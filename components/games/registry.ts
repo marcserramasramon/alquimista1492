@@ -8,6 +8,11 @@ import { SerratBruixesGame } from './SerratBruixesGame'
 import { FontFerroGame } from './FontFerroGame'
 import { PlaneBonesGame } from './PlaneBonesGame'
 import { CementiriGame } from './CementiriGame'
+import { ControlGame } from './ControlGame'
+import { AccusationGame } from './AccusationGame'
+import { BoxGame } from './BoxGame'
+import { BellGame } from './BellGame'
+import { MoralChoiceGame } from './MoralChoiceGame'
 
 export interface GameRegistry {
   [stationId: string]: React.ComponentType<any>
@@ -21,6 +26,11 @@ export const GAMES: GameRegistry = {
   'font-ferro': FontFerroGame,
   'planes-bones': PlaneBonesGame,
   'cementiri': CementiriGame,
+  'pla-masset-control': ControlGame,
+  'pla-masset-accusation': AccusationGame,
+  'caixa-almoines': BoxGame,
+  'sometent-campanar': BellGame,
+  'decisio-moral': MoralChoiceGame,
 }
 
 /**
