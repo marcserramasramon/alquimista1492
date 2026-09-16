@@ -20,9 +20,20 @@ export default function MasterDashboard() {
     }
   }, [router])
 
-  const handleLogout = () => {
-    localStorage.removeItem('master_token')
-    router.push('/login')
+  const handleLogout = async () => {
+    try {
+      // Call logout endpoint to clear the cookie
+      await fetch('/api/auth/master-logout', {
+        method: 'POST',
+      })
+    } catch (err) {
+      console.error('Logout error:', err)
+    } finally {
+      // Clear localStorage as well
+      localStorage.removeItem('master_token')
+      // Redirect to login
+      router.push('/(master)/login')
+    }
   }
 
   return (
