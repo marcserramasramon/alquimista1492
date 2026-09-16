@@ -1,9 +1,9 @@
-# 🎨 Fase 2: UI Base Jugador
+# 🎨 Fase 2: UI Base Jugador + Entry Flow
 
 **Status:** 📋 Planejament  
-**Durada:** 3 hores  
-**Inici:** Setmana 2  
-**Dependency:** Fase 1 completada (BD + auth)  
+**Durada:** 4–5 hores (expanded: entry flow + layout + pages)  
+**Inici:** Setmana 2–3  
+**Dependency:** Fase 1 completada (BD + auth + API routes)  
 **Branch:** `phase/2-ui-base`
 
 ---
@@ -19,17 +19,21 @@ Construir UI mobile-first per a jugadors: hub d'entrada, navegació, cronometre 
 ## 🏗️ Arquitectura Visual
 
 ```
-app/(player)/
-├── layout.tsx              (⭐ Next.js Layout: Navbar + main + Footer persistent)
-├── page.tsx                (Hub — entrada + informació)
-├── mapa.tsx                (Mapa interactiu La Guixa)
-├── quadern/
-│   ├── layout.tsx          (Tabs layout si necessari)
-│   └── page.tsx            (3 tabs: Sospitosos | Evidències | Codi)
-├── salvaconductes/
-│   └── page.tsx            (Salconduits page)
-└── s/[token]/
-    └── page.tsx            (Placeholder per a estacions — Fase 3)
+app/
+├── page.tsx                (⭐ Redirect to /enter)
+├── enter/
+│   └── page.tsx            (⭐ QR scanner + signin flow — NO layout wrapper)
+└── (player)/
+    ├── layout.tsx          (⭐ Next.js Layout: Navbar + main + Footer persistent)
+    ├── page.tsx            (Hub — entrada + informació)
+    ├── mapa.tsx            (Mapa interactiu La Guixa)
+    ├── quadern/
+    │   ├── layout.tsx      (Tabs layout si necessari)
+    │   └── page.tsx        (3 tabs: Sospitosos | Evidències | Codi)
+    ├── salvaconductes/
+    │   └── page.tsx        (Salconduits page)
+    └── s/[token]/
+        └── page.tsx        (Placeholder per a estacions — Fase 3)
 
 components/layout/
 ├── Navbar.tsx              (Logo + nom equip + cronometre + salconduits)
@@ -66,6 +70,51 @@ lib/
 ---
 
 ## 📋 Checklist Detallat
+
+### 0. Entry Flow (Signin/QR)
+- [ ] Fitxer: `app/page.tsx` (root index)
+  - Simple redirect: `redirect('/enter')`
+- [ ] Fitxer: `app/enter/page.tsx` (⭐ NOT wrapped by `(player)/layout.tsx`)
+- [ ] UI Elements:
+  - [ ] Logo "El Traïdor de la Guixa" (centered, prominent)
+  - [ ] Subtítol: "Entra al joc"
+  - [ ] **Option 1: QR Scanner**
+    - [ ] Button "📱 Escaneja QR d'equip"
+    - [ ] Click → opens `@yudiel/react-qr-scanner`
+    - [ ] Decoder scans GRUP1–GRUP8 codes
+    - [ ] Success → proceed to name prompt
+  - [ ] **Option 2: Manual Code Entry**
+    - [ ] Text input: "Codi d'equip (ex: GRUP1)"
+    - [ ] Validator: 4–6 chars alphanumeric
+    - [ ] Submit → proceed to name prompt
+  - [ ] **Name Prompt (either path)**
+    - [ ] Dialog: "Quin és el teu nom?"
+    - [ ] Input field (max 50 chars)
+    - [ ] Submit button
+- [ ] Form Validation (Zod):
+  ```typescript
+  const entrySchema = z.object({
+    teamCode: z.string().min(4).max(6).toUpperCase(),
+    playerName: z.string().min(1).max(50)
+  })
+  ```
+- [ ] Submit Handler:
+  - [ ] POST `/api/auth/signin` with `{ teamCode, playerName }`
+  - [ ] On success: store `session_id` (localStorage or cookie)
+  - [ ] Redirect to `/joc` (Hub page)
+  - [ ] On error: show error message (team not found, etc.)
+- [ ] Error Handling:
+  - [ ] "Equip no trovate" (team code invalid)
+  - [ ] "Error al connectar" (network error)
+  - [ ] Auto-retry or manual retry button
+- [ ] Styling:
+  - [ ] Mobile-first (full screen)
+  - [ ] Center content vertically
+  - [ ] Large touch targets (48px+ buttons)
+  - [ ] High contrast (PRD colors)
+  - [ ] No Navbar/Footer (clean entry)
+
+---
 
 ### 1. PlayerLayout — Next.js Layout File
 - [ ] Fitxer: `app/(player)/layout.tsx` ⭐ (NOT a component!)
@@ -298,6 +347,12 @@ lib/
 
 | Item | File | Type | Status | Notes |
 |------|------|------|--------|-------|
+| Root Index | `app/page.tsx` | Page | [ ] | Redirect to `/enter` |
+| Entry Page | `app/enter/page.tsx` | Page | [ ] | ⭐ QR scanner + signin (no layout) |
+| QR Scanner | `components/auth/QRScanner.tsx` | Component | [ ] | @yudiel/react-qr-scanner wrapper |
+| Code Input | `components/auth/CodeInput.tsx` | Component | [ ] | Manual team code input |
+| Name Prompt | `components/auth/NamePrompt.tsx` | Component | [ ] | Player name dialog |
+| Auth Hook | `lib/auth/useSignin.ts` | Hook | [ ] | POST `/api/auth/signin` + redirect |
 | Player Layout | `app/(player)/layout.tsx` | Layout | [ ] | ⭐ Next.js layout (persistent) |
 | Navbar | `components/layout/Navbar.tsx` | Component | [ ] | Sticky top, realtime, sticky in layout |
 | Footer | `components/layout/Footer.tsx` | Component | [ ] | Sticky bottom, 4 nav buttons |
@@ -323,45 +378,80 @@ lib/
    - [ ] Tailwind config actualitzat (colors, spacing)
    - [ ] Leaflet + React-Leaflet installed
    - [ ] Zustand store setup
+   - [ ] QR scanner library (@yudiel/react-qr-scanner)
 
-2. **Layout Base** (45 min)
-   - [ ] PlayerLayout
-   - [ ] Navbar
-   - [ ] Footer
-   - [ ] Test: navigation between pages
+2. **Entry Flow** (45 min) ⭐ DO THIS FIRST
+   - [ ] `app/page.tsx` (redirect)
+   - [ ] `app/enter/page.tsx` (entry UI)
+   - [ ] QRScanner component
+   - [ ] CodeInput component
+   - [ ] NamePrompt component
+   - [ ] useSignin hook (POST /api/auth/signin)
+   - [ ] Error handling + validation
+   - [ ] Test: QR scan → signin → redirect to /joc
 
-3. **Hub & Status** (45 min)
+3. **Layout Base** (45 min)
+   - [ ] `app/(player)/layout.tsx` (PlayerLayout)
+   - [ ] Navbar component
+   - [ ] Footer component
+   - [ ] Test: navigation between pages (don't reset state)
+
+4. **Hub & Status** (45 min)
    - [ ] Hub page
    - [ ] HubGreeting
    - [ ] HubStatus (progress bar)
    - [ ] Test: displays correctly, responsive
 
-4. **Mapa** (30 min)
+5. **Mapa** (30 min)
    - [ ] Leaflet map carrega
    - [ ] 7 markers amb colors
    - [ ] Click handlers (future: redirect)
    - [ ] Test: markers visible, responsive
 
-5. **Quadern** (30 min)
+6. **Quadern** (30 min)
    - [ ] 3 tabs structure
    - [ ] Suspect cards (6)
    - [ ] Evidence cards (empty initially)
    - [ ] Code display (4 slots)
-   - [ ] Test: tabs switchable, realtime suscriptions work
+   - [ ] Test: tabs switchable, realtime subscriptions work
+
+7. **Salvaconductes** (15 min)
+   - [ ] Page structure
+   - [ ] Braçals visual
+   - [ ] Event timeline
+   - [ ] Test: responsive
 
 ---
 
 ## ✅ Criteris d'Èxit
 
-- ✅ Hub page renderitza correctament (mobile + desktop)
-- ✅ Mapa carrega i markers visible
-- ✅ Quadern mostra 3 tabs funcionals
-- ✅ Cronometre countdown visible i real-time
-- ✅ Salconduits mostra 3 icones dinàmiques
-- ✅ Accessibility: WCAG AA (contrast, touch targets, keyboard nav)
-- ✅ Mobile responsive (375px–1920px sense horizontal scroll)
-- ✅ Realtime updates: sincronitzats entre sessions
-- ✅ No console errors o warnings
+- ✅ **Entry Flow:**
+  - Root `/` redirects to `/enter`
+  - QR scanner works (captures GRUP1–GRUP8)
+  - Manual code input validates format
+  - Name prompt collects player name
+  - POST `/api/auth/signin` creates session
+  - Redirect to `/joc` after signin
+  - Error handling displays user-friendly messages
+
+- ✅ **Player Layout:**
+  - Hub page renderitza correctament (mobile + desktop)
+  - Navbar persistent (countdown doesn't reset on navigation)
+  - Footer navigation working
+
+- ✅ **Content Pages:**
+  - Mapa carrega i markers visible
+  - Quadern mostra 3 tabs funcionals
+  - Salvaconductes page structure complete
+
+- ✅ **Realtime:**
+  - Cronometre countdown visible i real-time
+  - Salconduits mostra 3 icones dinàmiques
+  - Multiple windows sync'd
+
+- ✅ **Accessibility:** WCAG AA (contrast, touch targets, keyboard nav)
+- ✅ **Mobile responsive:** 375px–1920px sense horizontal scroll
+- ✅ **No console errors o warnings**
 
 ---
 
