@@ -138,6 +138,30 @@ CREATE TABLE master_sessions (
 ```
 - [ ] Taula creada
 
+#### 2.7 Taula `solutions_private` ⭐ (SECRET — RLS protected)
+```sql
+CREATE TABLE solutions_private (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  station_id VARCHAR(50) NOT NULL,
+  variant CHAR(1) NOT NULL CHECK (variant IN ('A', 'B', 'C')),
+  solution JSONB NOT NULL,
+  hints JSONB DEFAULT '{"level_1": "", "level_2": "", "level_3": ""}',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(station_id, variant)
+);
+
+-- Example data structure for solution JSONB:
+-- Jog 1 (Polybius): { "answer": "SAP DE LLETRA", "digit": 4, "evidence": "fire_beacons", "suspects_dismissed": ["Pere", "Joan"] }
+-- Jog 2 (Date): { "day": 13, "digit": 2, "evidence": "water_ledger", "suspects_dismissed": ["Marianna"] }
+-- Jog 3 (Map): { "time": "14:45", "digit": 3, "evidence": "patrol_route", "suspects_dismissed": ["Isidre"] }
+-- Jog 4 (Text): { "choice": "C", "digit": 1, "evidence": "tombstone", "suspects_dismissed": ["Anton"] }
+```
+- [ ] Taula creada
+- [ ] Índex: UNIQUE(station_id, variant)
+- [ ] ⚠️ **CRITICAL:** Activar RLS — per defecte DENY ALL
+- [ ] RLS policy: `service_role` (servidor) pot SELECT/INSERT/UPDATE
+- [ ] RLS policy: Players/Master NOT pot accedir (denied)
+
 ### 3. RLS Policies
 
 #### 3.1 `teams`
@@ -159,6 +183,26 @@ CREATE TABLE master_sessions (
 #### 3.5 `results`
 - [ ] Players: SELECT own result
 - [ ] Master: SELECT ALL
+
+#### 3.6 `solutions_private` ⭐ (CRITICAL — Secret answers)
+- [ ] **DEFAULT: DENY ALL** (RLS enabled, all policies deny)
+- [ ] Server policy: `service_role` can SELECT
+  ```sql
+  CREATE POLICY "service_role_can_select"
+  ON solutions_private
+  FOR SELECT
+  TO service_role
+  USING (true);
+  ```
+- [ ] Insert policy: `service_role` can INSERT (for seeding)
+  ```sql
+  CREATE POLICY "service_role_can_insert"
+  ON solutions_private
+  FOR INSERT
+  TO service_role
+  WITH CHECK (true);
+  ```
+- [ ] ⚠️ **Verify:** anon user cannot SELECT (test with cURL)
 
 ### 4. Autenticació Jugadors
 
@@ -193,12 +237,15 @@ CREATE TABLE master_sessions (
 // POST /validate-answer
 // Body: { station_id, answer, session_id, hint_level }
 // Response: { success, digit, evidence_unlock, suspects_dismissed, score_delta }
-// - Load SOLUTIONS from content/private/solutions.json
-// - Validate against solutions[station_id][variant]
-// - Return result
+// - ⭐ Load SOLUTIONS from supabase.from('solutions_private').select()
+//   Query: station_id = ? AND variant = ? (from session.variant)
+// - Validate answer against solutions[variant].solution.answer
+// - Return result { success, digit, evidence, suspects_dismissed }
+// - ⚠️ Use SERVICE_ROLE key to query solutions_private (RLS allows only service_role)
 ```
-- [ ] Function created
+- [ ] Function created (uses service_role client)
 - [ ] Deployed to Supabase
+- [ ] ✅ Solutions never exposed to client (server-only query)
 
 #### 5.2 Crear `supabase/functions/unlock-evidence/index.ts`
 ```typescript
@@ -287,22 +334,38 @@ CREATE TABLE master_sessions (
 - [ ] Simulate evidence unlock: `UPDATE sessions SET evidence_unlocked = array_append(evidence_unlocked, 'fire_beacons') WHERE id = '...'`
 - [ ] Verify quadern subscription receives update (real-time test in Fase 2)
 
+#### 8.6 Manual Test — Solutions Security (CRITICAL)
+- [ ] Insert test solution: `INSERT INTO solutions_private (station_id, variant, solution) VALUES ('jog_1', 'A', '{"answer":"SAP DE LLETRA","digit":4}')`
+- [ ] **Try to access as Player (MUST FAIL):**
+  - Open browser dev tools
+  - Try: `supabase.from('solutions_private').select()` with anon key
+  - ✅ Should get error: "403 Forbidden" or "RLS policy violation"
+- [ ] **Verify Server can access:**
+  - Use `supabase.from('solutions_private').select()` with SERVICE_ROLE key
+  - ✅ Should return solution data
+- [ ] ⚠️ **If player CAN access:** RLS policy NOT set correctly — FIX immediately
+
 ---
 
 ## ✅ Criteris d'Èxit
 
-- ✅ 6 taules creades a Supabase
+- ✅ 7 taules creades a Supabase (+ `solutions_private`)
 - ✅ `sessions` table amb 5 noves columnes:
   - `evidence_unlocked`, `suspects_dismissed`, `salconduits_remaining`, `salconduits_used`
   - `started_at`, `expires_at` (trigger auto-set)
+- ✅ `solutions_private` table amb RLS:
+  - Players CANNOT SELECT (403 Forbidden) ⭐
+  - Server (service_role) CAN SELECT
+  - Unique constraint: (station_id, variant)
 - ✅ Trigger per a `expires_at` funciona correctament
-- ✅ RLS policies actives (verificar que RLS enforced)
+- ✅ RLS policies actives (verificar que RLS enforced) — especialment 8.6!
 - ✅ Player auth funciona (creates session amb noves columnes)
 - ✅ Master auth funciona
-- ✅ Validation API funciona
-- ✅ Manual tests passen (especialment 8.5 — columns test)
+- ✅ Validation API funciona (loads solutions from table, not file)
+- ✅ Manual tests passen (8.1–8.6 incloses)
 - ✅ Migrations en git (reproducibles)
 - ✅ Schema matches PRD Fase 2 + 3 requirements
+- ✅ **Security:** Secrets are protected (solutions only accessible server-side)
 
 ---
 
