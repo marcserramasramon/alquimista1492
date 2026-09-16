@@ -1,0 +1,203 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Game Configuration",
+  "description": "Metadades generals del joc d'escape room",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "year",
+    "duration_minutes",
+    "acts"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Identificador únic del joc. Ús: carpeta, database, URLs. Exemple: 'traidor-guixa'",
+      "minLength": 3,
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Títol del joc en català. Exemple: 'El Traïdor de la Guixa'",
+      "minLength": 5
+    },
+    "subtitle": {
+      "type": "string",
+      "description": "[Opcional] Subtítol o tagline. Exemple: 'Escape room exterior a Sentfores–La Guixa'"
+    },
+    "year": {
+      "type": "integer",
+      "description": "Any de la trama (context històric). Exemple: 1705",
+      "minimum": 1000,
+      "maximum": 2100
+    },
+    "duration_minutes": {
+      "type": "integer",
+      "description": "Durada estimada total en minuts. Exemple: 90",
+      "minimum": 30,
+      "maximum": 480
+    },
+    "difficulty": {
+      "type": "string",
+      "description": "Dificultat general. Format: 'number/5'. Exemple: '3/5'",
+      "pattern": "^[1-5]/5$"
+    },
+    "location": {
+      "type": "object",
+      "description": "Ubicació física del joc",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Nom de la ubicació. Exemple: 'La Guixa, Osona'"
+        },
+        "region": {
+          "type": "string",
+          "description": "Comarca o regió. Exemple: 'Catalunya'"
+        },
+        "coordinates": {
+          "type": "object",
+          "description": "[Opcional] Coordenades GPS",
+          "properties": {
+            "latitude": {
+              "type": "number"
+            },
+            "longitude": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "acts": {
+      "type": "array",
+      "description": "Estructura narrativa en actes",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "number",
+          "name",
+          "stations"
+        ],
+        "properties": {
+          "number": {
+            "type": "integer",
+            "description": "Número d'acte (1, 2, 3, ...)",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Nom de l'acte. Exemple: 'Investigació'"
+          },
+          "description": {
+            "type": "string",
+            "description": "[Opcional] Descripció de què passa. Exemple: 'Els jugadors visiten 4 estacions en ordre lliure'"
+          },
+          "stations": {
+            "type": "array",
+            "description": "Array d'IDs de stations.json que pertanyen a aquest acte. Ordre importa.",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+$"
+            },
+            "minItems": 1
+          },
+          "prerequisites": {
+            "type": "array",
+            "description": "[Opcional] Condicions que s'han de complir per accedir a aquest acte. Exemples: 'all_act1_stations_solved', 'bernat_accused'",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "themes": {
+      "type": "array",
+      "description": "[Opcional] Temes del joc",
+      "items": {
+        "type": "string",
+        "enum": [
+          "mystery",
+          "historical",
+          "moral_choice",
+          "adventure",
+          "survival",
+          "heist",
+          "fantasy",
+          "scifi"
+        ]
+      }
+    },
+    "language": {
+      "type": "string",
+      "description": "Idioma del joc (ISO 639-1). Exemple: 'ca' per a català",
+      "pattern": "^[a-z]{2}$"
+    },
+    "author": {
+      "type": "string",
+      "description": "Autor del joc"
+    },
+    "version": {
+      "type": "string",
+      "description": "Versió del joc (semantic versioning). Exemple: '1.0.0'",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "created": {
+      "type": "string",
+      "description": "Data de creació (ISO 8601). Exemple: '2026-09-16'",
+      "format": "date"
+    },
+    "lastUpdated": {
+      "type": "string",
+      "description": "[Opcional] Data última actualització (ISO 8601)",
+      "format": "date"
+    }
+  },
+  "example": {
+    "id": "traidor-guixa",
+    "title": "El Traïdor de la Guixa",
+    "subtitle": "Escape room exterior a Sentfores–La Guixa",
+    "year": 1705,
+    "duration_minutes": 90,
+    "difficulty": "3/5",
+    "location": {
+      "name": "La Guixa, Osona",
+      "region": "Catalunya"
+    },
+    "acts": [
+      {
+        "number": 1,
+        "name": "Investigació",
+        "description": "Els jugadors visiten 4 estacions en ordre lliure",
+        "stations": [
+          "serrat-bruixes",
+          "font-ferro",
+          "planes-bones",
+          "cementiri"
+        ]
+      },
+      {
+        "number": 2,
+        "name": "Traïció",
+        "stations": [
+          "pla-masset-control",
+          "pla-masset-accusation"
+        ],
+        "prerequisites": [
+          "all_act1_stations_solved"
+        ]
+      }
+    ],
+    "themes": [
+      "mystery",
+      "historical",
+      "moral_choice"
+    ],
+    "language": "ca",
+    "author": "Marc Serra Masramon",
+    "version": "1.0.0",
+    "created": "2026-09-16"
+  }
+}

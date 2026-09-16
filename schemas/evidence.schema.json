@@ -1,0 +1,247 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Evidence Configuration",
+  "description": "Array de 10 (o més) evidències que es desbloquegen al resoldre estacions",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "required": [
+      "id",
+      "title",
+      "category"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "Identificador únic de l'evidència. Format: 'evidence_descriptive_name'. Exemple: 'evidence_firebeacons'",
+        "pattern": "^evidence_[a-z0-9_]+$"
+      },
+      "title": {
+        "type": "string",
+        "description": "Títol de l'evidència. Exemple: 'Senyals dels vigies de la plana'"
+      },
+      "category": {
+        "type": "string",
+        "description": "Categoria de l'evidència (ajuda a organitzar al quadern)",
+        "enum": [
+          "investigation",
+          "suspect_profile",
+          "location",
+          "item",
+          "document",
+          "letter",
+          "confession",
+          "revelation",
+          "solution"
+        ]
+      },
+      "icon": {
+        "type": "string",
+        "description": "[Opcional] Icona/emoji per representar l'evidència. Exemple: 'fire' o '🔥'"
+      },
+      "unlockedAt": {
+        "type": "object",
+        "description": "Quan es desbloqueja aquesta evidència",
+        "required": [
+          "station_id"
+        ],
+        "properties": {
+          "station_id": {
+            "type": "string",
+            "description": "ID de l'estació que desbloqueja aquesta evidència. Exemple: 'serrat-bruixes'",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "condition": {
+            "type": "string",
+            "description": "[Opcional] Condició adicional. Exemple: 'on_correct_solve' (defecte), 'on_first_clue', etc.",
+            "default": "on_correct_solve"
+          }
+        }
+      },
+      "description": {
+        "type": "string",
+        "description": "Text complet de l'evidència. Què diu? Qui parla? Quin és el context?"
+      },
+      "visuals": {
+        "type": "object",
+        "description": "[Opcional] Imatges i il·lustracions relacionades",
+        "properties": {
+          "image": {
+            "type": "string",
+            "description": "Ruta a foto/escanneig de l'evidència física. Exemple: 'evidence/firebeacons.png'"
+          },
+          "illustration": {
+            "type": "string",
+            "description": "Ruta a il·lustració artística. Exemple: 'evidence/firebeacons-drawn.svg'"
+          },
+          "backgroundColor": {
+            "type": "string",
+            "description": "[Opcional] Color de fons al quadern (hex o color name)"
+          }
+        }
+      },
+      "clueAgainstCharacters": {
+        "type": "array",
+        "description": "[Opcional] Proves que descarten sospitosos específics",
+        "items": {
+          "type": "object",
+          "required": [
+            "character"
+          ],
+          "properties": {
+            "character": {
+              "type": "string",
+              "description": "ID del personatge (de narrative.json)",
+              "pattern": "^[a-z0-9-]+$"
+            },
+            "strength": {
+              "type": "string",
+              "description": "Força de la clue",
+              "enum": [
+                "weak",
+                "medium",
+                "strong"
+              ]
+            },
+            "reasoning": {
+              "type": "string",
+              "description": "Per què aquesta evidència el descarta"
+            }
+          }
+        }
+      },
+      "clueAgainstTraitor": {
+        "type": "array",
+        "description": "[Opcional] Proves que van contra el traïdor (Bernat)",
+        "items": {
+          "type": "object",
+          "required": [
+            "character"
+          ],
+          "properties": {
+            "character": {
+              "type": "string",
+              "description": "ID del traïdor",
+              "pattern": "^[a-z0-9-]+$"
+            },
+            "strength": {
+              "type": "string",
+              "description": "Força de la clue",
+              "enum": [
+                "weak",
+                "medium",
+                "strong"
+              ]
+            },
+            "reasoning": {
+              "type": "string",
+              "description": "Per què aquesta evidència acusa el traïdor"
+            }
+          }
+        }
+      },
+      "validForAccusation": {
+        "type": "boolean",
+        "description": "[Opcional] Si aquesta evidència compta per a acusar el traïdor (Joc 6). Defecte: false",
+        "default": false
+      },
+      "accusationWeight": {
+        "type": "number",
+        "description": "[Opcional] Pes de l'evidència en l'acusació (0–1). Defecte: 0.5. Exemple: 0.3",
+        "minimum": 0,
+        "maximum": 1,
+        "default": 0.5
+      },
+      "relatedStations": {
+        "type": "array",
+        "description": "[Opcional] IDs d'estacions relacionades (mostra connexió entre estacions)",
+        "items": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        }
+      },
+      "relatedCharacters": {
+        "type": "array",
+        "description": "[Opcional] IDs de personatges mencionats en l'evidència",
+        "items": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        }
+      },
+      "historicalContext": {
+        "type": "string",
+        "description": "[Opcional] Context històric de l'evidència (per a immersió)"
+      }
+    }
+  },
+  "example": [
+    {
+      "id": "evidence_firebeacons",
+      "title": "Senyals dels vigies de la plana",
+      "category": "investigation",
+      "icon": "fire",
+      "unlockedAt": {
+        "station_id": "serrat-bruixes",
+        "condition": "on_correct_solve"
+      },
+      "description": "Avisos de fogueres entre els turons de vigilància. Un informador dins de Vic ha confirmat que la carta del delator és de mà pròpia.\n\nConclusió: El traïdor sap escriure.",
+      "visuals": {
+        "image": "evidence/firebeacons.png",
+        "illustration": "evidence/firebeacons-drawn.svg"
+      },
+      "clueAgainstCharacters": [
+        {
+          "character": "pere-moli",
+          "strength": "strong",
+          "reasoning": "Signa amb creu, no sap escriure"
+        },
+        {
+          "character": "joan",
+          "strength": "strong",
+          "reasoning": "Signa amb creu, no sap escriure"
+        }
+      ],
+      "clueAgainstTraitor": [
+        {
+          "character": "bernat",
+          "strength": "medium",
+          "reasoning": "Prova que el delator sap de lletra. Bernat és mestre i sap de lletra."
+        }
+      ],
+      "validForAccusation": true,
+      "accusationWeight": 0.3,
+      "relatedStations": ["serrat-bruixes"],
+      "relatedCharacters": ["bernat", "pere-moli", "joan"]
+    },
+    {
+      "id": "evidence_water_ledger",
+      "title": "Llibreta de torns de la font",
+      "category": "investigation",
+      "icon": "water",
+      "unlockedAt": {
+        "station_id": "font-ferro",
+        "condition": "on_correct_solve"
+      },
+      "description": "Control diàri de qui va baixar a recollir l'aigua de la Font del Ferro per a la tinta. L'ingredient principal és l'aigua de ferro d'aquesta font.\n\nTinta de gales: 3 dies de remull\nCarta escrita: 15 de maig (nit)\nAigua recollida: 12 de maig (−3 dies)\n\nConclusió: Marianna de l'Hostal estava al mercat de Vic el dia 12. No pot haver fet la tinta.",
+      "clueAgainstCharacters": [
+        {
+          "character": "marianna-hostal",
+          "strength": "strong",
+          "reasoning": "Estava fora el dia crítica de recollida"
+        }
+      ],
+      "clueAgainstTraitor": [
+        {
+          "character": "bernat",
+          "strength": "strong",
+          "reasoning": "Bernat va recollir dos càntirs aquell dia per a l'escola"
+        }
+      ],
+      "validForAccusation": true,
+      "accusationWeight": 0.4,
+      "relatedStations": ["font-ferro"],
+      "relatedCharacters": ["bernat", "marianna-hostal"]
+    }
+  ]
+}
