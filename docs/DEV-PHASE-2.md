@@ -235,7 +235,7 @@ lib/
 ### 7. Quadern Page (`/quadern`)
 - [ ] Fitxer: `app/(player)/quadern/page.tsx`
 - [ ] ⭐ Wrapped by `app/(player)/layout.tsx` (Navbar/Footer persist)
-- [ ] 3 tabs (shadcn Tabs):
+- [ ] 4 tabs (shadcn Tabs):
   - **Tab 1: Sospitosos**
     - 6 cards (3 col mobile, 2 col tablet, 3 col desktop)
     - Cada card:
@@ -260,7 +260,17 @@ lib/
     - 4 digits: [ _ ][ _ ][ _ ][ _ ]
     - Al resoldre Jogs 1–4: digits omplits real-time
     - Font gran (24px+)
-- [ ] Realtime updates: subscripció BD per a evidències + code_digits
+  - **Tab 4: Sellos ⭐ (NEW — for Treasure Box)**
+    - Títol "Sellos de la Caixa"
+    - Descripció: "Cada joc revela un seal (tanca). Necessitarás la seqüència correcta per obrir la caixa!"
+    - Llista 4 sellos (es desbloquegen progressivament):
+      - [ ] Jog 1 resolt → Seal 1: 🔥 Foc (Digit 4)
+      - [ ] Jog 2 resolt → Seal 2: 🪨 Pedra (Digit 2)
+      - [ ] Jog 3 resolt → Seal 3: 💨 Aire (Digit 3)
+      - [ ] Jog 4 resolt → Seal 4: 💧 Aigua (Digit 1)
+    - Display: "Ordre correcte: [4️⃣ 🔥] [2️⃣ 🪨] [3️⃣ 💨] [1️⃣ 💧]"
+    - Realtime: Cada seal apareix instantly after jog completion
+- [ ] Realtime updates: subscripció BD per a evidències + code_digits + seals
 
 ### 7. Realtime Integration (Zustand + Supabase) ⭐
 

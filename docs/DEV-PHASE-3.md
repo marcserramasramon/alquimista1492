@@ -138,6 +138,24 @@ api/games/
   - Quadern es refrescar real-time (subscripció Realtime)
   - Suspects dismissed (status canvia a "Descartat")
 
+### 6. Seal Unlock Flow ⭐ (per Treasure Box — Jog 7)
+- [ ] Fitxer: `lib/games/seals.ts` (NEW)
+- [ ] Fonction: `unlockSeal(session_id, seal_id)`
+- [ ] Cada joc retorna seal:
+  ```
+  Jog 1 (Polybius) → Digit 4 → 🔥 Foc
+  Jog 2 (Date) → Digit 2 → 🪨 Pedra
+  Jog 3 (Map) → Digit 3 → 💨 Aire
+  Jog 4 (Text) → Digit 1 → 💧 Aigua
+  ```
+- [ ] Server returns: `{ success: true, digit: 4, seal: "fire", ... }`
+- [ ] Client updates store: `addSeal("fire")`
+- [ ] Quadern Tab 4 (Sellos) updates real-time:
+  - Seal apareix amb icona + digit
+  - Display ordre correcte: [4 🔥] [2 🪨] [3 💨] [1 💧]
+- [ ] Update BD:
+  - `sessions.seals_unlocked[]` append (["fire", "stone", "air", "water"])
+
 ---
 
 ## 🎯 Joc 1: Serrat de les Bruixes (Polybius Square)
@@ -203,7 +221,14 @@ api/games/
      - unlockEvidence(session_id, evidence: solution.solution.evidence)
      - updateCodeDigit(session_id, position: 3, digit: 4)
      - updateSuspects(session_id, dismissed: solution.solution.suspects_dismissed)
-     - return { success: true, digit: 4, evidence: "fire_beacons", suspects: ["Pere", "Joan"] }
+     - ⭐ unlockSeal(session_id, seal: solution.solution.seal) — NEW!
+     - return { 
+         success: true, 
+         digit: 4, 
+         seal: "fire",              // ⭐ 🔥 Foc (per Quadern Tab 4)
+         evidence: "fire_beacons", 
+         suspects: ["Pere", "Joan"] 
+       }
   7. Si no match:
      - Insert attempt (success: false)
      - updateScore(session_id, −10)
