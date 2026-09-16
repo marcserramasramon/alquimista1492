@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const validation = MasterLoginSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: validation.error.errors },
+        { error: 'Invalid request' },
         { status: 400 }
       )
     }
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const result = await loginMaster(pin)
 
     // Check if error
-    if ('code' in result && result.code) {
+    if ('code' in result) {
       const statusCode = result.code === 'INVALID_PIN' ? 401 : 400
       return NextResponse.json(result, { status: statusCode })
     }

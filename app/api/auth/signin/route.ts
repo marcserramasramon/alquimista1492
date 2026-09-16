@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const validation = SignInSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request', details: validation.error.errors },
+        { error: 'Invalid request' },
         { status: 400 }
       )
     }
