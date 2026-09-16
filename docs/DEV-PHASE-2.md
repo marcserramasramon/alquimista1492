@@ -1,9 +1,9 @@
-# 🎨 Fase 2: UI Base Jugador + Entry Flow
+# 🎨 Fase 2: UI Base Jugador + Entry Flow + Realtime
 
 **Status:** 📋 Planejament  
-**Durada:** 4–5 hores (expanded: entry flow + layout + pages)  
+**Durada:** 5–6 hores (expanded: realtime + entry flow + layout + pages)  
 **Inici:** Setmana 2–3  
-**Dependency:** Fase 1 completada (BD + auth + API routes)  
+**Dependency:** Fase 1 completada (BD + auth + API routes + Realtime enabled)  
 **Branch:** `phase/2-ui-base`
 
 ---
@@ -262,30 +262,259 @@ lib/
     - Font gran (24px+)
 - [ ] Realtime updates: subscripció BD per a evidències + code_digits
 
-### 7. Data Flow & State Management
+### 7. Realtime Integration (Zustand + Supabase) ⭐
 
-#### Real-Time Subscriptions (Zustand + Supabase)
-- [ ] Store: `lib/store/gameStore.ts`
+#### 7.1 Zustand Store Setup
+- [ ] Fitxer: `lib/store/gameStore.ts`
+- [ ] Schema:
   ```typescript
-  type GameStore = {
-    session: Session | null
-    countdown: number
-    solvedStations: string[]
-    codeDigits: string[]
-    evidences: Evidence[]
-    suspects: Suspect[]
+  interface GameStore {
+    // Session metadata
+    sessionId: string | null
+    teamCode: string
+    variant: 'A' | 'B' | 'C'
+    
+    // Game state (synced from BD via Realtime)
+    currentAct: number
+    solvedStations: string[]      // ["jog_1", "jog_2", ...]
+    codeDigits: string[]          // ["4", "2", "3", "1"]
+    score: number
+    
+    // Evidence & suspects
+    evidenceUnlocked: string[]    // ["fire_beacons", "water_ledger", ...]
+    suspectsDismissed: string[]   // ["Pere", "Joan", ...]
+    
+    // Countdown
+    startedAt: Date
+    expiresAt: Date
+    remainingSeconds: number
+    
+    // Salconduits
+    salconduits: number           // 0-3
+    salconduitUsed: string[]      // ["14:32", "15:45", ...]
+    
+    // Setters (called by hooks)
+    setSession(data: Partial<GameStore>)
+    updateCountdown(seconds: number)
+    addEvidence(id: string)
+    dismissSuspect(name: string)
+    useSalconduit(timestamp: string)
   }
   ```
-- [ ] Hook: `useCountdown()`
-  - Subscripció Realtime a `sessions` table
-  - Emits countdown cada segon
-  - Format: MM:SS
-- [ ] Hook: `useSession()`
-  - Subscripció Realtime a `sessions.solved_stations[]`
-  - Subscripció a `sessions.code_digits[]`
-- [ ] Hook: `useEvidences()`
-  - Subscripció Realtime a `sessions.evidence_unlocked[]`
-  - Subscripció a suspect descartats
+- [ ] Store created: `export const useGameStore = create<GameStore>(...)`
+- [ ] Persist to localStorage (optional, for resilience)
+
+#### 7.2 Hook: `useCountdown()` (1h implementation)
+- [ ] Fitxer: `lib/hooks/useCountdown.ts`
+- [ ] Funcionalitat:
+  ```typescript
+  export function useCountdown() {
+    const { startedAt, expiresAt, remainingSeconds, updateCountdown } = useGameStore()
+    const sessionId = useGameStore(s => s.sessionId)
+    
+    // 1. Interval: update every second (client-side tick)
+    useEffect(() => {
+      const interval = setInterval(() => {
+        const now = new Date()
+        const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000))
+        updateCountdown(remaining)
+        
+        if (remaining === 0) {
+          // Game over — redirect or show timeout screen
+          window.location.href = '/joc/timeout'
+        }
+      }, 1000)
+      
+      return () => clearInterval(interval)
+    }, [expiresAt])
+    
+    // 2. Realtime subscription: sync if server updates expires_at
+    useEffect(() => {
+      if (!sessionId) return
+      
+      const channel = supabase
+        .channel(`session:${sessionId}`)
+        .on('postgres_changes', 
+          { event: 'UPDATE', schema: 'public', table: 'sessions', filter: `id=eq.${sessionId}` },
+          (payload) => {
+            if (payload.new.expires_at) {
+              updateCountdown(Math.max(0, Math.floor((new Date(payload.new.expires_at) - new Date()) / 1000)))
+            }
+          }
+        )
+        .subscribe()
+      
+      return () => { supabase.removeChannel(channel) }
+    }, [sessionId])
+    
+    return remainingSeconds
+  }
+  ```
+- [ ] Format display: `MM:SS` (helpers: `secondsToMMSS(seconds)`)
+- [ ] Color coding:
+  - Green: >30 min remaining
+  - Orange: 15–30 min
+  - Red: <15 min
+  - Gray: 0 (expired)
+
+#### 7.3 Hook: `useSession()` (1h implementation)
+- [ ] Fitxer: `lib/hooks/useSession.ts`
+- [ ] Funcionalitat:
+  ```typescript
+  export function useSession() {
+    const sessionId = useGameStore(s => s.sessionId)
+    const setSession = useGameStore(s => s.setSession)
+    
+    // 1. Load session once on mount
+    useEffect(() => {
+      if (!sessionId) return
+      
+      const loadSession = async () => {
+        const { data: session } = await supabase
+          .from('sessions')
+          .select('*')
+          .eq('id', sessionId)
+          .single()
+        
+        if (session) {
+          setSession({
+            currentAct: session.current_act,
+            solvedStations: session.solved_stations || [],
+            codeDigits: session.code_digits || ['', '', '', ''],
+            score: session.score,
+            evidenceUnlocked: session.evidence_unlocked || [],
+            suspectsDismissed: session.suspects_dismissed || [],
+            startedAt: new Date(session.started_at),
+            expiresAt: new Date(session.expires_at),
+            salconduits: session.salconduits_remaining,
+            salconduitUsed: session.salconduits_used || []
+          })
+        }
+      }
+      
+      loadSession()
+    }, [sessionId])
+    
+    // 2. Realtime subscription: sync ALL updates
+    useEffect(() => {
+      if (!sessionId) return
+      
+      const channel = supabase
+        .channel(`session:${sessionId}`)
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'sessions', filter: `id=eq.${sessionId}` },
+          (payload) => {
+            // On INSERT or UPDATE
+            if (payload.new) {
+              setSession({
+                currentAct: payload.new.current_act,
+                solvedStations: payload.new.solved_stations || [],
+                codeDigits: payload.new.code_digits || [],
+                score: payload.new.score,
+                evidenceUnlocked: payload.new.evidence_unlocked || [],
+                suspectsDismissed: payload.new.suspects_dismissed || [],
+                startedAt: new Date(payload.new.started_at),
+                expiresAt: new Date(payload.new.expires_at),
+                salconduits: payload.new.salconduits_remaining,
+                salconduitUsed: payload.new.salconduits_used || []
+              })
+            }
+          }
+        )
+        .subscribe()
+      
+      return () => { supabase.removeChannel(channel) }
+    }, [sessionId])
+  }
+  ```
+- [ ] Error handling: retry on disconnect, log to console
+- [ ] No loading state needed (uses cached data during reconnect)
+
+#### 7.4 Hook: `useEvidences()` (1h implementation)
+- [ ] Fitxer: `lib/hooks/useEvidences.ts`
+- [ ] Funcionalitat:
+  ```typescript
+  // Evidence metadata (public data — OK to keep on client)
+  const EVIDENCE_MAP = {
+    'fire_beacons': { title: 'Senyals dels vigies', suspects: ['Pere', 'Joan'], ... },
+    'water_ledger': { title: 'Llibre de reg', suspects: ['Marianna'], ... },
+    // ...
+  }
+  
+  export function useEvidences() {
+    const sessionId = useGameStore(s => s.sessionId)
+    const evidenceUnlocked = useGameStore(s => s.evidenceUnlocked)
+    const addEvidence = useGameStore(s => s.addEvidence)
+    
+    // 1. Load unlocked evidence IDs via useSession() (already subscribed)
+    // 2. Map IDs to full evidence objects
+    const evidences = evidenceUnlocked.map(id => EVIDENCE_MAP[id])
+    
+    // 3. Realtime subscription (piggyback on useSession channels)
+    useEffect(() => {
+      if (!sessionId) return
+      
+      const channel = supabase
+        .channel(`session:${sessionId}`)
+        .on('postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'sessions', filter: `id=eq.${sessionId}` },
+          (payload) => {
+            const newEvidence = payload.new.evidence_unlocked || []
+            const oldEvidence = payload.old?.evidence_unlocked || []
+            
+            // Detect new evidence (array diff)
+            const added = newEvidence.filter(e => !oldEvidence.includes(e))
+            added.forEach(id => addEvidence(id))
+            
+            // Trigger animation (optional: add to store)
+          }
+        )
+        .subscribe()
+      
+      return () => { supabase.removeChannel(channel) }
+    }, [sessionId])
+    
+    return evidences
+  }
+  ```
+- [ ] Component usage:
+  ```typescript
+  // In Quadern Evidence tab
+  const evidences = useEvidences()
+  return (
+    <div>
+      {evidences.length === 0 ? (
+        <p>Cap evidència desbloquejan</p>
+      ) : (
+        evidences.map(e => <EvidenceCard key={e.id} {...e} />)
+      )}
+    </div>
+  )
+  ```
+
+#### 7.5 Channel Management (Optimization)
+- [ ] Create shared channel per sessionId (avoid duplicates)
+  ```typescript
+  // lib/realtime/channels.ts
+  const channels = new Map<string, RealtimeChannel>()
+  
+  export function getSessionChannel(sessionId: string) {
+    if (!channels.has(sessionId)) {
+      channels.set(sessionId, supabase.channel(`session:${sessionId}`))
+    }
+    return channels.get(sessionId)
+  }
+  ```
+- [ ] All 3 hooks use same channel (single subscription)
+- [ ] Unsubscribe only when sessionId changes or component unmounts
+
+### 7.6 Testing Realtime (Manual)
+- [ ] Open 2 browser windows (same team)
+- [ ] Window 1: Resolve Jog 1 (submit answer)
+- [ ] Window 2: Verify evidence appears instantly (no refresh needed)
+- [ ] Verify countdown synced (both show same time)
+- [ ] Disconnect internet → reconnect → verify resync works
+- [ ] Test 8 players (8 sessions) — no cross-talk
 
 ### 8. Styling & Theme
 
@@ -353,6 +582,12 @@ lib/
 | Code Input | `components/auth/CodeInput.tsx` | Component | [ ] | Manual team code input |
 | Name Prompt | `components/auth/NamePrompt.tsx` | Component | [ ] | Player name dialog |
 | Auth Hook | `lib/auth/useSignin.ts` | Hook | [ ] | POST `/api/auth/signin` + redirect |
+| **Zustand Store** | **`lib/store/gameStore.ts`** | **Store** | **[ ]** | **⭐ Central state (countdown, evidence, etc)** |
+| **useCountdown Hook** | **`lib/hooks/useCountdown.ts`** | **Hook** | **[ ]** | **⭐ MM:SS countdown + Realtime sync** |
+| **useSession Hook** | **`lib/hooks/useSession.ts`** | **Hook** | **[ ]** | **⭐ Load/sync session state** |
+| **useEvidences Hook** | **`lib/hooks/useEvidences.ts`** | **Hook** | **[ ]** | **⭐ Evidence list + Realtime updates** |
+| **Channel Manager** | **`lib/realtime/channels.ts`** | **Utility** | **[ ]** | **Shared Realtime channels (no duplicates)** |
+| **Evidence Map** | **`lib/data/evidenceMap.ts`** | **Data** | **[ ]** | Public evidence metadata (titles, suspects) |
 | Player Layout | `app/(player)/layout.tsx` | Layout | [ ] | ⭐ Next.js layout (persistent) |
 | Navbar | `components/layout/Navbar.tsx` | Component | [ ] | Sticky top, realtime, sticky in layout |
 | Footer | `components/layout/Footer.tsx` | Component | [ ] | Sticky bottom, 4 nav buttons |
@@ -374,13 +609,23 @@ lib/
 
 ## 🎬 Implementation Order
 
-1. **Setup & Config** (30 min)
+1. **Setup & Config** (45 min)
    - [ ] Tailwind config actualitzat (colors, spacing)
    - [ ] Leaflet + React-Leaflet installed
-   - [ ] Zustand store setup
    - [ ] QR scanner library (@yudiel/react-qr-scanner)
+   - [ ] Create folder structure (`lib/store/`, `lib/hooks/`, `lib/realtime/`, `lib/data/`)
+   - [ ] Test Supabase connection (check Realtime enabled)
 
-2. **Entry Flow** (45 min) ⭐ DO THIS FIRST
+2. **Realtime Infrastructure** (1h) ⭐ DO EARLY
+   - [ ] Zustand store setup (gameStore.ts)
+   - [ ] Channel manager (channels.ts)
+   - [ ] Evidence metadata (evidenceMap.ts)
+   - [ ] useCountdown hook (with Realtime subscription)
+   - [ ] useSession hook (with Realtime subscription)
+   - [ ] useEvidences hook (with Realtime subscription)
+   - [ ] Test: Manual 2-window sync test (7.6)
+
+3. **Entry Flow** (45 min) ⭐ USES REALTIME SETUP
    - [ ] `app/page.tsx` (redirect)
    - [ ] `app/enter/page.tsx` (entry UI)
    - [ ] QRScanner component
@@ -444,10 +689,14 @@ lib/
   - Quadern mostra 3 tabs funcionals
   - Salvaconductes page structure complete
 
-- ✅ **Realtime:**
-  - Cronometre countdown visible i real-time
-  - Salconduits mostra 3 icones dinàmiques
-  - Multiple windows sync'd
+- ✅ **Realtime Infrastructure:**
+  - Zustand store created + Realtime subscriptions working
+  - useCountdown hook: countdown updates every second (MM:SS format)
+  - useSession hook: session state syncs across windows
+  - useEvidences hook: new evidence appears instantly (no refresh needed)
+  - 2-window manual test passes (evidence sync verified)
+  - Disconnect/reconnect handled gracefully
+  - No duplicate Realtime channels (shared channel manager)
 
 - ✅ **Accessibility:** WCAG AA (contrast, touch targets, keyboard nav)
 - ✅ **Mobile responsive:** 375px–1920px sense horizontal scroll
@@ -458,14 +707,23 @@ lib/
 ## 🔧 Stack & Dependencies
 
 ```bash
-npm install react-leaflet leaflet zustand
+# Already installed in Fase 0
+npm install @supabase/ssr @supabase/supabase-js zustand zod framer-motion
+
+# New for Fase 2 Realtime
+# (zustand already installed, just needs to be used)
+
+# Components & UI
+npm install react-leaflet leaflet
 npm install -D @tailwindcss/forms @tailwindcss/typography
 ```
 
+- **State Management:** Zustand (local store)
+- **Realtime:** Supabase Realtime websockets (channels, subscriptions)
 - **Layouts:** Tailwind flexbox
-- **State:** Zustand + Supabase Realtime
 - **Maps:** Leaflet + React-Leaflet
 - **UI Components:** shadcn/ui (Button, Card, Tabs, Badge)
+- **Realtime Channels:** Supabase `RealtimeChannel` (postgres_changes events)
 
 ---
 
