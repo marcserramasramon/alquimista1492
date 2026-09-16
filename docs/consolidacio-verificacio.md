@@ -181,20 +181,11 @@ Cada variant canvia aquests paràmetres:
 |----------|-------|----------------------|
 | Estació resolta | +100 | ✅ (joc placeholder) |
 | Resposta incorrecta | −10 | ✅ (cada joc) |
-| Pista nivell 1 | −15 (nota PRD: `−2 a jocs.md`) | ⚠️ Discrepàcia |
-| Pista nivell 2 | −30 (nota PRD: `−2 a jocs.md`) | ⚠️ Discrepàcia |
-| Pista nivell 3 | −50 (nota PRD: `−5 a jocs.md`) | ⚠️ Discrepàcia |
+| Pista nivell 1 | 0 | ✅ Consistent |
+| Pista nivell 2 | −2 | ✅ Consistent |
+| Pista nivell 3 | −5 | ✅ Consistent |
 
-**⚠️ NOTA:** Els costos de pistes a `jocs.md` són menors (0, −2, −5) que al `PRD.md` (−15, −30, −50). Cal unificar.
-
-### Recomanació
-
-Usar els valors més baixos de `jocs.md` (0, −2, −5) perquè:
-- Són més generosos amb jugadors novells
-- Permeten més replayability
-- Coincideixen amb el "joc més accessible" del PRD secció 5 (Estimuladora nivell 2–4 de dificultat)
-
-**Acció:** Actualitzar PRD.md secció 8 per reflectir els costos reals de pistes.
+**✅ RESOLT:** Els costos de pistes són uniformes a 0 / −2 / −5 en tots els documents (PRD.md, jocs.md, SCHEMA.md).
 
 ---
 
@@ -251,7 +242,7 @@ Usar els valors més baixos de `jocs.md` (0, −2, −5) perquè:
 
 | Tema | Resolució | Prioritat |
 |------|-----------|-----------|
-| Costos de pistes | ✅ Unificat a 0, −2, −5 (PRD.md actualitzat) | Alta |
+| Costos de pistes | ✅ Unificat a 0, −2, −5 (PRD.md § 8, jocs.md, SCHEMA.md, pantalles.md) | Alta |
 | Ubicació del campanar | ✅ Al costat Rectoria, darrera Església | Alta |
 | Cronometratge real | ✅ Cronometrat de nit (datos integrades) | Alta |
 
