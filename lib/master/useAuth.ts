@@ -46,9 +46,20 @@ export function useMasterAuth() {
     }
   }
 
-  const logout = () => {
-    localStorage.removeItem('master_token')
-    router.push('/login')
+  const logout = async () => {
+    try {
+      // Call logout endpoint to clear the cookie
+      await fetch('/api/auth/master-logout', {
+        method: 'POST',
+      })
+    } catch (err) {
+      console.error('Logout error:', err)
+    } finally {
+      // Clear localStorage as well for backward compatibility
+      localStorage.removeItem('master_token')
+      // Redirect to login
+      router.push('/(master)/login')
+    }
   }
 
   return {
