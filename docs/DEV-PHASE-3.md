@@ -58,31 +58,46 @@ api/games/
 
 ## 📋 Checklist Arquitectura Global
 
-### 1. Server-Only Solutions Setup
-- [ ] Fitxer: `content/private/solutions.json` (NO enviat a client)
-- [ ] Schema:
-  ```json
-  {
-    "traitor": "Bernat",
-    "stations": {
-      "jog_1": {
-        "A": { "solution": "SAP DE LLETRA", "digit": 4, "evidence": "fire_beacons" },
-        "B": { "solution": "ARREBOSSADA", "digit": 4, "evidence": "fire_beacons" },
-        "C": { "solution": "CLATELLADA", "digit": 4, "evidence": "fire_beacons" }
+### 1. Server-Only Solutions Setup (via Supabase)
+- [ ] ⭐ **Solutions loaded from `solutions_private` table** (NOT file)
+  - Created in Fase 1 (check Fase 1 section 2.7)
+  - RLS protected: only service_role can SELECT
+  - Structure per row:
+    ```
+    {
+      station_id: "jog_1",
+      variant: "A",
+      solution: JSONB {
+        answer: "SAP DE LLETRA",
+        digit: 4,
+        evidence: "fire_beacons",
+        suspects_dismissed: ["Pere", "Joan"]
       },
-      "jog_2": { /* ... */ },
-      "jog_3": { /* ... */ },
-      "jog_4": { /* ... */ }
-    },
-    "evidence": {
-      "fire_beacons": { "title": "Senyals dels vigies", "suspects_dismissed": ["Pere", "Joan"] },
-      "water_ledger": { "title": "Llibre de reg", "suspects_dismissed": ["Marianna"] },
-      "patrol_route": { "title": "Ruta de patrulla", "suspects_dismissed": ["Isidre"] },
-      "tombstone": { "title": "Làpida", "suspects_dismissed": ["Anton"] }
+      hints: JSONB {
+        level_1: "Comença per 'S'",
+        level_2: "Forma de tauler d'escacs",
+        level_3: "Resposta comença amb SAP..."
+      }
     }
-  }
+    ```
+- [ ] Evidence mapping (separate or in solution):
+  - "fire_beacons" → title "Senyals dels vigies", suspects ["Pere", "Joan"]
+  - "water_ledger" → title "Llibre de reg", suspects ["Marianna"]
+  - "patrol_route" → title "Ruta de patrulla", suspects ["Isidre"]
+  - "tombstone" → title "Làpida", suspects ["Anton"]
+- [ ] Load solutions server-side:
+  ```typescript
+  // app/api/games/validate/route.ts — server action
+  import 'server-only'
+  const supabase = createServiceRoleClient() // Uses SERVICE_ROLE key
+  const solution = await supabase
+    .from('solutions_private')
+    .select('solution, hints')
+    .eq('station_id', station_id)
+    .eq('variant', variant)
+    .single()
   ```
-- [ ] `import 'server-only'` en tots els arxius que el carreguin
+- [ ] ✅ Solutions NEVER exposed to client (RLS + server-only query)
 
 ### 2. Validator Schemas (Zod)
 - [ ] Fitxer: `lib/games/validators.ts`
@@ -167,24 +182,36 @@ api/games/
 
 ### Server Validation
 - [ ] Fitxer: `app/api/games/validate/route.ts` (POST)
+- [ ] ⭐ **CRITICAL:** Must use `import 'server-only'`
 - [ ] Lògica:
   ```typescript
   1. Verifica JWT (session_id)
-  2. Carrega SOLUTIONS.stations.jog_1[variant]
-  3. Normalitza resposta (uppercase, trim)
-  4. Compara amb solution
-  5. Si match:
+  2. Get session variant: const { variant } = await supabase
+       .from('sessions')
+       .select('variant')
+       .eq('id', session_id)
+  3. Carrega solution desde solutions_private:
+     const solution = await supabase  // SERVICE_ROLE client
+       .from('solutions_private')
+       .select('solution')
+       .eq('station_id', 'jog_1')
+       .eq('variant', variant)
+  4. Normalitza resposta (uppercase, trim, remove accents)
+  5. Compara amb solution.solution.answer
+  6. Si match:
      - updateScore(session_id, +100)
-     - unlockEvidence(session_id, "fire_beacons")
-     - updateCodeDigit(session_id, 3, 4) // digit 4 en posició 3
-     - return { success: true, digit: 4, evidence: "fire_beacons" }
-  6. Si no match:
-     - updateAttempt(session_id, false)
+     - unlockEvidence(session_id, evidence: solution.solution.evidence)
+     - updateCodeDigit(session_id, position: 3, digit: 4)
+     - updateSuspects(session_id, dismissed: solution.solution.suspects_dismissed)
+     - return { success: true, digit: 4, evidence: "fire_beacons", suspects: ["Pere", "Joan"] }
+  7. Si no match:
+     - Insert attempt (success: false)
      - updateScore(session_id, −10)
      - return { success: false }
   ```
-- [ ] RLS Policy: Jugador només pot validar sessions del seu equip
-- [ ] Rate limit: 1 submit/5 seg (prevent spam)
+- [ ] ✅ RLS Policy: Jugador només pot validar sessions del seu equip
+- [ ] ⚠️ Rate limit: 1 submit/5 seg (prevent spam) — implementar via Redis o DB
+- [ ] ✅ Solutions NEVER appear in response (only digit, evidence, suspects)
 
 ### Testing Manual
 - [ ] Device: iPhone (375px)
