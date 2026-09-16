@@ -19,33 +19,40 @@ Construir UI mobile-first per a jugadors: hub d'entrada, navegació, cronometre 
 ## 🏗️ Arquitectura Visual
 
 ```
-(player)/joc/
-├── layout.tsx              (PlayerLayout wrapper)
+app/(player)/
+├── layout.tsx              (⭐ Next.js Layout: Navbar + main + Footer persistent)
 ├── page.tsx                (Hub — entrada + informació)
 ├── mapa.tsx                (Mapa interactiu La Guixa)
 ├── quadern/
-│   ├── layout.tsx
+│   ├── layout.tsx          (Tabs layout si necessari)
 │   └── page.tsx            (3 tabs: Sospitosos | Evidències | Codi)
+├── salvaconductes/
+│   └── page.tsx            (Salconduits page)
 └── s/[token]/
     └── page.tsx            (Placeholder per a estacions — Fase 3)
 
-components/
-├── layout/
-│   ├── PlayerLayout.tsx    (Navbar + main + footer)
-│   ├── Navbar.tsx          (Logo + nom equip + cronometre + salconduits)
-│   ├── Footer.tsx          (Navigation buttons)
-│   └── MobileNav.tsx       (Tab buttons)
-├── player/
-│   ├── HubCard.tsx         (Status card)
-│   ├── SuspectCard.tsx     (Fitxa sospitós)
-│   ├── EvidenceCard.tsx    (Fitxa evidència)
-│   ├── Map.tsx             (Leaflet mapa)
-│   └── CodeDisplay.tsx     (4 xifres vacies)
-└── ui/
-    ├── Button.tsx
-    ├── Card.tsx
-    ├── Tabs.tsx
-    └── Badge.tsx           (status badges)
+components/layout/
+├── Navbar.tsx              (Logo + nom equip + cronometre + salconduits)
+├── Footer.tsx              (Navigation buttons — sticky bottom)
+└── MobileNav.tsx           (Tab button helpers — optional)
+
+components/player/
+├── HubCard.tsx             (Status card)
+├── HubGreeting.tsx         (Greeting dinàmic)
+├── HubStatus.tsx           (Act + progress)
+├── SuspectCard.tsx         (Fitxa sospitós)
+├── EvidenceCard.tsx        (Fitxa evidència)
+├── SalconduitCard.tsx      (Visual braçal)
+├── EventTimeline.tsx       (Salconduit log)
+├── Map.tsx                 (Leaflet mapa)
+├── MapMarker.tsx           (SVG circle markers)
+└── CodeDisplay.tsx         (4 xifres vacies)
+
+components/ui/
+├── Button.tsx
+├── Card.tsx
+├── Tabs.tsx
+└── Badge.tsx               (status badges)
 
 lib/
 ├── realtime/
@@ -60,21 +67,28 @@ lib/
 
 ## 📋 Checklist Detallat
 
-### 1. PlayerLayout — Wrapper Principal
-- [ ] Fitxer: `components/layout/PlayerLayout.tsx`
+### 1. PlayerLayout — Next.js Layout File
+- [ ] Fitxer: `app/(player)/layout.tsx` ⭐ (NOT a component!)
+- [ ] Import: `<Navbar />` + `<Footer />` from components/layout/
 - [ ] Estructura:
+  ```typescript
+  export default function PlayerLayout({ children }: { children: React.ReactNode }) {
+    return (
+      <div className="flex flex-col h-screen">
+        <Navbar />
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
+        <Footer />
+      </div>
+    )
+  }
   ```
-  <div className="flex flex-col h-screen">
-    <Navbar />
-    <main className="flex-1 overflow-y-auto">
-      {children}
-    </main>
-    <Footer />
-  </div>
-  ```
+- [ ] ⭐ **IMPORTANT:** This is a Next.js layout — wraps ALL routes in `(player)/`
 - [ ] 100vh height (full viewport)
 - [ ] Flex layout: navbar + content + footer
 - [ ] Mobile-first: responsive padding (16px gutter)
+- [ ] State persistence: Navbar countdown/salconduits don't reset on navigation
 
 ### 2. Navbar Component
 - [ ] Fitxer: `components/layout/Navbar.tsx`
@@ -102,17 +116,20 @@ lib/
 - [ ] Links: `useRouter` navigation
 
 ### 4. Hub Page (`/joc`)
-- [ ] Fitxer: `app/(player)/joc/page.tsx`
-- [ ] Estructura:
-  ```
-  <PlayerLayout>
-    <div className="p-4 space-y-6">
-      <Greeting />           {/* "Benvinguts, Grup X" */}
-      <ActStatus />          {/* "Acte I — Investigació" */}
-      <StationsProgress />   {/* Progress: 4/4 estacions */}
-      <ActionButtons />      {/* Scanejar QR, Mapa, Quadern */}
-    </div>
-  </PlayerLayout>
+- [ ] Fitxer: `app/(player)/page.tsx` (routes to `/joc` via Next.js routing)
+- [ ] ⭐ **NOTE:** Wrapped by `app/(player)/layout.tsx` automatically
+- [ ] Content structure (inside layout's `{children}`):
+  ```typescript
+  export default function JocHub() {
+    return (
+      <div className="p-4 space-y-6">
+        <HubGreeting />        {/* "Benvinguts, Grup X" */}
+        <HubStatus />          {/* "Acte I — Investigació" */}
+        <StationsProgress />   {/* Progress: 4/4 estacions */}
+        <ActionButtons />      {/* Scanejar QR, Mapa, Quadern */}
+      </div>
+    )
+  }
   ```
 - [ ] **Greeting:** Títol dinàmic "Benvinguts, [nom_equip]"
 - [ ] **Act Status:** Card "ACTE I - INVESTIGACIÓ" (color: blue)
@@ -123,8 +140,9 @@ lib/
   - "📖 Obrir Quadern" → `/joc/quadern`
 - [ ] Responsiu: stack vertical a mobile, 2 col a tablet+
 
-### 5. Map Page (`/joc/mapa`)
-- [ ] Fitxer: `app/(player)/joc/mapa.tsx`
+### 5. Map Page (`/mapa`)
+- [ ] Fitxer: `app/(player)/mapa.tsx`
+- [ ] ⭐ Wrapped by `app/(player)/layout.tsx` (same Navbar/Footer persist)
 - [ ] Setup Leaflet:
   ```typescript
   npm install react-leaflet leaflet
@@ -142,8 +160,9 @@ lib/
 - [ ] Click marker: redirecció a estació (si accesible)
 - [ ] Légende: "Legenda" botó que mostra colors
 
-### 6. Salvaconductes Page (`/joc/salvaconductes`)
-- [ ] Fitxer: `app/(player)/joc/salvaconductes/page.tsx`
+### 6. Salvaconductes Page (`/salvaconductes`)
+- [ ] Fitxer: `app/(player)/salvaconductes/page.tsx`
+- [ ] ⭐ Wrapped by `app/(player)/layout.tsx` (Navbar/Footer persist)
 - [ ] **Informació:**
   - Títol: "Salvaconductes (Salconduits)"
   - Descripció narrativa: "Els salconduits us permeten passar pel Control de l'Emissari sense que us dubti. Cada vegada que falleu el control, en perdreu un."
@@ -164,8 +183,9 @@ lib/
 
 ---
 
-### 7. Quadern Page (`/joc/quadern`)
-- [ ] Fitxer: `app/(player)/joc/quadern/page.tsx`
+### 7. Quadern Page (`/quadern`)
+- [ ] Fitxer: `app/(player)/quadern/page.tsx`
+- [ ] ⭐ Wrapped by `app/(player)/layout.tsx` (Navbar/Footer persist)
 - [ ] 3 tabs (shadcn Tabs):
   - **Tab 1: Sospitosos**
     - 6 cards (3 col mobile, 2 col tablet, 3 col desktop)
@@ -274,25 +294,26 @@ lib/
 
 ---
 
-## 📊 Components Checklist
+## 📊 Components & Pages Checklist
 
-| Component | File | Status | Notes |
-|-----------|------|--------|-------|
-| PlayerLayout | `components/layout/PlayerLayout.tsx` | [ ] | Wrapper principal |
-| Navbar | `components/layout/Navbar.tsx` | [ ] | Sticky top, realtime |
-| Footer | `components/layout/Footer.tsx` | [ ] | Sticky bottom, 4 nav buttons |
-| Hub Page | `app/(player)/joc/page.tsx` | [ ] | Entrada principal |
-| Hub Greeting | `components/player/HubGreeting.tsx` | [ ] | Title dinàmic |
-| Hub Status | `components/player/HubStatus.tsx` | [ ] | Act + progress |
-| Map | `app/(player)/joc/mapa.tsx` | [ ] | Leaflet map |
-| Map Marker | `components/player/MapMarker.tsx` | [ ] | SVG circle markers |
-| Salvaconductes | `app/(player)/joc/salvaconductes/page.tsx` | [ ] | Salconduits page |
-| Salconduit Card | `components/player/SalconduitCard.tsx` | [ ] | Visual braçal |
-| Event Timeline | `components/player/EventTimeline.tsx` | [ ] | Salconduit log |
-| Quadern | `app/(player)/joc/quadern/page.tsx` | [ ] | 3 tabs |
-| Suspect Card | `components/player/SuspectCard.tsx` | [ ] | Photo + status |
-| Evidence Card | `components/player/EvidenceCard.tsx` | [ ] | Expandable |
-| Code Display | `components/player/CodeDisplay.tsx` | [ ] | 4 xifres |
+| Item | File | Type | Status | Notes |
+|------|------|------|--------|-------|
+| Player Layout | `app/(player)/layout.tsx` | Layout | [ ] | ⭐ Next.js layout (persistent) |
+| Navbar | `components/layout/Navbar.tsx` | Component | [ ] | Sticky top, realtime, sticky in layout |
+| Footer | `components/layout/Footer.tsx` | Component | [ ] | Sticky bottom, 4 nav buttons |
+| Hub Page | `app/(player)/page.tsx` | Page | [ ] | Entrada principal (`/joc`) |
+| Hub Greeting | `components/player/HubGreeting.tsx` | Component | [ ] | Title dinàmic |
+| Hub Status | `components/player/HubStatus.tsx` | Component | [ ] | Act + progress bar |
+| Map Page | `app/(player)/mapa.tsx` | Page | [ ] | Leaflet map full page |
+| Map Component | `components/player/Map.tsx` | Component | [ ] | Leaflet wrapper |
+| Map Marker | `components/player/MapMarker.tsx` | Component | [ ] | SVG circle markers |
+| Salconduits Page | `app/(player)/salvaconductes/page.tsx` | Page | [ ] | Salconduits info |
+| Salconduit Card | `components/player/SalconduitCard.tsx` | Component | [ ] | Visual braçal |
+| Event Timeline | `components/player/EventTimeline.tsx` | Component | [ ] | Salconduit event log |
+| Quadern Page | `app/(player)/quadern/page.tsx` | Page | [ ] | 3 tabs container |
+| Suspect Card | `components/player/SuspectCard.tsx` | Component | [ ] | Photo + status badge |
+| Evidence Card | `components/player/EvidenceCard.tsx` | Component | [ ] | Expandable item |
+| Code Display | `components/player/CodeDisplay.tsx` | Component | [ ] | 4 xifres slots |
 
 ---
 
