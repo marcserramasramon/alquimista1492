@@ -373,78 +373,87 @@ export function BellsGame(props: GameProps) {
         {/* Result */}
         {state.currentTab === 'result' && (
           <div className="flex flex-col justify-center flex-1 gap-4">
-            {/* Epíleg */}
+            {/* Header */}
+            <header className="border-b-2 border-[#8C6D53] pb-3 text-center">
+              <h2 className="text-2xl font-bold text-[#2B2118]">✅ ESTACIÓ SUPERADA</h2>
+              <p className="text-xs text-[#5C4533] mt-1 font-sans">Campanades correctes</p>
+            </header>
+
+            {/* Campanada animada */}
             <motion.div
-              className="bg-[#EAE0CA] border border-[#8C6D53] p-6 rounded-lg"
+              className="bg-[#D5F4E6] border-2 border-[#16A085] p-6 rounded-sm shadow-lg text-center"
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <motion.p
+                className="text-6xl mb-3"
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{ duration: 0.8, repeat: Infinity }}
+              >
+                🔔
+              </motion.p>
+              <p className="font-bold text-[#117A65] text-sm">SOMETENT SONAT</p>
+              <p className="text-xs text-[#16A085] mt-2">La seqüència de campanades ha estat correcta</p>
+            </motion.div>
+
+            {/* Epíleg de la história */}
+            <motion.div
+              className="bg-[#F5EFE0] border-2 border-[#8C6D53] p-4 rounded-sm"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
             >
-              <p className="text-5xl mb-3 text-center">🔔</p>
-              <p className="text-lg font-bold text-[#2B2118] mb-3 text-center">DONG... DONG... DONG...</p>
-              <p className="text-sm text-[#5C4533] leading-relaxed mb-4">
-                {state.epilogue}
-              </p>
-              <div className="border-t border-[#8C6D53] pt-3 mt-3">
-                <p className="text-center font-bold text-lg text-[#2B2118]">
-                  ✓ +100 punts
-                </p>
+              <div className="text-xs text-[#2B2118] leading-relaxed space-y-2">
+                <p className="font-bold text-[#8C6D53] mb-2">EPÍLEG:</p>
+                <p>{state.epilogue}</p>
               </div>
             </motion.div>
 
             {/* Estadístiques del grup */}
             {state.decisionStats && (
               <motion.div
-                className="bg-[#F5EFE0] border border-[#8C6D53] p-4 rounded-lg"
+                className="bg-[#EAE0CA] border border-[#8C6D53] p-4 rounded-sm"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.5 }}
               >
                 <p className="text-xs uppercase tracking-widest text-[#8C6D53] font-bold mb-3 text-center">
-                  Decisió del grup
+                  Decisió del Grup
                 </p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-[#5C4533] w-20">Compassió (A):</span>
-                    <div className="flex-1 bg-[#D5F4E6] rounded-full h-6 flex items-center justify-center">
+                <div className="space-y-2.5">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-[#5C4533]">Compassió (A)</span>
+                      <span className="text-xs font-bold text-[#16A085]">{state.decisionStats.optionA}%</span>
+                    </div>
+                    <div className="bg-[#D5F4E6] rounded-full h-4 overflow-hidden">
                       <div
-                        className="bg-[#16A085] h-6 rounded-full flex items-center justify-center"
+                        className="bg-[#16A085] h-4 rounded-full transition-all"
                         style={{ width: `${state.decisionStats.optionA}%` }}
-                      >
-                        <span className="text-xs font-bold text-white">
-                          {state.decisionStats.optionA > 10 ? `${state.decisionStats.optionA}%` : ''}
-                        </span>
-                      </div>
+                      />
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-[#5C4533] w-20">Justícia (B):</span>
-                    <div className="flex-1 bg-[#FADBD8] rounded-full h-6 flex items-center justify-center">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-[#5C4533]">Justícia (B)</span>
+                      <span className="text-xs font-bold text-[#E74C3C]">{state.decisionStats.optionB}%</span>
+                    </div>
+                    <div className="bg-[#FADBD8] rounded-full h-4 overflow-hidden">
                       <div
-                        className="bg-[#E74C3C] h-6 rounded-full flex items-center justify-center"
+                        className="bg-[#E74C3C] h-4 rounded-full transition-all"
                         style={{ width: `${state.decisionStats.optionB}%` }}
-                      >
-                        <span className="text-xs font-bold text-white">
-                          {state.decisionStats.optionB > 10 ? `${state.decisionStats.optionB}%` : ''}
-                        </span>
-                      </div>
+                      />
                     </div>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* Fi de joc */}
-            <motion.div
-              className="bg-[#2B2118] text-[#EAE0CA] p-4 rounded-lg text-center"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-            >
-              <p className="text-sm font-bold">FI DE L'ESTACIÓ</p>
-              <p className="text-xs mt-2 text-[#C9BDAA]">
-                La carta ha arribat a l'Emissari. El Pacte dels Vigatans continua.
-              </p>
-            </motion.div>
+            {/* Punts finals */}
+            <div className="bg-[#F9F7F3] border border-[#D8CCAE] p-4 rounded-sm text-center">
+              <p className="text-2xl mb-2">⏱️ + 100 PUNTS</p>
+              <p className="text-xs text-[#8C6D53] font-sans">Compartida per tots l'equip</p>
+            </div>
           </div>
         )}
       </div>
