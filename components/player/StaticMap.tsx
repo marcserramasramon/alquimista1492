@@ -20,22 +20,11 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
     ? getTeamStation(stations, selectedStationId)
     : null
 
-  // Map bounds (from station coordinates)
-  const lats = allStations.map((s) => s.latitude)
-  const lons = allStations.map((s) => s.longitude)
-  const minLat = Math.min(...lats)
-  const maxLat = Math.max(...lats)
-  const minLon = Math.min(...lons)
-  const maxLon = Math.max(...lons)
-
-  // Add padding
-  const latPadding = (maxLat - minLat) * 0.15
-  const lonPadding = (maxLon - minLon) * 0.15
-
-  const boundMinLat = minLat - latPadding
-  const boundMaxLat = maxLat + latPadding
-  const boundMinLon = minLon - lonPadding
-  const boundMaxLon = maxLon + lonPadding
+  // Map bounds (from IGN WMS BBOX: 2.2212,41.9068,2.2380,41.9166)
+  const boundMinLon = 2.2212
+  const boundMinLat = 41.9068
+  const boundMaxLon = 2.2380
+  const boundMaxLat = 41.9166
 
   // SVG dimensions
   const svgWidth = 800
@@ -65,11 +54,18 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
         <svg
           width={svgWidth}
           height={svgHeight}
-          className="border-2 border-amber-300 rounded-lg shadow-lg bg-white"
+          className="border-2 border-amber-300 rounded-lg shadow-lg"
           style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}
         >
-          {/* Background */}
-          <rect width={svgWidth} height={svgHeight} fill="#f5f1e8" />
+          {/* Background image - IGN satellite map */}
+          <image
+            href="/mapa-guixa.png"
+            x="0"
+            y="0"
+            width={svgWidth}
+            height={svgHeight}
+            preserveAspectRatio="none"
+          />
 
           {/* Grid lines (subtle) */}
           {Array.from({ length: 5 }).map((_, i) => {
