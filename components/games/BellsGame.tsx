@@ -81,14 +81,29 @@ export function BellsGame(props: GameProps) {
     setState(prev => ({ ...prev, currentTab: 'senyal' }))
   }
 
+  const playBellSound = (bellNumber: number) => {
+    const bellNames = ['do', 're', 'mi', 'fa']
+    play(`bell-${bellNames[bellNumber]}`)
+  }
+
   const handleBellPress = (bellNumber: number) => {
-    play('bell-ding')
+    playBellSound(bellNumber)
     const newSequence = [...state.playerSequence, bellNumber]
     setState(prev => ({ ...prev, playerSequence: newSequence }))
 
     // Aquí el servidor validarà la seqüència completa
     if (newSequence.length === 8) {
       handleSubmitBells(newSequence)
+    }
+  }
+
+  const playFullSequence = async () => {
+    const bellNames = ['do', 're', 'mi', 'fa']
+    const mockSequence = [1, 2, 1, 2, 3, 1, 3, 2] // Placeholder, will get from server
+
+    for (const bellNum of mockSequence) {
+      play(`bell-${bellNames[bellNum]}`)
+      await new Promise(resolve => setTimeout(resolve, 1200))
     }
   }
 
@@ -271,8 +286,9 @@ export function BellsGame(props: GameProps) {
             <div className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl p-6 text-center">
               <p className="text-sm text-[#5C4533] mb-4">Escolta la seqüència de campanades...</p>
               <motion.button
-                onClick={handlePlayPista}
-                className="mx-auto block text-6xl mb-4 hover:scale-110 transition"
+                onClick={playFullSequence}
+                disabled={loading}
+                className="mx-auto block text-6xl mb-4 hover:scale-110 transition disabled:opacity-50"
                 whileHover={{ scale: 1.15 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -322,16 +338,19 @@ export function BellsGame(props: GameProps) {
 
             <div className="bg-[#F0EAE3] border border-[#8C6D53] rounded-lg p-3 text-center">
               <p className="text-xs text-[#5C4533] mb-2">Partitura:</p>
-              <div className="flex justify-center gap-1">
-                {state.playerSequence.map((bell, i) => (
-                  <div
-                    key={i}
-                    className="w-4 h-8 rounded-sm"
-                    style={{
-                      backgroundColor: ['#4A4A4A', '#5C5C5C', '#6E6E6E', '#7F7F7F'][bell],
-                    }}
-                  />
-                ))}
+              <div className="flex items-end justify-center gap-1 h-20">
+                {state.playerSequence.map((bell, i) => {
+                  const heights = ['h-4', 'h-8', 'h-12', 'h-16']
+                  return (
+                    <div
+                      key={i}
+                      className={`w-4 ${heights[bell]} rounded-sm transition-all`}
+                      style={{
+                        backgroundColor: ['#4A4A4A', '#5C5C5C', '#6E6E6E', '#7F7F7F'][bell],
+                      }}
+                    />
+                  )
+                })}
               </div>
             </div>
 
