@@ -227,7 +227,7 @@ export function SerratBruixesGame(props: GameProps) {
       {/* Capçalera històrica */}
       <header className="border-b-2 border-[#8C6D53] pb-3 mb-4 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
-          Estació 1 · Serrat de les Bruixes
+          Estació 1 · SERRAT DE LES BRUIXES
         </span>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
           El Codi de Fogueres

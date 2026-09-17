@@ -7,6 +7,7 @@ import { getAllStations, getStation } from '@/content/public/stations'
 import type { TeamStationRow } from '@/lib/realtime/useTeamState'
 import { isStationSolved, getTeamStation } from '@/lib/realtime/useTeamState'
 import { StationModal } from './StationModal'
+import { MapFitBounds } from './MapFitBounds'
 
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
@@ -98,7 +99,7 @@ export function MapTab({ stations, teamId }: MapTabProps) {
         <MapContainer
           {...({
             center: [centerLat, centerLon],
-            zoom: 15,
+            zoom: 13,
             maxZoom: 17,
             minZoom: 13,
             style: {
@@ -110,11 +111,11 @@ export function MapTab({ stations, teamId }: MapTabProps) {
             ref: mapRef,
           } as any)}
         >
+          {/* <MapFitBounds stations={allStations} /> */}
+
           <TileLayer
-            {...({
-              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-              url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            } as any)}
+            attribution='&copy; OpenStreetMap contributors'
+            url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
           />
 
           {/* Station Markers */}

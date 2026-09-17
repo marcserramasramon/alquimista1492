@@ -33,6 +33,10 @@ function compareAnswers(
     const obj = submitted as Record<string, unknown>
     if ('date' in obj && (typeof obj.date === 'string' || typeof obj.date === 'number')) {
       submitted = String(obj.date)
+    } else if ('location' in obj && typeof obj.location === 'string') {
+      submitted = String(obj.location)
+    } else if ('destination' in obj && typeof obj.destination === 'string') {
+      submitted = String(obj.destination)
     } else if ('answer' in obj && (typeof obj.answer === 'string' || typeof obj.answer === 'number')) {
       submitted = String(obj.answer)
     }
@@ -90,6 +94,25 @@ function compareAnswers(
       }
     }
 
+    // Variants especials de Planes Bones (Farga / 23:00 / Casella 3)
+    if (stationType.includes('plane') || stationType.includes('bones')) {
+      if (
+        subClean === 'FARGA' ||
+        subClean === 'LA FARGA' ||
+        subClean === '3' ||
+        subClean === 'CASELLA 3' ||
+        subClean === '23:00' ||
+        subClean === '23' ||
+        subClean === '60' ||
+        subClean === '60 MIN' ||
+        subCompact === 'FARGA' ||
+        subCompact === 'LAFARGA' ||
+        subCompact.includes('FARGA')
+      ) {
+        return true
+      }
+    }
+
     return false
   }
 
@@ -115,6 +138,14 @@ function compareAnswers(
         const expectedTime = exp.time as number
         // Allow ±5 minute tolerance
         return Math.abs(submittedTime - expectedTime) <= 5
+      }
+
+      // Check if arrived at Farga (id 3)
+      if (Array.isArray(sub.visitedCells)) {
+        const last = sub.visitedCells[sub.visitedCells.length - 1]
+        if (last === 3 || last === '3' || sub.visitedCells.includes(3)) {
+          return true
+        }
       }
     }
 

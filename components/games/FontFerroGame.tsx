@@ -200,10 +200,10 @@ export function FontFerroGame(props: GameProps) {
       {/* CAPÇALERA HISTÒRICA */}
       <header className="text-center py-4 px-3 bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl shadow-md">
         <div className="inline-block px-3 py-0.5 mb-1.5 text-xs font-mono tracking-widest text-[#1D3557] bg-[#D8CCAE] rounded-full border border-[#8C6D53]/40">
-          ESTACIÓ II · LA INVESTIGACIÓ
+          ESTACIÓ II · FONT DEL FERRO
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#2B2118] tracking-wide">
-          FONT DEL FERRO
+          LA TINTA NEGRE
         </h1>
         <p className="text-xs sm:text-sm text-[#5C4533] italic mt-0.5">
           Tinta de Gales, Torns d'Aigua i la Traça del Delator
