@@ -60,10 +60,23 @@ async function getDecisionPercentage(
   serviceClient: any,
   sessionId: string
 ): Promise<{ optionA: number; optionB: number }> {
+  // Get all teams in this session
+  const { data: teams } = await serviceClient
+    .from('teams')
+    .select('id')
+    .eq('session_id', sessionId)
+
+  if (!teams || teams.length === 0) {
+    return { optionA: 50, optionB: 50 }
+  }
+
+  const teamIds = teams.map((t: any) => t.id)
+
+  // Get all moral decision events for these teams
   const { data: decisionEvents } = await serviceClient
     .from('score_events')
-    .select('details')
-    .eq('session_id', sessionId)
+    .select('details, team_id')
+    .in('team_id', teamIds)
     .eq('event_type', 'bells_moral_decision')
 
   if (!decisionEvents || decisionEvents.length === 0) {
@@ -180,34 +193,42 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
 
-    // Check if this team already has a generated bell sequence for this session
-    // Store it in a custom JSON column in team_stations or use a separate table
-    let teamStation = await serviceClient
-      .from('team_stations')
-      .select('id, metadata')
+    // Check if this team already has a generated bell sequence
+    // Retrieve from score_events with event_type 'bells_sequence_generated'
+    const { data: sequenceEvents } = await serviceClient
+      .from('score_events')
+      .select('details')
       .eq('team_id', player.team_id)
-      .eq('station_id', 'bells_sometent')
-      .single()
+      .eq('event_type', 'bells_sequence_generated')
+      .order('created_at', { ascending: false })
+      .limit(1)
 
     let bellSequenceData: number[] = []
 
-    if (!teamStation.data) {
+    if (!sequenceEvents || sequenceEvents.length === 0) {
       // First time this team is playing bells - generate sequence
       bellSequenceData = generateBellSequence()
 
-      // Create team_stations entry with the generated sequence
+      // Store the generated sequence in score_events for later retrieval
+      await serviceClient.from('score_events').insert({
+        team_id: player.team_id,
+        points: 0,
+        event_type: 'bells_sequence_generated',
+        details: {
+          sequence: bellSequenceData,
+        },
+      })
+
+      // Create team_stations entry to track progress
       await serviceClient.from('team_stations').insert({
         team_id: player.team_id,
         station_id: 'bells_sometent',
         solved: false,
-        metadata: {
-          bellSequence: bellSequenceData,
-          moralChoice: moralChoice,
-        },
+        attempts: 0,
       })
     } else {
       // Retrieve existing sequence
-      bellSequenceData = teamStation.data?.metadata?.bellSequence || generateBellSequence()
+      bellSequenceData = (sequenceEvents[0].details as any)?.sequence || generateBellSequence()
     }
 
     // Validate the bell sequence if provided
@@ -257,10 +278,6 @@ export async function POST(request: NextRequest) {
           .update({
             solved: true,
             solved_at: new Date().toISOString(),
-            metadata: {
-              bellSequence: bellSequenceData,
-              moralChoice: moralChoice,
-            },
           })
           .eq('id', existingStation.id)
       }
@@ -268,7 +285,6 @@ export async function POST(request: NextRequest) {
       // Insert score event for bells completion
       await serviceClient.from('score_events').insert({
         team_id: player.team_id,
-        session_id: session.id,
         points: scoreReward,
         event_type: 'station_puzzle',
         details: {
@@ -280,7 +296,6 @@ export async function POST(request: NextRequest) {
       // Insert separate event for moral decision tracking
       await serviceClient.from('score_events').insert({
         team_id: player.team_id,
-        session_id: session.id,
         points: 0,
         event_type: 'bells_moral_decision',
         details: {
@@ -293,14 +308,10 @@ export async function POST(request: NextRequest) {
       await serviceClient.from('sessions').update({ score: newScore }).eq('id', session.id)
 
       // Unlock final decision evidence
-      await serviceClient.from('team_evidence').insert(
-        {
-          team_id: player.team_id,
-          evidence_id: 'decision_final',
-          discovered_at: new Date().toISOString(),
-        },
-        { onConflict: 'team_id,evidence_id' }
-      )
+      await serviceClient.from('team_evidences').insert({
+        team_id: player.team_id,
+        evidence_id: 'decision_final',
+      })
     }
 
     // Get decision statistics for this session
