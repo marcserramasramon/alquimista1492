@@ -23,13 +23,23 @@ export interface GameRegistry {
  */
 export const GAMES: GameRegistry = {
   'serrat-bruixes': SerratBruixesGame,
+  'serrat': SerratBruixesGame,
   'font-ferro': FontFerroGame,
+  'font_ferro': FontFerroGame,
   'planes-bones': PlaneBonesGame,
+  'planes_bones': PlaneBonesGame,
   'cementiri': CementiriGame,
   'pla-masset-control': ControlGame,
+  'pla-masset': ControlGame,
+  'pla_masset': ControlGame,
   'pla-masset-accusation': AccusationGame,
+  'acusacio': AccusationGame,
   'caixa-almoines': BoxGame,
+  'rectoria-caixa': BoxGame,
+  'caixa_almoines': BoxGame,
+  'rectoria': BoxGame,
   'sometent-campanar': BellGame,
+  'campanar': BellGame,
   'decisio-moral': MoralChoiceGame,
 }
 

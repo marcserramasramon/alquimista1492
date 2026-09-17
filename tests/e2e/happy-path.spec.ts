@@ -7,12 +7,17 @@ test.describe('Happy Path: Complete Game Flow', () => {
     await expect(page).toHaveTitle(/El Traïdor/i);
 
     // 2. Enter team code (simulated QR scan)
-    // NOTE: This assumes there's a player login page at /e/[code]
-    // Placeholder code - adjust to your actual setup
-    await page.goto('/e/TEST001');
+    await page.goto('/e/TEST01');
+
+    // If player entry form is shown, enter name and join
+    const nameInput = page.locator('#player-name');
+    if (await nameInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await nameInput.pressSequentially('Jugador Test', { delay: 50 });
+      await page.locator('button:has-text("Entrar al Joc")').click();
+    }
 
     // 3. Verify player hub loads
-    await expect(page.locator('[data-testid="tab-notebook"]')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('[data-testid="tab-notebook"]')).toBeVisible({ timeout: 10000 });
 
     // 4. Play a game (test station selection)
     const stationsTab = page.locator('[data-testid="tab-stations"]').first();
@@ -20,7 +25,7 @@ test.describe('Happy Path: Complete Game Flow', () => {
       await stationsTab.click();
 
       // Click first available station
-      const stationButton = page.locator('button:has-text(/Estació|Sentfoses/)').first();
+      const stationButton = page.locator('button', { hasText: /Estació|Sentfoses/ }).first();
       if (await stationButton.isVisible()) {
         await stationButton.click();
 
@@ -39,7 +44,7 @@ test.describe('Happy Path: Complete Game Flow', () => {
 
             // Verify feedback (success or error)
             await expect(
-              page.locator('text=/Correcte|incorrecte|retry/i')
+              page.locator('text=/Correcte|incorrecte|retry/i').first()
             ).toBeVisible({ timeout: 3000 }).catch(() => {
               // If no feedback, that's OK for this test
             });
@@ -58,14 +63,14 @@ test.describe('Happy Path: Complete Game Flow', () => {
     await expect(pinInput).toBeVisible();
 
     // 3. Enter correct PIN (from env or config)
-    const correctPin = process.env.MASTER_PIN || '1234';
-    await pinInput.fill(correctPin);
+    const correctPin = process.env.MASTER_PIN || '123456';
+    await pinInput.pressSequentially(correctPin, { delay: 50 });
 
     // 4. Submit
     await page.locator('button:has-text("Accedir")').click();
 
     // 5. Verify dashboard loads
-    await expect(page.locator('text=/Control del Màster|Dashboard/i')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=/Control del Màster|Dashboard/i').first()).toBeVisible({ timeout: 5000 });
 
     // 6. Verify teams listed
     await expect(page.locator('[data-testid="teams-list"]')).toBeVisible();

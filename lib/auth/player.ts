@@ -8,6 +8,7 @@ export interface PlayerSignupResult {
   teamId: string
   playerId: string
   sessionToken?: string
+  authSession?: any
 }
 
 export interface PlayerSignupError {
@@ -42,8 +43,10 @@ export async function signInAsPlayer(
       }
     }
 
+    const serviceClient = getServiceRoleClient()
+
     // Check if team exists and is active
-    const { data: team, error: teamError } = await supabase
+    const { data: team, error: teamError } = await serviceClient
       .from('teams')
       .select('id, variant, is_active, session_id')
       .eq('code', teamCode.toUpperCase())
@@ -70,23 +73,41 @@ export async function signInAsPlayer(
       }
     }
 
-    // Create anonymous auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: `player-${Date.now()}@scaperoom.local`,
-      password: Math.random().toString(36).slice(-12),
+    // Create player auth user with confirmed email (avoids SMTP rate limits and works reliably)
+    const email = `player-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@example.com`
+    const password = `PlayerPass_${Math.random().toString(36).slice(-8)}!`
+
+    const { data: createData, error: createError } = await serviceClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
     })
 
-    if (authError || !authData.user) {
+    if (createError || !createData.user) {
+      console.error('Failed to create player auth user:', createError)
       return {
         code: 'AUTH_FAILED',
         message: 'Failed to create user session'
       }
     }
 
-    const userId = authData.user.id
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (authError || !authData.session) {
+      console.error('Failed to sign in player auth user:', authError)
+      return {
+        code: 'AUTH_FAILED',
+        message: 'Failed to sign in user session'
+      }
+    }
+
+    const userId = createData.user.id
 
     // Get current player count for this team
-    const { data: existingPlayers } = await supabase
+    const { data: existingPlayers } = await serviceClient
       .from('players')
       .select('player_index')
       .eq('team_id', team.id)
@@ -96,7 +117,7 @@ export async function signInAsPlayer(
     const playerIndex = (existingPlayers?.[0]?.player_index ?? -1) + 1
 
     // Insert player record
-    const { data: player, error: playerError } = await supabase
+    const { data: player, error: playerError } = await serviceClient
       .from('players')
       .insert({
         team_id: team.id,
@@ -121,7 +142,6 @@ export async function signInAsPlayer(
       sessionId = team.session_id
     } else {
       // Create new session
-      const serviceClient = getServiceRoleClient()
       const { data: session, error: sessionError } = await serviceClient
         .from('sessions')
         .insert({
@@ -145,7 +165,7 @@ export async function signInAsPlayer(
       }
 
       // Update team with the new session_id
-      const { error: updateError } = await supabase
+      const { error: updateError } = await serviceClient
         .from('teams')
         .update({ session_id: session.id })
         .eq('id', team.id)
@@ -164,6 +184,7 @@ export async function signInAsPlayer(
       sessionId,
       teamId: team.id,
       playerId: player.id,
+      authSession: authData.session,
     }
   } catch (error) {
     console.error('Player signup error:', error)

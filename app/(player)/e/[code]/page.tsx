@@ -20,7 +20,6 @@ export default function PlayerEntryPage() {
 
   const handleSubmit = async () => {
     if (!code || code.length !== 6) {
-      setCodeError('Codi d\'equip no vàlid')
       return
     }
 

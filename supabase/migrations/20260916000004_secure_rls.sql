@@ -7,20 +7,62 @@
 -- 1. Drop Overly Permissive Policies
 -- ============================================================================
 
--- Teams: Remove permissive insert policy
+-- Teams: Remove old policies
 DROP POLICY IF EXISTS "allow_insert_teams" ON teams;
+DROP POLICY IF EXISTS "players_select_own_team" ON teams;
+DROP POLICY IF EXISTS "players_update_own_team" ON teams;
+DROP POLICY IF EXISTS "master_select_all_teams" ON teams;
+DROP POLICY IF EXISTS "master_update_all_teams" ON teams;
+DROP POLICY IF EXISTS "master_insert_teams" ON teams;
 
--- Players: Remove permissive insert policy
+-- Players: Remove old policies
 DROP POLICY IF EXISTS "allow_insert_players" ON players;
+DROP POLICY IF EXISTS "player_select_own_record" ON players;
+DROP POLICY IF EXISTS "players_select_own_team_players" ON players;
+DROP POLICY IF EXISTS "player_update_own_record" ON players;
+DROP POLICY IF EXISTS "master_select_all_players" ON players;
+DROP POLICY IF EXISTS "master_insert_players" ON players;
+DROP POLICY IF EXISTS "master_update_all_players" ON players;
 
--- Sessions: Remove permissive insert and update policies
+-- Sessions: Remove old policies
 DROP POLICY IF EXISTS "allow_insert_sessions" ON sessions;
+DROP POLICY IF EXISTS "players_select_own_session" ON sessions;
+DROP POLICY IF EXISTS "players_update_own_session" ON sessions;
+DROP POLICY IF EXISTS "deny_players_update_sessions" ON sessions;
+DROP POLICY IF EXISTS "deny_players_insert_sessions" ON sessions;
+DROP POLICY IF EXISTS "master_select_all_sessions" ON sessions;
+DROP POLICY IF EXISTS "master_update_all_sessions" ON sessions;
+DROP POLICY IF EXISTS "master_insert_sessions" ON sessions;
 
--- Results: Remove permissive insert policy
+-- Attempts: Remove old policies
+DROP POLICY IF EXISTS "players_select_own_attempts" ON attempts;
+DROP POLICY IF EXISTS "players_insert_own_attempts" ON attempts;
+DROP POLICY IF EXISTS "deny_players_update_attempts" ON attempts;
+DROP POLICY IF EXISTS "master_select_all_attempts" ON attempts;
+DROP POLICY IF EXISTS "master_update_all_attempts" ON attempts;
+
+-- Results: Remove old policies
 DROP POLICY IF EXISTS "allow_insert_results" ON results;
+DROP POLICY IF EXISTS "players_select_own_result" ON results;
+DROP POLICY IF EXISTS "deny_players_insert_results" ON results;
+DROP POLICY IF EXISTS "deny_players_update_results" ON results;
+DROP POLICY IF EXISTS "master_select_all_results" ON results;
+DROP POLICY IF EXISTS "master_insert_results" ON results;
+DROP POLICY IF EXISTS "master_update_all_results" ON results;
 
--- Master Sessions: Remove permissive insert policy
+-- Master Sessions: Remove old policies
 DROP POLICY IF EXISTS "master_insert_own_sessions" ON master_sessions;
+DROP POLICY IF EXISTS "master_select_own_sessions" ON master_sessions;
+DROP POLICY IF EXISTS "service_role_select_all_master_sessions" ON master_sessions;
+DROP POLICY IF EXISTS "deny_anon_master_sessions" ON master_sessions;
+
+-- Solutions Private: Remove old policies
+DROP POLICY IF EXISTS "service_role_select_solutions" ON solutions_private;
+DROP POLICY IF EXISTS "service_role_insert_solutions" ON solutions_private;
+DROP POLICY IF EXISTS "service_role_update_solutions" ON solutions_private;
+DROP POLICY IF EXISTS "deny_anon_select_solutions" ON solutions_private;
+DROP POLICY IF EXISTS "deny_anon_insert_solutions" ON solutions_private;
+DROP POLICY IF EXISTS "deny_authenticated_solutions" ON solutions_private;
 
 -- ============================================================================
 -- 2. Create Audit Logging Table
@@ -278,8 +320,10 @@ CREATE POLICY "players_select_own_session"
 ON sessions
 FOR SELECT
 USING (
-  team_id IN (
-    SELECT team_id FROM players WHERE user_id = auth.uid()
+  id IN (
+    SELECT session_id FROM teams WHERE id IN (
+      SELECT team_id FROM players WHERE user_id = auth.uid()
+    )
   )
 );
 
@@ -297,7 +341,6 @@ WITH CHECK (FALSE);
 CREATE POLICY "deny_players_insert_sessions"
 ON sessions
 FOR INSERT
-USING (FALSE)
 WITH CHECK (FALSE);
 
 -- POLICY: Sessions - Master can SELECT all sessions via service_role
@@ -334,7 +377,7 @@ ON attempts
 FOR SELECT
 USING (
   session_id IN (
-    SELECT id FROM sessions WHERE team_id IN (
+    SELECT session_id FROM teams WHERE id IN (
       SELECT team_id FROM players WHERE user_id = auth.uid()
     )
   )
@@ -347,7 +390,7 @@ ON attempts
 FOR INSERT
 WITH CHECK (
   session_id IN (
-    SELECT id FROM sessions WHERE team_id IN (
+    SELECT session_id FROM teams WHERE id IN (
       SELECT team_id FROM players WHERE user_id = auth.uid()
     )
   )
@@ -395,7 +438,6 @@ USING (
 CREATE POLICY "deny_players_insert_results"
 ON results
 FOR INSERT
-USING (FALSE)
 WITH CHECK (FALSE);
 
 -- POLICY: Results - Master can SELECT all results via service_role

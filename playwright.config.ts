@@ -1,5 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
 
+if (typeof process.loadEnvFile === 'function') {
+  try {
+    process.loadEnvFile('.env.local');
+  } catch {
+    // Ignore if file doesn't exist
+  }
+}
+
 export default defineConfig({
   testDir: './tests/e2e',
   testMatch: '**/*.spec.ts',

@@ -14,6 +14,9 @@ DROP POLICY IF EXISTS "players_select_own_team" ON teams;
 DROP POLICY IF EXISTS "master_select_all_teams" ON teams;
 DROP POLICY IF EXISTS "allow_insert_teams" ON teams;
 
+DROP POLICY IF EXISTS "players_select_own_attempts" ON attempts;
+DROP POLICY IF EXISTS "players_insert_own_attempts" ON attempts;
+
 -- Step 1: Drop foreign key constraint from sessions.team_id
 ALTER TABLE sessions DROP CONSTRAINT IF EXISTS sessions_team_id_fkey;
 

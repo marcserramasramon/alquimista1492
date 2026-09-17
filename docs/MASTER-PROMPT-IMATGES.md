@@ -280,6 +280,92 @@ no modern elements, 1705 Spain historical accuracy.
 
 ---
 
+## 11B. PROMPT ESPECÍFIC: CARTELL 4 — CEMENTIRI (La Signatura del Difunt)
+
+### Context
+- **Joc:** Estació 4 — Cementiri
+- **Mecànica:** Comparació d'escriptures; jugador ha de recordar la signatura errada del cartell i comparar-la amb les 9 làpides a la webapp
+- **Format:** A2 (420×594 mm), cartó laminat durador
+- **Variants:** 3 cartells separats (A, B, C) amb signatura diferent cada un
+
+### VARIANT A — Prompt Final
+
+```
+"El Traïdor de la Guixa, May 1705. 
+
+Cemetery placard showing an ancient letter fragment pinned 
+with a visible iron nail through its center. The letter is 
+aged, yellowed parchment with creases and water stains.
+
+Letter fragment text (handwritten medieval style, antiquated 
+serif font if not handwritten):
+
+'15 de maig de 1705
+
+Si el Pacte cau, els homes de Sentfoses hauran de fugir. 
+Només l'Emissari pot salvar-nos si li donem la clau de la Rectoria.
+
+Els conjurats sabran qui ha triat deixar morir el Pacte...'
+
+Signed: Corminas
+
+Above the pinned letter: Narrative context explaining that 
+weathered cemetery stones have carver's errors, and the traitor 
+copied names from them, not from the rector's parish register.
+
+Below: QR code (5×5 cm, bottom-right corner) with text 
+'Escaneja per veure les làpides velles'.
+
+Visual style: Aged parchment background (cream to gray, weathered), 
+iron nail with 3D shadow effect, fragment paper with realistic aging 
+(stains, creases, fading). Spanish 18th-century engraving aesthetic.
+
+Palette: Warm beige #F5E6D3 (parchment), old gold #D4AF37 (nail 
+highlights), dark brown #5D4E37 (text and shadows), siena #A0522D 
+(rust on nail). High contrast, no dark mode, mobile-readable.
+
+Cemetery symbols: Small cross, stone texture, funerary motifs.
+
+Dimensions: 420×594 mm (A2), 300 dpi, landscape orientation."
+```
+
+### VARIANT B — Prompt Final
+
+```
+"[Same as Variant A, with following change:]
+
+Signed: Sarrat
+
+[All other details identical to Variant A]"
+```
+
+### VARIANT C — Prompt Final
+
+```
+"[Same as Variant A, with following change:]
+
+Signed: Puch
+
+[All other details identical to Variant A]"
+```
+
+### Checklist Cartell Cementiri
+- [ ] Fragment de carta visible i llegible (no massa petita)
+- [ ] Clau de ferro travessant el paper (efecte 3D visible amb ombra)
+- [ ] Signatura errada clara per variant (Corminas / Sarrat / Puch)
+- [ ] Data "15 de maig de 1705" visible en el fragment
+- [ ] Text de la carta complet (4 línies narratives)
+- [ ] Context narratiu (paràgraf de làpides) llegible a dalt
+- [ ] QR codi 5×5 cm a baix a dreta, escanejable
+- [ ] Paper realista (taques, plecs, desgast)
+- [ ] Paleta correcta (beige, or vell, marró fosc, siena)
+- [ ] Contrast negre sobre crem (llegible ple sol)
+- [ ] Sense elements moderns (només 1705)
+- [ ] Resolució 300 dpi per impressió de cartó
+- [ ] Format A2 (420×594 mm)
+
+---
+
 ## 12. NOTES ADDICIONALS
 
 - **No AI Watermarks:** Totes les imatges netejades de watermarks o logos

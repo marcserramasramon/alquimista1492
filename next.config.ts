@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  devIndicators: false,
+  async redirects() {
+    return [
+      {
+        source: '/joc/hub',
+        destination: '/joc',
+        permanent: false,
+      },
+    ]
+  },
 };
 
 export default nextConfig;

@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { QrScanner } from '@yudiel/react-qr-scanner'
+import { Scanner, IDetectedBarcode } from '@yudiel/react-qr-scanner'
 
 interface QRScannerProps {
   onClose: () => void
@@ -14,17 +14,12 @@ export function QRScanner({ onClose }: QRScannerProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const processedTokens = useRef<Set<string>>(new Set())
 
-  const handleDetect = useCallback(
-    async (result: unknown) => {
-      if (isProcessing) return
+  const handleScan = useCallback(
+    async (detectedCodes: IDetectedBarcode[]) => {
+      if (isProcessing || !detectedCodes || detectedCodes.length === 0) return
 
       try {
-        const detectionResult = result as { data?: { text?: string } } | { rawValue?: string }
-        const text =
-          ('data' in detectionResult && detectionResult.data?.text) ||
-          ('rawValue' in detectionResult && detectionResult.rawValue) ||
-          null
-
+        const text = detectedCodes[0]?.rawValue
         if (!text) return
 
         // Prevent duplicate processing
@@ -73,18 +68,17 @@ export function QRScanner({ onClose }: QRScannerProps) {
 
       {/* Scanner */}
       <div className="flex-1 overflow-hidden">
-        <QrScanner
-          onDecode={handleDetect}
+        <Scanner
+          onScan={handleScan}
           onError={(err) => {
             console.error('Scanner error:', err)
             setError("No es pot accedir a la càmera")
           }}
-          containerStyle={{
-            width: '100%',
-            height: '100%',
-          }}
-          videoContainerStyle={{
-            paddingBottom: '100%',
+          styles={{
+            container: {
+              width: '100%',
+              height: '100%',
+            },
           }}
         />
       </div>

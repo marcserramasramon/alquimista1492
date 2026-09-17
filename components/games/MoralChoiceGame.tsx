@@ -31,6 +31,21 @@ export function MoralChoiceGame(props: GameProps) {
     }
   })
 
+  const handleChoice = async (choice: 'A' | 'B') => {
+    play('bell-ring')
+    setState(prev => ({
+      ...prev,
+      choice,
+      currentScreen: 'result',
+    }))
+
+    await props.submit({
+      choice,
+      timeRemaining: state.timeRemaining,
+      type: 'moral_choice',
+    })
+  }
+
   useEffect(() => {
     props.setSharedState(state)
   }, [state, props])
@@ -51,22 +66,7 @@ export function MoralChoiceGame(props: GameProps) {
     if (state.timeRemaining === 0 && !state.choice) {
       handleChoice('B')
     }
-  }, [state.currentScreen, state.timeRemaining, state.choice])
-
-  const handleChoice = async (choice: 'A' | 'B') => {
-    play('bell-ring')
-    setState(prev => ({
-      ...prev,
-      choice,
-      currentScreen: 'result',
-    }))
-
-    await props.submit({
-      choice,
-      timeRemaining: state.timeRemaining,
-      type: 'moral_choice',
-    })
-  }
+  }, [state.currentScreen, state.timeRemaining, state.choice, handleChoice])
 
   return (
     <motion.div

@@ -26,119 +26,252 @@
 
 ## Contingut del Cartell
 
-### Secció 1: Títol i Context (Part Superior)
+### Secció 1: Títol (Part Superior)
 
 ```
-LÀPIDES VELLES DEL FOSSAR
-
-Còpia de les inscripcions, tal com les va gravar el picapedrer.
+CEMENTIRI
+═════════════════════════════════════════════════════════════════
+LA SIGNATURA DEL DIFUNT
 ```
 
-Tipografia: **negra sobre pergamí crem**, subtítol "NOTA: Làpides ficticies. No corresponen a tombes reals."
+Tipografia: **negra sobre pergamí crem envellit**, estil medieval.
 
-### Secció 2: Tres Làpides (Part Central)
-
-**Variant A** (Base):
+### Secció 2: Context Narratiu (Part Superior-Central)
 
 ```
-AQUÍ IAU ANTONI PUCH · MORÍ LO ANY 1695
-AQUÍ IAU JOSEPH CORMINAS, PAGÈS · MORÍ LO ANY 1698
-AQUÍ IAU MARIA SARRAT · MORÍ LO ANY 1701
+Aquestes làpides estan a la intempèrie fa dècades.
+Els noms van gravats amb errades del picapedrer.
+
+Qui va escriure la carta va copiar noms d'aquí,
+no dels registres ben escrits del rector.
+
+Compareu la signatura misteriosa amb les làpides
+i descobrireu qui és el traïdor.
 ```
 
-**Variant B**:
+Tipografia: **14 punts**, negre sobre pergamí crem.
+
+### Secció 3: Fragment de Carta Clavat (Part Central)
+
+**Element Visual Principal:** Un fragment de paper antic (simular carta vella) **clavat amb un clau petit** al centre del cartell.
+
+**Contingut del fragment:**
 
 ```
-AQUÍ IAU ANTONI PUCH · MORÍ LO ANY 1695
-AQUÍ IAU JOSEP CORMINAS, PAGÈS · MORÍ LO ANY 1698
-AQUÍ IAU MARIA SARRAT · MORÍ LO ANY 1701
+15 de maig de 1705
+
+"Si el Pacte cau, els homes de Sentfoses 
+hauran de fugir. Només l'Emissari pot salvar-nos 
+si li donem la clau de la Rectoria.
+
+Els conjurats sabran qui ha triat deixar 
+morir el Pacte..."
+
+Signada: [NOM ERRAT PER VARIANT]
 ```
 
-**Variant C**:
+**Variació per variant:**
+- **Variant A:** "Signada: Corminas"
+- **Variant B:** "Signada: Sarrat"
+- **Variant C:** "Signada: Puch"
 
-```
-AQUÍ IAU ANTONI PUQ · MORÍ LO ANY 1695
-AQUÍ IAU JOSEPH CORMINES, PAGÈS · MORÍ LO ANY 1698
-AQUÍ IAU MARIA SERRAT · MORÍ LO ANY 1701
-```
-
-**Presentació visual:** Cada làpida en una **caixa rectangular amb borde simul·lant pedra tallada**. Tipografia: **serif (tipus notari), 18–20 punts**, text en negre sobre fons clar.
-
-### Secció 3: Nota Context (Part Inferior)
-
-```
-Aquestes làpides estan a la intempèrie des de fa dècades.
-Els noms están gravats amb errades del picapedrer.
-Qui va escriure la carta va copiar els noms d'aquí,
-no dels registres ben escrits.
-```
-
-Tipografia: **14 punts italicada**, context narratiu.
+**Presentació visual:**
+- Fragment sobre paper beige/marró desgastat
+- Text manuscrit (handwriting style) o serif antiquat
+- Clau visible travessant el paper (efecte 3D)
+- Ombra subtil del paper per donar profunditat
+- Taques d'humitat/envelliment
 
 ### Secció 4: QR (Cantonada Inferior Dreta)
 
 ```
 [QR CODE 5×5 cm]
 URL: https://app.traidor.cat/s/[TOKEN-STATION-4]
+
+Escaneja per veure les làpides velles
+```
+
+Tipografia: **12 punts**, negre, centrat.
+
+---
+
+## Prompts per Generar la Imatge — Variants Completes
+
+### VARIANT A — Prompt Complet
+
+```
+El Traïdor de la Guixa, May 1705. 
+
+Cemetery placard showing an ancient letter fragment pinned 
+with a visible iron nail through its center. The letter is 
+aged, yellowed parchment with creases and water stains.
+
+Letter fragment text (handwritten medieval style, antiquated 
+serif font if not handwritten):
+
+"15 de maig de 1705
+
+Si el Pacte cau, els homes de Sentfoses hauran de fugir. 
+Només l'Emissari pot salvar-nos si li donem la clau de la Rectoria.
+
+Els conjurats sabran qui ha triat deixar morir el Pacte..."
+
+Signed: Corminas
+
+Above the pinned letter: Narrative context explaining that 
+weathered cemetery stones have carver's errors, and the traitor 
+copied names from them, not from the rector's parish register.
+
+Below: QR code (5×5 cm, bottom-right corner) with text 
+"Escaneja per veure les làpides velles".
+
+Visual style: Aged parchment background (cream to gray, weathered), 
+iron nail with 3D shadow effect, fragment paper with realistic aging 
+(stains, creases, fading). Spanish 18th-century engraving aesthetic.
+
+Palette: Warm beige #F5E6D3 (parchment), old gold #D4AF37 (nail 
+highlights), dark brown #5D4E37 (text and shadows), siena #A0522D 
+(rust on nail). High contrast, no dark mode, mobile-readable.
+
+Cemetery symbols: Small cross, stone texture, funerary motifs.
+
+Dimensions: 420×594 mm (A2), 300 dpi, landscape orientation.
+```
+
+### VARIANT B — Prompt Complet
+
+```
+El Traïdor de la Guixa, May 1705. 
+
+Cemetery placard showing an ancient letter fragment pinned 
+with a visible iron nail through its center. The letter is 
+aged, yellowed parchment with creases and water stains.
+
+Letter fragment text (handwritten medieval style, antiquated 
+serif font if not handwritten):
+
+"15 de maig de 1705
+
+Si el Pacte cau, els homes de Sentfoses hauran de fugir. 
+Només l'Emissari pot salvar-nos si li donem la clau de la Rectoria.
+
+Els conjurats sabran qui ha triat deixar morir el Pacte..."
+
+Signed: Sarrat
+
+Above the pinned letter: Narrative context explaining that 
+weathered cemetery stones have carver's errors, and the traitor 
+copied names from them, not from the rector's parish register.
+
+Below: QR code (5×5 cm, bottom-right corner) with text 
+"Escaneja per veure les làpides velles".
+
+Visual style: Aged parchment background (cream to gray, weathered), 
+iron nail with 3D shadow effect, fragment paper with realistic aging 
+(stains, creases, fading). Spanish 18th-century engraving aesthetic.
+
+Palette: Warm beige #F5E6D3 (parchment), old gold #D4AF37 (nail 
+highlights), dark brown #5D4E37 (text and shadows), siena #A0522D 
+(rust on nail). High contrast, no dark mode, mobile-readable.
+
+Cemetery symbols: Small cross, stone texture, funerary motifs.
+
+Dimensions: 420×594 mm (A2), 300 dpi, landscape orientation.
+```
+
+### VARIANT C — Prompt Complet
+
+```
+El Traïdor de la Guixa, May 1705. 
+
+Cemetery placard showing an ancient letter fragment pinned 
+with a visible iron nail through its center. The letter is 
+aged, yellowed parchment with creases and water stains.
+
+Letter fragment text (handwritten medieval style, antiquated 
+serif font if not handwritten):
+
+"15 de maig de 1705
+
+Si el Pacte cau, els homes de Sentfoses hauran de fugir. 
+Només l'Emissari pot salvar-nos si li donem la clau de la Rectoria.
+
+Els conjurats sabran qui ha triat deixar morir el Pacte..."
+
+Signed: Puch
+
+Above the pinned letter: Narrative context explaining that 
+weathered cemetery stones have carver's errors, and the traitor 
+copied names from them, not from the rector's parish register.
+
+Below: QR code (5×5 cm, bottom-right corner) with text 
+"Escaneja per veure les làpides velles".
+
+Visual style: Aged parchment background (cream to gray, weathered), 
+iron nail with 3D shadow effect, fragment paper with realistic aging 
+(stains, creases, fading). Spanish 18th-century engraving aesthetic.
+
+Palette: Warm beige #F5E6D3 (parchment), old gold #D4AF37 (nail 
+highlights), dark brown #5D4E37 (text and shadows), siena #A0522D 
+(rust on nail). High contrast, no dark mode, mobile-readable.
+
+Cemetery symbols: Small cross, stone texture, funerary motifs.
+
+Dimensions: 420×594 mm (A2), 300 dpi, landscape orientation.
 ```
 
 ---
 
-## Prompt per Generar la Imatge
+## Detalls Visuals Clau
 
-**Estil i Ambientació:**
-
-```
-Medieval Catalan cemetery placard, 1705. Create aged stone-carved 
-tombstone rubbings or copies showing three epitaphs in Catalan:
-1. Antoni Puch (1695)
-2. Joseph Corminas/Cormines/Josep Corminas (pagès, 1698) — note spelling variations per variant
-3. Maria Sarrat/Serrat (1701)
-
-Each epitaph in a stone-frame box. Use serif font (notary style) with 
-intentional letter variations to show stone-carved "errors" (PUQ instead 
-of PUIG, CORMINAS instead of COROMINES, etc). Aged parchment background. 
-Include context note: these are weathered cemetery stones with carver's 
-mistakes. Add small cemetery decoration: cross, stone texture. Include 
-QR placeholder bottom-right. Dimensions: A2 (420×594 mm).
-```
-
-**Detalls Visuals:**
-
-- **Làpides:** Textura de pedra tallada (gravat), borde rectangular
-- **Text:** Serif (font notari), spacing medieval
-- **Errades:** Subtil però visible (PUQ vs PUIG, CORMINAS vs COROMINES)
-- **Variació:** Distint segons variant (A, B, C)
+- **Fons:** Pergamí envellit (crem a gris), textura de cementiri
+- **Fragment de carta:** Paper beige/marró desgastat, plecs visibles, taques d'humitat realistes
+- **Clau:** Clau de ferro visible travessant el paper (efecte 3D amb ombra subtil)
+- **Text:** Manuscrit o serif antiquat, llegible però amb aparença antiga de 1705
+- **Firma:** Varia per variant (Corminas, Sarrat, Puch) — VISIBLE I CLARA
+- **Context narratiu:** Paràgraf explicatiu a dalt de la carta
 - **Decoració:** Petita creu, símbol de difunt, motius funeris medievals
-- **Fons:** Pergamí envellit o gris clair (simular pedra)
-- **Contrast:** Negre sobre clar per llegibilitat
+- **QR:** 5×5 cm a la cantonada inferior dreta, escanejable
+- **Paleta:** Beige warm (#F5E6D3), or vell (#D4AF37), marró fosc (#5D4E37), siena (#A0522D)
+- **Contrast:** Negre sobre clar per llegibilitat màxima ple sol
+- **Sense elements moderns:** Cap cosa posterior a 1705
 
 ---
 
 ## Elements Clau
 
-✓ Tres làpides ben diferenciades
-✓ Noms amb errades del picapedrer (varia per variant)
-✓ Dates ben visibles (1695, 1698, 1701)
-✓ Context narratiu sobre errades de gravat
-✓ QR codi grand i escanejable
-✓ Tipografia serif (estil notari/medieval)
+✓ Fragment de carta antiga clavat amb clau visible
+✓ Signature errada (varia per variant: Corminas, Sarrat, Puch)
+✓ Text de la carta llegible i interessant narrativament
+✓ Context narratiu sobre les errades del picapedrer
+✓ QR codi gran i escanejable (5×5 cm)
+✓ Tipografia serif (estil notari/medieval) per la carta
+✓ Efecte 3D del clau travessant el paper
 ✓ Material durador (cementiri pot ser humit)
+✓ 3 cartells separats (un per variant)
 
 ---
 
 ## Variabilitat Entre Variants (A, B, C)
 
-**IMPORTANT:** Cada variant té errades diferentes. **Necessita 3 cartells separats** (o inserts modulars).
+**IMPORTANT:** Cada variant té **una signatura diferent** al fragment de carta. **Necessita 3 cartells separats**.
 
-| Camp | Variant A | Variant B | Variant C |
-|------|-----------|-----------|-----------|
-| **Làpida 1** | ANTONIO PUCH | ANTONIO PUCH | ANTONIO PUQ |
-| **Làpida 2** | JOSEPH CORMINAS | JOSEP CORMINAS | JOSEPH CORMINES |
-| **Làpida 3** | MARIA SARRAT | MARIA SARRAT | MARIA SERRAT |
-| **Clau solució** | Corminas ≠ Coromines | Corminas ≠ Coromines | Cormines ≠ Coromines |
+### Variant A
+**Signatura del fragment:** Corminas (1698)  
+**Làpida correcta a la webapp:** Làpida 1 (Corminas, 1698)  
+**Registre parroquial real:** Joseph Coromines
 
-**Producció:** Imprimir **3 cartells separats**, un per variant.
+### Variant B
+**Signatura del fragment:** Sarrat (1701)  
+**Làpida correcta a la webapp:** Làpida 9 (Sarrat, 1701)  
+**Registre parroquial real:** Maria Serrat
+
+### Variant C
+**Signatura del fragment:** Puch (1695)  
+**Làpida correcta a la webapp:** Làpida 1 (Puch, 1695)  
+**Registre parroquial real:** Antoni Puig
+
+**Producció:** Imprimir **3 cartells separats**, un per variant, amb la signatura correcta al fragment de carta.
 
 ---
 
@@ -156,15 +289,19 @@ QR placeholder bottom-right. Dimensions: A2 (420×594 mm).
 
 ## Checklist de Verificació
 
-- [ ] 3 làpides visibles amb noms i dates
-- [ ] Errades del picapedrer variables per variant
-- [ ] Noms dels personatges amb espais correctes
-- [ ] Anys en numerals romans o àrabs (verificar estil)
-- [ ] Context narratiu llegible
-- [ ] QR codi verificat per variant
-- [ ] Laminat aplicat (protecció humitat)
-- [ ] Suports segurs (fora de reixa)
+- [ ] Fragment de carta visible i llegible
+- [ ] Clau de ferro travessant el paper (efecte 3D visible)
+- [ ] Signature errada visible i clara per variant
+- [ ] Data "15 de maig de 1705" visible
+- [ ] Text de la carta complet i llegible
+- [ ] Context narratiu (paràgraf de làpides) llegible
+- [ ] QR codi verificat per variant (5×5 cm)
+- [ ] QR testejat: accedeix a `/s/[TOKEN-STATION-4]`
+- [ ] Paper envellit amb aspecto realista (taques, plecs, etc.)
+- [ ] Laminat aplicat (protecció humitat del cementiri)
+- [ ] Suports segurs (fora de reixa, no danyal tombes)
 - [ ] Cartells etiquetats per variant (A, B, C)
+- [ ] Contrast negre sobre crem per llegibilitat
 
 ---
 

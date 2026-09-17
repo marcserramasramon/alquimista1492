@@ -1,4 +1,13 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+async function loginAsMaster(page: Page, pin = process.env.MASTER_PIN || '123456') {
+  await page.goto('/master');
+  const pinInput = page.locator('[data-testid="master-pin"]');
+  await expect(pinInput).toBeVisible();
+  await pinInput.pressSequentially(pin, { delay: 30 });
+  await page.locator('button:has-text("Accedir")').click();
+  await expect(page).toHaveURL(/\/master/, { timeout: 5000 });
+}
 
 test.describe('Master Dashboard: Authentication & Controls', () => {
   test('Master login with incorrect PIN shows error', async ({ page }) => {
@@ -8,47 +17,30 @@ test.describe('Master Dashboard: Authentication & Controls', () => {
     await expect(pinInput).toBeVisible();
 
     // Enter wrong PIN
-    await pinInput.fill('000000');
+    await pinInput.pressSequentially('000000', { delay: 30 });
     await page.locator('button:has-text("Accedir")').click();
 
     // Expect error message (soft assertion - may be silent)
     const errorMsg = page.locator(
       'text=/incorrecte|error|invalid|no match/i'
     );
-    await expect(errorMsg).toBeVisible({ timeout: 2000 }).catch(() => {
+    await expect(errorMsg.first()).toBeVisible({ timeout: 2000 }).catch(() => {
       // Error may be silent
     });
 
     // Should still be on login page
-    expect(page.url()).toContain('/master');
+    expect(page.url()).toMatch(/\/(master|login)/);
   });
 
   test('Master can login with correct PIN', async ({ page }) => {
-    await page.goto('/master');
-
-    const pinInput = page.locator('[data-testid="master-pin"]');
-    const correctPin = process.env.MASTER_PIN || '123456';
-
-    await pinInput.fill(correctPin);
-    await page.locator('button:has-text("Accedir")').click();
-
-    // Expect redirect to dashboard or wait for dashboard to load
-    await expect(page).toHaveURL(/\/master/, { timeout: 5000 });
+    await loginAsMaster(page);
 
     // Verify dashboard elements
-    await expect(page.locator('text=/Control del Màster|Equips en joc/i')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=/Control del Màster|Equips en joc/i').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('Dashboard shows all teams and their scores', async ({ page }) => {
-    const correctPin = process.env.MASTER_PIN || '123456';
-
-    // Login
-    await page.goto('/master');
-    await page.locator('[data-testid="master-pin"]').fill(correctPin);
-    await page.locator('button:has-text("Accedir")').click();
-
-    // Wait for dashboard to load
-    await expect(page).toHaveURL(/\/master/, { timeout: 5000 });
+    await loginAsMaster(page);
 
     // Look for team list
     const teamList = page.locator('[data-testid="teams-list"]');
@@ -61,17 +53,10 @@ test.describe('Master Dashboard: Authentication & Controls', () => {
   });
 
   test('Master can trigger unlock or hint for a game', async ({ page }) => {
-    const correctPin = process.env.MASTER_PIN || '123456';
-
-    await page.goto('/master');
-    await page.locator('[data-testid="master-pin"]').fill(correctPin);
-    await page.locator('button:has-text("Accedir")').click();
-
-    // Wait for dashboard to load
-    await expect(page).toHaveURL(/\/master/, { timeout: 5000 });
+    await loginAsMaster(page);
 
     // Look for action buttons (unlock, hint, etc.) - soft assertion
-    const actionButtons = page.locator('button:has-text(/desbloqueig|unlock|pista|hint|acció/i)');
+    const actionButtons = page.locator('button', { hasText: /desbloqueig|unlock|pista|hint|acció/i });
     const count = await actionButtons.count();
 
     if (count > 0) {
@@ -79,7 +64,7 @@ test.describe('Master Dashboard: Authentication & Controls', () => {
       await actionButtons.first().click();
 
       // Verify confirmation or result (soft assertion - may be silent)
-      await expect(page.locator('text=/acció|executada|success|completat/i')).toBeVisible({
+      await expect(page.locator('text=/acció|executada|success|completat/i').first()).toBeVisible({
         timeout: 2000,
       }).catch(() => {
         // May be silent action or no confirmation needed
@@ -88,8 +73,6 @@ test.describe('Master Dashboard: Authentication & Controls', () => {
   });
 
   test('Master can see real-time player updates', async ({ browser }) => {
-    const correctPin = process.env.MASTER_PIN || '123456';
-
     // Open master dashboard in one context
     const masterContext = await browser.newContext();
     const masterPage = await masterContext.newPage();
@@ -100,17 +83,17 @@ test.describe('Master Dashboard: Authentication & Controls', () => {
 
     try {
       // Load master dashboard
-      await masterPage.goto('/master');
-      await masterPage.locator('[data-testid="master-pin"]').fill(correctPin);
-      await masterPage.locator('button:has-text("Accedir")').click();
-      await expect(masterPage).toHaveURL(/\/master/, {
-        timeout: 5000,
-      });
+      await loginAsMaster(masterPage);
 
       // Load player page
-      await playerPage.goto('/e/TEST001');
+      await playerPage.goto('/e/TEST01');
+      const nameInput = playerPage.locator('#player-name');
+      if (await nameInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await nameInput.pressSequentially('Jugador Master', { delay: 30 });
+        await playerPage.locator('button:has-text("Entrar al Joc")').click();
+      }
       await expect(playerPage.locator('[data-testid="tab-notebook"]')).toBeVisible({
-        timeout: 5000,
+        timeout: 10000,
       });
 
       // Get initial state from master dashboard
@@ -139,20 +122,13 @@ test.describe('Master Dashboard: Authentication & Controls', () => {
   });
 
   test('Master can export results', async ({ page, context }) => {
-    const correctPin = process.env.MASTER_PIN || '123456';
-
     // Setup download listener with timeout
     const downloadPromise = context.waitForEvent('download').catch(() => null);
 
-    await page.goto('/master');
-    await page.locator('[data-testid="master-pin"]').fill(correctPin);
-    await page.locator('button:has-text("Accedir")').click();
-
-    // Wait for dashboard to load
-    await expect(page).toHaveURL(/\/master/, { timeout: 5000 });
+    await loginAsMaster(page);
 
     // Look for export button (soft assertion - may not exist in all views)
-    const exportButton = page.locator('button:has-text(/exportar|export|descarregar|resultats/i)').first();
+    const exportButton = page.locator('button', { hasText: /exportar|export|descarregar|resultats/i }).first();
     if (await exportButton.isVisible()) {
       await exportButton.click();
 

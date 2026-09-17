@@ -31,56 +31,20 @@ export default function ResultsPage() {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const { data: teamsData, error: teamsError } = await supabase
-          .from('teams')
-          .select('*')
+        const token = localStorage.getItem('master_token')
+        const headers: Record<string, string> = {}
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
 
-        if (teamsError) throw teamsError
+        const res = await fetch('/api/master/results', { headers })
+        if (!res.ok) {
+          const errJson = await res.json().catch(() => ({}))
+          throw new Error(errJson.error || 'Error carregant resultats')
+        }
 
-        const { data: resultsData, error: resultsError } = await supabase
-          .from('results')
-          .select('*')
-
-        if (resultsError) throw resultsError
-
-        const { data: sessionsData, error: sessionsError } = await supabase
-          .from('sessions')
-          .select('*')
-
-        if (sessionsError) throw sessionsError
-
-        const resultsMap = new Map(
-          (resultsData || []).map((r) => [r.team_id, r])
-        )
-        const sessionsMap = new Map(
-          (sessionsData || []).map((s) => [s.id, s])
-        )
-
-        const enriched: TeamResult[] = (teamsData || [])
-          .map((team) => {
-            const result = resultsMap.get(team.id)
-            const session = team.session_id ? sessionsMap.get(team.session_id) : null
-            const startTime = team.started_at
-              ? new Date(team.started_at)
-              : new Date()
-            const endTime = team.finished_at ? new Date(team.finished_at) : new Date()
-            const timeElapsed = Math.round(
-              (endTime.getTime() - startTime.getTime()) / 1000
-            )
-
-            return {
-              ...team,
-              score: result?.total_score || session?.score || 0,
-              timeElapsed,
-              moralChoice: result?.moral_choice || undefined,
-              accuracy: session?.evidence_unlocked?.length
-                ? `${Math.round((session.evidence_unlocked.length / 6) * 100)}%`
-                : '0%',
-            }
-          })
-          .sort((a, b) => b.score - a.score)
-
-        setResults(enriched)
+        const data = await res.json()
+        setResults(data.results || [])
         setError(null)
       } catch (err) {
         setError(err instanceof Error ? err : new Error(String(err)))

@@ -1,13 +1,23 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { supabase } from '@/lib/db'
-import type { Database } from '@/lib/db.types'
 
-export type TeamData = Database['public']['Tables']['teams']['Row'] & {
+export interface TeamData {
+  id: string
+  code: string
+  name: string | null
+  color: string | null
+  variant: 'A' | 'B' | 'C'
+  started_at: string | null
+  finished_at: string | null
+  is_active: boolean | null
+  created_at?: string | null
+  session_id?: string | null
   score: number
   solvedStationsCount: number
   timeElapsed: number
   moralChoice?: string | null
   salconduits: number
+  playersCount: number
+  playerNames?: string[]
 }
 
 interface DashboardData {
@@ -19,9 +29,9 @@ interface DashboardData {
   lastUpdated: Date
 }
 
-const POLL_INTERVAL_MS = 5000 // Fallback polling interval
+const POLL_INTERVAL_MS = 4000 // Polling interval in ms
 
-export function useMasterDashboard(sessionId?: string) {
+export function useMasterDashboard() {
   const [data, setData] = useState<DashboardData>({
     teams: [],
     sessionStartTime: null,
@@ -31,142 +41,98 @@ export function useMasterDashboard(sessionId?: string) {
     lastUpdated: new Date(),
   })
 
-  const subscriptionRef = useRef<any>(null)
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const isMountedRef = useRef(true)
+  const [isResetting, setIsResetting] = useState(false)
 
-  // Fetch teams data
+  // Fetch teams data from dedicated server route
   const fetchTeams = useCallback(async () => {
     try {
-      const { data: teamsData, error } = await supabase
-        .from('teams')
-        .select('*')
-        .eq('is_active', true)
+      const token = localStorage.getItem('master_token')
+      const headers: Record<string, string> = {}
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
 
-      if (error) throw error
-
-      // Fetch sessions data for each team
-      const { data: sessionsData, error: sessionsError } = await supabase
-        .from('sessions')
-        .select('*')
-
-      if (sessionsError) throw sessionsError
-
-      // Fetch results data
-      const { data: resultsData, error: resultsError } = await supabase
-        .from('results')
-        .select('*')
-
-      if (resultsError) throw resultsError
-
-      if (!isMountedRef.current) return
-
-      const sessionMap = new Map(
-        (sessionsData || []).map((s) => [s.id, s])
-      )
-      const resultsMap = new Map(
-        (resultsData || []).map((r) => [r.team_id, r])
-      )
-
-      const enrichedTeams: TeamData[] = (teamsData || []).map((team) => {
-        const session = team.session_id ? sessionMap.get(team.session_id) : undefined
-        const result = resultsMap.get(team.id)
-        const startTime = team.started_at ? new Date(team.started_at) : new Date()
-        const now = new Date()
-        const timeElapsed = Math.round((now.getTime() - startTime.getTime()) / 1000)
-
-        return {
-          ...team,
-          score: result?.total_score || session?.score || 0,
-          solvedStationsCount: session?.solved_stations?.length || 0,
-          timeElapsed,
-          moralChoice: result?.moral_choice,
-          salconduits: session?.salconduits_remaining || 0,
-        }
+      const res = await fetch('/api/master/teams', {
+        headers,
+        cache: 'no-store',
       })
 
-      setData((prev) => ({
-        ...prev,
-        teams: enrichedTeams,
-        sessionStartTime: enrichedTeams[0]?.started_at
-          ? new Date(enrichedTeams[0].started_at)
-          : null,
-        sessionEndTime: enrichedTeams[0]?.started_at
-          ? new Date(new Date(enrichedTeams[0].started_at).getTime() + 90 * 60 * 1000)
-          : null,
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error('Sessió de màster expirada')
+        }
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Error obtenint equips')
+      }
+
+      const json = await res.json()
+
+      setData({
+        teams: json.teams || [],
+        sessionStartTime: json.sessionStartTime ? new Date(json.sessionStartTime) : null,
+        sessionEndTime: json.sessionEndTime ? new Date(json.sessionEndTime) : null,
         isLoading: false,
         error: null,
         lastUpdated: new Date(),
-      }))
+      })
     } catch (error) {
-      if (isMountedRef.current) {
-        setData((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: error instanceof Error ? error : new Error(String(error)),
-        }))
-      }
+      console.error('Error fetching teams:', error)
+      setData((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error : new Error(String(error)),
+      }))
     }
   }, [])
 
-  // Setup subscriptions
-  useEffect(() => {
-    let channel: any = null
-
-    const setupRealtimeSubscriptions = async () => {
-      try {
-        // Subscribe to teams changes
-        channel = supabase
-          .channel('dashboard-teams')
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'teams' },
-            () => {
-              fetchTeams()
-            }
-          )
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'sessions' },
-            () => {
-              fetchTeams()
-            }
-          )
-          .on(
-            'postgres_changes',
-            { event: '*', schema: 'public', table: 'results' },
-            () => {
-              fetchTeams()
-            }
-          )
-          .subscribe()
-
-        subscriptionRef.current = channel
-      } catch (error) {
-        console.error('Realtime subscription error:', error)
-        // Will fall back to polling
+  // Action to reset game for the 8 teams
+  const resetGame = useCallback(async () => {
+    setIsResetting(true)
+    try {
+      const token = localStorage.getItem('master_token')
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
       }
-    }
-
-    // Initial fetch
-    fetchTeams()
-
-    // Setup subscriptions
-    setupRealtimeSubscriptions()
-
-    // Setup fallback polling
-    pollIntervalRef.current = setInterval(fetchTeams, POLL_INTERVAL_MS)
-
-    return () => {
-      isMountedRef.current = false
-      if (subscriptionRef.current) {
-        supabase.removeChannel(subscriptionRef.current)
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
       }
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current)
+
+      const res = await fetch('/api/master/reset', {
+        method: 'POST',
+        headers,
+      })
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Error reiniciant la partida')
       }
+
+      await fetchTeams()
+      return true
+    } catch (err) {
+      console.error('Error resetting game:', err)
+      throw err
+    } finally {
+      setIsResetting(false)
     }
   }, [fetchTeams])
 
-  return data
+  useEffect(() => {
+    // Initial fetch
+    fetchTeams()
+
+    // Polling interval
+    const interval = setInterval(fetchTeams, POLL_INTERVAL_MS)
+
+    return () => {
+      clearInterval(interval)
+    }
+  }, [fetchTeams])
+
+  return {
+    ...data,
+    refetch: fetchTeams,
+    resetGame,
+    isResetting,
+  }
 }

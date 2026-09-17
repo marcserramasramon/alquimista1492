@@ -193,7 +193,9 @@ export default function JocHubPage() {
       <main className="flex-1 max-w-4xl w-full mx-auto flex flex-col overflow-hidden">
         {/* Tab Content - Takes remaining space */}
         <div className="flex-1 overflow-hidden flex flex-col">
-          {activeTab === 'map' && <MapTab stations={teamState.stations} />}
+          {activeTab === 'map' && (
+            <MapTab stations={teamState.stations} teamId={playerSession.teamId} />
+          )}
 
           {activeTab === 'notebook' && (
             <NotebookTab evidences={teamState.evidences} />

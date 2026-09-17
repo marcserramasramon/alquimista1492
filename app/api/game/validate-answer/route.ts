@@ -30,7 +30,31 @@ function compareAnswers(
 ): boolean {
   // String comparison (most common)
   if (typeof submitted === 'string' && typeof expected === 'string') {
-    return submitted.toUpperCase().trim() === expected.toUpperCase().trim()
+    const subClean = submitted.toUpperCase().trim().replace(/[.,;:!?'"`·\-]/g, ' ').replace(/\s+/g, ' ').trim()
+    const expClean = expected.toUpperCase().trim().replace(/[.,;:!?'"`·\-]/g, ' ').replace(/\s+/g, ' ').trim()
+    if (subClean === expClean) return true
+
+    const subCompact = subClean.replace(/\s+/g, '')
+    const expCompact = expClean.replace(/\s+/g, '')
+    if (subCompact === expCompact) return true
+
+    // Variants especials de Serrat
+    if (stationType.includes('serrat')) {
+      if (
+        subClean === 'SAP LLETRA' ||
+        subClean === 'SAP DE LLETRA' ||
+        subClean === 'SAP DE LETRA' ||
+        subClean === 'SAP LETRA' ||
+        subClean === 'SAB DE LLETRA' ||
+        subClean === 'SAB LLETRA' ||
+        subCompact === 'SAPDELLETRA' ||
+        subCompact === 'SAPLLETRA' ||
+        (subCompact.includes('SAP') && (subCompact.includes('LLETRA') || subCompact.includes('LETRA')))
+      ) {
+        return true
+      }
+    }
+    return false
   }
 
   // Number comparison

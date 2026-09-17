@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/db'
 
 export interface SignInError {
   code: string
@@ -53,6 +54,13 @@ export function usePlayerSignIn() {
       }
 
       const data = await response.json()
+
+      if (data.authSession) {
+        await supabase.auth.setSession({
+          access_token: data.authSession.access_token,
+          refresh_token: data.authSession.refresh_token,
+        })
+      }
 
       // Redirect to game hub on success
       router.push('/joc')
