@@ -1,6 +1,6 @@
 import { Howl } from 'howler';
 
-export type AudioClip = 'game-correct' | 'game-incorrect' | 'evidence-unlock' | 'bell-ring' | 'bell-ding' | 'buzzer';
+export type AudioClip = 'game-correct' | 'game-incorrect' | 'evidence-unlock' | 'bell-ring' | 'bell-ding' | 'buzzer' | 'bell-do' | 'bell-re' | 'bell-mi' | 'bell-fa';
 export type VoiceActor = 'bernat' | 'mossen' | 'emissari';
 export type VoiceClip = `voice-${VoiceActor}-act1` | `voice-${VoiceActor}-act2` | `voice-${VoiceActor}-act3`;
 
@@ -29,6 +29,10 @@ class AudioManager {
       'bell-ring': '/audio/effects/bell-ring.mp3',
       'bell-ding': '/audio/effects/bell-ding.mp3',
       'buzzer': '/audio/effects/buzzer.mp3',
+      'bell-do': '/audio/bells/do.mp3',
+      'bell-re': '/audio/bells/re.mp3',
+      'bell-mi': '/audio/bells/mi.mp3',
+      'bell-fa': '/audio/bells/fa.mp3',
     };
 
     Object.entries(soundEffects).forEach(([key, src]) => {
@@ -71,6 +75,10 @@ class AudioManager {
       'bell-ring': 0.9,
       'bell-ding': 0.8,
       'buzzer': 0.8,
+      'bell-do': 0.7,
+      'bell-re': 0.7,
+      'bell-mi': 0.7,
+      'bell-fa': 0.7,
     };
     return volumeMap[clip] ?? 0.8;
   }
