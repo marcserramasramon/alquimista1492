@@ -232,7 +232,7 @@ export function BoxGame(props: GameProps) {
 
   return (
     <motion.div
-      className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col"
+      className="w-full max-w-md mx-auto pb-12 flex flex-col font-serif text-[#2B2118]"
       initial="hidden"
       animate="visible"
       variants={fadeInVariants}
@@ -241,7 +241,7 @@ export function BoxGame(props: GameProps) {
       <AnimatePresence>
         {error && (
           <motion.div
-            className="bg-red-100 border border-red-600 text-red-700 p-3 rounded mb-4 text-sm"
+            className="bg-[#FADBD8] border border-[#E74C3C] text-[#C0392B] p-3 rounded mb-4 text-sm"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -252,7 +252,7 @@ export function BoxGame(props: GameProps) {
       </AnimatePresence>
 
       {/* Timer at top */}
-      <div className="text-right text-sm font-mono text-red-600 mb-4">
+      <div className="text-right text-xs font-mono text-[#8C6D53] mb-2 font-sans">
         12:34:56
       </div>
 
@@ -331,31 +331,57 @@ export function BoxGame(props: GameProps) {
 function Part1IntroScreen({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="flex flex-col justify-center flex-1 gap-4">
-      <h1 className="text-3xl font-bold text-center mb-4">CAIXA DE LES ALMOINES</h1>
+      <header className="border-b-2 border-[#8C6D53] pb-3 mb-4 text-center">
+        <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
+          Estació 7 · Rectoria
+        </span>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1">
+          CAIXA DE LES ALMOINES
+        </h1>
+        <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic">
+          "El cadenat protegeix secrets del Pacte dels Vigatans"
+        </p>
+      </header>
 
-      <div className="bg-amber-100 p-4 rounded-lg text-center mb-2">
-        <p className="text-2xl mb-2">🔒</p>
-        <p className="font-bold mb-2">La caixa està segellada amb cadenat</p>
-        <p className="text-sm text-amber-800">Necessites la contrasenya dels 4 elements</p>
-      </div>
+      <motion.div
+        className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm p-4 text-center"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <p className="text-3xl mb-2">🔒</p>
+        <p className="font-bold text-[#2B2118] mb-1">La caixa està segellada</p>
+        <p className="text-xs text-[#5C4533]">Necessites la contrasenya</p>
+      </motion.div>
 
-      <div className="bg-blue-100 p-3 rounded-lg text-center mb-4">
-        <p className="font-bold mb-2 text-sm">4 Elements = 4 Números:</p>
+      <div className="bg-[#F0EAE3] border border-[#D8CCAE] rounded-xl p-3">
+        <p className="font-bold text-xs text-[#2B2118] mb-2 text-center font-sans">4 ELEMENTS = 4 NÚMEROS:</p>
         <div className="grid grid-cols-2 gap-2 text-xs">
-          <p>🔥 CIM (Serrat) = <span className="font-bold">4</span></p>
-          <p>💧 FONT = <span className="font-bold">2</span></p>
-          <p>🌍 PLA (Planes) = <span className="font-bold">3</span></p>
-          <p>⛰️ PEDRA (Cementiri) = <span className="font-bold">1</span></p>
+          <div className="bg-white p-2 rounded border border-[#8C6D53]">
+            <p className="font-bold text-[#1D3557]">🔥 FOC</p>
+            <p className="text-[#5C4533]">CIM (Serrat) = <span className="font-bold">4</span></p>
+          </div>
+          <div className="bg-white p-2 rounded border border-[#8C6D53]">
+            <p className="font-bold text-[#1D3557]">💧 AIGUA</p>
+            <p className="text-[#5C4533]">FONT Ferro = <span className="font-bold">2</span></p>
+          </div>
+          <div className="bg-white p-2 rounded border border-[#8C6D53]">
+            <p className="font-bold text-[#1D3557]">🌍 TERRA</p>
+            <p className="text-[#5C4533]">PLA Bones = <span className="font-bold">3</span></p>
+          </div>
+          <div className="bg-white p-2 rounded border border-[#8C6D53]">
+            <p className="font-bold text-[#1D3557]">⛰️ PEDRA</p>
+            <p className="text-[#5C4533]">Cementiri = <span className="font-bold">1</span></p>
+          </div>
         </div>
       </div>
 
       <motion.button
         onClick={onContinue}
-        className="w-full p-4 bg-amber-900 text-amber-50 font-bold text-lg border-2 border-amber-900 hover:bg-amber-800 rounded transition"
+        className="w-full p-3 bg-[#2B2118] text-[#EAE0CA] font-bold text-sm border-2 border-[#2B2118] hover:bg-[#1D3557] rounded-lg transition font-sans"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
-        OBRIR CADENAT
+        OBRIR CADENAT →
       </motion.button>
     </div>
   )
@@ -384,12 +410,19 @@ function Part1InputScreen({
 
   return (
     <div className="flex flex-col justify-center flex-1 gap-6">
-      <h2 className="text-2xl font-bold text-center">GIRAR LES RODES</h2>
+      <header className="border-b-2 border-[#8C6D53] pb-3 text-center">
+        <h2 className="text-2xl font-bold text-[#2B2118]">GIRAR LES RODES</h2>
+        <p className="text-xs text-[#5C4533] mt-1 font-sans">Contrasenya: 4-2-3-1</p>
+      </header>
 
-      <div className="bg-amber-100 p-6 rounded-lg">
-        <p className="text-center text-sm mb-4 text-amber-800">Introdueix: 4-2-3-1</p>
+      <motion.div
+        className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl p-6"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <p className="text-center text-sm mb-4 text-[#5C4533] font-sans font-bold">Selecciona els 4 números:</p>
 
-        <div className="flex gap-3 justify-center">
+        <div className="flex gap-4 justify-center">
           {[0, 1, 2, 3].map(index => (
             <DialWheel
               key={index}
@@ -398,30 +431,31 @@ function Part1InputScreen({
             />
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {attempts > 0 && (
         <motion.div
-          className="bg-red-100 p-3 rounded border border-red-600 text-center"
+          className="bg-[#FADBD8] border border-[#E74C3C] text-[#C0392B] p-3 rounded-lg text-center text-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <p className="text-sm text-red-600">❌ Intent {attempts}/3</p>
+          <p className="font-bold font-sans">❌ Intent {attempts}/3</p>
+          <p className="text-xs">Revisa els 4 elements</p>
         </motion.div>
       )}
 
       <motion.button
         onClick={onSubmit}
         disabled={!isCorrect}
-        className={`w-full p-4 font-bold text-lg border-2 transition rounded ${
+        className={`w-full p-3 font-bold text-sm border-2 transition rounded-lg font-sans ${
           isCorrect
-            ? 'bg-amber-900 text-amber-50 border-amber-900 hover:bg-amber-800'
-            : 'bg-gray-300 text-gray-600 border-gray-300 cursor-not-allowed'
+            ? 'bg-[#2B2118] text-[#EAE0CA] border-[#2B2118] hover:bg-[#1D3557]'
+            : 'bg-[#D8CCAE] text-[#8C6D53] border-[#8C6D53] cursor-not-allowed'
         }`}
         whileHover={isCorrect ? { scale: 1.02 } : {}}
         whileTap={isCorrect ? { scale: 0.98 } : {}}
       >
-        🔓 OBRIR
+        🔓 OBRIR CADENAT
       </motion.button>
     </div>
   )
@@ -435,17 +469,17 @@ function DialWheel({
   onChange: (val: number) => void
 }) {
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-1">
       <motion.button
         onClick={() => onChange((value + 1) % 10)}
-        className="w-12 h-8 bg-amber-800 text-amber-50 font-bold text-lg rounded hover:bg-amber-700"
+        className="w-12 h-8 bg-[#8C6D53] text-[#EAE0CA] font-bold text-lg rounded hover:bg-[#6B5244] transition"
         whileTap={{ scale: 0.9 }}
       >
         ▲
       </motion.button>
 
       <motion.div
-        className="w-14 h-16 bg-amber-900 border-4 border-amber-800 rounded flex items-center justify-center text-3xl font-bold text-amber-50 shadow-lg"
+        className="w-14 h-16 bg-[#D8CCAE] border-4 border-[#8C6D53] rounded flex items-center justify-center text-3xl font-bold text-[#2B2118] shadow-lg"
         animate={{ rotateX: value * 36 }}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       >
@@ -454,7 +488,7 @@ function DialWheel({
 
       <motion.button
         onClick={() => onChange((value - 1 + 10) % 10)}
-        className="w-12 h-8 bg-amber-800 text-amber-50 font-bold text-lg rounded hover:bg-amber-700"
+        className="w-12 h-8 bg-[#8C6D53] text-[#EAE0CA] font-bold text-lg rounded hover:bg-[#6B5244] transition"
         whileTap={{ scale: 0.9 }}
       >
         ▼
@@ -480,10 +514,12 @@ function Part1OpenScreen({ onContinue }: { onContinue: () => void }) {
       />
 
       <div className="relative z-10 flex flex-col gap-6">
-        <h2 className="text-3xl font-bold text-center mb-2">🔓 OBRINT LA CAIXA...</h2>
+        <header className="border-b-2 border-[#8C6D53] pb-3 text-center">
+          <h2 className="text-2xl font-bold text-[#2B2118]">🔓 OBRINT...</h2>
+        </header>
 
         <motion.div
-          className="bg-white border-4 border-amber-900 p-8 rounded-lg text-center shadow-xl"
+          className="bg-[#F0EAE3] border-4 border-[#8C6D53] p-8 rounded-xl text-center shadow-lg"
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 0.8, repeat: 3 }}
         >
@@ -494,34 +530,43 @@ function Part1OpenScreen({ onContinue }: { onContinue: () => void }) {
           >
             🗝️
           </motion.p>
-          <p className="font-bold text-amber-900">Girant el cadenat...</p>
+          <p className="font-bold text-[#2B2118] text-sm font-sans">Girant el cadenat...</p>
         </motion.div>
 
         <motion.div
-          className="bg-green-100 border-2 border-green-600 p-5 rounded-lg text-center"
+          className="bg-[#E8F8F5] border-2 border-[#16A085] p-5 rounded-lg text-center"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.5 }}
         >
-          <p className="font-bold text-green-700 text-lg">✓ OBERTA!</p>
-          <p className="text-sm text-green-600 mt-2">Dins la caixa trobes:</p>
+          <p className="font-bold text-[#117A65] text-lg">✓ CAIXA OBERTA!</p>
+          <p className="text-sm text-[#16A085] mt-2 font-sans">Dins la caixa trobes:</p>
           <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
-            <div className="bg-white p-2 rounded">📬<br />Sobre original</div>
-            <div className="bg-white p-2 rounded">📄<br />6 Cartes</div>
-            <div className="bg-white p-2 rounded">📝<br />Nota Capità</div>
+            <div className="bg-white p-2 rounded border border-[#8C6D53]">
+              <p>📬</p>
+              <p className="font-bold text-[#5C4533]">Sobre</p>
+            </div>
+            <div className="bg-white p-2 rounded border border-[#8C6D53]">
+              <p>📄</p>
+              <p className="font-bold text-[#5C4533]">6 Cartes</p>
+            </div>
+            <div className="bg-white p-2 rounded border border-[#8C6D53]">
+              <p>📝</p>
+              <p className="font-bold text-[#5C4533]">Nota</p>
+            </div>
           </div>
         </motion.div>
 
         <motion.button
           onClick={onContinue}
-          className="w-full p-4 bg-amber-900 text-amber-50 font-bold text-lg border-2 border-amber-900 hover:bg-amber-800 rounded transition"
+          className="w-full p-3 bg-[#2B2118] text-[#EAE0CA] font-bold text-sm border-2 border-[#2B2118] hover:bg-[#1D3557] rounded-lg transition font-sans"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2 }}
         >
-          CONTINUAR A LA PART 2 →
+          PART 2: CANVI DE CARTA →
         </motion.button>
       </div>
     </motion.div>
@@ -553,54 +598,59 @@ function Part2CardsScreen({
 }) {
   return (
     <div className="flex flex-col flex-1 gap-4">
-      <h2 className="text-2xl font-bold text-center mb-2">DINS LA CAIXA</h2>
+      <header className="border-b-2 border-[#8C6D53] pb-3 text-center">
+        <h2 className="text-2xl font-bold text-[#2B2118]">DINS LA CAIXA</h2>
+        <p className="text-xs text-[#5C4533] mt-1 font-sans">Substitució de la carta</p>
+      </header>
 
       <motion.div
-        className="bg-blue-100 p-4 rounded-lg text-center mb-2 cursor-pointer hover:bg-blue-150 transition"
+        className="bg-[#EAE0CA] border-2 border-[#8C6D53] p-4 rounded-xl text-center cursor-pointer hover:bg-[#F0EAE3] transition"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
         <p className="text-3xl mb-2">📬</p>
-        <p className="font-bold">SOBRE (original de Bernat)</p>
-        <p className="text-sm">Data: 16-05-1705</p>
+        <p className="font-bold text-[#2B2118] text-sm">SOBRE ORIGINAL</p>
+        <p className="text-xs text-[#5C4533] font-sans">De Bernat · 16-05-1705</p>
       </motion.div>
 
-      <p className="text-center font-bold text-sm mb-2">6 CARTES SOLTES:</p>
+      <div className="mt-2">
+        <p className="text-center font-bold text-sm text-[#2B2118] mb-3 font-sans">6 CARTES SOLTES:</p>
 
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        {dates.map(date => (
-          <motion.button
-            key={date}
-            onClick={() => onSelectCard(date)}
-            className={`p-4 rounded border-2 transition flex flex-col items-center justify-center min-h-24 ${
-              stolenCards.has(date)
-                ? 'bg-green-200 border-green-600 opacity-60'
-                : selectedCard === date
-                  ? 'bg-blue-200 border-blue-600'
-                  : 'bg-amber-50 border-amber-300 hover:bg-amber-100'
-            }`}
-            whileHover={!stolenCards.has(date) ? { scale: 1.05 } : {}}
-            whileTap={!stolenCards.has(date) ? { scale: 0.95 } : {}}
-          >
-            <div className="text-3xl mb-2">📄</div>
-            <div className="text-sm font-bold text-amber-900">{date}</div>
-            {stolenCards.has(date) && <div className="text-xs text-green-700 mt-1">✓ Robada</div>}
-          </motion.button>
-        ))}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {dates.map(date => (
+            <motion.button
+              key={date}
+              onClick={() => onSelectCard(date)}
+              className={`p-4 rounded-lg border-2 transition flex flex-col items-center justify-center min-h-24 ${
+                stolenCards.has(date)
+                  ? 'bg-[#D5F4E6] border-[#16A085] opacity-60'
+                  : selectedCard === date
+                    ? 'bg-[#D6EAF8] border-[#1D3557]'
+                    : 'bg-[#F0EAE3] border-[#D8CCAE] hover:bg-[#EAE0CA]'
+              }`}
+              whileHover={!stolenCards.has(date) ? { scale: 1.05 } : {}}
+              whileTap={!stolenCards.has(date) ? { scale: 0.95 } : {}}
+            >
+              <div className="text-3xl mb-2">📄</div>
+              <div className="text-sm font-bold text-[#2B2118]">{date}</div>
+              {stolenCards.has(date) && <div className="text-xs text-[#16A085] mt-1 font-bold">✓ Robada</div>}
+            </motion.button>
+          ))}
+        </div>
       </div>
 
       {stolenCards.size > 0 && (
         <motion.div
-          className="bg-green-100 border border-green-600 p-4 rounded-lg"
+          className="bg-[#E8F8F5] border border-[#16A085] p-4 rounded-lg"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <p className="text-center font-bold text-sm mb-3">Cartes robades: {stolenCards.size}/6</p>
-          <p className="text-center font-bold text-sm mb-3">Quina substitueixes a l'sobre?</p>
+          <p className="text-center font-bold text-sm text-[#117A65] mb-2 font-sans">Cartes robades: {stolenCards.size}/6</p>
+          <p className="text-center font-bold text-xs text-[#16A085] mb-2 font-sans">Quina substitueixes?</p>
           <select
             value={selectedDate || ''}
             onChange={e => onSelectDate(e.target.value || null)}
-            className="w-full p-3 border-2 border-amber-900 rounded"
+            className="w-full p-3 border-2 border-[#8C6D53] rounded bg-white text-[#2B2118] text-sm"
           >
             <option value="">Selecciona data...</option>
             {Array.from(stolenCards).map(date => (
@@ -615,15 +665,15 @@ function Part2CardsScreen({
       <motion.button
         onClick={onSubmit}
         disabled={!selectedDate || loading}
-        className={`w-full p-4 font-bold text-lg border-2 transition ${
+        className={`w-full p-3 font-bold text-sm border-2 transition rounded-lg font-sans ${
           selectedDate && !loading
-            ? 'bg-amber-900 text-amber-50 border-amber-900 hover:bg-amber-800'
-            : 'bg-gray-300 text-gray-600 border-gray-300 cursor-not-allowed'
+            ? 'bg-[#2B2118] text-[#EAE0CA] border-[#2B2118] hover:bg-[#1D3557]'
+            : 'bg-[#D8CCAE] text-[#8C6D53] border-[#8C6D53] cursor-not-allowed'
         }`}
         whileHover={selectedDate && !loading ? { scale: 1.02 } : {}}
         whileTap={selectedDate && !loading ? { scale: 0.98 } : {}}
       >
-        {loading ? '⏳ Validant...' : 'SUBSTITUIR'}
+        {loading ? '⏳ Validant...' : '✓ SUBSTITUIR'}
       </motion.button>
     </div>
   )
@@ -646,27 +696,31 @@ function Part3EmissariScreen({
     <div className="flex flex-col justify-center flex-1 gap-4">
       <h2 className="text-2xl font-bold text-center mb-4">PORTA DEL CAMPANAR</h2>
 
-      <div className="bg-amber-100 p-6 rounded-lg text-center mb-4">
-        <p className="text-lg mb-4">L'Emissari està aquí, amb fanal</p>
-        <p className="font-bold italic">"Qui va? On aneu?"</p>
-      </div>
+      <motion.div
+        className="bg-[#EAE0CA] border border-[#8C6D53] p-4 rounded-lg text-center mb-3"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <p className="text-sm text-[#2B2118] mb-2">L'Emissari està aquí, amb fanal</p>
+        <p className="font-bold italic text-[#5C4533] text-sm">"Qui va? On aneu?"</p>
+      </motion.div>
 
       <motion.input
         type="text"
         placeholder='Introdueix la contrasenya...'
         value={password}
         onChange={e => onPasswordChange(e.target.value)}
-        className="w-full p-4 border-2 border-amber-900 text-center font-bold rounded text-lg uppercase"
+        className="w-full p-3 border-2 border-[#8C6D53] text-center font-bold rounded-lg text-sm uppercase bg-[#F0EAE3] text-[#2B2118]"
         whileFocus={{ scale: 1.02 }}
       />
 
-      <p className="text-center text-xs text-amber-700">
+      <p className="text-center text-xs text-[#8C6D53] font-sans">
         💡 Pista: "L'ALBA..."
       </p>
 
       {error && (
         <motion.div
-          className="bg-red-100 border border-red-600 text-red-700 p-3 rounded text-sm text-center"
+          className="bg-[#FADBD8] border border-[#E74C3C] text-[#C0392B] p-3 rounded-lg text-xs text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
@@ -677,15 +731,15 @@ function Part3EmissariScreen({
       <motion.button
         onClick={onSubmit}
         disabled={loading || !password.trim()}
-        className={`w-full p-4 font-bold text-lg border-2 transition ${
+        className={`w-full p-3 font-bold text-sm border-2 transition rounded-lg font-sans ${
           password.trim() && !loading
-            ? 'bg-amber-900 text-amber-50 border-amber-900 hover:bg-amber-800'
-            : 'bg-gray-300 text-gray-600 border-gray-300 cursor-not-allowed'
+            ? 'bg-[#2B2118] text-[#EAE0CA] border-[#2B2118] hover:bg-[#1D3557]'
+            : 'bg-[#D8CCAE] text-[#8C6D53] border-[#8C6D53] cursor-not-allowed'
         }`}
         whileHover={password.trim() && !loading ? { scale: 1.02 } : {}}
         whileTap={password.trim() && !loading ? { scale: 0.98 } : {}}
       >
-        {loading ? '⏳ Validant...' : 'ENTREGAR CARTA'}
+        {loading ? '⏳ Validant...' : '📜 ENTREGAR CARTA'}
       </motion.button>
     </div>
   )
@@ -713,32 +767,32 @@ function CardDetailModal({
       onClick={onClose}
     >
       <motion.div
-        className="bg-amber-50 border-4 border-amber-900 rounded-lg p-6 max-w-sm w-full"
+        className="bg-[#F0EAE3] border-4 border-[#8C6D53] rounded-lg p-6 max-w-sm w-full"
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
         onClick={e => e.stopPropagation()}
       >
-        <h3 className="text-2xl font-bold text-center mb-4">CARTA</h3>
+        <h3 className="text-2xl font-bold text-center mb-4 text-[#2B2118]">CARTA</h3>
 
-        <div className="bg-white border-2 border-amber-900 p-4 rounded mb-4">
-          <p className="text-center text-sm text-amber-700 mb-2">📜</p>
-          <p className="text-center font-bold mb-2">Data: {date}-1705</p>
-          <p className="text-center text-sm mb-3">Signatura: {details.signature}</p>
-          <p className="text-center text-sm mb-3">Segell: {details.seal}</p>
-          <p className="text-center italic text-xs text-amber-600">{details.desc}</p>
+        <div className="bg-white border-2 border-[#8C6D53] p-4 rounded-lg mb-4">
+          <p className="text-center text-2xl mb-2">📜</p>
+          <p className="text-center font-bold mb-2 text-[#2B2118] text-sm">Data: {date}-1705</p>
+          <p className="text-center text-sm mb-2 text-[#5C4533]">Signatura: {details.signature}</p>
+          <p className="text-center text-sm mb-3 text-[#5C4533]">Segell: {details.seal}</p>
+          <p className="text-center italic text-xs text-[#8C6D53]">{details.desc}</p>
         </div>
 
         {details.correct && (
-          <div className="bg-green-100 border border-green-600 p-2 rounded mb-4">
-            <p className="text-center text-xs font-bold text-green-700">✓ AQUESTA SEMBLA CORRECTA</p>
+          <div className="bg-[#E8F8F5] border border-[#16A085] p-2 rounded-lg mb-4">
+            <p className="text-center text-xs font-bold text-[#117A65]">✓ AQUESTA SEMBLA CORRECTA</p>
           </div>
         )}
 
         <div className="flex gap-2">
           <motion.button
             onClick={onClose}
-            className="flex-1 p-3 bg-gray-300 text-gray-800 font-bold border-2 border-gray-400 hover:bg-gray-400 transition rounded"
+            className="flex-1 p-3 bg-[#D8CCAE] text-[#2B2118] font-bold border-2 border-[#8C6D53] hover:bg-[#C9BDAA] transition rounded-lg text-sm"
             whileTap={{ scale: 0.95 }}
           >
             TANCAR
@@ -750,10 +804,10 @@ function CardDetailModal({
               onClose()
             }}
             disabled={isStolen}
-            className={`flex-1 p-3 font-bold border-2 rounded transition ${
+            className={`flex-1 p-3 font-bold border-2 rounded-lg text-sm transition ${
               isStolen
-                ? 'bg-gray-300 text-gray-600 border-gray-300 cursor-not-allowed'
-                : 'bg-amber-900 text-amber-50 border-amber-900 hover:bg-amber-800'
+                ? 'bg-[#D8CCAE] text-[#8C6D53] border-[#8C6D53] cursor-not-allowed'
+                : 'bg-[#2B2118] text-[#EAE0CA] border-[#2B2118] hover:bg-[#1D3557]'
             }`}
             whileTap={!isStolen ? { scale: 0.95 } : {}}
           >
@@ -776,40 +830,46 @@ function Part3MoralScreen({
 
   return (
     <div className="flex flex-col justify-center flex-1 gap-4">
-      <h2 className="text-2xl font-bold text-center mb-2">DECISIÓ MORAL</h2>
+      <header className="border-b-2 border-[#8C6D53] pb-3 text-center">
+        <h2 className="text-2xl font-bold text-[#2B2118]">DECISIÓ MORAL</h2>
+        <p className="text-xs text-[#5C4533] mt-1 font-sans">Bernat espera la resposta</p>
+      </header>
 
-      <div className="bg-amber-100 p-4 rounded-lg text-center mb-4">
-        <p className="italic mb-2 text-sm">Bernat espera la resposta...</p>
-        <p className="font-bold">"Vosaltres... què hauríeu fet?"</p>
-      </div>
+      <motion.div
+        className="bg-[#EAE0CA] border border-[#8C6D53] p-4 rounded-xl text-center mb-2"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <p className="italic text-sm text-[#5C4533]">"Vosaltres... què hauríeu fet?"</p>
+      </motion.div>
 
       <div className="flex-1 space-y-3 mb-4">
         <motion.button
           onClick={() => onChoose('A')}
-          className="w-full p-4 bg-blue-100 border-2 border-blue-600 hover:bg-blue-200 transition text-left rounded"
+          className="w-full p-4 bg-[#D5F4E6] border-2 border-[#16A085] hover:bg-[#C9EDE3] transition text-left rounded-lg"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <p className="font-bold text-blue-900">A: COMPASSIÓ</p>
-          <p className="text-sm text-blue-700 mt-2">Deixa que fugis a buscar el teu fill.</p>
+          <p className="font-bold text-[#117A65]">A: COMPASSIÓ</p>
+          <p className="text-sm text-[#16A085] mt-2">Deixa que fugis a buscar el teu fill.</p>
         </motion.button>
 
         <motion.button
           onClick={() => onChoose('B')}
-          className="w-full p-4 bg-red-100 border-2 border-red-600 hover:bg-red-200 transition text-left rounded"
+          className="w-full p-4 bg-[#FADBD8] border-2 border-[#E74C3C] hover:bg-[#F5CCC5] transition text-left rounded-lg"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <p className="font-bold text-red-900">B: JUSTICIA</p>
-          <p className="text-sm text-red-700 mt-2">No. Bernat, estás detingut.</p>
+          <p className="font-bold text-[#C0392B]">B: JUSTICIA</p>
+          <p className="text-sm text-[#E74C3C] mt-2">No. Bernat, estás detingut.</p>
         </motion.button>
       </div>
 
       <motion.div
-        className={`text-center font-bold p-3 rounded ${
+        className={`text-center font-bold p-3 rounded-lg text-sm ${
           isTimeWarning
-            ? 'bg-red-200 text-red-800 animate-pulse'
-            : 'bg-amber-100 text-amber-800'
+            ? 'bg-[#FADBD8] text-[#C0392B] animate-pulse'
+            : 'bg-[#EAE0CA] text-[#8C6D53]'
         }`}
         animate={isTimeWarning ? { scale: [1, 1.05, 1] } : {}}
         transition={{ repeat: isTimeWarning ? Infinity : 0, duration: 1 }}
@@ -823,39 +883,51 @@ function Part3MoralScreen({
 function ResultScreen({ choice }: { choice: 'A' | 'B' | null }) {
   return (
     <div className="flex flex-col justify-center flex-1 gap-4">
-      <h2 className="text-2xl font-bold text-center mb-4">🔔 CAMPANA DE L'ALBA 🔔</h2>
+      <header className="border-b-2 border-[#8C6D53] pb-3 text-center">
+        <h2 className="text-2xl font-bold text-[#2B2118]">🔔 CAMPANA DE L'ALBA</h2>
+      </header>
 
-      <div className="bg-amber-100 p-6 rounded-lg text-center mb-4 animate-bounce">
-        <p className="text-4xl mb-2">🔔</p>
-        <p className="font-bold">DONG... DONG... DONG...</p>
-      </div>
+      <motion.div
+        className="bg-[#EAE0CA] p-6 rounded-lg text-center mb-3 border border-[#8C6D53]"
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 0.5, repeat: 3 }}
+      >
+        <motion.p
+          className="text-5xl mb-2"
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 0.5, repeat: 3 }}
+        >
+          🔔
+        </motion.p>
+        <p className="font-bold text-[#2B2118] text-sm font-sans">DONG... DONG... DONG...</p>
+      </motion.div>
 
       {choice === 'A' ? (
-        <div className="bg-blue-100 border-2 border-blue-600 p-4 rounded-lg">
-          <p className="font-bold text-blue-900 mb-2">OPCIÓ A: COMPASSIÓ</p>
-          <p className="text-sm text-blue-700">
+        <div className="bg-[#D5F4E6] border-2 border-[#16A085] p-4 rounded-lg">
+          <p className="font-bold text-[#117A65] mb-2 text-sm font-sans">OPCIÓ A: COMPASSIÓ</p>
+          <p className="text-sm text-[#16A085]">
             Bernat i Jaume es reuniren a l'estiu. No tornaren mai més a la Guixa.
           </p>
-          <p className="text-sm text-blue-700 mt-2">Però els conjurats van salvos.</p>
+          <p className="text-sm text-[#16A085] mt-2">Però els conjurats van salvos.</p>
         </div>
       ) : (
-        <div className="bg-red-100 border-2 border-red-600 p-4 rounded-lg">
-          <p className="font-bold text-red-900 mb-2">OPCIÓ B: JUSTICIA</p>
-          <p className="text-sm text-red-700">
+        <div className="bg-[#FADBD8] border-2 border-[#E74C3C] p-4 rounded-lg">
+          <p className="font-bold text-[#C0392B] mb-2 text-sm font-sans">OPCIÓ B: JUSTICIA</p>
+          <p className="text-sm text-[#E74C3C]">
             Jaume surt de presó tardor. Busca el seu pare a l'escola. No el troba.
           </p>
-          <p className="text-sm text-red-700 mt-2">Els conjurats es salvaren.</p>
+          <p className="text-sm text-[#E74C3C] mt-2">Els conjurats es salvaren.</p>
         </div>
       )}
 
-      <div className="bg-gray-100 p-4 rounded-lg text-center">
-        <p className="text-sm text-gray-700">
+      <div className="bg-[#F0EAE3] p-4 rounded-lg text-center border border-[#8C6D53]">
+        <p className="text-sm text-[#5C4533] italic font-sans">
           "Aquella nit els vau salvar. La història no els va salvar per sempre."
         </p>
       </div>
 
-      <p className="text-center font-bold text-lg text-amber-900 mt-4">
-        +100 punts
+      <p className="text-center font-bold text-lg text-[#2B2118] mt-4 font-sans">
+        ✓ +100 punts
       </p>
     </div>
   )
