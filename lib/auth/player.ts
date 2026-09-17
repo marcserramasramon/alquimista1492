@@ -34,17 +34,18 @@ export async function signInAsPlayer(
       }
     }
 
-    if (!playerName || playerName.trim().length === 0) {
+    const trimmedName = playerName.trim()
+    if (!trimmedName || trimmedName.length < 2 || trimmedName.length > 30) {
       return {
         code: 'INVALID_NAME',
-        message: 'Player name is required'
+        message: 'Player name must be between 2 and 30 characters'
       }
     }
 
-    // Check if team exists
+    // Check if team exists and is active
     const { data: team, error: teamError } = await supabase
       .from('teams')
-      .select('id, variant')
+      .select('id, variant, is_active, session_id')
       .eq('code', teamCode.toUpperCase())
       .single()
 
@@ -52,6 +53,13 @@ export async function signInAsPlayer(
       return {
         code: 'TEAM_NOT_FOUND',
         message: 'Team code not found'
+      }
+    }
+
+    if (!team.is_active) {
+      return {
+        code: 'TEAM_INACTIVE',
+        message: 'Team session has ended'
       }
     }
 
@@ -93,7 +101,7 @@ export async function signInAsPlayer(
       .insert({
         team_id: team.id,
         user_id: userId,
-        name: playerName.trim(),
+        name: trimmedName,
         player_index: playerIndex,
       })
       .select()
@@ -106,24 +114,16 @@ export async function signInAsPlayer(
       }
     }
 
-    // Check if session exists for team
-    const { data: existingSession } = await supabase
-      .from('sessions')
-      .select('id')
-      .eq('team_id', team.id)
-      .single()
-
     let sessionId: string
 
-    if (existingSession?.id) {
-      // Reuse existing session
-      sessionId = existingSession.id
+    if (team.session_id) {
+      // Team already has a session
+      sessionId = team.session_id
     } else {
       // Create new session
       const { data: session, error: sessionError } = await supabase
         .from('sessions')
         .insert({
-          team_id: team.id,
           current_act: 1,
           current_station: null,
           solved_stations: [],
@@ -140,6 +140,19 @@ export async function signInAsPlayer(
         return {
           code: 'SESSION_CREATE_FAILED',
           message: 'Failed to create game session'
+        }
+      }
+
+      // Update team with the new session_id
+      const { error: updateError } = await supabase
+        .from('teams')
+        .update({ session_id: session.id })
+        .eq('id', team.id)
+
+      if (updateError) {
+        return {
+          code: 'SESSION_UPDATE_FAILED',
+          message: 'Failed to link session to team'
         }
       }
 

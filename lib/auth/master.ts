@@ -1,7 +1,7 @@
 // Master authentication
 // Handles master PIN validation and JWT token generation
 
-import { SignJWT } from 'jose'
+import { SignJWT, jwtVerify } from 'jose'
 
 export interface MasterLoginResult {
   token: string
@@ -79,26 +79,51 @@ export async function loginMaster(
   }
 }
 
+export interface VerifiedMasterToken {
+  role: 'master'
+  exp: number
+  sub: string
+  iat: number
+}
+
 /**
  * Verify JWT token
  * @param token - JWT token to verify
- * @returns Decoded token or null if invalid
+ * @returns Decoded token with role and expiry or throws error if invalid
+ * @throws Error if token is invalid, expired, or secret not configured
  */
-export async function verifyMasterToken(token: string) {
+export async function verifyMasterToken(
+  token: string
+): Promise<VerifiedMasterToken> {
+  const secret = process.env.MASTER_SESSION_SECRET
+  if (!secret) {
+    throw new Error('Session secret not configured')
+  }
+
+  const secretBuffer = new TextEncoder().encode(secret)
+
   try {
-    const secret = process.env.MASTER_SESSION_SECRET
-    if (!secret) {
-      console.error('Session secret not configured')
-      return null
+    const { payload } = await jwtVerify(token, secretBuffer)
+
+    if (!payload.exp) {
+      throw new Error('Token missing expiry claim')
     }
 
-    const secretBuffer = new TextEncoder().encode(secret)
+    if (payload.role !== 'master') {
+      throw new Error('Invalid token role')
+    }
 
-    // Note: jose.jwtVerify needs to be imported
-    // This is a placeholder - actual verification happens in middleware
-    return { role: 'master' }
+    return {
+      role: 'master',
+      exp: payload.exp as number,
+      sub: payload.sub as string,
+      iat: payload.iat as number,
+    }
   } catch (error) {
-    console.error('Token verification error:', error)
-    return null
+    if (error instanceof Error) {
+      // Re-throw jose verification errors with context
+      throw new Error(`Token verification failed: ${error.message}`)
+    }
+    throw new Error('Token verification failed: Unknown error')
   }
 }

@@ -88,7 +88,7 @@ export function FontFerroGame(props: GameProps) {
 function MenuScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-center flex-1 gap-4">
@@ -128,7 +128,7 @@ function MenuScreen({
 function IntroScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-between flex-1">
@@ -163,7 +163,7 @@ function IntroScreen({
 function ReceptaScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-between flex-1">
@@ -202,7 +202,7 @@ function ReceptaScreen({
 function TornsScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-between flex-1">
@@ -253,7 +253,7 @@ function JocScreen({
   selectedDate: string
   onDateSelect: (date: string) => void
   onSubmit: () => void
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
   attempts: number
 }) {
   const dates = ['10', '11', '12', '13', '14', '15', '16']

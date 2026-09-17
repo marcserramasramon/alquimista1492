@@ -1,16 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { GameProps } from '@/components/gameTypes'
 
 interface GameState {
   currentScreen: 'menu' | 'intro' | 'regles' | 'joc' | 'result'
   visitedCells: number[]
   totalMinutes: number
-  attempts: number
+  isSubmitting: boolean
 }
 
-const CELLS = {
+const CELLS: Record<number, { id: number; name: string; type: string; row: number; col: number; isDestination?: boolean; isStart?: boolean }> = {
   1: { id: 1, name: 'Camí Vic', type: 'location', row: 0, col: 0 },
   2: { id: 2, name: '', type: 'empty', row: 0, col: 1 },
   3: { id: 3, name: 'Farga', type: 'location', row: 0, col: 2, isDestination: true },
@@ -30,13 +31,14 @@ const CELLS = {
 }
 
 export function PlaneBonesGame(props: GameProps) {
+  const router = useRouter()
   const [state, setState] = useState<GameState>(() => {
     const saved = props.sharedState as GameState | undefined
     return saved || {
       currentScreen: 'menu',
       visitedCells: [14], // Start at Plaça
       totalMinutes: 0,
-      attempts: 0,
+      isSubmitting: false,
     }
   })
 
@@ -47,7 +49,7 @@ export function PlaneBonesGame(props: GameProps) {
   const handleCellClick = (cellId: number) => {
     if (state.visitedCells.includes(cellId)) return
 
-    const cell = CELLS[cellId]
+    const cell = CELLS[cellId as keyof typeof CELLS]
     if (cell.type === 'prohibit') return
 
     setState(prev => ({
@@ -58,23 +60,17 @@ export function PlaneBonesGame(props: GameProps) {
   }
 
   const handleSubmit = async () => {
-    const lastCell = state.visitedCells[state.visitedCells.length - 1]
-    const cellData = CELLS[lastCell]
+    setState(prev => ({ ...prev, isSubmitting: true }))
 
-    const result = await props.submit({
-      visitedCells: state.visitedCells,
-      totalMinutes: state.totalMinutes,
-    })
-
-    if (result.correct) {
-      setState(prev => ({ ...prev, currentScreen: 'result' }))
-    } else {
-      setState(prev => ({
-        ...prev,
-        attempts: prev.attempts + 1,
-        visitedCells: [14], // Reset to start
-        totalMinutes: 0,
-      }))
+    try {
+      await props.submit({
+        visitedCells: state.visitedCells,
+        totalMinutes: state.totalMinutes,
+      })
+      // Validation happens server-side; redirect to hub
+      router.push(`/joc/hub`)
+    } catch (error) {
+      setState(prev => ({ ...prev, isSubmitting: false }))
     }
   }
 
@@ -108,12 +104,12 @@ export function PlaneBonesGame(props: GameProps) {
           onCellClick={handleCellClick}
           onSubmit={handleSubmit}
           onNavigate={navigateTo}
-          attempts={state.attempts}
+          isSubmitting={state.isSubmitting}
         />
       )}
 
       {state.currentScreen === 'result' && (
-        <ResultScreen solved={props.solved} />
+        <ResultScreen />
       )}
     </div>
   )
@@ -122,7 +118,7 @@ export function PlaneBonesGame(props: GameProps) {
 function MenuScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-center flex-1 gap-4">
@@ -156,7 +152,7 @@ function MenuScreen({
 function IntroScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-between flex-1">
@@ -194,7 +190,7 @@ function IntroScreen({
 function ReglesScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-between flex-1">
@@ -247,14 +243,14 @@ function JocScreen({
   onCellClick,
   onSubmit,
   onNavigate,
-  attempts,
+  isSubmitting,
 }: {
   visitedCells: number[]
   totalMinutes: number
   onCellClick: (cellId: number) => void
   onSubmit: () => void
-  onNavigate: (screen: string) => void
-  attempts: number
+  onNavigate: (screen: GameState['currentScreen']) => void
+  isSubmitting: boolean
 }) {
   const hours = 22 + Math.floor(totalMinutes / 60)
   const mins = totalMinutes % 60
@@ -271,14 +267,14 @@ function JocScreen({
               key={cell.id}
               onClick={() => onCellClick(cell.id)}
               disabled={
-                visitedCells.includes(cell.id) || cell.type === 'prohibit'
+                visitedCells.includes(cell.id) || cell.type === 'prohibit' || isSubmitting
               }
               className={`p-2 text-xs font-bold border-2 ${
                 visitedCells.includes(cell.id)
                   ? 'bg-green-500 text-white border-green-700'
                   : cell.type === 'prohibit'
                     ? 'bg-red-300 text-red-800 border-red-600 cursor-not-allowed'
-                    : 'bg-white text-amber-900 border-amber-900 hover:bg-amber-50'
+                    : 'bg-white text-amber-900 border-amber-900 hover:bg-amber-50 disabled:opacity-50'
               }`}
             >
               {cell.name ? cell.name.slice(0, 3) : '-'}
@@ -305,24 +301,20 @@ function JocScreen({
             </span>
           </div>
         </div>
-
-        {attempts > 0 && (
-          <p className="text-red-600 text-sm mb-4">
-            Intent {attempts}/3 - Ruta incorrecta
-          </p>
-        )}
       </div>
 
       <div className="space-y-3">
         <button
           onClick={onSubmit}
-          className="w-full p-3 bg-amber-900 text-amber-50 font-bold"
+          disabled={isSubmitting}
+          className="w-full p-3 bg-amber-900 text-amber-50 font-bold disabled:opacity-50"
         >
-          [VALIDAR]
+          {isSubmitting ? '[ENVIANT...]' : '[VALIDAR]'}
         </button>
         <button
           onClick={() => onNavigate('menu')}
-          className="w-full p-3 text-left text-amber-900 font-bold"
+          disabled={isSubmitting}
+          className="w-full p-3 text-left text-amber-900 font-bold disabled:opacity-50"
         >
           [← MENÚ]
         </button>
@@ -331,34 +323,12 @@ function JocScreen({
   )
 }
 
-function ResultScreen({ solved }: { solved: boolean }) {
+function ResultScreen() {
   return (
     <div className="flex flex-col justify-center flex-1 gap-4">
-      {solved ? (
-        <>
-          <h2 className="text-3xl font-bold text-center mb-4">✓ CORRECTE!</h2>
-          <p className="text-center text-amber-900 mb-4">
-            La patrulla va arribar a FARGA exactament a les 23:00.
-          </p>
-          <p className="text-center text-amber-900 font-bold">
-            ISIDRE EL FERRER ESTAVA TREBALLANT ALLÀ EN AQUELL MOMENT.
-          </p>
-          <p className="text-center text-amber-900 mt-4">
-            TÉ COARTADA ✓
-          </p>
-          <div className="bg-amber-100 border-2 border-amber-900 p-4 text-center">
-            <p className="font-bold text-amber-900">XIFRA: TERRA = 3</p>
-          </div>
-          <p className="text-center text-green-600 font-bold">+100 punts</p>
-        </>
-      ) : (
-        <>
-          <h2 className="text-3xl font-bold text-center mb-4">✗ INCORRECTE</h2>
-          <p className="text-center text-amber-900">
-            La patrulla ha de arribar a FARGA a les 23:00 (60 minuts).
-          </p>
-        </>
-      )}
+      <div className="text-center">
+        <p className="text-lg text-amber-900">Processant resposta...</p>
+      </div>
     </div>
   )
 }

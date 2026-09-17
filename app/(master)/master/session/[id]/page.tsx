@@ -44,23 +44,35 @@ export default function SessionDetailPage() {
     }
   }, [sessionId])
 
-  const generateTeamCode = (): string => {
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    const randomLetters = Array.from({ length: 4 }, () =>
-      letters.charAt(Math.floor(Math.random() * letters.length))
-    ).join('')
-    return randomLetters
-  }
-
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!teamName.trim()) return
 
     setIsLoading(true)
     try {
+      // Call API to create team
+      const response = await fetch('/api/teams/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          teamName: teamName.trim(),
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        console.error('Failed to create team:', error)
+        alert('Error creating team. Please try again.')
+        return
+      }
+
+      const { code } = await response.json()
+
+      // Add to local state
       const newTeam: Team = {
         id: `team-${Date.now()}`,
-        code: generateTeamCode(),
+        code,
         name: teamName,
         createdAt: new Date().toISOString(),
       }
@@ -69,6 +81,9 @@ export default function SessionDetailPage() {
       setTeams(updated)
       localStorage.setItem(`session-teams-${sessionId}`, JSON.stringify(updated))
       setTeamName('')
+    } catch (error) {
+      console.error('Error creating team:', error)
+      alert('Error creating team. Please try again.')
     } finally {
       setIsLoading(false)
     }

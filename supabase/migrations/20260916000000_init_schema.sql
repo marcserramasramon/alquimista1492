@@ -10,7 +10,7 @@ CREATE TYPE attempt_status AS ENUM ('correct', 'incorrect', 'partial');
 
 -- Table: teams
 CREATE TABLE teams (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code VARCHAR(6) UNIQUE NOT NULL,
   variant session_variant NOT NULL DEFAULT 'A',
   name VARCHAR(100),
@@ -25,7 +25,7 @@ CREATE INDEX idx_teams_code ON teams(code);
 
 -- Table: players
 CREATE TABLE players (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
   user_id UUID NOT NULL,
   name VARCHAR(100) NOT NULL,
@@ -38,7 +38,7 @@ CREATE INDEX idx_players_user_id ON players(user_id);
 
 -- Table: sessions
 CREATE TABLE sessions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
   current_act INTEGER DEFAULT 1,
   current_station VARCHAR(50),
@@ -75,7 +75,7 @@ EXECUTE FUNCTION set_session_expiry();
 
 -- Table: attempts
 CREATE TABLE attempts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   station_id VARCHAR(50) NOT NULL,
   attempt_number INTEGER NOT NULL,
@@ -91,7 +91,7 @@ CREATE INDEX idx_attempts_station_id ON attempts(station_id);
 
 -- Table: results
 CREATE TABLE results (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
   total_score INTEGER NOT NULL,
   time_elapsed INTEGER NOT NULL,
@@ -104,7 +104,7 @@ CREATE INDEX idx_results_team_id ON results(team_id);
 
 -- Table: master_sessions
 CREATE TABLE master_sessions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   master_id VARCHAR(255) NOT NULL,
   login_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   is_active BOOLEAN DEFAULT TRUE
@@ -114,7 +114,7 @@ CREATE INDEX idx_master_sessions_master_id ON master_sessions(master_id);
 
 -- Table: solutions_private (SECRET - RLS protected)
 CREATE TABLE solutions_private (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   station_id VARCHAR(50) NOT NULL,
   variant session_variant NOT NULL,
   solution JSONB NOT NULL,

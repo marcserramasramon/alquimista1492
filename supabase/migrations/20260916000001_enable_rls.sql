@@ -12,6 +12,11 @@ ALTER TABLE results ENABLE ROW LEVEL SECURITY;
 ALTER TABLE master_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE solutions_private ENABLE ROW LEVEL SECURITY;
 
+-- Helper function for RLS policies
+CREATE OR REPLACE FUNCTION current_user_id() RETURNS TEXT AS $$
+  SELECT auth.uid()::TEXT;
+$$ LANGUAGE SQL SECURITY DEFINER;
+
 -- Teams: Players see only their own team
 CREATE POLICY "players_select_own_team"
 ON teams

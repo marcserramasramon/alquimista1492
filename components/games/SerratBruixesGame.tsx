@@ -1,21 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { GameProps } from '@/components/gameTypes'
 
 interface GameState {
   currentScreen: 'menu' | 'intro' | 'tabla' | 'joc' | 'result'
   answer: string
-  attempts: number
+  isSubmitting: boolean
 }
 
 export function SerratBruixesGame(props: GameProps) {
+  const router = useRouter()
   const [state, setState] = useState<GameState>(() => {
     const saved = props.sharedState as GameState | undefined
     return saved || {
       currentScreen: 'menu',
       answer: '',
-      attempts: 0,
+      isSubmitting: false,
     }
   })
 
@@ -26,18 +28,16 @@ export function SerratBruixesGame(props: GameProps) {
   const handleSubmit = async () => {
     if (!state.answer.trim()) return
 
-    const result = await props.submit({
-      answer: state.answer,
-    })
+    setState(prev => ({ ...prev, isSubmitting: true }))
 
-    if (result.correct) {
-      setState(prev => ({ ...prev, currentScreen: 'result' }))
-    } else {
-      setState(prev => ({
-        ...prev,
-        attempts: prev.attempts + 1,
-        answer: '',
-      }))
+    try {
+      await props.submit({
+        answer: state.answer,
+      })
+      // Validation happens server-side; redirect to hub
+      router.push(`/joc/hub`)
+    } catch (error) {
+      setState(prev => ({ ...prev, isSubmitting: false }))
     }
   }
 
@@ -70,12 +70,12 @@ export function SerratBruixesGame(props: GameProps) {
           onAnswerChange={val => setState(prev => ({ ...prev, answer: val }))}
           onSubmit={handleSubmit}
           onNavigate={navigateTo}
-          attempts={state.attempts}
+          isSubmitting={state.isSubmitting}
         />
       )}
 
       {state.currentScreen === 'result' && (
-        <ResultScreen solved={props.solved} />
+        <ResultScreen />
       )}
     </div>
   )
@@ -84,7 +84,7 @@ export function SerratBruixesGame(props: GameProps) {
 function MenuScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-center flex-1 gap-4">
@@ -118,7 +118,7 @@ function MenuScreen({
 function IntroScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-between flex-1">
@@ -156,7 +156,7 @@ function IntroScreen({
 function TablaScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-between flex-1">
@@ -239,13 +239,13 @@ function JocScreen({
   onAnswerChange,
   onSubmit,
   onNavigate,
-  attempts,
+  isSubmitting,
 }: {
   answer: string
   onAnswerChange: (val: string) => void
   onSubmit: () => void
-  onNavigate: (screen: string) => void
-  attempts: number
+  onNavigate: (screen: GameState['currentScreen']) => void
+  isSubmitting: boolean
 }) {
   return (
     <div className="flex flex-col justify-between flex-1">
@@ -263,28 +263,24 @@ function JocScreen({
           type="text"
           value={answer}
           onChange={e => onAnswerChange(e.target.value.toUpperCase())}
-          className="w-full p-3 border-2 border-amber-900 text-amber-900 font-mono text-lg mb-6"
+          disabled={isSubmitting}
+          className="w-full p-3 border-2 border-amber-900 text-amber-900 font-mono text-lg mb-6 disabled:opacity-50"
           placeholder="..."
         />
-
-        {attempts > 0 && (
-          <p className="text-red-600 text-sm mb-4">
-            Intent {attempts}/3 - Resposta incorrecta
-          </p>
-        )}
       </div>
 
       <div className="space-y-3">
         <button
           onClick={onSubmit}
-          disabled={!answer.trim()}
+          disabled={!answer.trim() || isSubmitting}
           className="w-full p-3 bg-amber-900 text-amber-50 font-bold disabled:opacity-50"
         >
-          [VALIDAR]
+          {isSubmitting ? 'ENVIANT...' : '[VALIDAR]'}
         </button>
         <button
           onClick={() => onNavigate('menu')}
-          className="w-full p-3 text-left text-amber-900 font-bold"
+          disabled={isSubmitting}
+          className="w-full p-3 text-left text-amber-900 font-bold disabled:opacity-50"
         >
           [← MENÚ]
         </button>
@@ -293,31 +289,12 @@ function JocScreen({
   )
 }
 
-function ResultScreen({ solved }: { solved: boolean }) {
+function ResultScreen() {
   return (
     <div className="flex flex-col justify-center flex-1 gap-4">
-      {solved ? (
-        <>
-          <h2 className="text-3xl font-bold text-center mb-4">✓ CORRECTE!</h2>
-          <p className="text-center text-amber-900 mb-6">
-            Els vigies han transmès: "SAP DE LLETRA"
-          </p>
-          <p className="text-center text-amber-900 font-bold">
-            Descartats: Pere del Molí, Joan el traginer
-          </p>
-          <div className="bg-amber-100 border-2 border-amber-900 p-4 text-center">
-            <p className="font-bold text-amber-900">XIFRA: FOC = 4</p>
-          </div>
-          <p className="text-center text-green-600 font-bold">+100 punts</p>
-        </>
-      ) : (
-        <>
-          <h2 className="text-3xl font-bold text-center mb-4">✗ INCORRECTE</h2>
-          <p className="text-center text-amber-900">
-            Torna a intentar. Comprova la taula de fogueres.
-          </p>
-        </>
-      )}
+      <div className="text-center">
+        <p className="text-lg text-amber-900">Processant resposta...</p>
+      </div>
     </div>
   )
 }

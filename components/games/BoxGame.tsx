@@ -9,7 +9,7 @@ interface BoxGameState {
   part1Code: string
   part1Attempts: number
   part2SelectedDate: string | null
-  part2StolenCards: Set<string>
+  part2StolenCards: string[]
   part3Choice: 'A' | 'B' | null
   part3TimeRemaining: number
   isCorrect: boolean
@@ -34,7 +34,7 @@ export function BoxGame(props: GameProps) {
       part1Code: '',
       part1Attempts: 0,
       part2SelectedDate: null,
-      part2StolenCards: new Set(),
+      part2StolenCards: [],
       part3Choice: null,
       part3TimeRemaining: 60,
       isCorrect: false,
@@ -81,12 +81,9 @@ export function BoxGame(props: GameProps) {
 
   const toggleStolenCard = (date: string) => {
     setState(prev => {
-      const newStolen = new Set(prev.part2StolenCards)
-      if (newStolen.has(date)) {
-        newStolen.delete(date)
-      } else {
-        newStolen.add(date)
-      }
+      const newStolen = prev.part2StolenCards.includes(date)
+        ? prev.part2StolenCards.filter(d => d !== date)
+        : [...prev.part2StolenCards, date]
       return { ...prev, part2StolenCards: newStolen }
     })
   }
@@ -160,7 +157,7 @@ export function BoxGame(props: GameProps) {
       {state.currentPart === 2 && state.currentScreen === 'cards' && (
         <Part2CardsScreen
           dates={CARD_DATES}
-          stolenCards={state.part2StolenCards}
+          stolenCards={new Set(state.part2StolenCards)}
           selectedDate={state.part2SelectedDate}
           onToggleCard={toggleStolenCard}
           onSelectDate={val => setState(prev => ({ ...prev, part2SelectedDate: val }))}
@@ -378,7 +375,7 @@ function Part3EmissariScreen({ onContinue }: { onContinue: () => void }) {
 
       <input
         type="text"
-        placeholder='Ex: "L\'ALBA VE DE VIC"'
+        placeholder={'Ex: "L\'ALBA VE DE VIC"'}
         disabled
         className="w-full p-4 border-2 border-amber-900 bg-gray-100 text-center font-bold"
       />

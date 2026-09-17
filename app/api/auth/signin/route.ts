@@ -7,7 +7,7 @@ import { z } from 'zod'
 
 const SignInSchema = z.object({
   teamCode: z.string().length(6),
-  playerName: z.string().min(1).max(100),
+  playerName: z.string().min(2).max(30),
 })
 
 export async function POST(request: NextRequest) {
@@ -30,7 +30,12 @@ export async function POST(request: NextRequest) {
 
     // Check if error
     if ('code' in result && result.code) {
-      const statusCode = result.code === 'TEAM_NOT_FOUND' ? 404 : 400
+      let statusCode = 400
+      if (result.code === 'TEAM_NOT_FOUND' || result.code === 'TEAM_INACTIVE') {
+        statusCode = 404
+      } else if (result.code === 'INVALID_PIN') {
+        statusCode = 401
+      }
       return NextResponse.json(result, { status: statusCode })
     }
 

@@ -72,7 +72,7 @@ export default function ResultsPage() {
               ...team,
               score: result?.total_score || session?.score || 0,
               timeElapsed,
-              moralChoice: result?.moral_choice,
+              moralChoice: result?.moral_choice || undefined,
               accuracy: session?.evidence_unlocked?.length
                 ? `${Math.round((session.evidence_unlocked.length / 6) * 100)}%`
                 : '0%',

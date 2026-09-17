@@ -116,7 +116,7 @@ export function CementiriGame(props: GameProps) {
 function MenuScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-center flex-1 gap-4">
@@ -162,7 +162,7 @@ function MenuScreen({
 function IntroScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-between flex-1">
@@ -200,7 +200,7 @@ function IntroScreen({
 function LapidesScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-between flex-1">
@@ -241,7 +241,7 @@ function LapidesScreen({
 function RegistreScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-between flex-1">
@@ -279,7 +279,7 @@ function RegistreScreen({
 function CartaScreen({
   onNavigate,
 }: {
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
 }) {
   return (
     <div className="flex flex-col justify-between flex-1">
@@ -329,7 +329,7 @@ function JocScreen({
   selectedLapida: number | null
   onLapisaSelect: (id: number) => void
   onSubmit: () => void
-  onNavigate: (screen: string) => void
+  onNavigate: (screen: GameState['currentScreen']) => void
   attempts: number
 }) {
   return (

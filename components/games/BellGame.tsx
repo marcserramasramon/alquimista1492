@@ -1,31 +1,28 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { GameProps } from '@/components/gameTypes'
 
 interface BellGameState {
   currentScreen: 'intro' | 'input' | 'result'
   code: string
-  attempts: number
-  isCorrect: boolean
+  isSubmitting: boolean
 }
-
-const CORRECT_CODE = '1234' // foc=1, aigua=2, aire=3, terra=4
 
 /**
  * Joc 8: Sometent — Campanar
  * Input 4 digits per tocar el campanar
- * Validació: ordre correcta (element codes)
- * Correcte: som campana + +100 punts
+ * Validació: ordre correcta (element codes) — validated server-side only
  */
 export function BellGame(props: GameProps) {
+  const router = useRouter()
   const [state, setState] = useState<BellGameState>(() => {
     const saved = props.sharedState as BellGameState | undefined
     return saved || {
       currentScreen: 'intro',
       code: '',
-      attempts: 0,
-      isCorrect: false,
+      isSubmitting: false,
     }
   })
 
@@ -36,24 +33,22 @@ export function BellGame(props: GameProps) {
   const handleSubmit = async () => {
     const normalized = state.code.replace(/[\s-]/g, '')
 
+    // Basic format check only (not validation)
     if (normalized.length !== 4 || !/^\d{4}$/.test(normalized)) {
-      setState(prev => ({ ...prev, attempts: prev.attempts + 1 }))
       return
     }
 
-    const isCorrect = normalized === CORRECT_CODE
+    setState(prev => ({ ...prev, isSubmitting: true }))
 
-    const result = await props.submit({
-      code: normalized,
-      isCorrect,
-    })
-
-    setState(prev => ({
-      ...prev,
-      isCorrect: result.correct || isCorrect,
-      attempts: prev.attempts + 1,
-      currentScreen: 'result',
-    }))
+    try {
+      await props.submit({
+        code: normalized,
+      })
+      // Validation happens server-side; redirect to hub
+      router.push(`/joc/hub`)
+    } catch (error) {
+      setState(prev => ({ ...prev, isSubmitting: false }))
+    }
   }
 
   return (
@@ -72,12 +67,12 @@ export function BellGame(props: GameProps) {
           code={state.code}
           onCodeChange={val => setState(prev => ({ ...prev, code: val }))}
           onSubmit={handleSubmit}
-          attempts={state.attempts}
+          isSubmitting={state.isSubmitting}
         />
       )}
 
       {state.currentScreen === 'result' && (
-        <ResultScreen isCorrect={state.isCorrect} attempts={state.attempts} />
+        <ResultScreen />
       )}
     </div>
   )
@@ -120,12 +115,12 @@ function InputScreen({
   code,
   onCodeChange,
   onSubmit,
-  attempts,
+  isSubmitting,
 }: {
   code: string
   onCodeChange: (val: string) => void
   onSubmit: () => void
-  attempts: number
+  isSubmitting: boolean
 }) {
   const isValid = code.replace(/[\s-]/g, '').length === 4
 
@@ -141,65 +136,35 @@ function InputScreen({
         type="text"
         value={code}
         onChange={e => onCodeChange(e.target.value)}
+        disabled={isSubmitting}
         placeholder="Ex: 1234 o 1-2-3-4"
-        className="w-full p-4 text-2xl text-center font-bold border-2 border-amber-900 tracking-widest"
-        maxLength="7"
+        className="w-full p-4 text-2xl text-center font-bold border-2 border-amber-900 tracking-widest disabled:opacity-50"
+        maxLength={7}
       />
 
       <p className="text-center text-sm text-amber-800">Forma: 1234 o 1-2-3-4</p>
 
-      {attempts > 0 && (
-        <div className="bg-red-100 p-3 rounded border border-red-600">
-          <p className="text-sm text-red-600">Intents: {attempts}</p>
-        </div>
-      )}
-
       <button
         onClick={onSubmit}
-        disabled={!isValid}
+        disabled={!isValid || isSubmitting}
         className={`w-full p-4 font-bold text-lg border-2 transition ${
-          isValid
+          isValid && !isSubmitting
             ? 'bg-amber-900 text-amber-50 border-amber-900 hover:bg-amber-800'
             : 'bg-gray-300 text-gray-600 border-gray-300 cursor-not-allowed'
         }`}
       >
-        TOCAR EL CAMPANAR
+        {isSubmitting ? 'ENVIANT...' : 'TOCAR EL CAMPANAR'}
       </button>
     </div>
   )
 }
 
-function ResultScreen({ isCorrect, attempts }: { isCorrect: boolean; attempts: number }) {
+function ResultScreen() {
   return (
     <div className="flex flex-col justify-center flex-1 gap-6">
-      {isCorrect ? (
-        <>
-          <h2 className="text-3xl font-bold text-center text-green-600 mb-2">✓ CORRECTE!</h2>
-
-          <div className="bg-green-50 border-2 border-green-600 p-8 rounded-lg text-center animate-bounce">
-            <p className="text-6xl mb-4">🔔</p>
-            <p className="font-bold text-green-700 text-lg">DONG... DONG... DONG...</p>
-            <p className="text-sm text-green-600 mt-2">El campanar sona!</p>
-          </div>
-
-          <div className="bg-amber-100 p-4 rounded-lg text-center">
-            <p className="text-base mb-2">Els conjurats de Sant Sebastià senten el senyal.</p>
-            <p className="text-sm text-amber-800">I comencen a moure's cap a la seguretat.</p>
-          </div>
-
-          <p className="text-center font-bold text-lg text-green-600">+100 punts</p>
-        </>
-      ) : (
-        <>
-          <h2 className="text-3xl font-bold text-center text-red-600 mb-4">✗ CODI INCORRECTE</h2>
-
-          <div className="bg-red-100 border-2 border-red-600 p-6 rounded-lg text-center">
-            <p className="text-lg mb-2">El codi que has entrat no és correcte.</p>
-            <p className="text-sm text-red-700">Repassa els 4 elements.</p>
-            <p className="text-sm font-bold mt-4">Intents: {attempts}</p>
-          </div>
-        </>
-      )}
+      <div className="text-center">
+        <p className="text-lg text-amber-900">Processant resposta...</p>
+      </div>
     </div>
   )
 }

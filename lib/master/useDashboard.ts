@@ -6,7 +6,7 @@ export type TeamData = Database['public']['Tables']['teams']['Row'] & {
   score: number
   solvedStationsCount: number
   timeElapsed: number
-  moralChoice?: string
+  moralChoice?: string | null
   salconduits: number
 }
 
