@@ -1,32 +1,91 @@
-// @ts-nocheck
-// TypeScript errors in this file are expected and will be resolved after:
-// 1. Supabase project is created
-// 2. supabase gen types is run to generate lib/db.types.ts with correct schema
-// This temporary suppression allows compilation during development phase.
-
-// POST /api/game/validate-answer
-// Validate player answer against solutions (server-only)
-// Uses service role to access solutions_private table
-
 import 'server-only'
 
 import { getServiceRoleClient } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+/**
+ * Validation schema for answer submission
+ * Answer can be: string, number, or complex object depending on game type
+ */
 const ValidateAnswerSchema = z.object({
   sessionId: z.string().uuid(),
-  stationId: z.string(),
-  answer: z.unknown(), // Can be string, number, object depending on game type
+  stationId: z.string().min(1),
+  answer: z.unknown(),
 })
 
 interface ValidateAnswerResponse {
-  correct: boolean
+  success: boolean
   message: string
-  digit?: number
-  evidence?: string[]
-  suspectsDismissed?: string[]
-  scoreBonus?: number
+  reward: number
+}
+
+/**
+ * Type-safe comparison function for different answer types
+ */
+function compareAnswers(
+  submitted: unknown,
+  expected: unknown,
+  stationType: string
+): boolean {
+  // String comparison (most common)
+  if (typeof submitted === 'string' && typeof expected === 'string') {
+    return submitted.toUpperCase().trim() === expected.toUpperCase().trim()
+  }
+
+  // Number comparison
+  if (typeof submitted === 'number' && typeof expected === 'number') {
+    return submitted === expected
+  }
+
+  // Object comparison for complex answers
+  if (
+    typeof submitted === 'object' &&
+    submitted !== null &&
+    typeof expected === 'object' &&
+    expected !== null
+  ) {
+    // Handle PlaneBonesGame answer: { visitedCells, totalMinutes }
+    if ('visitedCells' in submitted || 'totalMinutes' in submitted) {
+      const sub = submitted as Record<string, unknown>
+      const exp = expected as Record<string, unknown>
+      // Compare time-based answer (convert both to comparable format)
+      if ('time' in exp && 'totalMinutes' in sub) {
+        const submittedTime = sub.totalMinutes as number
+        const expectedTime = exp.time as number
+        // Allow ±5 minute tolerance
+        return Math.abs(submittedTime - expectedTime) <= 5
+      }
+    }
+
+    // Handle ControlGame answer: { type, timestamp }
+    if ('type' in submitted) {
+      const sub = submitted as Record<string, unknown>
+      const exp = expected as Record<string, unknown>
+      return sub.type === exp.type
+    }
+
+    // Handle AccusationGame answer: { suspect, evidence }
+    if ('suspect' in submitted && 'evidence' in submitted) {
+      const sub = submitted as Record<string, unknown>
+      const exp = expected as Record<string, unknown>
+
+      // Check suspect match
+      if (sub.suspect !== exp.traitor) {
+        return false
+      }
+
+      // Check if evidence array has minimum required pieces
+      const evidence = sub.evidence as unknown[]
+      const minEvidence = (exp.minEvidence as number) || 1
+      return evidence && evidence.length >= minEvidence
+    }
+
+    // Default: deep equality for other object types
+    return JSON.stringify(submitted) === JSON.stringify(expected)
+  }
+
+  return false
 }
 
 export async function POST(request: NextRequest) {
@@ -43,108 +102,173 @@ export async function POST(request: NextRequest) {
     }
 
     const { sessionId, stationId, answer } = validation.data
-
-    // Get service role client (has access to solutions_private)
     const serviceClient = getServiceRoleClient()
 
-    // Get the session and its variant
+    // === Step 1: Get session and find associated team ===
     const { data: session, error: sessionError } = await serviceClient
       .from('sessions')
-      .select('id, team_id, code_digits')
+      .select('id, score')
       .eq('id', sessionId)
       .single()
 
     if (sessionError || !session) {
-      return NextResponse.json(
-        { error: 'Session not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 })
     }
 
-    // Get team variant
-    const { data: team } = await serviceClient
+    // Find the team for this session
+    const { data: team, error: teamError } = await serviceClient
       .from('teams')
-      .select('variant')
-      .eq('id', session.team_id)
+      .select('id, variant')
+      .eq('session_id', sessionId)
       .single()
 
-    if (!team) {
-      return NextResponse.json(
-        { error: 'Team not found' },
-        { status: 404 }
-      )
+    if (teamError || !team) {
+      return NextResponse.json({ error: 'Team not found' }, { status: 404 })
     }
 
-    // CRITICAL: Load solution using service role (anon users cannot access)
-    const { data: solutions, error: solutionError } = await serviceClient
+    // === Step 2: Rate limiting - max 1 attempt per 3 seconds per team+station ===
+    const { data: lastAttempt } = await serviceClient
+      .from('attempts')
+      .select('timestamp')
+      .eq('session_id', sessionId)
+      .eq('station_id', stationId)
+      .order('timestamp', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (lastAttempt?.timestamp) {
+      const lastAttemptTime = new Date(lastAttempt.timestamp).getTime()
+      const currentTime = new Date().getTime()
+      const timeSinceLastAttempt = (currentTime - lastAttemptTime) / 1000
+
+      if (timeSinceLastAttempt < 3) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Massa ràpid. Espera ${Math.ceil(3 - timeSinceLastAttempt)} segons.`,
+            reward: 0,
+          },
+          { status: 429 }
+        )
+      }
+    }
+
+    // === Step 3: Fetch solution from database (server-only access) ===
+    const { data: solution, error: solutionError } = await serviceClient
       .from('solutions_private')
-      .select('solution, hints')
+      .select('solution')
       .eq('station_id', stationId)
       .eq('variant', team.variant)
       .single()
 
-    if (solutionError || !solutions) {
+    if (solutionError || !solution) {
       return NextResponse.json(
         { error: 'Solution not configured for station' },
         { status: 500 }
       )
     }
 
-    // Parse solution (structure depends on game type)
-    const solution = solutions.solution as Record<string, any>
+    const solutionData = solution.solution as Record<string, unknown>
 
-    // Validate answer (this is a basic check - actual validation depends on game type)
-    const correct = String(answer).toUpperCase() === String(solution.answer).toUpperCase()
+    // === Step 4: Compare answer with solution ===
+    const isCorrect = compareAnswers(answer, solutionData.answer, stationId)
 
-    // Record attempt
-    const { data: attempt } = await serviceClient
-      .from('attempts')
-      .select('attempt_number')
-      .eq('session_id', sessionId)
-      .eq('station_id', stationId)
-      .order('attempt_number', { ascending: false })
-      .limit(1)
-      .single()
+    // === Step 5: Record attempt ===
+    // Convert answer to string for storage
+    let answerString: string
+    if (typeof answer === 'string') {
+      answerString = answer
+    } else if (typeof answer === 'number') {
+      answerString = String(answer)
+    } else {
+      answerString = JSON.stringify(answer)
+    }
 
-    const attemptNumber = (attempt?.attempt_number ?? 0) + 1
-
-    const { error: insertError } = await serviceClient
+    const { error: attemptError } = await serviceClient
       .from('attempts')
       .insert({
         session_id: sessionId,
         station_id: stationId,
-        attempt_number: attemptNumber,
-        answer: String(answer),
-        is_correct: correct,
-        status: correct ? 'correct' : 'incorrect',
+        answer: answerString,
+        is_correct: isCorrect,
+        status: isCorrect ? 'correct' : 'incorrect',
+        attempt_number: 1, // Will be incremented by trigger if needed
       })
 
-    if (insertError) {
-      console.error('Failed to insert attempt:', insertError)
+    if (attemptError) {
+      console.error('Failed to insert attempt:', attemptError)
       return NextResponse.json(
         { error: 'Failed to record attempt' },
         { status: 500 }
       )
     }
 
-    // Prepare response
-    const response: ValidateAnswerResponse = {
-      correct,
-      message: correct
-        ? 'Resposta correcta!'
-        : 'Resposta incorrecta. Torna-ho a intentar.',
-      digit: solution.digit,
-      evidence: solution.evidence ? [solution.evidence] : undefined,
-      suspectsDismissed: solution.suspects_dismissed || undefined,
-      scoreBonus: correct ? 100 : -10,
+    let scoreReward = 0
+    let responseMessage = isCorrect
+      ? 'Resposta correcta!'
+      : 'Resposta incorrecta. Torna-ho a intentar.'
+
+    // === Step 6: On correct answer, update game state ===
+    if (isCorrect) {
+      scoreReward = 100
+
+      // Update team_stations: mark as solved
+      const { data: teamStation } = await serviceClient
+        .from('team_stations')
+        .select('id')
+        .eq('team_id', team.id)
+        .eq('station_id', stationId)
+        .single()
+
+      if (teamStation) {
+        await serviceClient
+          .from('team_stations')
+          .update({
+            solved: true,
+            solved_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', teamStation.id)
+      } else {
+        // Create team_station entry if it doesn't exist
+        await serviceClient.from('team_stations').insert({
+          team_id: team.id,
+          station_id: stationId,
+          solved: true,
+          solved_at: new Date().toISOString(),
+        })
+      }
+
+      // Insert score event (audit trail)
+      await serviceClient.from('score_events').insert({
+        team_id: team.id,
+        points: scoreReward,
+        event_type: 'station_solved',
+        details: {
+          station_id: stationId,
+          answer_type: typeof answer,
+        },
+      })
+
+      // Update session score
+      const newScore = (session.score ?? 0) + scoreReward
+      await serviceClient
+        .from('sessions')
+        .update({ score: newScore })
+        .eq('id', sessionId)
     }
 
-    return NextResponse.json(response, { status: 200 })
+    // === Step 7: Return response ===
+    return NextResponse.json(
+      {
+        success: isCorrect,
+        message: responseMessage,
+        reward: scoreReward,
+      } satisfies ValidateAnswerResponse,
+      { status: 200 }
+    )
   } catch (error) {
     console.error('Validation error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
