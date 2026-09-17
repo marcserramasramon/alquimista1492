@@ -25,8 +25,8 @@ interface BellsGameState {
   playbackCount: number // For final screen (plays 3 times)
 }
 
-// 8-bell sequence for the Sometent (representing the calling of the conjurats)
-const BELL_SEQUENCE = [1, 2, 1, 2, 3, 1, 3, 2]
+// Seqüència de campanades (es genera servidor, no hardcoded)
+// El servidor la valida quan el jugador l'ha reproduït correctament
 
 /**
  * Joc 8: Sometent — Campanar (Bell Ringing Game)
@@ -53,7 +53,7 @@ export function BellsGame(props: GameProps) {
       currentScreen: 'intro',
       moralChoice: null,
       moralTimer: 60,
-      bellSequence: BELL_SEQUENCE,
+      bellSequence: [], // Es carregará del servidor
       playerSequence: [],
       attempts: 0,
       hasListenedOnce: false,
@@ -177,8 +177,8 @@ export function BellsGame(props: GameProps) {
     try {
       const result = await props.submit({
         moralChoice: state.moralChoice,
+        bellSequence: state.playerSequence, // Enviar la seqüència que el jugador ha tocat
         attempts: state.attempts,
-        bellsCorrect: true,
       })
 
       if (!result.correct) {

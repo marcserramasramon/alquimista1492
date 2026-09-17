@@ -12,6 +12,7 @@ import { ControlGame } from './ControlGame'
 import { AccusationGame } from './AccusationGame'
 import { BoxGame } from './BoxGame'
 import { BellGame } from './BellGame'
+import { BellsGame } from './BellsGame'
 import { MoralChoiceGame } from './MoralChoiceGame'
 
 export interface GameRegistry {
@@ -38,9 +39,9 @@ export const GAMES: GameRegistry = {
   'rectoria-caixa': BoxGame,
   'caixa_almoines': BoxGame,
   'rectoria': BoxGame,
-  'sometent-campanar': BellGame,
-  'bells-sometent': BellGame,
-  'campanar': BellGame,
+  'sometent-campanar': BellsGame,
+  'bells-sometent': BellsGame,
+  'campanar': BellsGame,
   'decisio-moral': MoralChoiceGame,
 }
 

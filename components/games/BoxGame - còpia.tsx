@@ -11,7 +11,7 @@ import {
 
 interface BoxGameState {
   currentPart: 1 | 2 | 3
-  currentScreen: 'cards' | 'card_detail' | 'seal' | 'seal_detail' | 'sealed' | 'complete'
+  currentScreen: 'intro' | 'input' | 'cards' | 'card_detail' | 'seal' | 'seal_detail' | 'sealed' | 'complete'
   part1Code: string
   part1Attempts: number
   part2SelectedDate: string | null
@@ -126,7 +126,7 @@ export function BoxGame(props: GameProps) {
     }
     return {
       currentPart: 1,
-      currentScreen: 'cards',
+      currentScreen: 'intro',
       part1Code: '',
       part1Attempts: 0,
       part2SelectedDate: null,
@@ -140,6 +140,7 @@ export function BoxGame(props: GameProps) {
   useEffect(() => {
     props.setSharedState(state)
   }, [state, props])
+
 
   const handlePart1Submit = async () => {
     if (!state.part1Code.trim()) {
@@ -181,6 +182,8 @@ export function BoxGame(props: GameProps) {
       setLoading(false)
     }
   }
+
+
 
   const handlePart2Submit = async () => {
     if (!state.part2SelectedDate) {
@@ -297,8 +300,12 @@ export function BoxGame(props: GameProps) {
       </div>
 
       {/* Part 1: Obrir caixa */}
-      {state.currentPart === 1 && (
-        <Part1UnifiedScreen
+      {state.currentPart === 1 && state.currentScreen === 'intro' && (
+        <Part1IntroScreen onContinue={() => setState(prev => ({ ...prev, currentScreen: 'input' }))} />
+      )}
+
+      {state.currentPart === 1 && state.currentScreen === 'input' && (
+        <Part1InputScreen
           code={state.part1Code}
           onCodeChange={val => setState(prev => ({ ...prev, part1Code: val }))}
           onSubmit={handlePart1Submit}
@@ -369,7 +376,89 @@ export function BoxGame(props: GameProps) {
   )
 }
 
-function Part1UnifiedScreen({
+function Part1IntroScreen({ onContinue }: { onContinue: () => void }) {
+  return (
+    <div className="flex flex-col justify-center flex-1 gap-4">
+      <header className="border-b-2 border-[#8C6D53] pb-3 mb-4 text-center">
+        <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
+          Estació 7 · Rectoria
+        </span>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
+          CAIXA DE LES ALMOINES
+        </h1>
+        <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">
+          "El cadenat protegeix secrets del Pacte dels Vigatans"
+        </p>
+      </header>
+
+      {/* Narrative text (replaces the old "La caixa està segellada" card) */}
+      <motion.div
+        className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm p-4"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <p className="text-sm text-[#2B2118] leading-relaxed">
+          La <strong>Caixa de les Almoines</strong> de la Rectoria de la Guixa amaga el
+          testament secret dels conjurats. En Bernat Sala t'ha fet arribar la clau i la
+          paraula d'ordre. Obre-la, substitueix la carta comprometedora per una
+          d'inofensiva i tanca-la de nou — abans que no arribi el correu reial.
+        </p>
+      </motion.div>
+
+      {/* Padlock — floating animation (no rotation) */}
+      <motion.div
+        className="flex justify-center"
+        animate={{ y: [0, -6, 0] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <span className="text-5xl drop-shadow-md select-none">🔒</span>
+      </motion.div>
+
+
+
+
+      <div className="bg-[#F0EAE3] border border-[#D8CCAE] rounded-xl p-3">
+        <p className="font-bold text-xs text-[#2B2118] mb-2 text-center font-sans">4 ELEMENTS = 4 NÚMEROS:</p>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="bg-white p-2 rounded border border-[#8C6D53]">
+            <p className="font-bold text-[#1D3557]">🔥 FOC</p>
+            <p className="text-[#5C4533]">CIM (Serrat) = <span className="font-bold">4</span></p>
+          </div>
+          <div className="bg-white p-2 rounded border border-[#8C6D53]">
+            <p className="font-bold text-[#1D3557]">💧 AIGUA</p>
+            <p className="text-[#5C4533]">FONT Ferro = <span className="font-bold">2</span></p>
+          </div>
+          <div className="bg-white p-2 rounded border border-[#8C6D53]">
+            <p className="font-bold text-[#1D3557]">🌍 TERRA</p>
+            <p className="text-[#5C4533]">PLA Bones = <span className="font-bold">3</span></p>
+          </div>
+          <div className="bg-white p-2 rounded border border-[#8C6D53]">
+            <p className="font-bold text-[#1D3557]">⛰️ PEDRA</p>
+            <p className="text-[#5C4533]">Cementiri = <span className="font-bold">1</span></p>
+          </div>
+        </div>
+		
+		
+		
+		
+		
+		
+		
+      </div>
+
+      <motion.button
+        onClick={onContinue}
+        className="w-full p-3 bg-[#2B2118] text-[#EAE0CA] font-bold text-sm border-2 border-[#2B2118] hover:bg-[#1D3557] rounded-lg transition font-sans"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        OBRIR CADENAT →
+      </motion.button>
+    </div>
+  )
+}
+
+function Part1InputScreen({
   code,
   onCodeChange,
   onSubmit,
@@ -391,89 +480,12 @@ function Part1UnifiedScreen({
   const isCorrect = code.replace(/[\s-]/g, '') === '4231'
 
   return (
-    <div className="flex flex-col flex-1 gap-6">
-      {/* Header */}
+    <div className="flex flex-col justify-center flex-1 gap-6">
       <header className="border-b-2 border-[#8C6D53] pb-3 text-center">
-        <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
-          Estació 7 · Rectoria
-        </span>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
-          CAIXA DE LES ALMOINES
-        </h1>
-        <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">
-          "El cadenat protegeix secrets del Pacte dels Vigatans"
-        </p>
+        <h2 className="text-2xl font-bold text-[#2B2118]">COFRE ANTIC</h2>
+        <p className="text-xs text-[#5C4533] mt-1 font-sans italic">Gira les rodes per obrir</p>
       </header>
 
-      {/* Narrative text */}
-      <motion.div
-        className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm p-4"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <p className="text-sm text-[#2B2118] leading-relaxed">
-          La <strong>Caixa de les Almoines</strong> de la Rectoria de la Guixa amaga el
-          testament secret dels conjurats. En Bernat Sala t'ha fet arribar la clau i la
-          paraula d'ordre. Obre-la, substitueix la carta comprometedora per una
-          d'inofensiva i tanca-la de nou — abans que no arribi el correu reial.
-        </p>
-      </motion.div>
-
-      {/* Padlock — floating animation */}
-      <motion.div
-        className="flex justify-center"
-        animate={{ y: [0, -6, 0] }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <span className="text-5xl drop-shadow-md select-none">🔒</span>
-      </motion.div>
-
-      {/* 4 Elements animats de costat */}
-      <div className="bg-[#F0EAE3] border border-[#D8CCAE] rounded-xl p-3 shadow-inner">
-        <div className="grid grid-cols-4 gap-2 text-center">
-          {/* FOC */}
-          <div className="group relative bg-gradient-to-b from-orange-50 to-white p-2.5 rounded-lg border border-amber-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <div className="text-2xl sm:text-3xl animate-bounce [animation-duration:2.5s]">
-              🔥
-            </div>
-            <div className="mt-1 text-[10px] font-bold tracking-widest text-amber-900 uppercase">
-              Foc
-            </div>
-          </div>
-
-          {/* AIGUA */}
-          <div className="group relative bg-gradient-to-b from-blue-50 to-white p-2.5 rounded-lg border border-sky-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <div className="text-2xl sm:text-3xl animate-pulse [animation-duration:2s]">
-              💧
-            </div>
-            <div className="mt-1 text-[10px] font-bold tracking-widest text-sky-900 uppercase">
-              Aigua
-            </div>
-          </div>
-
-          {/* TERRA */}
-          <div className="group relative bg-gradient-to-b from-emerald-50 to-white p-2.5 rounded-lg border border-emerald-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <div className="text-2xl sm:text-3xl animate-bounce [animation-duration:3s]">
-              🌍
-            </div>
-            <div className="mt-1 text-[10px] font-bold tracking-widest text-emerald-900 uppercase">
-              Terra
-            </div>
-          </div>
-
-          {/* PEDRA */}
-          <div className="group relative bg-gradient-to-b from-stone-50 to-white p-2.5 rounded-lg border border-stone-400 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <div className="text-2xl sm:text-3xl animate-pulse [animation-duration:2.8s]">
-              ⛰️
-            </div>
-            <div className="mt-1 text-[10px] font-bold tracking-widest text-stone-900 uppercase">
-              Pedra
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Combination Lock */}
       <motion.div
         className="bg-gradient-to-b from-[#8C6D53] via-[#6B5244] to-[#5C4533] border-4 border-[#3D3428] rounded-xl p-8 shadow-2xl relative overflow-hidden"
         initial={{ opacity: 0, scale: 0.95 }}
@@ -544,7 +556,6 @@ function Part1UnifiedScreen({
   )
 }
 
-
 function DialWheel({
   value,
   onChange,
@@ -580,6 +591,7 @@ function DialWheel({
     </div>
   )
 }
+
 
 function Part2CardsScreen({
   stolenCards,
@@ -620,7 +632,7 @@ function Part2CardsScreen({
         </p>
       </header>
 
-      {/* Tab bar */}
+      {/* Tab bar — same style as CementiriGame / FontFerroGame */}
       <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden">
         <div className="bg-[#D8CCAE] border-b border-[#8C6D53] flex">
           {TABS.map(tab => (
@@ -642,10 +654,12 @@ function Part2CardsScreen({
 
         {/* Tab content */}
         <div className="p-4">
+
           {/* ── El Sobre ── */}
           {activeTab === 'sobre' && (
             <AnimatePresence mode="wait">
               {!sobreObert ? (
+                /* Sobre tancat: segell de cera */
                 <motion.div
                   key="tancat"
                   initial={{ opacity: 0 }}
@@ -656,6 +670,7 @@ function Part2CardsScreen({
                     className="relative bg-gradient-to-br from-[#E8DCC8] via-[#E5D9C3] to-[#D8CCAE] border-2 border-[#8C6D53] p-6 text-center rounded-sm shadow-xl overflow-hidden"
                     style={{ backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(139,109,83,0.04) 3px, rgba(139,109,83,0.04) 6px),repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(139,109,83,0.04) 3px, rgba(139,109,83,0.04) 6px)` }}
                   >
+                    {/* Solapa del sobre (V decoratiu a dalt) */}
                     <div className="absolute top-0 left-0 right-0 flex justify-center pointer-events-none">
                       <div className="w-0 h-0 border-l-[60px] border-r-[60px] border-t-[40px] border-l-transparent border-r-transparent border-t-[#C9BDAA] opacity-60" />
                     </div>
@@ -666,6 +681,7 @@ function Part2CardsScreen({
                         Bernat Sala · 16 de maig de 1705
                       </p>
 
+                      {/* Segell de cera — el botó principal */}
                       <motion.button
                         onClick={() => !sobreRobat && setSobreObert(true)}
                         className="mx-auto mb-5 flex flex-col items-center gap-2 group"
@@ -689,6 +705,7 @@ function Part2CardsScreen({
                   </div>
                 </motion.div>
               ) : (
+                /* Sobre obert: contingut de la carta */
                 <motion.div
                   key="obert"
                   initial={{ opacity: 0, y: 12 }}
@@ -699,6 +716,7 @@ function Part2CardsScreen({
                     className="relative bg-[#F5EFE0] border-2 border-[#8C6D53] p-5 rounded-sm shadow-lg mb-4"
                     style={{ backgroundImage: 'repeating-linear-gradient(90deg,transparent,transparent 2px,rgba(139,109,83,0.03) 2px,rgba(139,109,83,0.03) 4px)' }}
                   >
+                    {/* Segell trencat decoratiu */}
                     <div className="absolute top-3 right-3 opacity-30 transform rotate-12 text-2xl select-none">🔴</div>
 
                     <p className="text-xs text-[#8C6D53] uppercase tracking-widest font-bold font-sans mb-1">📅 16 de maig de 1705</p>
@@ -808,6 +826,7 @@ function Part2CardsScreen({
               </div>
             </div>
           )}
+
         </div>
       </section>
 
@@ -989,10 +1008,12 @@ function BoxItemModal({
               `,
             }}
           >
+            {/* Decoració de sobre */}
             <div className="absolute top-2 left-2 text-2xl opacity-20">✉️</div>
             <div className="absolute bottom-2 right-2 text-2xl opacity-20">🔴</div>
 
             <div className="relative z-10">
+              {/* Línia superior decorativa */}
               <div className="h-0.5 bg-[#8C6D53] mb-4 opacity-30"></div>
 
               <p className="text-sm font-bold text-[#2B2118] mb-3 font-serif">Sobre Segellat</p>
@@ -1015,6 +1036,7 @@ function BoxItemModal({
               <p className="text-xs text-[#5C4533] italic mb-2">Segell intacte · Original</p>
               <p className="text-xs text-[#8C6D53] font-mono text-center">Filigrana: Àncora</p>
 
+              {/* Línia inferior decorativa */}
               <div className="h-0.5 bg-[#8C6D53] mt-4 opacity-30"></div>
             </div>
           </div>
@@ -1032,6 +1054,7 @@ function BoxItemModal({
                 `,
               }}
             >
+              {/* Segell visible dins la carta */}
               <div className="absolute top-3 right-4 text-2xl opacity-40 transform -rotate-12">
                 {details.seal === '✓✓' ? '🔴' : '✕'}
               </div>
@@ -1040,12 +1063,14 @@ function BoxItemModal({
                 <p className="text-xs text-[#8C6D53] mb-2 uppercase tracking-widest font-bold font-sans">📅 {details.date}</p>
                 <p className="text-xs text-[#5C4533] mb-3 italic font-sans">De: {details.from}</p>
 
+                {/* Contingut de la carta */}
                 <div className="bg-white/50 p-4 rounded border border-[#D8CCAE] mb-3">
                   <p className="text-xs text-[#2B2118] leading-relaxed whitespace-pre-wrap font-serif">
                     {details.content}
                   </p>
                 </div>
 
+                {/* Anàlisi */}
                 <div className="bg-[#FFF9F0] border border-[#D8CCAE] p-3 rounded">
                   <p className="text-xs text-[#5C4533] italic">
                     <span className="font-bold">Observació:</span> {details.analysis}
