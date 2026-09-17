@@ -28,6 +28,23 @@ function compareAnswers(
   expected: unknown,
   stationType: string
 ): boolean {
+  // Unwrap object payload if simple field provided
+  if (typeof submitted === 'object' && submitted !== null) {
+    const obj = submitted as Record<string, unknown>
+    if ('date' in obj && (typeof obj.date === 'string' || typeof obj.date === 'number')) {
+      submitted = String(obj.date)
+    } else if ('answer' in obj && (typeof obj.answer === 'string' || typeof obj.answer === 'number')) {
+      submitted = String(obj.answer)
+    }
+  }
+
+  // Coerce number and string for simple comparisons
+  if (typeof submitted === 'number' && typeof expected === 'string') {
+    submitted = String(submitted)
+  } else if (typeof submitted === 'string' && typeof expected === 'number') {
+    expected = String(expected)
+  }
+
   // String comparison (most common)
   if (typeof submitted === 'string' && typeof expected === 'string') {
     const subClean = submitted.toUpperCase().trim().replace(/[.,;:!?'"`·\-]/g, ' ').replace(/\s+/g, ' ').trim()
@@ -54,6 +71,25 @@ function compareAnswers(
         return true
       }
     }
+
+    // Variants especials de Font del Ferro (dia 12)
+    if (stationType.includes('font') || stationType.includes('ferro')) {
+      if (
+        subClean === '12' ||
+        subClean === '12 DE MAIG' ||
+        subClean === '12 MAIG' ||
+        subClean === 'DIA 12' ||
+        subClean === 'DIA 12 DE MAIG' ||
+        subClean === 'EL 12' ||
+        subClean === 'DOTZE' ||
+        subCompact === '12' ||
+        subCompact === '12DEMAIG' ||
+        subCompact === 'DIA12'
+      ) {
+        return true
+      }
+    }
+
     return false
   }
 

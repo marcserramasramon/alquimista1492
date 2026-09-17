@@ -47,14 +47,26 @@ export function MapTab({ stations, teamId }: MapTabProps) {
     ? getTeamStation(stations, selectedStationId) || null
     : null
 
-  // Bounds of Guixa area (from provided coordinates)
-  const bounds = [
-    [41.904009, 2.216902], // Southwest
-    [41.917679, 2.238049], // Northeast
-  ] as const
+  // Calculate bounds from station coordinates
+  let centerLat = 42.1278 // Fallback center
+  let centerLon = 2.1278
 
-  const centerLat = (bounds[0][0] + bounds[1][0]) / 2
-  const centerLon = (bounds[0][1] + bounds[1][1]) / 2
+  if (allStations.length > 0) {
+    const lats = allStations.map((s) => s.latitude)
+    const lons = allStations.map((s) => s.longitude)
+
+    const minLat = Math.min(...lats)
+    const maxLat = Math.max(...lats)
+    const minLon = Math.min(...lons)
+    const maxLon = Math.max(...lons)
+
+    // Add padding (10% of range)
+    const latPadding = Math.max((maxLat - minLat) * 0.1, 0.01)
+    const lonPadding = Math.max((maxLon - minLon) * 0.1, 0.01)
+
+    centerLat = (minLat + maxLat) / 2
+    centerLon = (minLon + maxLon) / 2
+  }
 
   const handleMarkerClick = (stationId: string) => {
     setSelectedStationId(stationId)

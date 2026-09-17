@@ -7,7 +7,7 @@ import { useAudio } from '@/lib/audio/useAudio'
 import { fadeInVariants, shakeVariants } from '@/lib/animations/useAnimations'
 
 interface GameState {
-  activeDocTab: 'historia' | 'taula' | 'sospitosos'
+  activeDocTab: 'historia' | 'sospitosos' | 'taula' | 'senyals'
   answer: string
   attempts: number
   solved: boolean
@@ -269,14 +269,27 @@ export function SerratBruixesGame(props: GameProps) {
           <button
             type="button"
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'taula' }))}
-            className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+            className={`flex-1 min-w-[110px] py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               state.activeDocTab === 'taula'
                 ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
                 : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
             }`}
           >
-            <span>🔥</span>
+            <span>🔤</span>
             <span>Taula de Polibi</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setState(prev => ({ ...prev, activeDocTab: 'senyals' }))}
+            className={`flex-1 min-w-[110px] py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+              state.activeDocTab === 'senyals'
+                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+            }`}
+          >
+            <span>🔥</span>
+            <span>Senyals de Foc</span>
           </button>
         </div>
 
@@ -417,113 +430,120 @@ export function SerratBruixesGame(props: GameProps) {
                 </div>
               </motion.div>
             )}
+
+            {state.activeDocTab === 'senyals' && (
+              <motion.div
+                key="senyals"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="bg-[#121E2B] text-[#F4EBD9] border-2 border-[#8C6D53] rounded-xl p-4 sm:p-5 shadow-xl relative overflow-hidden"
+              >
+                {/* Cel nocturn i turons decoratius de fons */}
+                <div className="absolute inset-0 bg-gradient-to-b from-[#0B131D] via-[#16273A] to-[#1D1711] opacity-90 pointer-events-none" />
+
+                <div className="relative z-10">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-[#8C6D53]/50 mb-3">
+                    <div>
+                      <h2 className="text-base sm:text-lg font-bold font-serif text-amber-200 flex items-center gap-2">
+                        <span>🔥</span>
+                        <span>Visualitzador de Senyals de Nit</span>
+                      </h2>
+                      <p className="text-xs text-amber-300/80 font-sans">
+                        Senyal actual: {state.currentSignalIndex + 1} de {FIRE_SIGNALS.length}
+                      </p>
+                    </div>
+
+                    {/* Controls de reproducció */}
+                    <div className="flex items-center gap-1.5 mt-2 sm:mt-0 font-sans">
+                      <button
+                        type="button"
+                        onClick={handlePrevSignal}
+                        className="p-1.5 px-2 bg-[#233549] hover:bg-[#314863] text-amber-200 rounded text-xs transition-colors"
+                        title="Senyal anterior"
+                      >
+                        ◀
+                      </button>
+
+                      {state.isPlayingSequence ? (
+                        <button
+                          type="button"
+                          onClick={handlePauseSequence}
+                          className="p-1.5 px-3 bg-amber-600 hover:bg-amber-500 text-black font-bold rounded text-xs transition-colors flex items-center gap-1"
+                        >
+                          <span>⏸</span> Pausar
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleStartSequence}
+                          className="p-1.5 px-3 bg-[#C99E32] hover:bg-amber-400 text-[#121E2B] font-bold rounded text-xs transition-colors flex items-center gap-1 shadow"
+                        >
+                          <span>▶</span> Reprodueix Seqüència
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={handleNextSignal}
+                        className="p-1.5 px-2 bg-[#233549] hover:bg-[#314863] text-amber-200 rounded text-xs transition-colors"
+                        title="Següent senyal"
+                      >
+                        ▶
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* L'ESCENA DELS DOS TURONS AMB LES FOGUERES */}
+                  <div className="grid grid-cols-2 gap-4 py-6 px-2 my-2 bg-black/40 rounded-lg border border-amber-900/40 relative">
+                    {/* Turó Esquerre: Fila */}
+                    <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-[#182330]/80 border border-amber-500/20">
+                      <span className="text-[11px] font-sans uppercase font-bold text-amber-400 tracking-wider mb-2">
+                        Turó Esquerre · Fila ({activeSignal.left})
+                      </span>
+                      <div className="flex items-center justify-center gap-2 min-h-[48px] flex-wrap">
+                        {Array.from({ length: activeSignal.left }).map((_, i) => (
+                          <motion.div
+                            key={`left-${i}`}
+                            animate={{ scale: [1, 1.15, 0.95, 1.1, 1] }}
+                            transition={{ repeat: Infinity, duration: 1.2 + i * 0.2 }}
+                            className="text-2xl filter drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]"
+                          >
+                            🔥
+                          </motion.div>
+                        ))}
+                      </div>
+                      <span className="text-xs font-mono font-bold text-amber-300 mt-2 bg-black/50 px-2 py-0.5 rounded">
+                        {activeSignal.left} foc{activeSignal.left > 1 ? 's' : ''}
+                      </span>
+                    </div>
+
+                    {/* Turó Dret: Columna */}
+                    <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-[#182330]/80 border border-amber-500/20">
+                      <span className="text-[11px] font-sans uppercase font-bold text-amber-400 tracking-wider mb-2">
+                        Turó Dret · Columna ({activeSignal.right})
+                      </span>
+                      <div className="flex items-center justify-center gap-2 min-h-[48px] flex-wrap">
+                        {Array.from({ length: activeSignal.right }).map((_, i) => (
+                          <motion.div
+                            key={`right-${i}`}
+                            animate={{ scale: [1, 1.1, 0.9, 1.15, 1] }}
+                            transition={{ repeat: Infinity, duration: 1.1 + i * 0.25 }}
+                            className="text-2xl filter drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]"
+                          >
+                            🔥
+                          </motion.div>
+                        ))}
+                      </div>
+                      <span className="text-xs font-mono font-bold text-amber-300 mt-2 bg-black/50 px-2 py-0.5 rounded">
+                        {activeSignal.right} foc{activeSignal.right > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </AnimatePresence>
-        </div>
-      </section>
-
-      {/* PUNT 2: VISUALITZADOR INTERACTIU DELS SENYALS DE FOC */}
-      <section className="bg-[#121E2B] text-[#F4EBD9] border-2 border-[#8C6D53] rounded-xl p-4 sm:p-5 shadow-xl mb-6 relative overflow-hidden">
-        {/* Cel nocturn i turons decoratius de fons */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0B131D] via-[#16273A] to-[#1D1711] opacity-90 pointer-events-none" />
-
-        <div className="relative z-10">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-[#8C6D53]/50 mb-3">
-            <div>
-              <h2 className="text-base sm:text-lg font-bold font-serif text-amber-200 flex items-center gap-2">
-                <span>🔥</span>
-                <span>Visualitzador de Senyals de Nit</span>
-              </h2>
-              <p className="text-xs text-amber-300/80 font-sans">
-                Senyal actual: {state.currentSignalIndex + 1} de {FIRE_SIGNALS.length}
-              </p>
-            </div>
-
-            {/* Controls de reproducció */}
-            <div className="flex items-center gap-1.5 mt-2 sm:mt-0 font-sans">
-              <button
-                type="button"
-                onClick={handlePrevSignal}
-                className="p-1.5 px-2 bg-[#233549] hover:bg-[#314863] text-amber-200 rounded text-xs transition-colors"
-                title="Senyal anterior"
-              >
-                ◀
-              </button>
-
-              {state.isPlayingSequence ? (
-                <button
-                  type="button"
-                  onClick={handlePauseSequence}
-                  className="p-1.5 px-3 bg-amber-600 hover:bg-amber-500 text-black font-bold rounded text-xs transition-colors flex items-center gap-1"
-                >
-                  <span>⏸</span> Pausar
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleStartSequence}
-                  className="p-1.5 px-3 bg-[#C99E32] hover:bg-amber-400 text-[#121E2B] font-bold rounded text-xs transition-colors flex items-center gap-1 shadow"
-                >
-                  <span>▶</span> Reprodueix Seqüència
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={handleNextSignal}
-                className="p-1.5 px-2 bg-[#233549] hover:bg-[#314863] text-amber-200 rounded text-xs transition-colors"
-                title="Següent senyal"
-              >
-                ▶
-              </button>
-            </div>
-          </div>
-
-          {/* L'ESCENA DELS DOS TURONS AMB LES FOGUERES */}
-          <div className="grid grid-cols-2 gap-4 py-6 px-2 my-2 bg-black/40 rounded-lg border border-amber-900/40 relative">
-            {/* Turó Esquerre: Fila */}
-            <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-[#182330]/80 border border-amber-500/20">
-              <span className="text-[11px] font-sans uppercase font-bold text-amber-400 tracking-wider mb-2">
-                Turó Esquerre · Fila ({activeSignal.left})
-              </span>
-              <div className="flex items-center justify-center gap-2 min-h-[48px] flex-wrap">
-                {Array.from({ length: activeSignal.left }).map((_, i) => (
-                  <motion.div
-                    key={`left-${i}`}
-                    animate={{ scale: [1, 1.15, 0.95, 1.1, 1] }}
-                    transition={{ repeat: Infinity, duration: 1.2 + i * 0.2 }}
-                    className="text-2xl filter drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]"
-                  >
-                    🔥
-                  </motion.div>
-                ))}
-              </div>
-              <span className="text-xs font-mono font-bold text-amber-300 mt-2 bg-black/50 px-2 py-0.5 rounded">
-                {activeSignal.left} foc{activeSignal.left > 1 ? 's' : ''}
-              </span>
-            </div>
-
-            {/* Turó Dret: Columna */}
-            <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-[#182330]/80 border border-amber-500/20">
-              <span className="text-[11px] font-sans uppercase font-bold text-amber-400 tracking-wider mb-2">
-                Turó Dret · Columna ({activeSignal.right})
-              </span>
-              <div className="flex items-center justify-center gap-2 min-h-[48px] flex-wrap">
-                {Array.from({ length: activeSignal.right }).map((_, i) => (
-                  <motion.div
-                    key={`right-${i}`}
-                    animate={{ scale: [1, 1.1, 0.9, 1.15, 1] }}
-                    transition={{ repeat: Infinity, duration: 1.1 + i * 0.25 }}
-                    className="text-2xl filter drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]"
-                  >
-                    🔥
-                  </motion.div>
-                ))}
-              </div>
-              <span className="text-xs font-mono font-bold text-amber-300 mt-2 bg-black/50 px-2 py-0.5 rounded">
-                {activeSignal.right} foc{activeSignal.right > 1 ? 's' : ''}
-              </span>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -572,45 +592,63 @@ export function SerratBruixesGame(props: GameProps) {
             </button>
           </form>
         ) : (
-          /* PANORAMA D'ÈXIT */
+          /* PANTALLA D'ÈXIT I DESCOBERTA D'EVIDÈNCIES */
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-emerald-50 border-2 border-emerald-600 p-4 rounded-xl text-center space-y-3"
+            variants={fadeInVariants}
+            initial="hidden"
+            animate="visible"
+            className="space-y-4"
           >
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-600 text-white rounded-full text-xs font-bold font-sans uppercase">
-              <span>✓</span>
-              <span>Enigma del Serrat Resolt!</span>
-            </div>
-
-            <h3 className="text-xl font-bold text-emerald-950 font-serif">
-              Missatge confirmat: "SAP DE LLETRA"
-            </h3>
-
-            <p className="text-xs sm:text-sm text-emerald-900 leading-relaxed max-w-md mx-auto">
-              El delator ha escrit la carta de traïció de mà pròpia. Per tant, <strong>sap escriure</strong>.
-              <br />
-              Queden <strong>immediatament descartats com a sospitosos</strong>:
-            </p>
-
-            <div className="bg-white/80 border border-emerald-300 p-2.5 rounded-lg text-xs font-sans text-left space-y-1 max-w-sm mx-auto">
-              <div className="flex items-center gap-2 text-emerald-800">
+            <div className="p-4 bg-emerald-50 border-2 border-emerald-600 rounded-lg text-emerald-950 shadow-inner">
+              <div className="flex items-center gap-2 text-base font-bold font-serif text-emerald-900 mb-1">
                 <span>✓</span>
-                <span><strong>Pere del Molí</strong>: Descartat (signa amb creu).</span>
+                <span>Missatge Desxifrat: "SAP DE LLETRA"!</span>
               </div>
-              <div className="flex items-center gap-2 text-emerald-800">
-                <span>✓</span>
-                <span><strong>Joan el traginer</strong>: Descartat (signa amb creu).</span>
+              <p className="text-xs font-sans text-emerald-800 leading-relaxed">
+                Les fogueres dels turons han revelat el codi delator: qui va escriure la carta <strong>sap llegir i escriure</strong> pergamins de mà pròpia.
+              </p>
+            </div>
+
+            {/* DESCOBERTA D'EVIDÈNCIA I DESCART */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Evidència */}
+              <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
+                <span className="text-[10px] font-mono uppercase font-bold text-[#8C6D53]">
+                  📜 Nova Evidència Desbloquejada
+                </span>
+                <h4 className="font-serif font-bold text-sm text-[#1D3557] mt-0.5">
+                  Alfabetització del Traïdor
+                </h4>
+                <p className="text-xs text-[#5C4533] mt-1 font-sans">
+                  El delator no necessita ningú per escriure: domina la lletra i el codi notarial.
+                </p>
+              </div>
+
+              {/* Sospitosos Descartats */}
+              <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
+                <span className="text-[10px] font-mono uppercase font-bold text-emerald-700">
+                  🚫 Sospitosos Descartats
+                </span>
+                <h4 className="font-serif font-bold text-sm text-[#2B2118] mt-0.5">
+                  Pere del Molí i Joan el traginer
+                </h4>
+                <p className="text-xs text-[#5C4533] mt-1 font-sans">
+                  Tots dos són analfabets i signen amb una creu. Queden <strong>immediatament descartats</strong>.
+                </p>
               </div>
             </div>
 
-            <div className="bg-amber-100 border-2 border-[#C99E32] p-3 rounded-lg text-[#2B2118] font-bold text-sm flex items-center justify-center gap-2">
-              <span>🔥</span>
-              <span>XIFRA DE L'ELEMENT DESBLOQUEJADA: <strong>FOC = 4</strong></span>
-            </div>
-
-            <div className="text-xs font-sans font-bold text-emerald-700">
-              +100 punts sumats al marcador de l'equip
+            {/* XIFRA DE L'ELEMENT FOC */}
+            <div className="p-3.5 bg-[#1D3557] text-[#FAF5E9] rounded-lg border-2 border-[#C99E32] shadow text-center">
+              <div className="text-[11px] font-mono uppercase tracking-widest text-[#C99E32]">
+                XIFRA DE L'ELEMENT DESCOBERTA
+              </div>
+              <div className="text-xl sm:text-2xl font-bold font-serif mt-0.5">
+                🔥 FOC = 4
+              </div>
+              <div className="text-[11px] text-[#FAF5E9]/80 font-sans mt-0.5">
+                Anota aquesta xifra al teu quadern d'equip!
+              </div>
             </div>
           </motion.div>
         )}
