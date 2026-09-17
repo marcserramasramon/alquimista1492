@@ -163,29 +163,34 @@ export function BellsGame(props: GameProps) {
       </header>
 
       {/* Tabs Menu */}
-      <div className="flex gap-2 mb-4 flex-wrap justify-center">
-        {[
-          { key: 'porta', label: '🚪 La porta', icon: '🚪' },
-          { key: 'decisio', label: '🤔 Decisió', icon: '🤔' },
-          { key: 'pista', label: '🎵 Pista sonora', icon: '🎵' },
-          { key: 'senyal', label: '📻 La senyal', icon: '📻' },
-        ].map(tab => (
-          <motion.button
-            key={tab.key}
-            onClick={() => setState(prev => ({ ...prev, currentTab: tab.key as any }))}
-            className={`px-3 py-2 rounded text-sm font-bold transition ${
-              state.currentTab === tab.key
-                ? 'bg-[#2B2118] text-[#EAE0CA]'
-                : 'bg-[#D8CCAE] text-[#2B2118] hover:bg-[#C9BDAA]'
-            }`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            disabled={state.currentTab === 'result'}
-          >
-            {tab.label}
-          </motion.button>
-        ))}
-      </div>
+      <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-[#D8CCAE] border-b border-[#8C6D53] flex">
+          {[
+            { key: 'porta', label: 'La porta', emoji: '🚪' },
+            { key: 'decisio', label: 'Decisió', emoji: '🤔' },
+            { key: 'pista', label: 'Pista sonora', emoji: '🎵' },
+            { key: 'senyal', label: 'La senyal', emoji: '📻' },
+          ].map(tab => (
+            <motion.button
+              key={tab.key}
+              onClick={() => setState(prev => ({ ...prev, currentTab: tab.key as any }))}
+              disabled={state.currentTab === 'result'}
+              className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+                state.currentTab === tab.key
+                  ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+                  : state.currentTab === 'result'
+                    ? 'text-[#A9A09A] cursor-not-allowed'
+                    : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+              }`}
+              whileHover={state.currentTab !== 'result' ? { scale: 1.02 } : {}}
+              whileTap={state.currentTab !== 'result' ? { scale: 0.98 } : {}}
+            >
+              <span>{tab.emoji}</span>
+              <span>{tab.label}</span>
+            </motion.button>
+          ))}
+        </div>
+      </section>
 
       {/* Content */}
       <div className="flex-1 flex flex-col gap-4">
