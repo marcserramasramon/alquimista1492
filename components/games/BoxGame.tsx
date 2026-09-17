@@ -12,8 +12,10 @@ import {
 interface BoxGameState {
   currentPart: 1 | 2 | 3
   currentScreen: 'cards' | 'card_detail' | 'seal' | 'seal_detail' | 'sealed' | 'complete'
+  part1Tab: 'historia' | 'pistes' | 'cadenat' | 'cofre'
   part1Code: string
   part1Attempts: number
+  part1Solved: boolean
   part2SelectedDate: string | null
   part2StolenCards: string[]
   part2SelectedCard: string | null
@@ -127,8 +129,10 @@ export function BoxGame(props: GameProps) {
     return {
       currentPart: 1,
       currentScreen: 'cards',
+      part1Tab: 'historia',
       part1Code: '',
       part1Attempts: 0,
+      part1Solved: false,
       part2SelectedDate: null,
       part2StolenCards: [],
       part2SelectedCard: null,
@@ -166,8 +170,8 @@ export function BoxGame(props: GameProps) {
         play('evidence-unlock')
         setState(prev => ({
           ...prev,
-          currentPart: 2,
-          currentScreen: 'cards',
+          part1Solved: true,
+          part1Tab: 'cofre',
         }))
       } else {
         play('buzzer')
@@ -298,11 +302,19 @@ export function BoxGame(props: GameProps) {
 
       {/* Part 1: Obrir caixa */}
       {state.currentPart === 1 && (
-        <Part1UnifiedScreen
+        <Part1WithMenu
+          tab={state.part1Tab}
+          onTabChange={tab => setState(prev => ({ ...prev, part1Tab: tab }))}
           code={state.part1Code}
           onCodeChange={val => setState(prev => ({ ...prev, part1Code: val }))}
           onSubmit={handlePart1Submit}
           attempts={state.part1Attempts}
+          solved={state.part1Solved}
+          onContinueToPart2={() => setState(prev => ({
+            ...prev,
+            currentPart: 2,
+            currentScreen: 'cards',
+          }))}
         />
       )}
 
@@ -369,16 +381,24 @@ export function BoxGame(props: GameProps) {
   )
 }
 
-function Part1UnifiedScreen({
+function Part1WithMenu({
+  tab,
+  onTabChange,
   code,
   onCodeChange,
   onSubmit,
   attempts,
+  solved,
+  onContinueToPart2,
 }: {
+  tab: 'historia' | 'pistes' | 'cadenat' | 'cofre'
+  onTabChange: (tab: 'historia' | 'pistes' | 'cadenat' | 'cofre') => void
   code: string
   onCodeChange: (val: string) => void
   onSubmit: () => void
   attempts: number
+  solved: boolean
+  onContinueToPart2: () => void
 }) {
   const digits = code.padEnd(4, '0').slice(0, 4).split('')
 
@@ -391,7 +411,7 @@ function Part1UnifiedScreen({
   const isCorrect = code.replace(/[\s-]/g, '') === '4231'
 
   return (
-    <div className="flex flex-col flex-1 gap-6">
+    <div className="flex flex-col flex-1 gap-4">
       {/* Header */}
       <header className="border-b-2 border-[#8C6D53] pb-3 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
@@ -405,141 +425,279 @@ function Part1UnifiedScreen({
         </p>
       </header>
 
-      {/* Narrative text */}
-      <motion.div
-        className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm p-4"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <p className="text-sm text-[#2B2118] leading-relaxed">
-          La <strong>Caixa de les Almoines</strong> de la Rectoria de la Guixa amaga el
-          testament secret dels conjurats. En Bernat Sala t'ha fet arribar la clau i la
-          paraula d'ordre. Obre-la, substitueix la carta comprometedora per una
-          d'inofensiva i tanca-la de nou — abans que no arribi el correu reial.
-        </p>
-      </motion.div>
-
-      {/* Padlock — floating animation */}
-      <motion.div
-        className="flex justify-center"
-        animate={{ y: [0, -6, 0] }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <span className="text-5xl drop-shadow-md select-none">🔒</span>
-      </motion.div>
-
-      {/* 4 Elements animats de costat */}
-      <div className="bg-[#F0EAE3] border border-[#D8CCAE] rounded-xl p-3 shadow-inner">
-        <div className="grid grid-cols-4 gap-2 text-center">
-          {/* FOC */}
-          <div className="group relative bg-gradient-to-b from-orange-50 to-white p-2.5 rounded-lg border border-amber-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <div className="text-2xl sm:text-3xl animate-bounce [animation-duration:2.5s]">
-              🔥
-            </div>
-            <div className="mt-1 text-[10px] font-bold tracking-widest text-amber-900 uppercase">
-              Foc
-            </div>
-          </div>
-
-          {/* AIGUA */}
-          <div className="group relative bg-gradient-to-b from-blue-50 to-white p-2.5 rounded-lg border border-sky-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <div className="text-2xl sm:text-3xl animate-pulse [animation-duration:2s]">
-              💧
-            </div>
-            <div className="mt-1 text-[10px] font-bold tracking-widest text-sky-900 uppercase">
-              Aigua
-            </div>
-          </div>
-
-          {/* TERRA */}
-          <div className="group relative bg-gradient-to-b from-emerald-50 to-white p-2.5 rounded-lg border border-emerald-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <div className="text-2xl sm:text-3xl animate-bounce [animation-duration:3s]">
-              🌍
-            </div>
-            <div className="mt-1 text-[10px] font-bold tracking-widest text-emerald-900 uppercase">
-              Terra
-            </div>
-          </div>
-
-          {/* PEDRA */}
-          <div className="group relative bg-gradient-to-b from-stone-50 to-white p-2.5 rounded-lg border border-stone-400 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-            <div className="text-2xl sm:text-3xl animate-pulse [animation-duration:2.8s]">
-              ⛰️
-            </div>
-            <div className="mt-1 text-[10px] font-bold tracking-widest text-stone-900 uppercase">
-              Pedra
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Combination Lock */}
-      <motion.div
-        className="bg-gradient-to-b from-[#8C6D53] via-[#6B5244] to-[#5C4533] border-4 border-[#3D3428] rounded-xl p-8 shadow-2xl relative overflow-hidden"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 300 }}
-      >
-        {/* Cofre top (ornament) */}
-        <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-r from-[#A0795A] to-[#8C6D53] border-b-2 border-[#3D3428]"></div>
-
-        {/* Serradura decorativa */}
-        <div className="absolute top-6 right-4 text-2xl opacity-80">🔒</div>
-
-        <div className="mt-6 mb-2">
-          <p className="text-center text-xs text-[#EAE0CA] font-sans font-bold mb-6 uppercase tracking-wider">
-            Combination Lock
-          </p>
-
-          {/* Rodes dins el cofre */}
-          <motion.div
-            className="bg-[#D8CCAE] border-4 border-[#5C4533] rounded-lg p-6 mb-4 shadow-inner"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+      {/* Menu de pestanyes */}
+      <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-[#D8CCAE] border-b border-[#8C6D53] flex">
+          {/* Historia */}
+          <button
+            type="button"
+            onClick={() => onTabChange('historia')}
+            className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+              tab === 'historia'
+                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+            }`}
           >
-            <div className="flex gap-5 justify-center">
-              {[0, 1, 2, 3].map((index, idx) => (
-                <div key={index} className="flex flex-col items-center">
-                  <DialWheel
-                    value={parseInt(digits[index] || '0')}
-                    onChange={val => handleDigitChange(index, String(val))}
-                  />
-                  <div className="mt-3 text-center">
-                    <p className="text-xs text-[#5C4533] font-sans font-bold">{['FOC', 'AIGUA', 'TERRA', 'PEDRA'][idx]}</p>
-                    <p className="text-2xs text-[#8C6D53] font-bold">{[4, 2, 3, 1][idx]}</p>
+            <span>📖</span>
+            <span>Historia</span>
+          </button>
+
+          {/* Pistes */}
+          <button
+            type="button"
+            onClick={() => onTabChange('pistes')}
+            className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+              tab === 'pistes'
+                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+            }`}
+          >
+            <span>💡</span>
+            <span>Pistes</span>
+          </button>
+
+          {/* Cadenat */}
+          <button
+            type="button"
+            onClick={() => onTabChange('cadenat')}
+            className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+              tab === 'cadenat'
+                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+            }`}
+          >
+            <span>🔒</span>
+            <span>Cadenat</span>
+          </button>
+
+          {/* Cofre (desabled si no resolt) */}
+          <button
+            type="button"
+            onClick={() => solved && onTabChange('cofre')}
+            disabled={!solved}
+            className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+              tab === 'cofre'
+                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+                : solved
+                  ? 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8] cursor-pointer'
+                  : 'text-[#A9A09A] cursor-not-allowed'
+            }`}
+          >
+            <span>🏺</span>
+            <span>Cofre</span>
+          </button>
+        </div>
+
+        {/* Contingut de les pestanyes */}
+        <div className="p-4">
+          <AnimatePresence mode="wait">
+            {/* Historia */}
+            {tab === 'historia' && (
+              <motion.div
+                key="historia"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="space-y-4"
+              >
+                <motion.div
+                  className="bg-[#F5EFE0] border border-[#8C6D53] rounded-lg p-4"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <p className="text-sm text-[#2B2118] leading-relaxed mb-3">
+                    La <strong>Caixa de les Almoines</strong> de la Rectoria de la Guixa amaga el
+                    testament secret dels conjurats. En Bernat Sala t'ha fet arribar la clau i la
+                    paraula d'ordre. Obre-la, substitueix la carta comprometedora per una
+                    d'inofensiva i tanca-la de nou — abans que no arribi el correu reial.
+                  </p>
+                </motion.div>
+
+                {/* Padlock — floating animation */}
+                <motion.div
+                  className="flex justify-center"
+                  animate={{ y: [0, -6, 0] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <span className="text-5xl drop-shadow-md select-none">🔒</span>
+                </motion.div>
+              </motion.div>
+            )}
+
+            {/* Pistes */}
+            {tab === 'pistes' && (
+              <motion.div
+                key="pistes"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+              >
+                <div className="bg-[#F0EAE3] border border-[#D8CCAE] rounded-lg p-3 shadow-inner">
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    {/* FOC */}
+                    <div className="group relative bg-gradient-to-b from-orange-50 to-white p-2.5 rounded-lg border border-amber-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+                      <div className="text-2xl sm:text-3xl animate-bounce [animation-duration:2.5s]">
+                        🔥
+                      </div>
+                      <div className="mt-1 text-[10px] font-bold tracking-widest text-amber-900 uppercase">
+                        Foc
+                      </div>
+                      <div className="mt-1.5 text-[9px] text-amber-800 font-bold">4</div>
+                    </div>
+
+                    {/* AIGUA */}
+                    <div className="group relative bg-gradient-to-b from-blue-50 to-white p-2.5 rounded-lg border border-sky-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+                      <div className="text-2xl sm:text-3xl animate-pulse [animation-duration:2s]">
+                        💧
+                      </div>
+                      <div className="mt-1 text-[10px] font-bold tracking-widest text-sky-900 uppercase">
+                        Aigua
+                      </div>
+                      <div className="mt-1.5 text-[9px] text-sky-800 font-bold">2</div>
+                    </div>
+
+                    {/* TERRA */}
+                    <div className="group relative bg-gradient-to-b from-emerald-50 to-white p-2.5 rounded-lg border border-emerald-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+                      <div className="text-2xl sm:text-3xl animate-bounce [animation-duration:3s]">
+                        🌍
+                      </div>
+                      <div className="mt-1 text-[10px] font-bold tracking-widest text-emerald-900 uppercase">
+                        Terra
+                      </div>
+                      <div className="mt-1.5 text-[9px] text-emerald-800 font-bold">3</div>
+                    </div>
+
+                    {/* PEDRA */}
+                    <div className="group relative bg-gradient-to-b from-stone-50 to-white p-2.5 rounded-lg border border-stone-400 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+                      <div className="text-2xl sm:text-3xl animate-pulse [animation-duration:2.8s]">
+                        ⛰️
+                      </div>
+                      <div className="mt-1 text-[10px] font-bold tracking-widest text-stone-900 uppercase">
+                        Pedra
+                      </div>
+                      <div className="mt-1.5 text-[9px] text-stone-800 font-bold">1</div>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </motion.div>
+              </motion.div>
+            )}
+
+            {/* Cadenat */}
+            {tab === 'cadenat' && (
+              <motion.div
+                key="cadenat"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="space-y-4"
+              >
+                <motion.div
+                  className="bg-gradient-to-b from-[#8C6D53] via-[#6B5244] to-[#5C4533] border-4 border-[#3D3428] rounded-xl p-6 shadow-2xl relative overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 300 }}
+                >
+                  <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-r from-[#A0795A] to-[#8C6D53] border-b-2 border-[#3D3428]"></div>
+                  <div className="absolute top-6 right-4 text-2xl opacity-80">🔒</div>
+
+                  <div className="mt-6 mb-2">
+                    <p className="text-center text-xs text-[#EAE0CA] font-sans font-bold mb-4 uppercase tracking-wider">
+                      Gira les rodes
+                    </p>
+
+                    <motion.div
+                      className="bg-[#D8CCAE] border-4 border-[#5C4533] rounded-lg p-4 mb-4 shadow-inner"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <div className="flex gap-4 justify-center">
+                        {[0, 1, 2, 3].map((index, idx) => (
+                          <div key={index} className="flex flex-col items-center">
+                            <DialWheel
+                              value={parseInt(digits[index] || '0')}
+                              onChange={val => handleDigitChange(index, String(val))}
+                            />
+                            <div className="mt-2 text-center">
+                              <p className="text-xs text-[#5C4533] font-sans font-bold">{['FOC', 'AIGUA', 'TERRA', 'PEDRA'][idx]}</p>
+                              <p className="text-2xs text-[#8C6D53] font-bold">{[4, 2, 3, 1][idx]}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  </div>
+                </motion.div>
+
+                {attempts > 0 && (
+                  <motion.div
+                    className="bg-[#FADBD8] border border-[#E74C3C] text-[#C0392B] p-3 rounded-lg text-center text-sm"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <p className="font-bold font-sans">❌ Intent {attempts}/3</p>
+                    <p className="text-xs">Revisa les pistes dels 4 elements</p>
+                  </motion.div>
+                )}
+
+                <motion.button
+                  onClick={onSubmit}
+                  disabled={!isCorrect}
+                  className={`w-full p-3 font-bold text-sm border-2 transition rounded-lg font-sans ${
+                    isCorrect
+                      ? 'bg-[#2B2118] text-[#EAE0CA] border-[#2B2118] hover:bg-[#1D3557]'
+                      : 'bg-[#D8CCAE] text-[#8C6D53] border-[#8C6D53] cursor-not-allowed'
+                  }`}
+                  whileHover={isCorrect ? { scale: 1.02 } : {}}
+                  whileTap={isCorrect ? { scale: 0.98 } : {}}
+                >
+                  🔓 OBRIR CADENAT
+                </motion.button>
+              </motion.div>
+            )}
+
+            {/* Cofre */}
+            {tab === 'cofre' && solved && (
+              <motion.div
+                key="cofre"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="space-y-4"
+              >
+                <motion.div
+                  className="bg-[#D5F4E6] border-2 border-[#16A085] p-6 rounded-lg shadow-lg text-center"
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <motion.p
+                    className="text-5xl mb-3"
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                  >
+                    🏺
+                  </motion.p>
+                  <p className="font-bold text-[#117A65] text-sm">COFRE OBERT!</p>
+                  <p className="text-xs text-[#16A085] mt-2">El cadenat s'ha obrit correctament</p>
+                </motion.div>
+
+                <p className="text-xs text-[#5C4533] italic text-center">
+                  La caixa de les almoines està oberta. Passa a la Part 2 per examinar el seu contingut.
+                </p>
+
+                <motion.button
+                  onClick={onContinueToPart2}
+                  className="w-full p-3 bg-[#2B2118] text-[#EAE0CA] font-bold text-sm border-2 border-[#2B2118] hover:bg-[#1D3557] rounded-lg transition font-sans"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  CONTINUAR A LA PART 2 →
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </motion.div>
-
-      {attempts > 0 && (
-        <motion.div
-          className="bg-[#FADBD8] border border-[#E74C3C] text-[#C0392B] p-3 rounded-lg text-center text-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <p className="font-bold font-sans">❌ Intent {attempts}/3</p>
-          <p className="text-xs">Revisa els 4 elements</p>
-        </motion.div>
-      )}
-
-      <motion.button
-        onClick={onSubmit}
-        disabled={!isCorrect}
-        className={`w-full p-3 font-bold text-sm border-2 transition rounded-lg font-sans ${
-          isCorrect
-            ? 'bg-[#2B2118] text-[#EAE0CA] border-[#2B2118] hover:bg-[#1D3557]'
-            : 'bg-[#D8CCAE] text-[#8C6D53] border-[#8C6D53] cursor-not-allowed'
-        }`}
-        whileHover={isCorrect ? { scale: 1.02 } : {}}
-        whileTap={isCorrect ? { scale: 0.98 } : {}}
-      >
-        🔓 OBRIR CADENAT
-      </motion.button>
+      </section>
     </div>
   )
 }
