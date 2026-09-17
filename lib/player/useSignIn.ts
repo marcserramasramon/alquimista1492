@@ -55,7 +55,7 @@ export function usePlayerSignIn() {
       const data = await response.json()
 
       // Redirect to game hub on success
-      router.push('/joc/hub')
+      router.push('/joc')
       return true
     } catch (err) {
       console.error('Sign in error:', err)

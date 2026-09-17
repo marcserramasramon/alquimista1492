@@ -2,22 +2,32 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
+import { useAudio } from '@/lib/audio/useAudio'
+import {
+  fadeInVariants,
+  slideUpVariants,
+  shakeVariants,
+} from '@/lib/animations/useAnimations'
 
 interface GameState {
   currentScreen: 'menu' | 'intro' | 'tabla' | 'joc' | 'result'
   answer: string
   isSubmitting: boolean
+  shake: boolean
 }
 
 export function SerratBruixesGame(props: GameProps) {
   const router = useRouter()
+  const { play } = useAudio()
   const [state, setState] = useState<GameState>(() => {
     const saved = props.sharedState as GameState | undefined
     return saved || {
       currentScreen: 'menu',
       answer: '',
       isSubmitting: false,
+      shake: false,
     }
   })
 
@@ -31,13 +41,27 @@ export function SerratBruixesGame(props: GameProps) {
     setState(prev => ({ ...prev, isSubmitting: true }))
 
     try {
-      await props.submit({
+      const result = await props.submit({
         answer: state.answer,
       })
+      if (result.correct) {
+        play('evidence-unlock')
+        setState(prev => ({ ...prev, shake: false }))
+      } else {
+        play('buzzer')
+        setState(prev => ({ ...prev, shake: true }))
+        setTimeout(() => {
+          setState(prev => ({ ...prev, shake: false }))
+        }, 400)
+      }
       // Validation happens server-side; redirect to hub
       router.push(`/joc/hub`)
     } catch (error) {
-      setState(prev => ({ ...prev, isSubmitting: false }))
+      play('buzzer')
+      setState(prev => ({ ...prev, isSubmitting: false, shake: true }))
+      setTimeout(() => {
+        setState(prev => ({ ...prev, shake: false }))
+      }, 400)
     }
   }
 
@@ -46,7 +70,12 @@ export function SerratBruixesGame(props: GameProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col">
+    <motion.div
+      className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col"
+      initial="hidden"
+      animate="visible"
+      variants={fadeInVariants}
+    >
       {/* Timer at top */}
       <div className="text-right text-sm font-mono text-red-600 mb-4">
         12:34:56
@@ -71,13 +100,14 @@ export function SerratBruixesGame(props: GameProps) {
           onSubmit={handleSubmit}
           onNavigate={navigateTo}
           isSubmitting={state.isSubmitting}
+          shake={state.shake}
         />
       )}
 
       {state.currentScreen === 'result' && (
         <ResultScreen />
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -240,12 +270,14 @@ function JocScreen({
   onSubmit,
   onNavigate,
   isSubmitting,
+  shake,
 }: {
   answer: string
   onAnswerChange: (val: string) => void
   onSubmit: () => void
   onNavigate: (screen: GameState['currentScreen']) => void
   isSubmitting: boolean
+  shake: boolean
 }) {
   return (
     <div className="flex flex-col justify-between flex-1">
@@ -259,14 +291,19 @@ function JocScreen({
         <p className="text-sm text-amber-900 font-bold mb-3">
           Què diuen les fogueres?
         </p>
-        <input
-          type="text"
-          value={answer}
-          onChange={e => onAnswerChange(e.target.value.toUpperCase())}
-          disabled={isSubmitting}
-          className="w-full p-3 border-2 border-amber-900 text-amber-900 font-mono text-lg mb-6 disabled:opacity-50"
-          placeholder="..."
-        />
+        <motion.div
+          animate={shake ? 'shake' : 'initial'}
+          variants={shakeVariants}
+        >
+          <input
+            type="text"
+            value={answer}
+            onChange={e => onAnswerChange(e.target.value.toUpperCase())}
+            disabled={isSubmitting}
+            className="w-full p-3 border-2 border-amber-900 text-amber-900 font-mono text-lg mb-6 disabled:opacity-50"
+            placeholder="..."
+          />
+        </motion.div>
       </div>
 
       <div className="space-y-3">

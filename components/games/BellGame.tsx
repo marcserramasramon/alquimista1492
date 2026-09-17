@@ -2,7 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
+import { useAudio } from '@/lib/audio/useAudio'
+import {
+  fadeInVariants,
+  pulseVariants,
+} from '@/lib/animations/useAnimations'
 
 interface BellGameState {
   currentScreen: 'intro' | 'input' | 'result'
@@ -17,6 +23,7 @@ interface BellGameState {
  */
 export function BellGame(props: GameProps) {
   const router = useRouter()
+  const { play } = useAudio()
   const [state, setState] = useState<BellGameState>(() => {
     const saved = props.sharedState as BellGameState | undefined
     return saved || {
@@ -38,21 +45,31 @@ export function BellGame(props: GameProps) {
       return
     }
 
+    play('bell-ring')
     setState(prev => ({ ...prev, isSubmitting: true }))
 
     try {
-      await props.submit({
+      const result = await props.submit({
         code: normalized,
       })
+      if (!result.correct) {
+        play('buzzer')
+      }
       // Validation happens server-side; redirect to hub
       router.push(`/joc/hub`)
     } catch (error) {
+      play('buzzer')
       setState(prev => ({ ...prev, isSubmitting: false }))
     }
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col">
+    <motion.div
+      className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col"
+      initial="hidden"
+      animate="visible"
+      variants={fadeInVariants}
+    >
       {/* Timer at top */}
       <div className="text-right text-sm font-mono text-red-600 mb-4">
         12:34:56
@@ -74,7 +91,7 @@ export function BellGame(props: GameProps) {
       {state.currentScreen === 'result' && (
         <ResultScreen />
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -128,9 +145,13 @@ function InputScreen({
     <div className="flex flex-col justify-center flex-1 gap-4">
       <h2 className="text-2xl font-bold text-center mb-4">CODI DEL CAMPANAR (4 dígits)</h2>
 
-      <div className="bg-amber-100 p-8 rounded-lg text-center mb-4">
+      <motion.div
+        className="bg-amber-100 p-8 rounded-lg text-center mb-4"
+        animate={isValid ? 'pulse' : 'initial'}
+        variants={pulseVariants}
+      >
         <p className="text-5xl mb-4">🔔</p>
-      </div>
+      </motion.div>
 
       <input
         type="text"

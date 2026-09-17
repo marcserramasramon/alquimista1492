@@ -2,7 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
+import { useAudio } from '@/lib/audio/useAudio'
+import {
+  fadeInVariants,
+  pulseVariants,
+} from '@/lib/animations/useAnimations'
 
 interface GameState {
   currentScreen: 'menu' | 'intro' | 'regles' | 'joc' | 'result'
@@ -32,6 +38,7 @@ const CELLS: Record<number, { id: number; name: string; type: string; row: numbe
 
 export function PlaneBonesGame(props: GameProps) {
   const router = useRouter()
+  const { play } = useAudio()
   const [state, setState] = useState<GameState>(() => {
     const saved = props.sharedState as GameState | undefined
     return saved || {
@@ -63,13 +70,19 @@ export function PlaneBonesGame(props: GameProps) {
     setState(prev => ({ ...prev, isSubmitting: true }))
 
     try {
-      await props.submit({
+      const result = await props.submit({
         visitedCells: state.visitedCells,
         totalMinutes: state.totalMinutes,
       })
+      if (result.correct) {
+        play('evidence-unlock')
+      } else {
+        play('buzzer')
+      }
       // Validation happens server-side; redirect to hub
       router.push(`/joc/hub`)
     } catch (error) {
+      play('buzzer')
       setState(prev => ({ ...prev, isSubmitting: false }))
     }
   }
@@ -79,11 +92,20 @@ export function PlaneBonesGame(props: GameProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col">
-      {/* Timer at top */}
-      <div className="text-right text-sm font-mono text-red-600 mb-4">
+    <motion.div
+      className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col"
+      initial="hidden"
+      animate="visible"
+      variants={fadeInVariants}
+    >
+      {/* Timer at top - pulse when time is low */}
+      <motion.div
+        className="text-right text-sm font-mono text-red-600 mb-4"
+        animate={state.totalMinutes > 45 ? 'pulse' : 'initial'}
+        variants={pulseVariants}
+      >
         12:34:56
-      </div>
+      </motion.div>
 
       {state.currentScreen === 'menu' && (
         <MenuScreen onNavigate={navigateTo} />
@@ -111,7 +133,7 @@ export function PlaneBonesGame(props: GameProps) {
       {state.currentScreen === 'result' && (
         <ResultScreen />
       )}
-    </div>
+    </motion.div>
   )
 }
 

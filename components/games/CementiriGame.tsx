@@ -1,7 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
+import { useAudio } from '@/lib/audio/useAudio'
+import {
+  fadeInVariants,
+  scaleVariants,
+  buttonHoverVariants,
+} from '@/lib/animations/useAnimations'
 
 interface GameState {
   currentScreen: 'menu' | 'intro' | 'lapides' | 'registre' | 'carta' | 'joc' | 'result'
@@ -34,6 +41,7 @@ const REGISTRY = [
 ]
 
 export function CementiriGame(props: GameProps) {
+  const { play } = useAudio()
   const [state, setState] = useState<GameState>(() => {
     const saved = props.sharedState as GameState | undefined
     return saved || {
@@ -55,8 +63,10 @@ export function CementiriGame(props: GameProps) {
     })
 
     if (result.correct) {
+      play('evidence-unlock')
       setState(prev => ({ ...prev, currentScreen: 'result' }))
     } else {
+      play('buzzer')
       setState(prev => ({
         ...prev,
         attempts: prev.attempts + 1,
@@ -70,7 +80,12 @@ export function CementiriGame(props: GameProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col">
+    <motion.div
+      className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col"
+      initial="hidden"
+      animate="visible"
+      variants={fadeInVariants}
+    >
       {/* Timer at top */}
       <div className="text-right text-sm font-mono text-red-600 mb-4">
         12:34:56
@@ -109,7 +124,7 @@ export function CementiriGame(props: GameProps) {
       {state.currentScreen === 'result' && (
         <ResultScreen solved={props.solved} selectedLapida={state.selectedLapida} />
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -221,18 +236,22 @@ function LapidesScreen({
       </div>
 
       <div className="space-y-3">
-        <button
+        <motion.button
           onClick={() => onNavigate('menu')}
           className="w-full p-3 bg-amber-900 text-amber-50 font-bold"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           [ENTENENT]
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           onClick={() => onNavigate('menu')}
           className="w-full p-3 text-left text-amber-900 font-bold"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           [← MENÚ]
-        </button>
+        </motion.button>
       </div>
     </div>
   )

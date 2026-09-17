@@ -1,7 +1,7 @@
 // Player authentication
 // Handles anonymous player signup and team joining
 
-import { supabase } from '@/lib/db'
+import { supabase, getServiceRoleClient } from '@/lib/db'
 
 export interface PlayerSignupResult {
   sessionId: string
@@ -121,7 +121,8 @@ export async function signInAsPlayer(
       sessionId = team.session_id
     } else {
       // Create new session
-      const { data: session, error: sessionError } = await supabase
+      const serviceClient = getServiceRoleClient()
+      const { data: session, error: sessionError } = await serviceClient
         .from('sessions')
         .insert({
           current_act: 1,

@@ -37,7 +37,10 @@ export function TeamsTable({ teams, isLoading }: TeamsTableProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 border-2 border-amber-200 overflow-x-auto">
+    <div
+      className="bg-white rounded-xl shadow-lg p-6 border-2 border-amber-200 overflow-x-auto"
+      data-testid="teams-list"
+    >
       <h2 className="text-xl font-bold text-amber-900 mb-6">Equips en joc</h2>
 
       {isLoading ? (
@@ -83,6 +86,7 @@ export function TeamsTable({ teams, isLoading }: TeamsTableProps) {
               {teams.map((team, idx) => (
                 <tr
                   key={team.id}
+                  data-testid="team-row"
                   className="border-b border-amber-100 hover:bg-amber-50 transition-colors"
                 >
                   <td className="py-4 px-4">
@@ -115,7 +119,10 @@ export function TeamsTable({ teams, isLoading }: TeamsTableProps) {
                     {formatTime(team.timeElapsed)}
                   </td>
                   <td className="py-4 px-4 text-center">
-                    <span className="font-bold text-lg text-amber-900">
+                    <span
+                      className="font-bold text-lg text-amber-900"
+                      data-testid="team-score"
+                    >
                       {team.score}
                     </span>
                   </td>

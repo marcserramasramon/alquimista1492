@@ -1,7 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
+import { useAudio } from '@/lib/audio/useAudio'
+import {
+  fadeInVariants,
+  containerVariants,
+  itemVariants,
+} from '@/lib/animations/useAnimations'
 
 interface AccusationGameState {
   currentScreen: 'intro' | 'suspect_select' | 'evidence_select' | 'giro' | 'result' | 'incorrect'
@@ -36,6 +43,7 @@ const VALID_EVIDENCE_FOR_ANTON: string[] = []
  * Si Bernat + 3 proves vàlides → Correcte
  */
 export function AccusationGame(props: GameProps) {
+  const { play } = useAudio()
   const [state, setState] = useState<AccusationGameState>(() => {
     const saved = props.sharedState as AccusationGameState | undefined
     return saved || {
@@ -84,6 +92,7 @@ export function AccusationGame(props: GameProps) {
     if (result.correct) {
       // If accusing Anton first, show giro
       if (state.selectedSuspect === 'anton' && !state.hasSeenGiro) {
+        play('bell-ring')
         setState(prev => ({
           ...prev,
           currentScreen: 'giro',
@@ -91,6 +100,7 @@ export function AccusationGame(props: GameProps) {
         }))
       } else {
         // Bernat is correct
+        play('bell-ring')
         setState(prev => ({
           ...prev,
           currentScreen: 'result',
@@ -98,6 +108,7 @@ export function AccusationGame(props: GameProps) {
         }))
       }
     } else {
+      play('buzzer')
       setState(prev => ({
         ...prev,
         currentScreen: 'incorrect',
@@ -116,7 +127,12 @@ export function AccusationGame(props: GameProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col">
+    <motion.div
+      className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col"
+      initial="hidden"
+      animate="visible"
+      variants={fadeInVariants}
+    >
       {/* Timer at top */}
       <div className="text-right text-sm font-mono text-red-600 mb-4">
         12:34:56
@@ -154,7 +170,7 @@ export function AccusationGame(props: GameProps) {
           onRetry={() => setState(prev => ({ ...prev, currentScreen: 'suspect_select', selectedSuspect: null, selectedEvidence: new Set() }))}
         />
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -238,15 +254,24 @@ function EvidenceSelectScreen({
   const canSubmit = selectedEvidence.size === 3
 
   return (
-    <div className="flex flex-col flex-1 gap-4">
+    <motion.div
+      className="flex flex-col flex-1 gap-4"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
       <h2 className="text-2xl font-bold text-center mb-2">HAS ACUSAT:</h2>
       <p className="text-center font-bold text-amber-900 mb-4">{suspect.name}</p>
 
       <p className="text-center text-sm font-bold mb-4">Marca 3 proves vàlides del Quadern:</p>
 
-      <div className="space-y-2 flex-1 overflow-y-auto">
+      <motion.div className="space-y-2 flex-1 overflow-y-auto" variants={containerVariants}>
         {evidence.map(ev => (
-          <label key={ev.id} className="flex items-start gap-3 p-3 bg-amber-100 border border-amber-300 cursor-pointer hover:bg-amber-150 transition">
+          <motion.label
+            key={ev.id}
+            variants={itemVariants}
+            className="flex items-start gap-3 p-3 bg-amber-100 border border-amber-300 cursor-pointer hover:bg-amber-150 transition"
+          >
             <input
               type="checkbox"
               checked={selectedEvidence.has(ev.id)}
@@ -257,9 +282,9 @@ function EvidenceSelectScreen({
               <p className="font-bold text-sm">{ev.name}</p>
               <p className="text-xs text-amber-700">{ev.source}</p>
             </div>
-          </label>
+          </motion.label>
         ))}
-      </div>
+      </motion.div>
 
       <div className="border-t-2 border-amber-900 pt-4">
         <p className="text-center font-bold mb-4">Proves marcades: {selectedEvidence.size}/3</p>
@@ -276,7 +301,7 @@ function EvidenceSelectScreen({
           VALIDAR
         </button>
       </div>
-    </div>
+    </motion.div>
   )
 }
 

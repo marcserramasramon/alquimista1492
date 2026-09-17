@@ -62,14 +62,14 @@ export function useMasterDashboard(sessionId?: string) {
       if (!isMountedRef.current) return
 
       const sessionMap = new Map(
-        (sessionsData || []).map((s) => [s.team_id, s])
+        (sessionsData || []).map((s) => [s.id, s])
       )
       const resultsMap = new Map(
         (resultsData || []).map((r) => [r.team_id, r])
       )
 
       const enrichedTeams: TeamData[] = (teamsData || []).map((team) => {
-        const session = sessionMap.get(team.id)
+        const session = team.session_id ? sessionMap.get(team.session_id) : undefined
         const result = resultsMap.get(team.id)
         const startTime = team.started_at ? new Date(team.started_at) : new Date()
         const now = new Date()

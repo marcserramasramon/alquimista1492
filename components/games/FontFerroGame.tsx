@@ -1,7 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
+import { useAudio } from '@/lib/audio/useAudio'
+import {
+  fadeInVariants,
+  slideUpVariants,
+  containerVariants,
+  itemVariants,
+} from '@/lib/animations/useAnimations'
 
 interface GameState {
   currentScreen: 'menu' | 'intro' | 'recepta' | 'torns' | 'joc' | 'result'
@@ -10,6 +18,7 @@ interface GameState {
 }
 
 export function FontFerroGame(props: GameProps) {
+  const { play } = useAudio()
   const [state, setState] = useState<GameState>(() => {
     const saved = props.sharedState as GameState | undefined
     return saved || {
@@ -31,8 +40,10 @@ export function FontFerroGame(props: GameProps) {
     })
 
     if (result.correct) {
+      play('evidence-unlock')
       setState(prev => ({ ...prev, currentScreen: 'result' }))
     } else {
+      play('buzzer')
       setState(prev => ({
         ...prev,
         attempts: prev.attempts + 1,
@@ -46,7 +57,12 @@ export function FontFerroGame(props: GameProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col">
+    <motion.div
+      className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col"
+      initial="hidden"
+      animate="visible"
+      variants={fadeInVariants}
+    >
       {/* Timer at top */}
       <div className="text-right text-sm font-mono text-red-600 mb-4">
         12:34:56
@@ -81,7 +97,7 @@ export function FontFerroGame(props: GameProps) {
       {state.currentScreen === 'result' && (
         <ResultScreen solved={props.solved} />
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -334,38 +350,43 @@ function JocScreen({
 
 function ResultScreen({ solved }: { solved: boolean }) {
   return (
-    <div className="flex flex-col justify-center flex-1 gap-4">
+    <motion.div
+      className="flex flex-col justify-center flex-1 gap-4"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {solved ? (
         <>
-          <h2 className="text-3xl font-bold text-center mb-4">✓ CORRECTE!</h2>
-          <p className="text-center text-amber-900 font-bold mb-4">
+          <motion.h2 variants={itemVariants} className="text-3xl font-bold text-center mb-4">✓ CORRECTE!</motion.h2>
+          <motion.p variants={itemVariants} className="text-center text-amber-900 font-bold mb-4">
             DIA 12 DE MAIG ✓
-          </p>
-          <p className="text-center text-amber-900 mb-4">
+          </motion.p>
+          <motion.p variants={itemVariants} className="text-center text-amber-900 mb-4">
             Els qui van recollir l'aigua:
-          </p>
-          <div className="bg-amber-100 border-2 border-amber-900 p-4">
+          </motion.p>
+          <motion.div variants={itemVariants} className="bg-amber-100 border-2 border-amber-900 p-4">
             <p className="text-amber-900">✓ ANTON l'escolà</p>
             <p className="text-amber-900">✓ ISIDRE el ferrer</p>
             <p className="text-amber-900">✓ BERNAT el mestre</p>
-          </div>
-          <p className="text-center text-amber-900 mt-4">
+          </motion.div>
+          <motion.p variants={itemVariants} className="text-center text-amber-900 mt-4">
             MARIANNA de l'Hostal estava al Mercat de Vic.
-          </p>
-          <p className="text-center text-amber-900 font-bold">✓ DESCARTADA</p>
-          <div className="bg-amber-100 border-2 border-amber-900 p-4 text-center">
+          </motion.p>
+          <motion.p variants={itemVariants} className="text-center text-amber-900 font-bold">✓ DESCARTADA</motion.p>
+          <motion.div variants={itemVariants} className="bg-amber-100 border-2 border-amber-900 p-4 text-center">
             <p className="font-bold text-amber-900">🔑 XIFRA DESCOBERTA: AIGUA = 2</p>
-          </div>
-          <p className="text-center text-green-600 font-bold">+100 punts</p>
+          </motion.div>
+          <motion.p variants={itemVariants} className="text-center text-green-600 font-bold">+100 punts</motion.p>
         </>
       ) : (
         <>
-          <h2 className="text-3xl font-bold text-center mb-4">✗ INCORRECTE</h2>
-          <p className="text-center text-amber-900">
+          <motion.h2 variants={itemVariants} className="text-3xl font-bold text-center mb-4">✗ INCORRECTE</motion.h2>
+          <motion.p variants={itemVariants} className="text-center text-amber-900">
             La tinta es va fer el 15. Calcula −3 dies.
-          </p>
+          </motion.p>
         </>
       )}
-    </div>
+    </motion.div>
   )
 }

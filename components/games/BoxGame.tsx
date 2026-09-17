@@ -1,7 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
+import { useAudio } from '@/lib/audio/useAudio'
+import {
+  fadeInVariants,
+  zoomVariants,
+} from '@/lib/animations/useAnimations'
 
 interface BoxGameState {
   currentPart: 1 | 2 | 3
@@ -26,6 +32,7 @@ const EMISSARI_PASSWORD = "L'ALBA VE DE VIC"
  * Part 3: Sometent + Decisió moral
  */
 export function BoxGame(props: GameProps) {
+  const { play } = useAudio()
   const [state, setState] = useState<BoxGameState>(() => {
     const saved = props.sharedState as BoxGameState | undefined
     return saved || {
@@ -61,10 +68,12 @@ export function BoxGame(props: GameProps) {
   const handlePart1Submit = async () => {
     const normalized = state.part1Code.replace(/[\s-]/g, '')
     if (normalized !== '4231') {
+      play('buzzer')
       setState(prev => ({ ...prev, part1Attempts: prev.part1Attempts + 1 }))
       return
     }
 
+    play('evidence-unlock')
     setState(prev => ({
       ...prev,
       currentScreen: 'open',
@@ -100,12 +109,14 @@ export function BoxGame(props: GameProps) {
     })
 
     if (isCorrect) {
+      play('evidence-unlock')
       setState(prev => ({
         ...prev,
         currentPart: 3,
         currentScreen: 'emissari',
       }))
     } else {
+      play('buzzer')
       setState(prev => ({
         ...prev,
         currentScreen: 'cards',
@@ -129,7 +140,12 @@ export function BoxGame(props: GameProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col">
+    <motion.div
+      className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col"
+      initial="hidden"
+      animate="visible"
+      variants={fadeInVariants}
+    >
       {/* Timer at top */}
       <div className="text-right text-sm font-mono text-red-600 mb-4">
         12:34:56
@@ -177,7 +193,7 @@ export function BoxGame(props: GameProps) {
       {state.currentScreen === 'result' && (
         <ResultScreen choice={state.part3Choice} />
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -263,26 +279,38 @@ function Part1OpenScreen({ onContinue }: { onContinue: () => void }) {
     <div className="flex flex-col justify-center flex-1 gap-6">
       <h2 className="text-3xl font-bold text-center mb-4">🔓 OBRINT LA CAIXA...</h2>
 
-      <div className="bg-amber-100 p-8 rounded-lg text-center animate-pulse">
+      <motion.div
+        className="bg-amber-100 p-8 rounded-lg text-center animate-pulse"
+        initial="hidden"
+        animate="visible"
+        variants={zoomVariants}
+      >
         <p className="text-6xl mb-4">🔑</p>
         <p className="font-bold">Animació d'obertura...</p>
-      </div>
+      </motion.div>
 
-      <div className="bg-green-100 border-2 border-green-600 p-4 rounded-lg text-center">
+      <motion.div
+        className="bg-green-100 border-2 border-green-600 p-4 rounded-lg text-center"
+        initial="hidden"
+        animate="visible"
+        variants={zoomVariants}
+      >
         <p className="font-bold text-green-700">✓ CORRECTE!</p>
         <p className="text-sm text-green-600 mt-2">La caixa s'ha obert.</p>
         <p className="text-sm mt-2">Dins trobes:</p>
         <p className="text-sm">📜 Carta original de Bernat</p>
         <p className="text-sm">📜 Carta falsa del Rector</p>
         <p className="text-sm">📝 Nota del Capità</p>
-      </div>
+      </motion.div>
 
-      <button
+      <motion.button
         onClick={onContinue}
         className="w-full p-4 bg-amber-900 text-amber-50 font-bold text-lg border-2 border-amber-900 hover:bg-amber-800 transition"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
       >
         CONTINUAR A LA PART 2
-      </button>
+      </motion.button>
     </div>
   )
 }

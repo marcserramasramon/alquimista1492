@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# audio assets (large binary files)
+public/audio/**/*.mp3
+public/audio/**/*.wav
+public/audio/**/*.ogg
+!public/audio/**/.keep

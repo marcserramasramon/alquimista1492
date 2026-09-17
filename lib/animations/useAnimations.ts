@@ -13,7 +13,7 @@ export const slideUpVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: 'easeOut' },
+    transition: { duration: 0.5, ease: [0, 0, 0.58, 1] as const },
   },
 };
 
@@ -22,7 +22,7 @@ export const scaleVariants = {
   visible: {
     scale: 1,
     opacity: 1,
-    transition: { duration: 0.4, ease: 'easeOut' },
+    transition: { duration: 0.4, ease: [0, 0, 0.58, 1] as const },
   },
 };
 
@@ -32,7 +32,7 @@ export const pulseVariants = {
     transition: {
       duration: 1.5,
       repeat: Infinity,
-      ease: 'easeInOut',
+      ease: [0.42, 0, 0.58, 1] as const,
     },
   },
 };
@@ -54,7 +54,7 @@ export const shakeVariants = {
     x: [-10, 10, -10, 10, 0],
     transition: {
       duration: 0.4,
-      ease: 'easeInOut',
+      ease: [0.42, 0, 0.58, 1] as const,
     },
   },
 };
@@ -66,7 +66,7 @@ export const zoomVariants = {
     opacity: 1,
     transition: {
       duration: 0.5,
-      ease: 'easeOut',
+      ease: [0, 0, 0.58, 1] as const,
     },
   },
 };

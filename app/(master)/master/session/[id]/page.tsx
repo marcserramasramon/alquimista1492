@@ -30,7 +30,9 @@ export default function SessionDetailPage() {
     if (!token) {
       router.push('/login')
     }
-  }, [router])
+    // router is memoized in Next.js 13+ so safe to omit from dependency array
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Load teams for this session
   useEffect(() => {

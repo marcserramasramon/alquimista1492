@@ -53,13 +53,13 @@ export default function ResultsPage() {
           (resultsData || []).map((r) => [r.team_id, r])
         )
         const sessionsMap = new Map(
-          (sessionsData || []).map((s) => [s.team_id, s])
+          (sessionsData || []).map((s) => [s.id, s])
         )
 
         const enriched: TeamResult[] = (teamsData || [])
           .map((team) => {
             const result = resultsMap.get(team.id)
-            const session = sessionsMap.get(team.id)
+            const session = team.session_id ? sessionsMap.get(team.session_id) : null
             const startTime = team.started_at
               ? new Date(team.started_at)
               : new Date()

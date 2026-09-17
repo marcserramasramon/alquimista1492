@@ -47,6 +47,7 @@ export function PINInput({
           <div className="relative">
             <input
               id="pin"
+              data-testid="master-pin"
               type={showPin ? 'text' : 'password'}
               inputMode="numeric"
               maxLength={6}

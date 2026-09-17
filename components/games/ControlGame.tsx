@@ -1,7 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
+import { useAudio } from '@/lib/audio/useAudio'
+import {
+  fadeInVariants,
+  scaleVariants,
+} from '@/lib/animations/useAnimations'
 
 interface ControlGameState {
   currentScreen: 'intro' | 'waiting' | 'result'
@@ -15,6 +21,7 @@ interface ControlGameState {
  * Validació manual del màster
  */
 export function ControlGame(props: GameProps) {
+  const { play } = useAudio()
   const [state, setState] = useState<ControlGameState>(() => {
     const saved = props.sharedState as ControlGameState | undefined
     return saved || {
@@ -29,6 +36,7 @@ export function ControlGame(props: GameProps) {
   }, [state, props])
 
   const handleConfirmMemory = async () => {
+    play('bell-ding')
     // Move to waiting screen (master validates)
     setState(prev => ({ ...prev, currentScreen: 'waiting' }))
 
@@ -39,6 +47,7 @@ export function ControlGame(props: GameProps) {
     })
 
     if (result.correct) {
+      play('evidence-unlock')
       setState(prev => ({
         ...prev,
         currentScreen: 'result',
@@ -47,6 +56,7 @@ export function ControlGame(props: GameProps) {
       }))
     } else {
       // Master marked as incorrect (lost salconduit)
+      play('buzzer')
       setState(prev => ({
         ...prev,
         currentScreen: 'result',
@@ -57,7 +67,12 @@ export function ControlGame(props: GameProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 min-h-screen bg-blue-950 text-amber-50 flex flex-col">
+    <motion.div
+      className="w-full max-w-md mx-auto p-4 min-h-screen bg-blue-950 text-amber-50 flex flex-col"
+      initial="hidden"
+      animate="visible"
+      variants={fadeInVariants}
+    >
       {/* Timer at top */}
       <div className="text-right text-sm font-mono text-red-500 mb-4">
         12:34:56
@@ -74,7 +89,7 @@ export function ControlGame(props: GameProps) {
       {state.currentScreen === 'result' && (
         <ResultScreen passed={state.passed} salconduitLost={state.salconduitLost} />
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -102,12 +117,14 @@ function IntroScreen({ onContinue }: { onContinue: () => void }) {
         <p>Si tots diu el mateix, passareu.</p>
       </div>
 
-      <button
+      <motion.button
         onClick={onContinue}
         className="w-full p-4 bg-amber-600 text-blue-950 font-bold text-lg border-2 border-amber-200 hover:bg-amber-500 transition"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
       >
         HE MEMÒRIA
-      </button>
+      </motion.button>
     </div>
   )
 }

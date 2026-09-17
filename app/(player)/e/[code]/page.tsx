@@ -10,17 +10,13 @@ export default function PlayerEntryPage() {
   const code = (params.code as string) || ''
 
   const [playerName, setPlayerName] = useState('')
-  const [codeError, setCodeError] = useState<string | null>(null)
   const { signIn, isLoading, error } = usePlayerSignIn()
 
-  // Validate code on mount
-  useEffect(() => {
-    if (!code || code.length !== 6) {
-      setCodeError('Codi d\'equip no vàlid')
-    } else {
-      setCodeError(null)
-    }
-  }, [code])
+  // Derive code error from code value (no setState in effect)
+  const codeError =
+    !code || code.length !== 6
+      ? 'Codi d\'equip no vàlid'
+      : null
 
   const handleSubmit = async () => {
     if (!code || code.length !== 6) {

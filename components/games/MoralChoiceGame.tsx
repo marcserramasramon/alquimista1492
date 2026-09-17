@@ -1,7 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
+import { useAudio } from '@/lib/audio/useAudio'
+import {
+  fadeInVariants,
+  scaleVariants,
+} from '@/lib/animations/useAnimations'
 
 interface MoralChoiceGameState {
   currentScreen: 'intro' | 'choice' | 'result'
@@ -15,6 +21,7 @@ interface MoralChoiceGameState {
  * NO scoring (neutre) - tracks percentage for final
  */
 export function MoralChoiceGame(props: GameProps) {
+  const { play } = useAudio()
   const [state, setState] = useState<MoralChoiceGameState>(() => {
     const saved = props.sharedState as MoralChoiceGameState | undefined
     return saved || {
@@ -47,6 +54,7 @@ export function MoralChoiceGame(props: GameProps) {
   }, [state.currentScreen, state.timeRemaining, state.choice])
 
   const handleChoice = async (choice: 'A' | 'B') => {
+    play('bell-ring')
     setState(prev => ({
       ...prev,
       choice,
@@ -61,7 +69,12 @@ export function MoralChoiceGame(props: GameProps) {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col">
+    <motion.div
+      className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col"
+      initial="hidden"
+      animate="visible"
+      variants={fadeInVariants}
+    >
       {/* Timer at top */}
       <div className="text-right text-sm font-mono text-red-600 mb-4">
         12:34:56
@@ -81,7 +94,7 @@ export function MoralChoiceGame(props: GameProps) {
       {state.currentScreen === 'result' && (
         <ResultScreen choice={state.choice} />
       )}
-    </div>
+    </motion.div>
   )
 }
 
@@ -129,9 +142,11 @@ function ChoiceScreen({
       </div>
 
       <div className="flex-1 space-y-3">
-        <button
+        <motion.button
           onClick={() => onChoose('A')}
           className="w-full p-6 bg-blue-100 border-2 border-blue-600 hover:bg-blue-150 transition text-left rounded-lg"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           <p className="font-bold text-blue-900 text-lg">OPCIÓ A</p>
           <p className="text-blue-900 font-bold mt-2">ACCEPTAR TRACTE</p>
@@ -143,11 +158,13 @@ function ChoiceScreen({
             <p>→ Bernat fuig amb Jaume</p>
             <p>→ FINAL: Compassió</p>
           </div>
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
           onClick={() => onChoose('B')}
           className="w-full p-6 bg-red-100 border-2 border-red-600 hover:bg-red-150 transition text-left rounded-lg"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
           <p className="font-bold text-red-900 text-lg">OPCIÓ B</p>
           <p className="text-red-900 font-bold mt-2">REBUTJAR TRACTE</p>
@@ -159,7 +176,7 @@ function ChoiceScreen({
             <p>→ Bernat queda tancat</p>
             <p>→ FINAL: Justicia</p>
           </div>
-        </button>
+        </motion.button>
       </div>
 
       <div className="text-center">

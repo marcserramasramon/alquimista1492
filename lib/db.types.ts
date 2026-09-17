@@ -450,6 +450,7 @@ export type Database = {
           expires_at: string | null
           id: string
           pass_token: string
+          station_id: string
           team_id: string
           used_at: string | null
           used_on_station_id: string | null
@@ -459,6 +460,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           pass_token: string
+          station_id: string
           team_id: string
           used_at?: string | null
           used_on_station_id?: string | null
@@ -468,6 +470,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           pass_token?: string
+          station_id?: string
           team_id?: string
           used_at?: string | null
           used_on_station_id?: string | null

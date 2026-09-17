@@ -1,26 +1,58 @@
 @import "tailwindcss";
 
+/* Historical theme palette (Section 16 PRD) */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Colors */
+  --parchment: #f4ebd9;
+  --vellum: #eae0ca;
+  --ink: #2b2118;
+  --leather: #8c6d53;
+  --prussian: #1d3557;
+  --cochineal: #7a1f26;
+  --gold: #c99e32;
+
+  /* Base theme - no dark mode */
+  --background: var(--parchment);
+  --foreground: var(--ink);
 }
 
 @theme inline {
+  --color-parchment: var(--parchment);
+  --color-vellum: var(--vellum);
+  --color-ink: var(--ink);
+  --color-leather: var(--leather);
+  --color-prussian: var(--prussian);
+  --color-cochineal: var(--cochineal);
+  --color-gold: var(--gold);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-eb-garamond);
+  --font-serif: var(--font-libre-caslon);
+  --font-accent: var(--font-cinzel);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-eb-garamond);
+  line-height: 1.5;
+}
+
+/* Ensure minimum contrast for readability (WCAG AA: 4.5:1) */
+/* On parchment background (#f4ebd9), use --ink (#2b2118) for body text */
+/* Use --leather only for secondary text >= 19px */
+/* --gold only for decoration, borders, focus rings - never as text on parchment */
+
+/* Mobile-first button sizing */
+button {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Focus ring for accessibility using gold */
+*:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
 }
