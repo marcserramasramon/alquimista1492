@@ -4,13 +4,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/db'
 import { useTeamState } from '@/lib/realtime/useTeamState'
-import { StationsTab } from '@/components/player/StationsTab'
 import { MapTab } from '@/components/player/MapTab'
 import { NotebookTab } from '@/components/player/NotebookTab'
 import { SalconduitTab } from '@/components/player/SalconduitTab'
 import { AccuseTab } from '@/components/player/AccuseTab'
+import { QRScanner } from '@/components/player/QRScanner'
 
-type Tab = 'stations' | 'map' | 'notebook' | 'salconduit' | 'accuse'
+type Tab = 'map' | 'notebook' | 'historia' | 'salconduit' | 'accuse'
 
 interface PlayerSession {
   playerId: string
@@ -21,11 +21,12 @@ interface PlayerSession {
 
 export default function JocHubPage() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<Tab>('stations')
+  const [activeTab, setActiveTab] = useState<Tab>('map')
   const [playerSession, setPlayerSession] = useState<PlayerSession | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSubmittingAccusation, setIsSubmittingAccusation] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
 
   const teamState = useTeamState(playerSession?.teamId)
 
@@ -190,20 +191,21 @@ export default function JocHubPage() {
       <main className="flex-1 max-w-4xl w-full mx-auto flex flex-col overflow-hidden">
         {/* Tab Content - Takes remaining space */}
         <div className="flex-1 overflow-hidden flex flex-col">
-          {activeTab === 'stations' && (
-            <StationsTab
-              stations={teamState.stations}
-              onSelectStation={(stationId) => {
-                // This would open QR scanner or show QR to scan
-                console.log('Selected station:', stationId)
-              }}
-            />
-          )}
-
           {activeTab === 'map' && <MapTab stations={teamState.stations} />}
 
           {activeTab === 'notebook' && (
             <NotebookTab evidences={teamState.evidences} />
+          )}
+
+          {activeTab === 'historia' && (
+            <div className="px-6 py-4 overflow-y-auto">
+              <h2 className="text-xl font-bold text-amber-900 mb-4">
+                📖 La Trama
+              </h2>
+              <p className="text-amber-700 text-sm">
+                Històries i pistes descobertes apareixeran aquí
+              </p>
+            </div>
           )}
 
           {activeTab === 'salconduit' && (
@@ -221,47 +223,59 @@ export default function JocHubPage() {
         </div>
       </main>
 
+      {/* QR Scanner Modal */}
+      {showScanner && <QRScanner onClose={() => setShowScanner(false)} />}
+
       {/* Bottom Navigation Tabs */}
       <nav className="border-t-4 border-amber-700 bg-white shadow-lg sticky bottom-0 z-40">
-        <div className="max-w-4xl mx-auto px-2 py-2 flex gap-1 overflow-x-auto">
-          <TabButton
-            id="stations"
-            icon="📍"
-            label="Estacions"
-            isActive={activeTab === 'stations'}
-            onClick={() => setActiveTab('stations')}
-          />
-          <TabButton
-            id="map"
-            icon="🗺️"
-            label="Mapa"
-            isActive={activeTab === 'map'}
-            onClick={() => setActiveTab('map')}
-          />
-          <TabButton
-            id="notebook"
-            icon="📋"
-            label="Quadern"
-            isActive={activeTab === 'notebook'}
-            onClick={() => setActiveTab('notebook')}
-            badge={teamState.evidences.length}
-          />
-          <TabButton
-            id="salconduit"
-            icon="🎫"
-            label="Salconduit"
-            isActive={activeTab === 'salconduit'}
-            onClick={() => setActiveTab('salconduit')}
-            badge={teamState.passes.filter((p) => !p.used_at).length}
-          />
-          <TabButton
-            id="accuse"
-            icon="⚖️"
-            label="Acusar"
-            isActive={activeTab === 'accuse'}
-            onClick={() => setActiveTab('accuse')}
-            disabled={teamState.stations.filter((s) => s.solved).length < 7}
-          />
+        <div className="max-w-4xl mx-auto px-2 py-3 flex gap-2 items-end justify-center relative h-24">
+          {/* Left side buttons */}
+          <div className="flex gap-2">
+            <TabButton
+              id="map"
+              icon="📍"
+              label="Mapa"
+              isActive={activeTab === 'map'}
+              onClick={() => setActiveTab('map')}
+            />
+            <TabButton
+              id="notebook"
+              icon="📔"
+              label="Quadern"
+              isActive={activeTab === 'notebook'}
+              onClick={() => setActiveTab('notebook')}
+              badge={teamState.evidences.length}
+            />
+          </div>
+
+          {/* Center QR Scanner Button - Larger and circular */}
+          <button
+            onClick={() => setShowScanner(true)}
+            className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full bg-yellow-600 hover:bg-yellow-700 active:scale-95 transition-all flex items-center justify-center text-3xl shadow-xl border-4 border-yellow-500"
+            style={{ backgroundColor: '#D4AF37' }}
+            title="Escaneja QR"
+          >
+            🔍
+          </button>
+
+          {/* Right side buttons */}
+          <div className="flex gap-2">
+            <TabButton
+              id="historia"
+              icon="📖"
+              label="Históra"
+              isActive={activeTab === 'historia'}
+              onClick={() => setActiveTab('historia')}
+            />
+            <TabButton
+              id="salconduit"
+              icon="🎖️"
+              label="Salvos"
+              isActive={activeTab === 'salconduit'}
+              onClick={() => setActiveTab('salconduit')}
+              badge={teamState.passes.filter((p) => !p.used_at).length}
+            />
+          </div>
         </div>
       </nav>
     </div>
@@ -292,7 +306,7 @@ function TabButton({
       onClick={onClick}
       disabled={disabled}
       data-testid={`tab-${id}`}
-      className={`flex-1 min-w-[80px] py-3 px-2 rounded-t-lg font-semibold text-sm transition-all flex flex-col items-center gap-1 relative ${
+      className={`w-12 h-12 rounded-lg font-semibold text-xs transition-all flex flex-col items-center justify-center gap-0.5 relative ${
         isActive
           ? 'bg-amber-700 text-white shadow-lg'
           : disabled
@@ -300,10 +314,10 @@ function TabButton({
             : 'bg-amber-100 text-amber-900 hover:bg-amber-200'
       }`}
     >
-      <span className="text-xl">{icon}</span>
-      <span>{label}</span>
+      <span className="text-lg">{icon}</span>
+      {label && <span className="text-xs leading-none">{label}</span>}
       {badge !== undefined && badge > 0 && (
-        <div className="absolute top-1 right-1 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+        <div className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
           {badge}
         </div>
       )}
