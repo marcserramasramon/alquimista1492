@@ -32,7 +32,7 @@ export default function MasterDashboard() {
       // Clear localStorage as well
       localStorage.removeItem('master_token')
       // Redirect to login
-      router.push('/(master)/login')
+      router.push('/login')
     }
   }
 

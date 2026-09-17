@@ -13,8 +13,8 @@ export async function middleware(request: NextRequest) {
 
   // Check if this is a protected master route
   if (protectedRoutes.some((route) => pathname.startsWith(route))) {
-    // Skip middleware for /master/login
-    if (pathname === '/login' || pathname === '/(master)/login') {
+    // Skip middleware for /login
+    if (pathname === '/login') {
       return NextResponse.next()
     }
 
@@ -22,7 +22,7 @@ export async function middleware(request: NextRequest) {
       const token = request.cookies.get('master_token')?.value
 
       if (!token) {
-        return NextResponse.redirect(new URL('/(master)/login', request.url))
+        return NextResponse.redirect(new URL('/login', request.url))
       }
 
       // Verify the JWT token
@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next()
     } catch (error) {
       console.error('Token verification failed:', error)
-      return NextResponse.redirect(new URL('/(master)/login', request.url))
+      return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 
