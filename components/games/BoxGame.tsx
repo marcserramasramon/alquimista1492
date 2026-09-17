@@ -331,28 +331,32 @@ export function BoxGame(props: GameProps) {
 function Part1IntroScreen({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="flex flex-col justify-center flex-1 gap-4">
-      <h1 className="text-3xl font-bold text-center mb-6">CAIXA DE LES ALMOINES</h1>
+      <h1 className="text-3xl font-bold text-center mb-4">CAIXA DE LES ALMOINES</h1>
 
-      <div className="bg-amber-100 p-6 rounded-lg text-center mb-4">
-        <p className="text-lg font-bold mb-4">🔒</p>
-        <p className="mb-4">La caixa està segellada amb cadenat.</p>
-        <p>Necessites la CONTRASENYA dels 4 elements.</p>
+      <div className="bg-amber-100 p-4 rounded-lg text-center mb-2">
+        <p className="text-2xl mb-2">🔒</p>
+        <p className="font-bold mb-2">La caixa està segellada amb cadenat</p>
+        <p className="text-sm text-amber-800">Necessites la contrasenya dels 4 elements</p>
       </div>
 
-      <div className="bg-blue-100 p-4 rounded-lg mb-4">
-        <p className="font-bold mb-3 text-sm">Recorda els 4 elements de les estacions:</p>
-        <p className="text-sm">CIM (Serrat) = 4 (FOC)</p>
-        <p className="text-sm">FONT (Font Ferro) = 2 (AIGUA)</p>
-        <p className="text-sm">PLA (Planes Bones) = 3 (TERRA)</p>
-        <p className="text-sm">PEDRA (Cementiri) = 1 (PEDRA)</p>
+      <div className="bg-blue-100 p-3 rounded-lg text-center mb-4">
+        <p className="font-bold mb-2 text-sm">4 Elements = 4 Números:</p>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <p>🔥 CIM (Serrat) = <span className="font-bold">4</span></p>
+          <p>💧 FONT = <span className="font-bold">2</span></p>
+          <p>🌍 PLA (Planes) = <span className="font-bold">3</span></p>
+          <p>⛰️ PEDRA (Cementiri) = <span className="font-bold">1</span></p>
+        </div>
       </div>
 
-      <button
+      <motion.button
         onClick={onContinue}
-        className="w-full p-4 bg-amber-900 text-amber-50 font-bold text-lg border-2 border-amber-900 hover:bg-amber-800 transition"
+        className="w-full p-4 bg-amber-900 text-amber-50 font-bold text-lg border-2 border-amber-900 hover:bg-amber-800 rounded transition"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
       >
-        CONTINUAR
-      </button>
+        OBRIR CADENAT
+      </motion.button>
     </div>
   )
 }
@@ -368,81 +372,159 @@ function Part1InputScreen({
   onSubmit: () => void
   attempts: number
 }) {
-  const isValid = code.replace(/[\s-]/g, '').length === 4
+  const digits = code.padEnd(4, '0').slice(0, 4).split('')
+
+  const handleDigitChange = (index: number, value: string) => {
+    const newDigits = [...digits]
+    newDigits[index] = value.slice(-1) || '0'
+    onCodeChange(newDigits.join(''))
+  }
+
+  const isCorrect = code.replace(/[\s-]/g, '') === '4231'
 
   return (
-    <div className="flex flex-col justify-center flex-1 gap-4">
-      <h2 className="text-2xl font-bold text-center mb-4">CONTRASENYA (4 xifres)</h2>
+    <div className="flex flex-col justify-center flex-1 gap-6">
+      <h2 className="text-2xl font-bold text-center">GIRAR LES RODES</h2>
 
-      <input
-        type="text"
-        value={code}
-        onChange={e => onCodeChange(e.target.value)}
-        placeholder="Ex: 4231 o 4-2-3-1"
-        className="w-full p-4 text-2xl text-center font-bold border-2 border-amber-900"
-      />
+      <div className="bg-amber-100 p-6 rounded-lg">
+        <p className="text-center text-sm mb-4 text-amber-800">Introdueix: 4-2-3-1</p>
 
-      <p className="text-center text-sm text-amber-800">Forma: 4231 o 4 2 3 1</p>
+        <div className="flex gap-3 justify-center">
+          {[0, 1, 2, 3].map(index => (
+            <DialWheel
+              key={index}
+              value={parseInt(digits[index] || '0')}
+              onChange={val => handleDigitChange(index, String(val))}
+            />
+          ))}
+        </div>
+      </div>
 
       {attempts > 0 && (
-        <div className="bg-red-100 p-3 rounded border border-red-600">
-          <p className="text-sm text-red-600">−10 punts • Intent {attempts}/3</p>
-        </div>
+        <motion.div
+          className="bg-red-100 p-3 rounded border border-red-600 text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <p className="text-sm text-red-600">❌ Intent {attempts}/3</p>
+        </motion.div>
       )}
 
-      <button
+      <motion.button
         onClick={onSubmit}
-        disabled={!isValid}
-        className={`w-full p-4 font-bold text-lg border-2 transition ${
-          isValid
+        disabled={!isCorrect}
+        className={`w-full p-4 font-bold text-lg border-2 transition rounded ${
+          isCorrect
             ? 'bg-amber-900 text-amber-50 border-amber-900 hover:bg-amber-800'
             : 'bg-gray-300 text-gray-600 border-gray-300 cursor-not-allowed'
         }`}
+        whileHover={isCorrect ? { scale: 1.02 } : {}}
+        whileTap={isCorrect ? { scale: 0.98 } : {}}
       >
-        OBRIR
-      </button>
+        🔓 OBRIR
+      </motion.button>
+    </div>
+  )
+}
+
+function DialWheel({
+  value,
+  onChange,
+}: {
+  value: number
+  onChange: (val: number) => void
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <motion.button
+        onClick={() => onChange((value + 1) % 10)}
+        className="w-12 h-8 bg-amber-800 text-amber-50 font-bold text-lg rounded hover:bg-amber-700"
+        whileTap={{ scale: 0.9 }}
+      >
+        ▲
+      </motion.button>
+
+      <motion.div
+        className="w-14 h-16 bg-amber-900 border-4 border-amber-800 rounded flex items-center justify-center text-3xl font-bold text-amber-50 shadow-lg"
+        animate={{ rotateX: value * 36 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      >
+        {value}
+      </motion.div>
+
+      <motion.button
+        onClick={() => onChange((value - 1 + 10) % 10)}
+        className="w-12 h-8 bg-amber-800 text-amber-50 font-bold text-lg rounded hover:bg-amber-700"
+        whileTap={{ scale: 0.9 }}
+      >
+        ▼
+      </motion.button>
     </div>
   )
 }
 
 function Part1OpenScreen({ onContinue }: { onContinue: () => void }) {
   return (
-    <div className="flex flex-col justify-center flex-1 gap-6">
-      <h2 className="text-3xl font-bold text-center mb-4">🔓 OBRINT LA CAIXA...</h2>
-
+    <motion.div
+      className="flex flex-col justify-center flex-1 gap-6 relative overflow-hidden"
+      initial={{ rotateZ: 0 }}
+      animate={{ rotateZ: [0, -5, 5, -3, 3, 0] }}
+      transition={{ duration: 2, ease: 'easeInOut' }}
+    >
+      {/* Background rotation effect */}
       <motion.div
-        className="bg-amber-100 p-8 rounded-lg text-center animate-pulse"
-        initial="hidden"
-        animate="visible"
-        variants={zoomVariants}
-      >
-        <p className="text-6xl mb-4">🔑</p>
-        <p className="font-bold">Animació d'obertura...</p>
-      </motion.div>
+        className="absolute inset-0 bg-gradient-to-br from-amber-200 to-amber-100 pointer-events-none"
+        initial={{ rotateZ: 0 }}
+        animate={{ rotateZ: 360 }}
+        transition={{ duration: 3, ease: 'linear' }}
+      />
 
-      <motion.div
-        className="bg-green-100 border-2 border-green-600 p-4 rounded-lg text-center"
-        initial="hidden"
-        animate="visible"
-        variants={zoomVariants}
-      >
-        <p className="font-bold text-green-700">✓ CORRECTE!</p>
-        <p className="text-sm text-green-600 mt-2">La caixa s'ha obert.</p>
-        <p className="text-sm mt-2">Dins trobes:</p>
-        <p className="text-sm">📜 Carta original de Bernat</p>
-        <p className="text-sm">📜 Carta falsa del Rector</p>
-        <p className="text-sm">📝 Nota del Capità</p>
-      </motion.div>
+      <div className="relative z-10 flex flex-col gap-6">
+        <h2 className="text-3xl font-bold text-center mb-2">🔓 OBRINT LA CAIXA...</h2>
 
-      <motion.button
-        onClick={onContinue}
-        className="w-full p-4 bg-amber-900 text-amber-50 font-bold text-lg border-2 border-amber-900 hover:bg-amber-800 transition"
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        CONTINUAR A LA PART 2
-      </motion.button>
-    </div>
+        <motion.div
+          className="bg-white border-4 border-amber-900 p-8 rounded-lg text-center shadow-xl"
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 0.8, repeat: 3 }}
+        >
+          <motion.p
+            className="text-5xl mb-4"
+            animate={{ rotateZ: 360 }}
+            transition={{ duration: 2, ease: 'linear' }}
+          >
+            🗝️
+          </motion.p>
+          <p className="font-bold text-amber-900">Girant el cadenat...</p>
+        </motion.div>
+
+        <motion.div
+          className="bg-green-100 border-2 border-green-600 p-5 rounded-lg text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5 }}
+        >
+          <p className="font-bold text-green-700 text-lg">✓ OBERTA!</p>
+          <p className="text-sm text-green-600 mt-2">Dins la caixa trobes:</p>
+          <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
+            <div className="bg-white p-2 rounded">📬<br />Sobre original</div>
+            <div className="bg-white p-2 rounded">📄<br />6 Cartes</div>
+            <div className="bg-white p-2 rounded">📝<br />Nota Capità</div>
+          </div>
+        </motion.div>
+
+        <motion.button
+          onClick={onContinue}
+          className="w-full p-4 bg-amber-900 text-amber-50 font-bold text-lg border-2 border-amber-900 hover:bg-amber-800 rounded transition"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2 }}
+        >
+          CONTINUAR A LA PART 2 →
+        </motion.button>
+      </div>
+    </motion.div>
   )
 }
 
@@ -483,25 +565,26 @@ function Part2CardsScreen({
         <p className="text-sm">Data: 16-05-1705</p>
       </motion.div>
 
-      <p className="text-center font-bold text-sm mb-2">6 CARTES SOLTES (clica per veure):</p>
+      <p className="text-center font-bold text-sm mb-2">6 CARTES SOLTES:</p>
 
-      <div className="grid grid-cols-3 gap-2 mb-4">
+      <div className="grid grid-cols-2 gap-2 mb-4">
         {dates.map(date => (
           <motion.button
             key={date}
             onClick={() => onSelectCard(date)}
-            className={`p-3 font-bold rounded border-2 transition text-center ${
+            className={`p-4 rounded border-2 transition flex flex-col items-center justify-center min-h-24 ${
               stolenCards.has(date)
-                ? 'bg-amber-900 text-amber-50 border-amber-900'
+                ? 'bg-green-200 border-green-600 opacity-60'
                 : selectedCard === date
-                  ? 'bg-blue-200 text-blue-900 border-blue-600'
-                  : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-150'
+                  ? 'bg-blue-200 border-blue-600'
+                  : 'bg-amber-50 border-amber-300 hover:bg-amber-100'
             }`}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={!stolenCards.has(date) ? { scale: 1.05 } : {}}
+            whileTap={!stolenCards.has(date) ? { scale: 0.95 } : {}}
           >
-            <div className="text-xl mb-1">📄</div>
-            <div className="text-xs">{date}</div>
+            <div className="text-3xl mb-2">📄</div>
+            <div className="text-sm font-bold text-amber-900">{date}</div>
+            {stolenCards.has(date) && <div className="text-xs text-green-700 mt-1">✓ Robada</div>}
           </motion.button>
         ))}
       </div>
