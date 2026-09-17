@@ -411,25 +411,49 @@ function Part1InputScreen({
   return (
     <div className="flex flex-col justify-center flex-1 gap-6">
       <header className="border-b-2 border-[#8C6D53] pb-3 text-center">
-        <h2 className="text-2xl font-bold text-[#2B2118]">GIRAR LES RODES</h2>
-        <p className="text-xs text-[#5C4533] mt-1 font-sans">Contrasenya: 4-2-3-1</p>
+        <h2 className="text-2xl font-bold text-[#2B2118]">COFRE ANTIC</h2>
+        <p className="text-xs text-[#5C4533] mt-1 font-sans italic">Gira les rodes per obrir</p>
       </header>
 
       <motion.div
-        className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl p-6"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-b from-[#8C6D53] via-[#6B5244] to-[#5C4533] border-4 border-[#3D3428] rounded-xl p-8 shadow-2xl relative overflow-hidden"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 300 }}
       >
-        <p className="text-center text-sm mb-4 text-[#5C4533] font-sans font-bold">Selecciona els 4 números:</p>
+        {/* Cofre top (ornament) */}
+        <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-r from-[#A0795A] to-[#8C6D53] border-b-2 border-[#3D3428]"></div>
 
-        <div className="flex gap-4 justify-center">
-          {[0, 1, 2, 3].map(index => (
-            <DialWheel
-              key={index}
-              value={parseInt(digits[index] || '0')}
-              onChange={val => handleDigitChange(index, String(val))}
-            />
-          ))}
+        {/* Serradura decorativa */}
+        <div className="absolute top-6 right-4 text-2xl opacity-80">🔒</div>
+
+        <div className="mt-6 mb-2">
+          <p className="text-center text-xs text-[#EAE0CA] font-sans font-bold mb-6 uppercase tracking-wider">
+            Combination Lock
+          </p>
+
+          {/* Rodes dins el cofre */}
+          <motion.div
+            className="bg-[#D8CCAE] border-4 border-[#5C4533] rounded-lg p-6 mb-4 shadow-inner"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="flex gap-5 justify-center">
+              {[0, 1, 2, 3].map((index, idx) => (
+                <div key={index} className="flex flex-col items-center">
+                  <DialWheel
+                    value={parseInt(digits[index] || '0')}
+                    onChange={val => handleDigitChange(index, String(val))}
+                  />
+                  <div className="mt-3 text-center">
+                    <p className="text-xs text-[#5C4533] font-sans font-bold">{['FOC', 'AIGUA', 'TERRA', 'PEDRA'][idx]}</p>
+                    <p className="text-2xs text-[#8C6D53] font-bold">{[4, 2, 3, 1][idx]}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </motion.div>
 
