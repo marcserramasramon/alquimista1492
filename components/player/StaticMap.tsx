@@ -141,31 +141,27 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
             )
           })}
 
-          {/* Station markers */}
+          {/* Station markers - Only icons */}
           {allStations.map((station) => {
             const { x, y } = latLonToSVG(station.latitude, station.longitude)
             const teamStation = getTeamStation(stations, station.id)
             const visited = !!teamStation
             const solved = teamStation?.solved ?? false
 
-            // Determine marker color
+            // Determine marker color (not used in this version, but kept for status)
             let markerColor = '#f59e0b' // amber (not visited)
             let borderColor = '#b45309'
-            let statusLabel = 'No visitada'
 
             if (visited && solved) {
               markerColor = '#22c55e' // green (solved)
               borderColor = '#15803d'
-              statusLabel = 'Completada'
             } else if (visited) {
               markerColor = '#eab308' // yellow (in progress)
               borderColor = '#b8860b'
-              statusLabel = 'En progres'
             }
 
-            const markerRadius = 24
-            const fontSize = 14
-            const labelFontSize = 11
+            const markerRadius = 20
+            const fontSize = 24
 
             return (
               <g
@@ -173,62 +169,32 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
                 onClick={() => setSelectedStationId(station.id)}
                 style={{ cursor: 'pointer' }}
               >
-                {/* Marker shadow */}
-                <circle
-                  cx={x + 2}
-                  cy={y + 2}
-                  r={markerRadius}
-                  fill="rgba(0,0,0,0.1)"
-                  style={{ pointerEvents: 'none' }}
-                />
-
-                {/* Marker circle */}
+                {/* Marker circle background */}
                 <circle
                   cx={x}
                   cy={y}
                   r={markerRadius}
                   fill={markerColor}
                   stroke={borderColor}
-                  strokeWidth="3"
+                  strokeWidth="2"
                   style={{ pointerEvents: 'all' }}
                 />
 
-                {/* Marker icon */}
+                {/* Marker icon - scales with zoom */}
                 <text
                   x={x}
                   y={y}
                   textAnchor="middle"
                   dominantBaseline="central"
                   fontSize={fontSize}
-                  style={{ pointerEvents: 'none', fontWeight: 'bold' }}
+                  style={{
+                    pointerEvents: 'none',
+                    fontWeight: 'bold',
+                    transform: `scale(${1 / zoom})`,
+                    transformOrigin: `${x}px ${y}px`,
+                  }}
                 >
                   {station.icon}
-                </text>
-
-                {/* Background for label */}
-                <rect
-                  x={x - 50}
-                  y={y + markerRadius + 8}
-                  width="100"
-                  height="18"
-                  fill="white"
-                  stroke={borderColor}
-                  strokeWidth="1"
-                  rx="3"
-                  style={{ pointerEvents: 'none' }}
-                />
-
-                {/* Station name label */}
-                <text
-                  x={x}
-                  y={y + markerRadius + 22}
-                  textAnchor="middle"
-                  fontSize={labelFontSize}
-                  fill="#78350f"
-                  fontWeight="bold"
-                  style={{ pointerEvents: 'none' }}
-                >
-                  {station.catalan}
                 </text>
               </g>
             )
@@ -247,18 +213,33 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
 
       {/* Legend */}
       <div className="px-6 py-4 border-t border-amber-200 bg-amber-50 flex-shrink-0">
-        <div className="grid grid-cols-3 gap-4 text-xs text-amber-700">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-amber-500 border-2 border-amber-700"></div>
-            <span>No visitada</span>
+        <div className="mb-3">
+          <p className="text-xs font-bold text-amber-900 mb-2">📍 Estacions del joc:</p>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            {allStations.map((station) => (
+              <div key={station.id} className="flex items-center gap-2">
+                <span className="text-xl">{station.icon}</span>
+                <span className="text-amber-900 font-medium">{station.catalan}</span>
+              </div>
+            ))}
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-yellow-400 border-2 border-yellow-700"></div>
-            <span>En progres</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-green-700"></div>
-            <span>Completada</span>
+        </div>
+
+        <div className="border-t border-amber-200 pt-3 mt-3">
+          <p className="text-xs font-bold text-amber-900 mb-2">Estat de les estacions:</p>
+          <div className="grid grid-cols-3 gap-4 text-xs text-amber-700">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-amber-500 border-2 border-amber-700"></div>
+              <span>No visitada</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-yellow-400 border-2 border-yellow-700"></div>
+              <span>En progres</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-green-700"></div>
+              <span>Completada</span>
+            </div>
           </div>
         </div>
       </div>
