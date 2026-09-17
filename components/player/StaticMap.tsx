@@ -75,7 +75,7 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
       document.removeEventListener('touchend', handleTouchEnd)
     }
 
-    document.addEventListener('touchmove', handleTouchMove, { passive: false })
+    document.addEventListener('touchmove', handleTouchMove)
     document.addEventListener('touchend', handleTouchEnd)
   }
 
