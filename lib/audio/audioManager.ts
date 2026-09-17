@@ -29,10 +29,10 @@ class AudioManager {
       'bell-ring': '/audio/effects/bell-ring.mp3',
       'bell-ding': '/audio/effects/bell-ding.mp3',
       'buzzer': '/audio/effects/buzzer.mp3',
-      'bell-do': '/audio/bells/do.mp3',
-      'bell-re': '/audio/bells/re.mp3',
-      'bell-mi': '/audio/bells/mi.mp3',
-      'bell-fa': '/audio/bells/fa.mp3',
+      'bell-do': '/audio/bells/do.wav',
+      'bell-re': '/audio/bells/re.wav',
+      'bell-mi': '/audio/bells/mi.wav',
+      'bell-fa': '/audio/bells/fa.wav',
     };
 
     Object.entries(soundEffects).forEach(([key, src]) => {
