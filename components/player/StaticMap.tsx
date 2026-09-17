@@ -48,6 +48,37 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
     document.addEventListener('mouseup', handleMouseUp)
   }
 
+  const handleTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
+    if (e.touches.length !== 2) return // Two fingers only
+
+    let startDistance = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    )
+    let startPanX = panX
+    let startPanY = panY
+    let startCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2
+    let startCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (moveEvent.touches.length !== 2) return
+
+      const deltaX = moveEvent.touches[0].clientX - startCenterX
+      const deltaY = moveEvent.touches[0].clientY - startCenterY
+
+      setPanX(startPanX + deltaX)
+      setPanY(startPanY + deltaY)
+    }
+
+    const handleTouchEnd = () => {
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: false })
+    document.addEventListener('touchend', handleTouchEnd)
+  }
+
   const selectedStation = selectedStationId ? getStation(selectedStationId) : null
   const selectedTeamStation = selectedStationId
     ? getTeamStation(stations, selectedStationId)
@@ -78,7 +109,7 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
       <div className="px-6 py-4 border-b border-amber-200 flex-shrink-0">
         <h2 className="text-xl font-bold text-amber-900">Mapa del Joc</h2>
         <p className="text-sm text-amber-700 mt-1">
-          Clica una estació per veure més opcions • 🖱️ Scroll per fer zoom • Clic dret per moure
+          Clica una estació per veure més opcions • 🖱️ Scroll per zoom • ✌️ Dos dits per moure
         </p>
       </div>
 
@@ -88,7 +119,7 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
           ref={svgRef as any}
           width={svgWidth}
           height={svgHeight}
-          className="border-2 border-amber-300 rounded-lg shadow-lg cursor-grab active:cursor-grabbing"
+          className="border-2 border-amber-300 rounded-lg shadow-lg cursor-grab active:cursor-grabbing touch-none"
           style={{
             filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
             transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`,
@@ -97,6 +128,7 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
           }}
           onWheel={handleWheel}
           onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
           onContextMenu={(e) => e.preventDefault()}
         >
           {/* Background image - IGN satellite map */}
