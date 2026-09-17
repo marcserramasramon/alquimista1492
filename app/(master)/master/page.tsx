@@ -6,6 +6,7 @@ import { useMasterDashboard, TeamData } from '@/lib/master/useDashboard'
 import { TeamsTable } from '@/components/master/TeamsTable'
 import { GameTimer } from '@/components/master/GameTimer'
 import { EquipsQRModal } from '@/components/master/EquipsQRModal'
+import { EmissariScannerModal } from '@/components/master/EmissariScannerModal'
 import Link from 'next/link'
 
 export default function MasterDashboard() {
@@ -23,6 +24,7 @@ export default function MasterDashboard() {
   } = useMasterDashboard()
 
   const [isQRModalOpen, setIsQRModalOpen] = useState(false)
+  const [isEmissariScannerOpen, setIsEmissariScannerOpen] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [selectedDuration, setSelectedDuration] = useState(90)
 
@@ -74,6 +76,14 @@ export default function MasterDashboard() {
           </div>
 
           <div className="flex flex-wrap gap-2 sm:gap-3">
+            {/* Botó Escàner Emissari (Salvos) */}
+            <button
+              onClick={() => setIsEmissariScannerOpen(true)}
+              className="px-4 py-2.5 text-sm font-semibold text-white bg-red-800 hover:bg-red-900 rounded-lg shadow transition-colors flex items-center gap-2 border border-red-600"
+            >
+              <span>⚔️</span> Escanejar Salvos (Emissari)
+            </button>
+
             {/* Botó QR Equips */}
             <button
               onClick={() => setIsQRModalOpen(true)}
@@ -237,6 +247,15 @@ export default function MasterDashboard() {
           </div>
         </div>
       )}
+      {/* Modal Escàner Emissari */}
+      <EmissariScannerModal
+        isOpen={isEmissariScannerOpen}
+        onClose={() => {
+          setIsEmissariScannerOpen(false)
+          refetch()
+        }}
+        teams={teams}
+      />
     </div>
   )
 }

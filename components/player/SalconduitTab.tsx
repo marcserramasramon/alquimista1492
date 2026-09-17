@@ -1,131 +1,241 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import type { PassRow } from '@/lib/realtime/useTeamState'
+import { useState, useEffect, useRef } from 'react'
+import QRCode from 'qrcode'
+import { motion } from 'framer-motion'
+import type { TeamRow, SessionRow, PassRow } from '@/lib/realtime/useTeamState'
 
 interface SalconduitTabProps {
-  passes: PassRow[]
+  team?: TeamRow | null
+  session?: SessionRow | null
+  passes?: PassRow[]
+  onOpenNotebook?: () => void
 }
 
-export function SalconduitTab({ passes }: SalconduitTabProps) {
-  const [displayIndex, setDisplayIndex] = useState(0)
-  const [timeLeft, setTimeLeft] = useState(30)
+export function SalconduitTab({
+  team,
+  session,
+  passes = [],
+  onOpenNotebook,
+}: SalconduitTabProps) {
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null)
 
-  const activePasses = passes.filter((p) => !p.used_at)
-  const currentPass = activePasses[displayIndex]
+  // Nombre de salvos restants de l'equip (per defecte 2 com a màxim col·lectiu)
+  const realSalvos = session?.salconduits_remaining ?? 2
 
-  // Rotate pass every 30 seconds
+  // Mode preview / simulador interactiu
+  const isPreview = !team || typeof window !== 'undefined' && window.location.pathname.includes('/preview')
+  const [previewSalvos, setPreviewSalvos] = useState<number>(2)
+
+  const salvosCount = isPreview ? previewSalvos : realSalvos
+  const teamCode = team?.code || 'EQUIP-1'
+  const teamName = team?.name || 'Equip de la Guixa'
+
+  // Generar Codi QR del Salvoconducte per a l'Emissari
   useEffect(() => {
-    if (activePasses.length === 0) return
+    if (!qrCanvasRef.current) return
 
-    const interval = setInterval(() => {
-      setDisplayIndex((prev) => (prev + 1) % activePasses.length)
-      setTimeLeft(30)
-    }, 30000)
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    // URL que obrirà l'Emissari quan escanegi el QR amb la càmera del seu mòbil
+    const qrTargetUrl = `${origin}/emissari/${teamCode}`
 
-    return () => clearInterval(interval)
-  }, [activePasses.length])
-
-  // Countdown timer
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 30))
-    }, 1000)
-
-    return () => clearInterval(interval)
-  }, [])
+    QRCode.toCanvas(
+      qrCanvasRef.current,
+      qrTargetUrl,
+      {
+        width: 170,
+        margin: 1,
+        color: {
+          dark: '#2B2118', // Marró tinta antiga
+          light: '#F4EBD9', // Fons pergamí
+        },
+      },
+      (err) => {
+        if (err) console.error('Error generating salvoconducte QR:', err)
+      }
+    )
+  }, [teamCode])
 
   return (
-    <div className="w-full flex flex-col h-full">
-      {/* Title */}
-      <div className="px-6 py-4 border-b border-amber-200">
-        <h2 className="text-xl font-bold text-amber-900">Salconduit</h2>
-        <p className="text-sm text-amber-700 mt-1">
-          Pass per passar els controls
-        </p>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6">
-        {activePasses.length === 0 ? (
-          // No passes
-          <div className="text-center">
-            <div className="text-5xl mb-4">⛔</div>
-            <h3 className="text-xl font-bold text-amber-900 mb-2">
-              Cap Salconduit Disponible
-            </h3>
-            <p className="text-amber-700">
-              Ja has utilitzat tots els salconduits
-            </p>
-          </div>
-        ) : currentPass ? (
-          // Display pass
-          <div className="w-full max-w-xs">
-            {/* Pass Card */}
-            <div className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl p-8 shadow-2xl border-4 border-amber-700 mb-8 relative overflow-hidden">
-              {/* Background decoration */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 left-0 text-6xl">🔱</div>
-                <div className="absolute bottom-0 right-0 text-6xl">🔱</div>
-              </div>
-
-              {/* Content */}
-              <div className="relative text-center">
-                <div className="text-3xl mb-3">📜</div>
-
-                <h3 className="font-bold text-amber-900 text-sm mb-4">
-                  SALCONDUIT OFICIAL
-                </h3>
-
-                {/* Token Display */}
-                <div className="bg-white rounded-lg p-4 mb-4 border-2 border-amber-700">
-                  <p className="text-xs text-amber-700 mb-1 font-semibold">
-                    CODI D'ACCÉS
-                  </p>
-                  <p className="font-mono text-lg font-bold text-amber-900 break-all">
-                    {currentPass.pass_token}
-                  </p>
-                </div>
-
-                {/* Instructions */}
-                <p className="text-xs text-amber-800 mb-3">
-                  Mostra aquest codi a l'Emissari per passar el control
-                </p>
-
-                {/* Pass Counter */}
-                <div className="text-xs text-amber-700">
-                  Salconduit {displayIndex + 1} de {activePasses.length}
-                </div>
-              </div>
+    <div className="w-full flex-1 overflow-y-auto p-4 sm:p-6 font-serif text-[#2B2118]">
+      <div className="max-w-md mx-auto flex flex-col gap-5 pb-8">
+        {/* Selector de simulació si estem en mode preview */}
+        {isPreview && (
+          <div className="p-3 bg-[#EAE0CA] border border-[#8C6D53] rounded-xl text-xs font-sans text-[#5C4533] flex items-center justify-between">
+            <span className="font-bold">🔍 Simula l'estat dels Salvos de l'equip:</span>
+            <div className="flex gap-1">
+              {[2, 1, 0].map((num) => (
+                <button
+                  key={num}
+                  onClick={() => setPreviewSalvos(num)}
+                  className={`px-2.5 py-1 rounded text-xs font-bold border transition ${
+                    previewSalvos === num
+                      ? 'bg-[#1D3557] text-white border-[#1D3557]'
+                      : 'bg-[#F4EBD9] text-[#2B2118] border-[#8C6D53]'
+                  }`}
+                >
+                  {num} {num === 1 ? 'salvo' : 'salvos'}
+                </button>
+              ))}
             </div>
-
-            {/* Rotation Info */}
-            <div className="text-center">
-              <p className="text-sm font-semibold text-amber-900">
-                Canvi automàtic en {timeLeft}s
-              </p>
-              <div className="flex gap-1 justify-center mt-3">
-                {activePasses.map((_, idx) => (
-                  <div
-                    key={idx}
-                    className={`h-2 w-2 rounded-full transition-all ${
-                      idx === displayIndex ? 'bg-amber-700 w-4' : 'bg-amber-300'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {/* Used Passes Info */}
-        {passes.some((p) => p.used_at) && (
-          <div className="mt-8 w-full max-w-xs p-4 rounded-lg bg-amber-50 border border-amber-200">
-            <p className="text-xs text-amber-700">
-              Salconduits usats: {passes.filter((p) => p.used_at).length}
-            </p>
           </div>
         )}
+
+        {/* DOCUMENT OFICIAL DEL SALVOCONDUCTE (1705) */}
+        <div className="bg-[#F4EBD9] border-4 border-[#8C6D53] rounded-2xl shadow-2xl p-5 sm:p-7 relative overflow-hidden">
+          {/* Marc ornamental intern */}
+          <div className="absolute inset-1.5 border border-[#8C6D53]/40 rounded-xl pointer-events-none" />
+
+          {/* Marca d'aigua de segell reial */}
+          <div className="absolute -right-8 -bottom-8 text-9xl opacity-5 select-none pointer-events-none">
+            🛡️
+          </div>
+
+          {/* Encapçalament Solemne */}
+          <header className="text-center border-b-2 border-[#8C6D53] pb-4 mb-5">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <span className="text-xl">⚜️</span>
+              <span className="text-[10px] sm:text-xs font-sans font-bold uppercase tracking-widest text-[#8C6D53]">
+                Batllia de la Guixa i Vegueria de Vic
+              </span>
+              <span className="text-xl">⚜️</span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-bold font-serif text-[#1D3557] tracking-tight">
+              SALVOCONDUCTE OFICIAL
+            </h1>
+
+            <p className="text-[11px] font-serif italic text-[#5C4533] mt-0.5">
+              Lliure trànsit atorgat en temps de guerra · Any de Nostre Senyor 1705
+            </p>
+
+            <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-0.5 bg-[#D8CCAE] rounded-full border border-[#8C6D53]/60 text-[11px] font-sans font-bold text-[#2B2118]">
+              <span>Equip:</span>
+              <span className="font-serif italic font-bold">{teamName}</span>
+              <span className="font-mono text-[#1D3557]">({teamCode})</span>
+            </div>
+          </header>
+
+          {/* TEXT LEGAL D'ÈPOCA */}
+          <p className="text-xs font-serif leading-relaxed text-[#5C4533] text-center italic mb-5">
+            «Féu saber a tots els capitans, sometents i emissaris que els integrants d'aquesta agrupació gaudeixen de dos permisos de pas vàlids. En cas de contradicció o desobediència, l'autoritat podrà confiscar-ne els segells.»
+          </p>
+
+          {/* ELS 2 PERMISOS DE L'EQUIP */}
+          <div className="space-y-3 mb-6">
+            <div className="flex items-center justify-between text-xs font-sans font-bold text-[#1D3557] uppercase tracking-wider px-1">
+              <span>Permisos de l'Equip:</span>
+              <span>{salvosCount} de 2 Actius</span>
+            </div>
+
+            {/* Permís 1 */}
+            <div
+              className={`p-3.5 rounded-xl border-2 flex items-center justify-between transition-all ${
+                salvosCount >= 1
+                  ? 'bg-[#EAE0CA] border-[#B8860B] text-[#2B2118] shadow-sm'
+                  : 'bg-[#F8D7DA] border-[#842029] text-[#842029] opacity-75'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">{salvosCount >= 1 ? '🎖️' : '🚫'}</div>
+                <div>
+                  <h3 className="font-serif font-bold text-sm">
+                    PRIMER PERMÍS REIAL
+                  </h3>
+                  <p className="text-[11px] font-sans">
+                    {salvosCount >= 1
+                      ? 'Autorització de lliure pas vigent'
+                      : 'Confiscat per l\'Emissari al punt de control'}
+                  </p>
+                </div>
+              </div>
+              <span
+                className={`text-[10px] font-sans font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                  salvosCount >= 1
+                    ? 'bg-[#B8860B] text-white'
+                    : 'bg-[#842029] text-white'
+                }`}
+              >
+                {salvosCount >= 1 ? 'VÀLID' : 'RETIRAT'}
+              </span>
+            </div>
+
+            {/* Permís 2 */}
+            <div
+              className={`p-3.5 rounded-xl border-2 flex items-center justify-between transition-all ${
+                salvosCount >= 2
+                  ? 'bg-[#EAE0CA] border-[#B8860B] text-[#2B2118] shadow-sm'
+                  : 'bg-[#F8D7DA] border-[#842029] text-[#842029] opacity-75'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">{salvosCount >= 2 ? '🎖️' : '🚫'}</div>
+                <div>
+                  <h3 className="font-serif font-bold text-sm">
+                    SEGON PERMÍS REIAL
+                  </h3>
+                  <p className="text-[11px] font-sans">
+                    {salvosCount >= 2
+                      ? 'Autorització de lliure pas vigent'
+                      : 'Confiscat per l\'Emissari al punt de control'}
+                  </p>
+                </div>
+              </div>
+              <span
+                className={`text-[10px] font-sans font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                  salvosCount >= 2
+                    ? 'bg-[#B8860B] text-white'
+                    : 'bg-[#842029] text-white'
+                }`}
+              >
+                {salvosCount >= 2 ? 'VÀLID' : 'RETIRAT'}
+              </span>
+            </div>
+          </div>
+
+          {/* AVÍS SI PERDEN ELS 2 SALVOS */}
+          {salvosCount === 0 && (
+            <div className="mb-6 p-3.5 bg-[#842029] text-white rounded-xl text-xs font-sans text-center shadow">
+              <span className="font-bold block mb-0.5">⚠️ SALVACONDUCTE SENSE EFECTE</span>
+              <span>L'Emissari ha confiscat tots dos permisos de l'equip. Se us detindrà a la Rectoria.</span>
+            </div>
+          )}
+
+          {/* CODI QR DEL SALVOCONDUCTE PER A L'EMISSARI */}
+          <div className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl p-4 text-center">
+            <span className="text-[10px] uppercase tracking-widest font-sans font-bold text-[#8C6D53] block mb-1">
+              Validació Oficial de Camp
+            </span>
+            <h4 className="text-sm font-bold font-serif text-[#1D3557] mb-3">
+              MOSTRA AQUEST CODI QR A L'EMISSARI
+            </h4>
+
+            {/* Canvas QR */}
+            <div className="inline-block p-3 bg-[#F4EBD9] rounded-xl border-2 border-[#8C6D53] shadow-inner mb-3">
+              <canvas ref={qrCanvasRef} className="mx-auto block" />
+            </div>
+
+            <p className="text-[11px] font-serif italic text-[#5C4533] max-w-xs mx-auto leading-tight">
+              L'Emissari escanejarà aquest codi des del seu dispositiu per verificar la vostra coartada o per confiscar-vos un permís.
+            </p>
+          </div>
+        </div>
+
+        {/* RECORDATORI DE LA COARTADA AL QUADERN */}
+        <div className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl p-4 text-center">
+          <p className="text-xs text-[#5C4533] mb-2 font-serif">
+            Recorda que per superar el control de l'Emissari cal sostenir la coartada que se us ha comunicat.
+          </p>
+          {onOpenNotebook && (
+            <button
+              onClick={onOpenNotebook}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#1D3557] hover:bg-[#162740] text-white rounded-lg font-sans font-bold text-xs shadow transition"
+            >
+              <span>📔</span>
+              <span>Consultar la meva frase al Quadern</span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

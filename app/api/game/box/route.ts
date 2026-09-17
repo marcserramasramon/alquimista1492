@@ -31,7 +31,51 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      // In development or preview without auth, validate against game solutions
+      const boxSolutions = GAME_SOLUTIONS.caixa_almoines as any
+      let isCorrect = false
+      let message = ''
+      let penalty = 0
+
+      if (part === '1') {
+        const normalized = (answer as string).replace(/[\s-]/g, '')
+        isCorrect = normalized === boxSolutions.part1.answer
+        if (!isCorrect) {
+          message = 'Contrasenya incorrecta. Recorda els 4 elements: FOC(4) AIGUA(2) TERRA(3) PEDRA(1)'
+          penalty = -10
+        } else {
+          message = 'Caixa oberta! Continua a la Part 2.'
+        }
+      } else if (part === '2') {
+        const submitted = (answer as string).trim()
+        isCorrect = submitted === boxSolutions.part2.answer
+        if (!isCorrect) {
+          message = 'Data incorrecta. Busca la carta amb data 16-05-1705'
+          penalty = -120
+        } else {
+          message = 'Carta correcta substituïda! Continua a la Part 3.'
+        }
+      } else if (part === '3') {
+        // Part 3: Validate seal (answer is the seal id: 'bernat', 'anton', 'jaume', 'capitan')
+        const submitted = (answer as string).trim()
+        isCorrect = submitted === boxSolutions.part3.answer
+        if (!isCorrect) {
+          message = 'Segell incorrecte. El segell de Bernat és el correcte.'
+          penalty = -60
+        } else {
+          message = 'Carta segellada correctament! Prova superada.'
+        }
+      }
+
+      return NextResponse.json(
+        {
+          success: isCorrect,
+          message,
+          reward: isCorrect ? 100 : 0,
+          penalty,
+        },
+        { status: 200 }
+      )
     }
 
     // Get player and their team/session
@@ -93,31 +137,43 @@ export async function POST(request: NextRequest) {
         message = 'Carta correcta substituda! Continua a la Part 3.'
       }
     } else if (part === '3') {
-      // Part 3 is moral choice - no correct/incorrect
-      const choice = (answer as any).choice
-      isCorrect = choice === 'A' || choice === 'B'
-      message = isCorrect ? 'Decisió registrada.' : 'Opció no vàlida'
+      // Part 3: Validate seal (answer is the seal id)
+      const submitted = (answer as string).trim()
+      isCorrect = submitted === boxSolutions.part3.answer
+      if (!isCorrect) {
+        message = 'Segell incorrecte. El segell de Bernat és el correcte.'
+        penalty = -60
+      } else {
+        message = 'Carta segellada correctament! Prova superada.'
+      }
     }
 
     // Record attempt
-    if (part !== '3') {
-      await serviceClient.from('attempts').insert({
-        session_id: session.id,
-        station_id: `box_part_${part}`,
-        answer: JSON.stringify(answer),
-        is_correct: isCorrect,
-        status: isCorrect ? 'correct' : 'incorrect',
-        attempt_number: 1,
-      })
-    }
+    await serviceClient.from('attempts').insert({
+      session_id: session.id,
+      station_id: `box_part_${part}`,
+      answer: JSON.stringify(answer),
+      is_correct: isCorrect,
+      status: isCorrect ? 'correct' : 'incorrect',
+      attempt_number: 1,
+    })
 
-    // Award points on correct answer (except part 3)
+    // Award points on correct answer
     let scoreReward = 0
-    if (isCorrect && part !== '3') {
+    if (isCorrect) {
       scoreReward = 100
 
-      // Mark as solved on final part (part 2)
+      // Part 2: Insert carta_falsa evidence when part 2 is solved correctly
       if (part === '2') {
+        await serviceClient.from('team_evidence').insert({
+          team_id: player.team_id,
+          evidence_id: 'carta_falsa',
+          discovered_at: new Date().toISOString(),
+        })
+      }
+
+      // Mark as solved on final part (part 3)
+      if (part === '3') {
         const { data: teamStation } = await serviceClient
           .from('team_stations')
           .select('id')

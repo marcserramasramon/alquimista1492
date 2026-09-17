@@ -7,11 +7,12 @@ import type { TeamEvidenceRow } from '@/lib/realtime/useTeamState'
 
 interface NotebookTabProps {
   evidences: TeamEvidenceRow[]
+  coartadaFrase?: string | null
 }
 
 type NotebookView = 'suspects' | 'evidence' | 'clues'
 
-export function NotebookTab({ evidences }: NotebookTabProps) {
+export function NotebookTab({ evidences, coartadaFrase }: NotebookTabProps) {
   const [view, setView] = useState<NotebookView>('suspects')
   const allSuspects = getAllSuspects()
   const allEvidence = getAllEvidence()
@@ -24,6 +25,34 @@ export function NotebookTab({ evidences }: NotebookTabProps) {
       <div className="px-6 py-4 border-b border-amber-200">
         <h2 className="text-xl font-bold text-amber-900">Quadern d'Investigació</h2>
       </div>
+
+      {/* Avís de l'Emissari guardat si ja ha saltat l'alerta */}
+      {coartadaFrase && (
+        <div className="mx-4 mt-3 p-4 bg-[#3d0a0a] border-2 border-red-700 rounded-xl text-amber-100 shadow-lg">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">⚠️</span>
+              <h3 className="font-serif font-bold text-red-300 text-sm tracking-wide">
+                AVÍS DE L'EMISSARI
+              </h3>
+            </div>
+            <span className="bg-red-900 text-red-200 border border-red-600 px-2 py-0.5 rounded text-[10px] font-sans font-bold uppercase">
+              La teva Coartada
+            </span>
+          </div>
+          <p className="text-xs text-yellow-300 italic mb-2 font-sans">
+            "L'Emissari és pel poble interrogant a la gent. Se sap que pregunta per:"
+          </p>
+          <div className="bg-[#2a0606] border border-red-800 rounded-lg p-3 text-center shadow-inner">
+            <p className="font-serif italic text-amber-200 text-sm sm:text-base leading-relaxed">
+              «{coartadaFrase}»
+            </p>
+          </div>
+          <p className="text-[11px] text-red-200/80 text-center mt-2 font-sans">
+            Muntar-vos una coartada no és mentir, fills. És salvar-vos. Cadascun de vosaltres porta un retall de la historia. Junts, heu de saber on éreu, amb qui, i per quant temps. La historia la compartiu tots. I serà la mateixa, sempre, sense relliscades. Que no doni una volta. Clar?
+          </p>
+        </div>
+      )}
 
       {/* Tab Buttons */}
       <div className="px-4 py-3 border-b border-amber-200 flex gap-2 flex-shrink-0">

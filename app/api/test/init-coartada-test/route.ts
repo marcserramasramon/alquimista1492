@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
         name: 'Test Team 4 Players',
         variant: 'A',
       })
-      .select('id')
+      .select('id, code')
       .single()
 
     if (teamError || !team) {

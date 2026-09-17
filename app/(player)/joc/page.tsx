@@ -191,7 +191,7 @@ export default function JocHubPage() {
               <div className="flex items-center gap-1 text-amber-900">
                 <span>🎫</span>
                 <span>
-                  {teamState.passes.filter((p) => !p.used_at).length} Salconduits
+                  {teamState.session?.salconduits_remaining ?? 2} Salvos
                 </span>
               </div>
             </div>
@@ -208,7 +208,10 @@ export default function JocHubPage() {
           )}
 
           {activeTab === 'notebook' && (
-            <NotebookTab evidences={teamState.evidences} />
+            <NotebookTab
+              evidences={teamState.evidences}
+              coartadaFrase={coartadaFrase}
+            />
           )}
 
           {activeTab === 'historia' && (
@@ -223,7 +226,12 @@ export default function JocHubPage() {
           )}
 
           {activeTab === 'salconduit' && (
-            <SalconduitTab passes={teamState.passes} />
+            <SalconduitTab
+              team={teamState.team}
+              session={teamState.session}
+              passes={teamState.passes}
+              onOpenNotebook={() => setActiveTab('notebook')}
+            />
           )}
 
           {activeTab === 'accuse' && (
@@ -307,7 +315,7 @@ export default function JocHubPage() {
               label="Salvos"
               isActive={activeTab === 'salconduit'}
               onClick={() => setActiveTab('salconduit')}
-              badge={teamState.passes.filter((p) => !p.used_at).length}
+              badge={teamState.session?.salconduits_remaining ?? 2}
             />
           </li>
         </menu>

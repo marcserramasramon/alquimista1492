@@ -93,8 +93,7 @@ export function ControlGame(props: GameProps) {
 
   // Detectar si estem en mode preview / explorador
   const isPreview =
-    typeof window !== 'undefined' &&
-    (window.location.pathname.includes('/preview') || !props.teamId || props.teamId === 'preview')
+    typeof window !== 'undefined' && window.location.pathname.includes('/preview')
 
   const [previewTemplateIndex, setPreviewTemplateIndex] = useState(0)
   const [previewFraseIndex, setPreviewFraseIndex] = useState(0)

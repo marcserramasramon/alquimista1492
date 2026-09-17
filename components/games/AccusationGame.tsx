@@ -210,13 +210,45 @@ export function AccusationGame(props: GameProps) {
             >
               <div className="p-4 bg-[#F4EBD9] border-l-4 border-[#8C6D53] rounded-r shadow-inner">
                 <h2 className="font-bold text-[#1D3557] text-base font-serif mb-1.5">
-                  El Moment de la Veritat
+                  La Nit de la Veritat
                 </h2>
-                <p className="text-xs sm:text-sm leading-relaxed text-[#2B2118]">
-                  Heu recorregut el terme de la Guixa recopilant les 4 xifres dels elements ancestrals
-                  (<strong className="font-mono text-[#1D3557]">🔥 4 · 💧 2 · 🌍 3 · 🪨 1</strong>) i
-                  recollint proves sobre els moviments de la nit del 15 de maig.
-                </p>
+                
+				
+				
+				
+				
+				
+				
+				<div className="text-xs sm:text-sm leading-relaxed text-[#2B2118] space-y-4">
+  <p>
+    <strong>L'Alba Ve de Vic</strong>, les fogueres s'han apagat.<strong> Els dragons</strong> ja sellen les portes de Vic.
+  </p>
+
+  <p>
+    Heu recorregut el <strong>terme de la Guixa</strong> com qui busca una ombra dins la nit. Els <strong>quatre elements ancestrals</strong> us han donat els seus secrets. Els vostres passos han descalçat <strong>quatre sospitosos</strong>.
+  </p>
+
+  <p>
+    Però <strong>la carta encara respira</strong>. I <strong>el traïdor</strong> respira amb ella. Entre els sis del poble <strong>en queda un</strong>: el traïdor que ha escrit la carta, el que va negociar amb Vic, el que va <strong>condemnar els conjurats</strong>.
+  </p>
+
+  <p>
+    <strong>Nomenau el delator</strong>. Portau les <strong>tres proves</strong> que no permeten dubte. La història us escolta.<br />
+    La nit espera la vostra <strong>resposta</strong>.
+  </p>
+</div>
+				
+				
+				
+				
+				
+				
+		
+				
+				
+				
+				
+				
               </div>
 
               {/* Sospitosos descartats */}

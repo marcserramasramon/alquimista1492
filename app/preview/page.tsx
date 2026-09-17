@@ -3,6 +3,10 @@
 import { useState } from 'react'
 import { getGameComponent, GAMES } from '@/components/games/registry'
 import { SubmitResult } from '@/components/gameTypes'
+import { SalconduitTab } from '@/components/player/SalconduitTab'
+import { EmissariAlertModal } from '@/components/game/EmissariAlertModal'
+import { NotebookTab } from '@/components/player/NotebookTab'
+import type { TeamRow, SessionRow } from '@/lib/realtime/useTeamState'
 
 const GAME_TABS = [
   { id: 'serrat-bruixes', name: '1. Serrat Bruixes', tag: 'Foc / Polibi' },
@@ -10,10 +14,60 @@ const GAME_TABS = [
   { id: 'planes-bones', name: '3. Planes Bones', tag: 'Ruta 4x4' },
   { id: 'cementiri', name: '4. Cementiri', tag: 'Làpides' },
   { id: 'pla-masset-control', name: '5. Control Masset', tag: 'Interrogatori' },
+  { id: 'salconduit-view', name: '🎖️ Salvos (Jugador)', tag: '2 Permisos + QR' },
+  { id: 'emissari-alert-view', name: '⚠️ Avís 5 min', tag: 'Pop-up Coartada' },
   { id: 'pla-masset-accusation', name: '6. Acusació', tag: 'Traïdor' },
   { id: 'caixa-almoines', name: '7. Caixa Almoines', tag: '3 Fases' },
   { id: 'sometent-campanar', name: '8. Campanar', tag: 'Sometent' },
   { id: 'decisio-moral', name: '9. Decisió Moral', tag: 'Final' },
+]
+
+const PREVIEW_COARTADES = [
+  {
+    name: 'Plantilla A: La Llevadora (Mas de la Carmeta)',
+    frases: [
+      'En Josep va portar aiguardent i draps nets al mas de la Carmeta durant la nit quan va arribar la llevadora.',
+      'La matrona Miquel va entrar al mas quan els crits de la parturienta es sentien des del camí públic.',
+      'En Ricard va estar tota la nit fora del mas portant aigua freda i brasa pel foc que escalfava l\'aigua.',
+      'Els veïns propers juren que van veure moviment continu a la casa: anar i venir de dones amb pans i roba blanca.',
+    ],
+  },
+  {
+    name: 'Plantilla B: El Medicament (Pagès de la Farga)',
+    frases: [
+      'La Josepa estava malalta de calentura alta, i en Josep va córrer fins al Pare Miquel que guarda les herbes medicinals a la rectoria.',
+      'En Tomàs va ser vist per quatre persones distintes carregant una bossa amb tònica de sàlvia i mel comprada a la casa de l\'Esteve.',
+      'A la finestra de la casa hi havia una carteta clavada amb la recepta escrita pel Pare Miquel per curar la malaltia.',
+      'L\'home del molí pot jurar que en Miquel va passar per la riera portant una ampoleta de líquid vermellós lligada a la cinta.',
+    ],
+  },
+  {
+    name: 'Plantilla C: Avisar el Rector (Difunt Josep)',
+    frases: [
+      'El Pare Miquel va cridar en Joan pel sacrament per anar a visitar un moribund al mas de Sots que estava morint de febres.',
+      'En Valentí pot certificar-ho: era ell qui portava la llàntia blanca, l\'aigua beneïda i el santcrist del rector pel camí de serena.',
+      'Els infants del poble van veure el sacerdot i el seu ajudant pujant cap a la capella de Sant Jaume amb les vestidures.',
+      'El rector escriu al llibre de defuncions que va administrar els olis sants aquella nit a tres cases del terme.',
+    ],
+  },
+  {
+    name: 'Plantilla D: Persona Perduda (Al bosc)',
+    frases: [
+      'L\'oncle de la Fada va desaparèixer al capvespre, i la seva mare va cridar desesperada a tot el poble demanant gent per buscar-lo.',
+      'Més de deu homes es van reunir amb torxes per cercar pels camps foscos, inclòs en Pau i en Miquel, fins ben entrada la matinada.',
+      'Van trobar el fugitiu adormit sota el paller de l\'Esteve, confós i desorientat per la foscor i la soledat.',
+      'Per això tots aquells homes de la partida van estar junts aquella nit sencera, sota les estrelles, buscant pels marges i les passeres.',
+    ],
+  },
+  {
+    name: 'Plantilla E: El Mestre d\'Obres (Gotera urgent)',
+    frases: [
+      'El mestre havia deixat tancat l\'estudi per pujar a la rectoria portant els comptes de les obres que el Pare Miquel li demanava urgentment.',
+      'Els nens que aprenen lletres van declarar que en Jaume el mestre va arribar tard aquell dia, tot suant i assedegat de la pujada.',
+      'En Josep, el fill del carnisser, va veure el mestre baixant ràpidament del camí de la rectoria amb papers a la mà i cara de preocupació.',
+      'L\'ajudant del mestre, una noia del poble, va haver de tancar ella mateixa els portals de l\'estudi perquè el mestre no tornava aquella tarda.',
+    ],
+  },
 ]
 
 export default function PreviewPage() {
@@ -22,7 +76,48 @@ export default function PreviewPage() {
   const [submissionLog, setSubmissionLog] = useState<Array<{ time: string; data: unknown; result: SubmitResult }>>([])
   const [forceCorrect, setForceCorrect] = useState(true)
 
-  const GameComponent = getGameComponent(selectedGame)
+  // Estats per a la prova de l'Avís dels 5 minuts
+  const [selectedTemplateIdx, setSelectedTemplateIdx] = useState(0)
+  const [selectedFraseIdx, setSelectedFraseIdx] = useState(0)
+  const [showAlertModal, setShowAlertModal] = useState(false)
+
+  const isSpecialView = selectedGame === 'salconduit-view' || selectedGame === 'emissari-alert-view'
+  const GameComponent = !isSpecialView ? getGameComponent(selectedGame) : null
+
+  const activeFrase = PREVIEW_COARTADES[selectedTemplateIdx].frases[selectedFraseIdx]
+
+  const mockTeam: TeamRow = {
+    id: 'preview-team-id',
+    code: 'EQUIP1',
+    name: 'Els Conjurats de la Guixa',
+    color: 'blue',
+    variant: 'A',
+    session_id: 'preview-session-id',
+    created_at: new Date().toISOString(),
+    is_active: true,
+    started_at: new Date().toISOString(),
+    finished_at: null,
+    master_session_id: null,
+  }
+
+  const mockSession = {
+    id: 'preview-session-id',
+    current_act: 1,
+    current_station: null,
+    solved_stations: ['serrat-bruixes', 'font-ferro'],
+    code_digits: ['4', '2', '', ''],
+    evidence_unlocked: ['ev-foc-1', 'ev-tinta-2'],
+    suspects_dismissed: [],
+    salconduits_remaining: 2,
+    salconduits_used: [],
+    score: 200,
+    started_at: new Date().toISOString(),
+    expires_at: new Date(Date.now() + 5400000).toISOString(),
+    created_at: new Date().toISOString(),
+    discovered_at: null,
+    master_id: null,
+    solved_at: null,
+  } as unknown as SessionRow
 
   const mockSubmit = async (answer: unknown): Promise<SubmitResult> => {
     const isCorrect = forceCorrect
@@ -61,37 +156,40 @@ export default function PreviewPage() {
                 Visor de Jocs — El Traïdor de la Guixa
               </h1>
               <p className="text-xs text-amber-200 font-sans">
-                Mode Explorador: Prova interactiva dels 9 enigmes
+                Mode Explorador: Prova interactiva dels enigmes i pantalles especials
               </p>
             </div>
           </div>
 
           {/* Validation toggle for testing both correct and incorrect feedback */}
-          <div className="flex items-center gap-2 text-xs bg-[#162740] px-3 py-1.5 rounded-full border border-blue-400/30">
-            <span className="font-sans text-gray-300">Resposta simulada:</span>
-            <button
-              onClick={() => setForceCorrect(true)}
-              className={`px-2 py-0.5 rounded font-sans font-bold transition-all ${
-                forceCorrect ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              ✓ Correcta
-            </button>
-            <button
-              onClick={() => setForceCorrect(false)}
-              className={`px-2 py-0.5 rounded font-sans font-bold transition-all ${
-                !forceCorrect ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              ✗ Incorrecta
-            </button>
-          </div>
+          {!isSpecialView && (
+            <div className="flex items-center gap-2 text-xs bg-[#162740] px-3 py-1.5 rounded-full border border-blue-400/30">
+              <span className="font-sans text-gray-300">Resposta simulada:</span>
+              <button
+                onClick={() => setForceCorrect(true)}
+                className={`px-2 py-0.5 rounded font-sans font-bold transition-all ${
+                  forceCorrect ? 'bg-emerald-600 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                ✓ Correcta
+              </button>
+              <button
+                onClick={() => setForceCorrect(false)}
+                className={`px-2 py-0.5 rounded font-sans font-bold transition-all ${
+                  !forceCorrect ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                ✗ Incorrecta
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Tab Selector */}
         <div className="max-w-7xl mx-auto mt-3 flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
           {GAME_TABS.map(tab => {
             const isSelected = selectedGame === tab.id
+            const isHighlight = tab.id === 'salconduit-view' || tab.id === 'emissari-alert-view'
             return (
               <button
                 key={tab.id}
@@ -99,6 +197,8 @@ export default function PreviewPage() {
                 className={`px-3 py-1.5 rounded text-xs whitespace-nowrap font-sans transition-all flex flex-col items-start ${
                   isSelected
                     ? 'bg-[#C99E32] text-[#2B2118] font-bold shadow'
+                    : isHighlight
+                    ? 'bg-amber-900/80 text-amber-100 hover:bg-amber-800 border border-amber-500/40'
                     : 'bg-[#2B466D] text-gray-200 hover:bg-[#3B5B8C]'
                 }`}
               >
@@ -112,10 +212,151 @@ export default function PreviewPage() {
         </div>
       </header>
 
-      {/* Main Game Container */}
+      {/* Main Container */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6">
         <div className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl shadow-lg overflow-hidden min-h-[600px] flex flex-col">
-          {GameComponent ? (
+          {/* PANTALLA ESPECIAL 1: SALVOS (JUGADOR) */}
+          {selectedGame === 'salconduit-view' && (
+            <div className="flex-1 flex flex-col">
+              <div className="bg-[#DFD4BC] border-b border-[#8C6D53] p-3 text-xs font-sans flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-[#1D3557]">
+                    🎖️ Pantalla oficial «Salvos» del jugador
+                  </span>
+                  <span className="text-gray-600 block sm:inline sm:ml-2">
+                    — Document de 1705 amb els 2 permisos col·lectius i el codi QR per a l'Emissari
+                  </span>
+                </div>
+                <span className="bg-[#C99E32] text-[#2B2118] font-bold px-2 py-0.5 rounded text-[11px]">
+                  Vista Jugador
+                </span>
+              </div>
+
+              <SalconduitTab
+                team={mockTeam}
+                session={mockSession}
+                passes={[]}
+                onOpenNotebook={() => handleSelectGame('emissari-alert-view')}
+              />
+            </div>
+          )}
+
+          {/* PANTALLA ESPECIAL 2: AVÍS DELS 5 MINUTS I GUARDAT AL QUADERN */}
+          {selectedGame === 'emissari-alert-view' && (
+            <div className="flex-1 p-4 sm:p-6 flex flex-col gap-6">
+              {/* Panell explicatiu de control */}
+              <div className="bg-[#DFD4BC] border-2 border-[#8C6D53] rounded-xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">⚠️</span>
+                    <h2 className="text-base sm:text-lg font-bold font-serif text-[#1D3557]">
+                      Simulador de l'Avís de l'Emissari (5 minuts post-2 proves)
+                    </h2>
+                  </div>
+                  <span className="bg-red-800 text-white font-sans font-bold px-2.5 py-0.5 rounded text-xs">
+                    Pop-up + Quadern
+                  </span>
+                </div>
+
+                <p className="text-xs text-[#5C4533] italic mb-4">
+                  Quan l'equip ha resolt 2 proves i transcorren 5 minuts, la webapp dispara aquest avís emergent. Un cop tancat amb «ENTÈS», la coartada queda desada al Quadern d'Investigació.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                  <div>
+                    <label className="block text-xs font-sans font-bold text-[#8C6D53] mb-1">
+                      Coartada de l'equip:
+                    </label>
+                    <select
+                      value={selectedTemplateIdx}
+                      onChange={e => setSelectedTemplateIdx(Number(e.target.value))}
+                      className="w-full p-2 bg-[#F4EBD9] border border-[#8C6D53] rounded text-xs font-serif text-[#2B2118]"
+                    >
+                      {PREVIEW_COARTADES.map((t, idx) => (
+                        <option key={idx} value={idx}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-sans font-bold text-[#8C6D53] mb-1">
+                      Frase del jugador (repartiment secret):
+                    </label>
+                    <div className="flex gap-1.5">
+                      {[0, 1, 2, 3].map(i => (
+                        <button
+                          key={i}
+                          onClick={() => setSelectedFraseIdx(i)}
+                          className={`flex-1 py-1.5 text-xs font-sans font-bold rounded border transition ${
+                            selectedFraseIdx === i
+                              ? 'bg-[#1D3557] text-white border-[#1D3557]'
+                              : 'bg-[#F4EBD9] text-[#5C4533] border-[#8C6D53] hover:bg-[#D8CCAE]'
+                          }`}
+                        >
+                          Jugador {i + 1}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Botó per disparar el pop-up de l'avís */}
+                <button
+                  onClick={() => setShowAlertModal(true)}
+                  className="w-full py-3 px-4 bg-red-700 hover:bg-red-800 active:scale-98 text-white rounded-xl font-sans font-bold text-sm shadow-md transition flex items-center justify-center gap-2"
+                >
+                  <span>⚠️</span>
+                  <span>DISPARAR EL POP-UP DE L'AVÍS DE L'EMISSARI</span>
+                </button>
+              </div>
+
+              {/* Previsualització de com queda desat al Quadern */}
+              <div>
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <h3 className="font-serif font-bold text-sm text-[#1D3557] flex items-center gap-1.5">
+                    <span>📔</span> Com es veu al Quadern un cop tancat l'avís:
+                  </h3>
+                  <span className="text-xs text-gray-500 font-sans italic">
+                    (Visible en tot moment pels jugadors)
+                  </span>
+                </div>
+
+                <div className="bg-white rounded-xl border-2 border-[#8C6D53] shadow overflow-hidden h-[420px] flex flex-col">
+                  <NotebookTab
+                    evidences={[
+                      {
+                        id: 'mock-ev-1',
+                        team_id: mockTeam.id,
+                        evidence_id: 'ev-foc-1',
+                        unlocked_at: new Date().toISOString(),
+                        created_at: new Date().toISOString(),
+                      },
+                      {
+                        id: 'mock-ev-2',
+                        team_id: mockTeam.id,
+                        evidence_id: 'ev-tinta-2',
+                        unlocked_at: new Date().toISOString(),
+                        created_at: new Date().toISOString(),
+                      },
+                    ]}
+                    coartadaFrase={activeFrase}
+                  />
+                </div>
+              </div>
+
+              {/* Modal emergent de l'Emissari */}
+              <EmissariAlertModal
+                show={showAlertModal}
+                frase={activeFrase}
+                onDismiss={() => setShowAlertModal(false)}
+              />
+            </div>
+          )}
+
+          {/* JOCS ESTÀNDARD */}
+          {!isSpecialView && GameComponent && (
             <div className="p-2 sm:p-4 flex-1">
               <GameComponent
                 stationId={selectedGame}
@@ -126,14 +367,16 @@ export default function PreviewPage() {
                 solved={false}
               />
             </div>
-          ) : (
+          )}
+
+          {!isSpecialView && !GameComponent && (
             <div className="p-8 text-center text-red-700">
               No s'ha trobat el joc seleccionat.
             </div>
           )}
 
           {/* Submission activity log at bottom */}
-          {submissionLog.length > 0 && (
+          {!isSpecialView && submissionLog.length > 0 && (
             <div className="border-t border-[#8C6D53] bg-[#DFD4BC] p-3 text-xs font-sans">
               <div className="font-bold text-[#2B2118] mb-1 flex items-center justify-between">
                 <span>Darrers intents enviats al joc:</span>

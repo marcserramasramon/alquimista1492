@@ -77,18 +77,46 @@ export const GAME_SOLUTIONS = {
       description: 'Date of stolen letter inside box',
     },
     part3: {
-      answer: null, // Branches to moral choice (no scoring)
-      type: 'moral_choice',
-      description: 'Bernat\'s final choice (A=Compassió, B=Justicia)',
+      answer: 'bernat', // Correct seal: Bernat's seal with anchor filigree
+      type: 'seal',
+      description: 'Seal the fake letter with Bernat\'s seal (red anchor filigree)',
     },
   },
 
   // Joc 8: Sometent (Bell Tower Code)
   sometent_bell: {
-    answer: '1234',
-    type: 'code',
+    bellSequence: [1, 2, 1, 2, 3, 1, 3, 2],
+    type: 'bell_sequence',
     elementCode: null, // No element code, bell rings when correct
-    description: 'Bell tower code from 4 elements: FOC(1) AIGUA(2) AIRE(3) TERRA(4)',
+    description: 'Bell tower sequence: 8 bells representing the calling of the conjurats',
+    moralChoices: {
+      A: {
+        label: 'ACCEPTAR TRACTE',
+        narrative: 'Deixeu que Bernat fugui a buscar el seu fill',
+      },
+      B: {
+        label: 'REBUTJAR TRACTE',
+        narrative: 'Bernat queda detingut sense tenir certesa',
+      },
+    },
+  },
+
+  // Alternative ID for the same game
+  bells_sometent: {
+    bellSequence: [1, 2, 1, 2, 3, 1, 3, 2],
+    type: 'bell_sequence',
+    elementCode: null,
+    description: 'Bell tower sequence: 8 bells representing the calling of the conjurats',
+    moralChoices: {
+      A: {
+        label: 'ACCEPTAR TRACTE',
+        narrative: 'Deixeu que Bernat fugui a buscar el seu fill',
+      },
+      B: {
+        label: 'REBUTJAR TRACTE',
+        narrative: 'Bernat queda detingut sense tenir certesa',
+      },
+    },
   },
 
   // Joc 9: Moral Decision (No scoring, narrative branches only)

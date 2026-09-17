@@ -76,7 +76,7 @@ export function EmissariAlertModal({
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
               >
-                Se sap que pregunta per:
+                Muntar-vos una coartada no és mentir, fills. És salvar-vos. Cadascun de vosaltres porta un retall de la historia. Junts, heu de saber on éreu, amb qui, i per quant temps. La historia la compartiu tots. I serà la mateixa, sempre, sense relliscades. Que no doni una volta. Clar?
               </motion.p>
 
               {/* Reveal section - Frase with pulse effect */}

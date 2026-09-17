@@ -127,6 +127,18 @@ export const STATIONS: Record<string, Station> = {
     icon: '🔔',
     difficulty: 'dificil',
   },
+  'bells_sometent': {
+    id: 'bells-sometent',
+    order: 9,
+    name: 'Campanar de Sant Sebastià',
+    catalan: 'Campanar de Sant Sebastià',
+    description: 'Bell tower where the tocsin signals the conjurates',
+    narrativeHook: 'Ring the bell to signal the escape route',
+    latitude: 41.913500,
+    longitude: 2.228500,
+    icon: '🔔',
+    difficulty: 'dificil',
+  },
 } as const
 
 /**

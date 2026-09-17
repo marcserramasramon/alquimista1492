@@ -39,6 +39,7 @@ export const GAMES: GameRegistry = {
   'caixa_almoines': BoxGame,
   'rectoria': BoxGame,
   'sometent-campanar': BellGame,
+  'bells-sometent': BellGame,
   'campanar': BellGame,
   'decisio-moral': MoralChoiceGame,
 }
