@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/db'
 import { useTeamState } from '@/lib/realtime/useTeamState'
+import { useGameNavigation } from '@/lib/context/GameNavigationContext'
 import { MapTab } from '@/components/player/MapTab'
 import { NotebookTab } from '@/components/player/NotebookTab'
 import { SalconduitTab } from '@/components/player/SalconduitTab'
@@ -21,6 +22,7 @@ interface PlayerSession {
 
 export default function JocHubPage() {
   const router = useRouter()
+  const { gameState, clearActiveGame, isGameActive } = useGameNavigation()
   const [activeTab, setActiveTab] = useState<Tab>('map')
   const [playerSession, setPlayerSession] = useState<PlayerSession | null>(null)
   const [loading, setLoading] = useState(true)
@@ -248,14 +250,23 @@ export default function JocHubPage() {
             />
           </div>
 
-          {/* Center QR Scanner Button - Larger and circular */}
+          {/* Center QR Scanner or Game Button - Larger and circular */}
           <button
-            onClick={() => setShowScanner(true)}
-            className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full bg-yellow-600 hover:bg-yellow-700 active:scale-95 transition-all flex items-center justify-center text-3xl shadow-xl border-4 border-yellow-500"
-            style={{ backgroundColor: '#D4AF37' }}
-            title="Escaneja QR"
+            onClick={() => {
+              if (isGameActive && gameState.activeToken) {
+                router.push(`/s/${gameState.activeToken}`)
+              } else {
+                setShowScanner(true)
+              }
+            }}
+            className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full hover:scale-110 active:scale-95 transition-all flex items-center justify-center text-3xl shadow-xl border-4"
+            style={{
+              backgroundColor: '#D4AF37',
+              borderColor: '#B8860B',
+            }}
+            title={isGameActive ? 'Torna al joc' : 'Escaneja QR'}
           >
-            🔍
+            {isGameActive ? '🎮' : '🔍'}
           </button>
 
           {/* Right side buttons */}

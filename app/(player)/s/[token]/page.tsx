@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { getGameComponent } from '@/components/games/registry'
 import { GameProps, SubmitResult } from '@/components/gameTypes'
+import { useGameNavigation } from '@/lib/context/GameNavigationContext'
 
 interface StationData {
   stationId: string
@@ -21,6 +22,7 @@ interface ValidationError {
 export default function StationQRPage() {
   const params = useParams()
   const router = useRouter()
+  const { setActiveGame, clearActiveGame } = useGameNavigation()
   const token = params.token as string
 
   const [stationData, setStationData] = useState<StationData | null>(null)
@@ -50,6 +52,8 @@ export default function StationQRPage() {
         const data = await response.json()
         setStationData(data)
         setSharedState(data.sharedState || {})
+        // Mark this game as active in navigation context
+        setActiveGame(token, data.stationId)
       } catch (err) {
         console.error('Error validating pass:', err)
         setError({
@@ -159,7 +163,10 @@ export default function StationQRPage() {
           <h1 className="mb-2 text-2xl font-bold text-red-900">{errorTitle}</h1>
           <p className="mb-6 text-red-800">{errorMessage}</p>
           <button
-            onClick={() => router.push('/joc/hub')}
+            onClick={() => {
+              clearActiveGame()
+              router.push('/joc')
+            }}
             className="inline-block rounded bg-red-900 px-6 py-2 font-semibold text-white hover:bg-red-800"
           >
             Tornar al Hub
@@ -179,7 +186,10 @@ export default function StationQRPage() {
           <h1 className="mb-2 text-2xl font-bold text-red-900">Joc No Disponible</h1>
           <p className="mb-6 text-red-800">No s'ha trobat el component del joc per a aquesta estació</p>
           <button
-            onClick={() => router.push('/joc/hub')}
+            onClick={() => {
+              clearActiveGame()
+              router.push('/joc')
+            }}
             className="inline-block rounded bg-red-900 px-6 py-2 font-semibold text-white hover:bg-red-800"
           >
             Tornar al Hub
@@ -191,7 +201,23 @@ export default function StationQRPage() {
 
   // Render game
   return (
-    <div className="bg-amber-50">
+    <div className="bg-amber-50 relative">
+      {/* Game Header with Exit Button */}
+      <div className="sticky top-0 z-10 bg-white border-b-2 border-amber-700 p-3 flex items-center justify-between">
+        <h2 className="font-bold text-amber-900">
+          {stationData.stationId}
+        </h2>
+        <button
+          onClick={() => {
+            clearActiveGame()
+            router.push('/joc')
+          }}
+          className="px-4 py-2 bg-amber-700 text-white rounded font-semibold hover:bg-amber-800 text-sm"
+        >
+          Menú
+        </button>
+      </div>
+
       <GameComponent
         stationId={stationData.stationId}
         content={stationData.content}
