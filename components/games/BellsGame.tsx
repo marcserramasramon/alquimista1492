@@ -16,6 +16,8 @@ interface BellsGameState {
   playerSequence: number[]
   attempts: number
   isCorrect: boolean
+  epilogue: string
+  decisionStats: { optionA: number; optionB: number } | null
 }
 
 /**
@@ -45,6 +47,8 @@ export function BellsGame(props: GameProps) {
       playerSequence: [],
       attempts: 0,
       isCorrect: false,
+      epilogue: '',
+      decisionStats: null,
     }
   })
 
@@ -120,7 +124,13 @@ export function BellsGame(props: GameProps) {
 
       if (result.correct) {
         play('evidence-unlock')
-        setState(prev => ({ ...prev, currentTab: 'result', isCorrect: true }))
+        setState(prev => ({
+          ...prev,
+          currentTab: 'result',
+          isCorrect: true,
+          epilogue: result.epilogue || '',
+          decisionStats: result.decisionPercentage || null,
+        }))
       } else {
         play('buzzer')
         setError('Campanades incorrectes. Reprova.')
@@ -363,20 +373,76 @@ export function BellsGame(props: GameProps) {
         {/* Result */}
         {state.currentTab === 'result' && (
           <div className="flex flex-col justify-center flex-1 gap-4">
+            {/* Epíleg */}
             <motion.div
-              className="bg-[#EAE0CA] border border-[#8C6D53] p-6 rounded-lg text-center"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              className="bg-[#EAE0CA] border border-[#8C6D53] p-6 rounded-lg"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
             >
-              <p className="text-5xl mb-3">🔔</p>
-              <p className="text-lg font-bold text-[#2B2118] mb-3">DONG... DONG... DONG...</p>
+              <p className="text-5xl mb-3 text-center">🔔</p>
+              <p className="text-lg font-bold text-[#2B2118] mb-3 text-center">DONG... DONG... DONG...</p>
               <p className="text-sm text-[#5C4533] leading-relaxed mb-4">
-                {state.moralChoice === 'A'
-                  ? 'Bernat i Jaume es reuniren a l\'estiu. No tornaren mai més a la Guixa. Però els conjurats van salvos.'
-                  : 'Jaume surt de presó tardor. Busca el seu pare a l\'escola. No el troba. Els conjurats es salvaren. Però al preu de la familia de Bernat.'}
+                {state.epilogue}
               </p>
-              <p className="text-center font-bold text-lg text-[#2B2118] mt-4">
-                ✓ +100 punts
+              <div className="border-t border-[#8C6D53] pt-3 mt-3">
+                <p className="text-center font-bold text-lg text-[#2B2118]">
+                  ✓ +100 punts
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Estadístiques del grup */}
+            {state.decisionStats && (
+              <motion.div
+                className="bg-[#F5EFE0] border border-[#8C6D53] p-4 rounded-lg"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <p className="text-xs uppercase tracking-widest text-[#8C6D53] font-bold mb-3 text-center">
+                  Decisió del grup
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[#5C4533] w-20">Compassió (A):</span>
+                    <div className="flex-1 bg-[#D5F4E6] rounded-full h-6 flex items-center justify-center">
+                      <div
+                        className="bg-[#16A085] h-6 rounded-full flex items-center justify-center"
+                        style={{ width: `${state.decisionStats.optionA}%` }}
+                      >
+                        <span className="text-xs font-bold text-white">
+                          {state.decisionStats.optionA > 10 ? `${state.decisionStats.optionA}%` : ''}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[#5C4533] w-20">Justícia (B):</span>
+                    <div className="flex-1 bg-[#FADBD8] rounded-full h-6 flex items-center justify-center">
+                      <div
+                        className="bg-[#E74C3C] h-6 rounded-full flex items-center justify-center"
+                        style={{ width: `${state.decisionStats.optionB}%` }}
+                      >
+                        <span className="text-xs font-bold text-white">
+                          {state.decisionStats.optionB > 10 ? `${state.decisionStats.optionB}%` : ''}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Fi de joc */}
+            <motion.div
+              className="bg-[#2B2118] text-[#EAE0CA] p-4 rounded-lg text-center"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <p className="text-sm font-bold">FI DE L'ESTACIÓ</p>
+              <p className="text-xs mt-2 text-[#C9BDAA]">
+                La carta ha arribat a l'Emissari. El Pacte dels Vigatans continua.
               </p>
             </motion.div>
           </div>
