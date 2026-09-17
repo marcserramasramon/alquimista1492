@@ -230,7 +230,7 @@ export function SerratBruixesGame(props: GameProps) {
           Estació 1 · SERRAT DE LES BRUIXES
         </span>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
-          El Codi de Fogueres
+          EL CODI DE FOGUERES
         </h1>
         <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">
           "La nit del 15 de maig, els vigies dels turons es van transmetre un missatge de foc que ningú al poble ha sabut llegir. Desxifra què diuen les fogueres de la plana."

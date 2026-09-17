@@ -8,41 +8,120 @@ import { fadeInVariants, shakeVariants } from '@/lib/animations/useAnimations'
 
 interface GameState {
   activeTab: 'historia' | 'regles' | 'mapa' | 'joc'
-  visitedCells: number[]
-  totalMinutes: number
-  selectedAnswer: string
+  currentTurn: number // 0: 22:00, 1: 22:15, 2: 22:30, 3: 22:45, 4: 23:00
+  playerHex: number
+  playerPath: number[]
   attempts: number
   solved: boolean
+  isAlerted: boolean
   lastFeedback: { type: 'success' | 'error'; message: string } | null
 }
 
-interface GridCell {
+interface HexNode {
   id: number
+  cx: number
+  cy: number
   name: string
-  type: 'inici' | 'desti' | 'lloc' | 'edifici' | 'prohibit'
-  row: number
-  col: number
-  desc: string
+  subtitle: string
   icon: string
+  type: 'cami' | 'edifici' | 'farga' | 'escola' | 'lloc' | 'prohibit'
+  neighbors: number[]
 }
 
-const CELLS: Record<number, GridCell> = {
-  1: { id: 1, name: 'Camí de Vic', type: 'lloc', row: 0, col: 0, desc: 'Sortida nord del poble cap a la plana', icon: '🛤️' },
-  2: { id: 2, name: 'Molí de la Guixa', type: 'edifici', row: 0, col: 1, desc: 'Molí fariner tocant al rec', icon: '⚙️' },
-  3: { id: 3, name: 'La Farga', type: 'desti', row: 0, col: 2, desc: "Taller del ferrer. S'hi sent el martell des de lluny", icon: '⚒️' },
-  4: { id: 4, name: 'Bosc Espès', type: 'prohibit', row: 0, col: 3, desc: 'Camí tancat de roures i heures (Prohibit)', icon: '🌲' },
-  5: { id: 5, name: "Hostal del Sol", type: 'edifici', row: 1, col: 0, desc: "L'hostal on fan parada traginers i viatgers", icon: '🏠' },
-  6: { id: 6, name: 'Pou Comunal', type: 'lloc', row: 1, col: 1, desc: "Boca d'aigua dolça al centre del carrer", icon: '🪣' },
-  7: { id: 7, name: "L'Era", type: 'lloc', row: 1, col: 2, desc: 'Espai obert per batre el blat', icon: '🌾' },
-  8: { id: 8, name: 'Bosc Fosc', type: 'prohibit', row: 1, col: 3, desc: 'Zona boscana intransitable de nit (Prohibida)', icon: '🌲' },
-  9: { id: 9, name: "L'Escola", type: 'edifici', row: 2, col: 0, desc: "Aula del mestre Bernat", icon: '📚' },
-  10: { id: 10, name: 'Rectoria', type: 'edifici', row: 2, col: 1, desc: 'Casa rectoral tocant a la paret del temple', icon: '⛪' },
-  11: { id: 11, name: "L'Hort", type: 'lloc', row: 2, col: 2, desc: 'Feixes de conreu amb séquies', icon: '🥬' },
-  12: { id: 12, name: 'La Font', type: 'lloc', row: 2, col: 3, desc: 'Punt de pas del camí del torrent', icon: '💧' },
-  13: { id: 13, name: 'Cementiri Vell', type: 'prohibit', row: 3, col: 0, desc: 'Terreny sagrat. La guàrdia no hi entra (Prohibit)', icon: '🪦' },
-  14: { id: 14, name: 'Plaça Major', type: 'inici', row: 3, col: 1, desc: 'Punt de trobada i sortida de la patrulla a les 22:00', icon: '🏛️' },
-  15: { id: 15, name: 'El Paller', type: 'lloc', row: 3, col: 2, desc: "Paller d'on el traginer vigilava la ronda", icon: '🛖' },
-  16: { id: 16, name: 'Riera Brava', type: 'prohibit', row: 3, col: 3, desc: 'Corrent d’aigua perillós de nit (Prohibit)', icon: '🌊' },
+const HEX_RADIUS = 38
+
+// Definició matemàtica dels 16 hexàgons en relleu cartogràfic
+const HEX_GRID: Record<number, HexNode> = {
+  // Fila 0
+  1: { id: 1, cx: 65, cy: 50, name: 'Camí de Vic', subtitle: 'Sortida Nord', icon: '🛤️', type: 'cami', neighbors: [2, 5] },
+  2: { id: 2, cx: 145, cy: 50, name: 'Molí Fariner', subtitle: 'Rec del molí', icon: '⚙️', type: 'edifici', neighbors: [1, 3, 5, 6] },
+  3: { id: 3, cx: 225, cy: 50, name: 'La Farga', subtitle: 'Taller d’Isidre', icon: '⚒️', type: 'farga', neighbors: [2, 4, 6, 7] },
+  4: { id: 4, cx: 305, cy: 50, name: 'Bosc Espès', subtitle: 'Camí tancat', icon: '🌲', type: 'prohibit', neighbors: [3, 7, 8] },
+
+  // Fila 1 (desplaçada +40px)
+  5: { id: 5, cx: 105, cy: 120, name: 'Hostal del Sol', subtitle: 'Parada de traginers', icon: '🏠', type: 'edifici', neighbors: [1, 2, 6, 9, 10] },
+  6: { id: 6, cx: 185, cy: 120, name: 'Pou Comunal', subtitle: 'Cruïlla central', icon: '🪣', type: 'lloc', neighbors: [2, 3, 5, 7, 10, 11] },
+  7: { id: 7, cx: 265, cy: 120, name: "L'Era Gran", subtitle: 'Espai obert', icon: '🌾', type: 'lloc', neighbors: [3, 4, 6, 8, 11, 12] },
+  8: { id: 8, cx: 345, cy: 120, name: 'Bosc Fosc', subtitle: 'Intransitable', icon: '🌲', type: 'prohibit', neighbors: [4, 7, 12] },
+
+  // Fila 2
+  9: { id: 9, cx: 65, cy: 190, name: "L'Escola", subtitle: 'Aula de Bernat', icon: '📚', type: 'escola', neighbors: [5, 10, 13] },
+  10: { id: 10, cx: 145, cy: 190, name: 'La Rectoria', subtitle: 'Casa rectoral', icon: '⛪', type: 'edifici', neighbors: [5, 6, 9, 11, 13, 14] },
+  11: { id: 11, cx: 225, cy: 190, name: 'Hort de Feixes', subtitle: 'Conreus', icon: '🥬', type: 'lloc', neighbors: [6, 7, 10, 12, 14, 15] },
+  12: { id: 12, cx: 305, cy: 190, name: 'Font del Torrent', subtitle: 'Aigua fresca', icon: '💧', type: 'lloc', neighbors: [7, 8, 11, 15, 16] },
+
+  // Fila 3 (desplaçada +40px)
+  13: { id: 13, cx: 105, cy: 260, name: 'Cementiri Vell', subtitle: 'Sagrat (Prohibit)', icon: '🪦', type: 'prohibit', neighbors: [9, 10, 14] },
+  14: { id: 14, cx: 185, cy: 260, name: 'Plaça Major', subtitle: 'Inici patrulla', icon: '🏛️', type: 'lloc', neighbors: [10, 11, 13, 15] },
+  15: { id: 15, cx: 265, cy: 260, name: 'El Paller', subtitle: 'Inici de Joan', icon: '🛖', type: 'lloc', neighbors: [11, 12, 14, 16] },
+  16: { id: 16, cx: 345, cy: 260, name: 'Riera Brava', subtitle: 'Gual perillós', icon: '🌊', type: 'prohibit', neighbors: [12, 15] },
+}
+
+// Història i posicions a cada torn (22:00 a 23:00)
+interface TurnStory {
+  time: string
+  patrolHex: number
+  shadowHex: number | null // L'ombra misteriosa (Bernat)
+  schoolLit: boolean
+  forgeLit: boolean
+  narrativeText: string
+}
+
+const TURNS: TurnStory[] = [
+  {
+    time: '22:00',
+    patrolHex: 14, // Plaça Major
+    shadowHex: null, // Encara és a dins l'escola
+    schoolLit: true, // Llum encès a l'escola
+    forgeLit: true, // Foc a la farga
+    narrativeText:
+      'La patrulla comença la ronda a la Plaça amb les torxes. S’albira un llum encès a l’Escola. A la Farga es veu el foc de la forja.',
+  },
+  {
+    time: '22:15',
+    patrolHex: 10, // La Rectoria
+    shadowHex: null,
+    schoolLit: true,
+    forgeLit: true,
+    narrativeText:
+      'La patrulla puja cap a la Rectoria. El llum de l’escola continua encès. Mou-te amb compte per les ombres!',
+  },
+  {
+    time: '22:30',
+    patrolHex: 6, // Pou Comunal
+    shadowHex: 5, // L'ombra surt de l'escola cap a l'Hostal!
+    schoolLit: false, // S'apaga el llum de l'escola
+    forgeLit: true,
+    narrativeText:
+      'ALERTA! S’apaga el llum de l’escola i una silueta amb capa surt d’amagat cap a l’Hostal aprofitant que la guàrdia és al Pou!',
+  },
+  {
+    time: '22:45',
+    patrolHex: 2, // Molí Fariner
+    shadowHex: 1, // L'ombra fuig cap al Camí de Vic
+    schoolLit: false,
+    forgeLit: true,
+    narrativeText:
+      'La patrulla vigila el rec del Molí. La silueta encaputxada corre cap al Camí de Vic amb un pergamí sota el braç!',
+  },
+  {
+    time: '23:00',
+    patrolHex: 3, // La Farga
+    shadowHex: null, // Ha escapat pel bosc
+    schoolLit: false,
+    forgeLit: true,
+    narrativeText:
+      'La patrulla arriba a La Farga! Trobem Isidre el ferrer martellejant ferro roent davant de la forja. Té coartada indiscutible!',
+  },
+]
+
+function getHexPolygon(cx: number, cy: number, r: number = HEX_RADIUS): string {
+  const points = []
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 180) * (60 * i - 30)
+    points.push(`${(cx + r * Math.cos(angle)).toFixed(1)},${(cy + r * Math.sin(angle)).toFixed(1)}`)
+  }
+  return points.join(' ')
 }
 
 export function PlaneBonesGame(props: GameProps) {
@@ -55,11 +134,12 @@ export function PlaneBonesGame(props: GameProps) {
 
     return {
       activeTab: saved.activeTab || 'historia',
-      visitedCells: saved.visitedCells && saved.visitedCells.length > 0 ? saved.visitedCells : [14],
-      totalMinutes: typeof saved.totalMinutes === 'number' ? saved.totalMinutes : 0,
-      selectedAnswer: saved.selectedAnswer || '',
+      currentTurn: typeof saved.currentTurn === 'number' ? saved.currentTurn : 0,
+      playerHex: typeof saved.playerHex === 'number' ? saved.playerHex : 15, // Inici al Paller
+      playerPath: saved.playerPath && saved.playerPath.length > 0 ? saved.playerPath : [15],
       attempts: saved.attempts || 0,
       solved: props.solved || saved.solved || false,
+      isAlerted: false,
       lastFeedback: null,
     }
   })
@@ -68,180 +148,148 @@ export function PlaneBonesGame(props: GameProps) {
     props.setSharedState(state)
   }, [state, props])
 
-  // Validació de si una casella és adjacent a l'última visitada
-  const isAdjacent = (cellId: number): boolean => {
-    if (state.visitedCells.length === 0) return cellId === 14
-    const lastId = state.visitedCells[state.visitedCells.length - 1]
-    const lastCell = CELLS[lastId]
-    const targetCell = CELLS[cellId]
-    if (!lastCell || !targetCell) return false
+  const currentStory = TURNS[state.currentTurn]
 
-    const dRow = Math.abs(lastCell.row - targetCell.row)
-    const dCol = Math.abs(lastCell.col - targetCell.col)
-    // Moviment ortogonal: 1 pas en fila O 1 pas en columna, mai en diagonal
-    return (dRow === 1 && dCol === 0) || (dRow === 0 && dCol === 1)
-  }
+  const handleHexClick = (hexId: number) => {
+    if (state.solved) return
+    const target = HEX_GRID[hexId]
+    if (!target) return
 
-  const handleCellClick = (cellId: number) => {
-    const cell = CELLS[cellId]
-    if (!cell || cell.type === 'prohibit') {
+    if (target.type === 'prohibit') {
       play('buzzer')
       setState(prev => ({
         ...prev,
         lastFeedback: {
           type: 'error',
-          message: `La patrulla no pot entrar a "${cell?.name || 'aquesta zona'}" (és una zona prohibida!).`,
+          message: `Zona prohibida: No pots entrar a ${target.name} (terreny perillós o vetat).`,
         },
       }))
       return
     }
 
-    // Si ja està visitada, no permetre repetir
-    if (state.visitedCells.includes(cellId)) {
-      // Si és l'última casella, permetre desfer
-      if (cellId === state.visitedCells[state.visitedCells.length - 1] && state.visitedCells.length > 1) {
-        handleUndoStep()
-      }
-      return
-    }
-
-    // Comprovar si és adjacent a la darrera
-    if (!isAdjacent(cellId)) {
+    // Comprovar si és adjacent a la posició actual del jugador
+    const currentHex = HEX_GRID[state.playerHex]
+    if (!currentHex.neighbors.includes(hexId) && hexId !== state.playerHex) {
       play('buzzer')
       setState(prev => ({
         ...prev,
         lastFeedback: {
           type: 'error',
-          message: 'La patrulla només pot avançar a caselles adjacents (NORD, EST, OEST, SUD), mai en diagonal ni saltant caselles.',
+          message: 'Només pots moure’t a hexàgons adjacents a la teva posició.',
         },
       }))
       return
     }
 
-    const nextVisited = [...state.visitedCells, cellId]
-    const nextMinutes = (nextVisited.length - 1) * 15
+    // Avançar de torn
+    const nextTurn = state.currentTurn + 1
+    if (nextTurn >= TURNS.length) {
+      // Ja s'ha completat la ronda de les 23:00
+      return
+    }
 
-    setState(prev => ({
-      ...prev,
-      visitedCells: nextVisited,
-      totalMinutes: nextMinutes,
-      selectedAnswer: cell.name,
-      lastFeedback: null,
-    }))
-  }
+    const nextStory = TURNS[nextTurn]
+    // Comprovar si entra directament a la casella de la patrulla
+    const isCaught = hexId === nextStory.patrolHex
 
-  const handleUndoStep = () => {
-    if (state.visitedCells.length <= 1) return
-    const nextVisited = state.visitedCells.slice(0, -1)
-    const nextMinutes = (nextVisited.length - 1) * 15
-    const lastCell = CELLS[nextVisited[nextVisited.length - 1]]
-
-    setState(prev => ({
-      ...prev,
-      visitedCells: nextVisited,
-      totalMinutes: nextMinutes,
-      selectedAnswer: lastCell?.name || '',
-      lastFeedback: null,
-    }))
-  }
-
-  const handleResetRoute = () => {
-    setState(prev => ({
-      ...prev,
-      visitedCells: [14],
-      totalMinutes: 0,
-      selectedAnswer: '',
-      lastFeedback: null,
-    }))
-  }
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    const cleanAnswer = state.selectedAnswer.trim().toUpperCase()
-    if (!cleanAnswer) {
+    if (isCaught) {
+      play('buzzer')
       setState(prev => ({
         ...prev,
+        isAlerted: true,
         lastFeedback: {
           type: 'error',
-          message: "Indica o selecciona on arriba la patrulla a les 23:00 hores.",
+          message: `ALERTA! La torxa de la patrulla t'ha enxampat a ${target.name}! Prem Desfer o Reiniciar per tornar a intentar-ho.`,
         },
       }))
       return
     }
 
-    const isLocallyCorrect =
-      cleanAnswer === 'FARGA' ||
-      cleanAnswer === 'LA FARGA' ||
-      cleanAnswer === '3' ||
-      cleanAnswer.includes('FARGA')
+    const nextPath = [...state.playerPath, hexId]
+    const isFinalTurn = nextTurn === 4
+
+    setState(prev => ({
+      ...prev,
+      currentTurn: nextTurn,
+      playerHex: hexId,
+      playerPath: nextPath,
+      isAlerted: false,
+      lastFeedback: null,
+    }))
+
+    // Si arriba amb èxit al torn 4 (23:00) sense ser enxampat
+    if (isFinalTurn) {
+      handleSuccessfulInfiltration(hexId, nextPath)
+    }
+  }
+
+  const handleSuccessfulInfiltration = async (finalHex: number, path: number[]) => {
+    play('evidence-unlock')
+    setState(prev => ({
+      ...prev,
+      solved: true,
+      lastFeedback: {
+        type: 'success',
+        message: 'Missió de sigil completada! Has presenciat els esdeveniments de la nit del 15 de maig.',
+      },
+    }))
 
     try {
-      const result = await props.submit({
-        location: cleanAnswer,
-        answer: cleanAnswer,
-        visitedCells: state.visitedCells,
-        totalMinutes: state.totalMinutes,
+      await props.submit({
+        location: 'FARGA',
+        destination: 'FARGA',
+        visitedCells: path,
+        totalMinutes: 60,
+        answer: 'FARGA',
       })
-
-      if (result.correct || isLocallyCorrect) {
-        play('evidence-unlock')
-        setState(prev => ({
-          ...prev,
-          solved: true,
-          lastFeedback: {
-            type: 'success',
-            message: 'Ruta confirmada! A les 23:00 la patrulla arriba a La Farga i confirma la coartada del ferrer Isidre.',
-          },
-        }))
-      } else {
-        play('buzzer')
-        setState(prev => ({
-          ...prev,
-          attempts: prev.attempts + 1,
-          lastFeedback: {
-            type: 'error',
-            message:
-              result.message ||
-              "Lloc incorrecte. Segueix la prioritat NORD → EST → OEST → SUD des de la Plaça durant 60 minuts (4 passos).",
-          },
-        }))
-      }
     } catch (err) {
-      console.error('Error validant ruta:', err)
-      if (isLocallyCorrect) {
-        play('evidence-unlock')
-        setState(prev => ({
-          ...prev,
-          solved: true,
-          lastFeedback: {
-            type: 'success',
-            message: 'Ruta confirmada! La patrulla arriba a La Farga.',
-          },
-        }))
-      }
+      console.error('Error enviant resolució:', err)
     }
   }
 
-  const currentHour = 22 + Math.floor(state.totalMinutes / 60)
-  const currentMins = state.totalMinutes % 60
-  const formattedTime = `${currentHour}:${String(currentMins).padStart(2, '0')}`
+  const handleUndo = () => {
+    if (state.playerPath.length <= 1) return
+    const prevPath = state.playerPath.slice(0, -1)
+    const prevHex = prevPath[prevPath.length - 1]
+    const prevTurn = prevPath.length - 1
+
+    setState(prev => ({
+      ...prev,
+      currentTurn: prevTurn,
+      playerHex: prevHex,
+      playerPath: prevPath,
+      isAlerted: false,
+      lastFeedback: null,
+    }))
+  }
+
+  const handleReset = () => {
+    setState(prev => ({
+      ...prev,
+      currentTurn: 0,
+      playerHex: 15,
+      playerPath: [15],
+      isAlerted: false,
+      lastFeedback: null,
+    }))
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-5 pb-8 font-serif">
       {/* CAPÇALERA HISTÒRICA */}
       <header className="text-center py-4 px-3 bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl shadow-md">
         <div className="inline-block px-3 py-0.5 mb-1.5 text-xs font-mono tracking-widest text-[#1D3557] bg-[#D8CCAE] rounded-full border border-[#8C6D53]/40">
-          ESTACIÓ III · COARTADES I RUTES
+          ESTACIÓ III · EL SIGIL DE PLANES BONES
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#2B2118] tracking-wide">
           PLANES BONES
         </h1>
         <p className="text-xs sm:text-sm text-[#5C4533] italic mt-0.5">
-          La Ronda Nocturna del Sometent i la Coartada del Ferrer
+          La Ronda de Nit, l'Ombra del Delator i la Forja del Ferrer
         </p>
       </header>
 
-      {/* PESTANYES DE CONSULTA I RECORREGUT */}
+      {/* PESTANYES D'INVESTIGACIÓ */}
       <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden">
         {/* Barra superior de pestanyes */}
         <div className="bg-[#D8CCAE] border-b border-[#8C6D53] flex flex-wrap">
@@ -268,7 +316,7 @@ export function PlaneBonesGame(props: GameProps) {
             }`}
           >
             <span>🧭</span>
-            <span>Regles de la Guàrdia</span>
+            <span>Regles de Sigil</span>
           </button>
 
           <button
@@ -281,7 +329,7 @@ export function PlaneBonesGame(props: GameProps) {
             }`}
           >
             <span>🗺️</span>
-            <span>Mapa del Terme</span>
+            <span>Plànol del Terme</span>
           </button>
 
           <button
@@ -294,7 +342,7 @@ export function PlaneBonesGame(props: GameProps) {
             }`}
           >
             <span>👣</span>
-            <span>Traçador de Ronda</span>
+            <span>Joc Hexagonal</span>
           </button>
         </div>
 
@@ -312,35 +360,44 @@ export function PlaneBonesGame(props: GameProps) {
               >
                 <div className="p-3.5 bg-[#F4EBD9] border-l-4 border-[#8C6D53] rounded-r shadow-inner">
                   <h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif mb-1">
-                    L'Espia del Paller i la Guàrdia del Sometent
+                    La Nit del 15 de Maig: Què va passar realment?
                   </h3>
                   <p>
-                    La nit del 15 de maig —la mateixa nit en què es va redactar la carta traïdora— la patrulla armada del sometent vigilava el poble per evitar infiltrats borbònics.
+                    Mentre la majoria del poble dormia, tres fets van transcórrer a la Guixa la mateixa nit de la carta traïdora:
                   </p>
                 </div>
 
-                <div className="space-y-2 text-[#4A3728]">
-                  <p>
-                    En Joan el traginer, amagat dalt del paller, va passar la nit vigilant els seus moviments i va anotar el patró exacte que segueix la guàrdia cada quart d'hora.
-                  </p>
-                  <p>
-                    D'altra banda, <strong>Isidre el ferrer</strong> afirma que té una coartada perfecta: assegura que a les <strong>23:00 hores</strong> en punt estava treballant a la seva farga forjant eines, i que la patrulla el va veure en passar per davant del taller.
-                  </p>
-                  <p>
-                    Hem de reconstruir el camí exacte que va fer la patrulla des de la seva sortida per comprovar si realment va arribar a la farga a les 23:00.
-                  </p>
-                </div>
+                <ul className="space-y-2.5 text-[#4A3728]">
+                  <li className="flex items-start gap-2">
+                    <span className="text-base">🏮</span>
+                    <div>
+                      <strong>La Patrulla del Sometent:</strong> Surt de la Plaça Major a les <strong>22:00</strong> armada amb torxes fent la ronda per prevenir aldarulls.
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-base">🕯️</span>
+                    <div>
+                      <strong>El Misteri de l'Escola:</strong> A les 22:00 hi ha un llum estrany a la finestra de l'aula del mestre Bernat... i a les 22:30 una figura amb capa s'escapa per l'ombra!
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-base">⚒️</span>
+                    <div>
+                      <strong>La Forja d'Isidre:</strong> El ferrer al·lega que a les 23:00 en punt era a la Farga forjant eines. Si la patrulla el va veure, tindrà una coartada indestructible.
+                    </div>
+                  </li>
+                </ul>
 
                 <div className="bg-[#DFD4BC]/70 p-3 rounded border border-[#8C6D53]/40 flex items-start gap-2.5 text-xs text-[#5C4533] font-sans">
                   <span className="text-lg">💡</span>
                   <div>
-                    <strong>Pista:</strong> Consulta les <em>Regles de la Guàrdia</em> per saber l'ordre de prioritat del pas i segueix la patrulla durant 60 minuts (4 trams de 15 minuts).
+                    <strong>El teu paper:</strong> Ets en <strong>Joan el traginer</strong>, observant des del paller. Has de moure't d'amagat pel mapa hexagonal seguint els esdeveniments de la nit sense ser vist per la patrulla!
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* PESTANYA 2: REGLES DE LA GUÀRDIA */}
+            {/* PESTANYA 2: REGLES */}
             {state.activeTab === 'regles' && (
               <motion.div
                 key="regles"
@@ -352,45 +409,36 @@ export function PlaneBonesGame(props: GameProps) {
                 <div className="bg-[#FAF5E9] border-2 border-[#8C6D53] rounded-lg p-4 sm:p-5 shadow-inner">
                   <div className="text-center pb-3 border-b border-[#8C6D53]/40 mb-3">
                     <span className="text-[11px] font-mono uppercase tracking-widest text-[#8C6D53]">
-                      Instruccions del Sometent de la Plana
+                      Instruccions de Moviment i Sigil
                     </span>
                     <h3 className="text-base sm:text-lg font-bold text-[#1D3557] font-serif">
-                      Normes Estrictes de la Ronda
+                      Com Jugar al Mapa Hexagonal
                     </h3>
                   </div>
 
                   <ul className="space-y-2.5 text-xs sm:text-sm text-[#4A3728] font-sans">
                     <li className="flex items-start gap-2">
                       <span className="text-emerald-700 font-bold">1.</span>
-                      <span><strong>Hora i punt de sortida:</strong> La patrulla surt sempre de la <strong>Plaça Major</strong> a les <strong>22:00 hores</strong>.</span>
+                      <span><strong>Inici al Paller (22:00):</strong> Comences amagat al Paller. A cada torn de 15 minuts pots clicar a un hexàgon adjacent per avançar.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-emerald-700 font-bold">2.</span>
-                      <span><strong>Cadència temporal:</strong> Cada casella avançada requereix exactament <strong>15 minuts</strong> (+1 quart d'hora).</span>
+                      <span><strong>La Torxa de la Patrulla:</strong> La guàrdia porta torxes 🔥 i es mou automàticament. No entris mai al seu hexàgon en el mateix torn!</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-emerald-700 font-bold">3.</span>
-                      <div>
-                        <strong>Ordre estricte de prioritat:</strong> Si la guàrdia pot avançar cap a diversos camins oberts, tria sempre en aquest ordre:
-                        <div className="mt-1 font-mono font-bold text-xs bg-[#EAE0CA] py-1 px-2.5 rounded border border-[#8C6D53]/30 text-[#1D3557]">
-                          1r NORD ➔ 2n EST ➔ 3r OEST ➔ 4t SUD
-                        </div>
-                      </div>
+                      <span><strong>Zones Prohibides:</strong> Bosc Espès, Bosc Fosc, Cementiri Vell i Riera Brava són intransitables.</span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-red-700 font-bold">4.</span>
-                      <span><strong>Zones prohibides:</strong> Mai no entren a zones fosques o perilloses: <strong>Bosc</strong>, <strong>Riera</strong> ni <strong>Cementiri</strong>.</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-red-700 font-bold">5.</span>
-                      <span><strong>Sense retrocessos:</strong> Mai no repeteixen caselles ni van en diagonal.</span>
+                      <span className="text-emerald-700 font-bold">4.</span>
+                      <span><strong>Objectiu final:</strong> Arribar a les <strong>23:00</strong> observant com la patrulla arriba a La Farga sense que t'hagin detectat.</span>
                     </li>
                   </ul>
                 </div>
               </motion.div>
             )}
 
-            {/* PESTANYA 3: MAPA DEL TERME */}
+            {/* PESTANYA 3: PLÀNOL */}
             {state.activeTab === 'mapa' && (
               <motion.div
                 key="mapa"
@@ -401,51 +449,44 @@ export function PlaneBonesGame(props: GameProps) {
               >
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm sm:text-base font-bold text-[#1D3557] font-serif">
-                    Plànol del Poble de la Guixa (4×4)
+                    Llocs Clau del Terme de la Guixa
                   </h3>
                   <span className="text-xs text-[#5C4533] font-sans">Any de 1705</span>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2 bg-[#FAF5E9] p-3 rounded-lg border border-[#8C6D53]">
-                  {Object.values(CELLS).map(cell => {
-                    const isForbidden = cell.type === 'prohibit'
-                    const isStart = cell.id === 14
-                    const isDest = cell.id === 3
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-sans">
+                  <div className="p-2.5 bg-[#FAF5E9] rounded border border-[#8C6D53]/40">
+                    <div className="font-bold text-[#1D3557] flex items-center gap-1">
+                      <span>🏛️</span> <span>Plaça Major (Hex 14)</span>
+                    </div>
+                    <p className="text-[#5C4533] mt-0.5">Punt de trobada i sortida de la patrulla armada a les 22:00.</p>
+                  </div>
 
-                    return (
-                      <div
-                        key={cell.id}
-                        className={`p-2 rounded border text-center text-xs flex flex-col justify-between min-h-[72px] ${
-                          isForbidden
-                            ? 'bg-red-100/70 border-red-300 text-red-900'
-                            : isStart
-                            ? 'bg-amber-200/80 border-amber-500 font-bold text-[#1D3557]'
-                            : isDest
-                            ? 'bg-blue-100/80 border-blue-400 font-bold text-[#1D3557]'
-                            : 'bg-white border-[#8C6D53]/30 text-[#4A3728]'
-                        }`}
-                      >
-                        <div className="text-base">{cell.icon}</div>
-                        <div className="font-sans font-bold leading-tight text-[11px] mt-0.5">
-                          {cell.name}
-                        </div>
-                        <div className="text-[9px] text-[#8C6D53] font-mono">
-                          {isForbidden ? 'Prohibit' : isStart ? 'Inici 22:00' : isDest ? 'Destí' : `Casella ${cell.id}`}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                  <div className="p-2.5 bg-[#FAF5E9] rounded border border-[#8C6D53]/40">
+                    <div className="font-bold text-[#1D3557] flex items-center gap-1">
+                      <span>🛖</span> <span>El Paller (Hex 15)</span>
+                    </div>
+                    <p className="text-[#5C4533] mt-0.5">On en Joan el traginer es refugia i comença a espiar la nit.</p>
+                  </div>
 
-                <div className="p-2.5 bg-amber-50 rounded border border-amber-300 text-xs text-amber-900 font-sans flex items-center justify-between">
-                  <span>🏛️ <strong>Plaça:</strong> Sortida 22:00</span>
-                  <span>🌲 <strong>Bosc / Riera:</strong> Vetats</span>
-                  <span>⚒️ <strong>La Farga:</strong> Casella 3</span>
+                  <div className="p-2.5 bg-[#FAF5E9] rounded border border-[#8C6D53]/40">
+                    <div className="font-bold text-[#1D3557] flex items-center gap-1">
+                      <span>📚</span> <span>L'Escola (Hex 9)</span>
+                    </div>
+                    <p className="text-[#5C4533] mt-0.5">Casa del mestre Bernat. Té un llum misteriós a les 22:00.</p>
+                  </div>
+
+                  <div className="p-2.5 bg-[#FAF5E9] rounded border border-[#8C6D53]/40">
+                    <div className="font-bold text-[#1D3557] flex items-center gap-1">
+                      <span>⚒️</span> <span>La Farga (Hex 3)</span>
+                    </div>
+                    <p className="text-[#5C4533] mt-0.5">Taller de ferrer on Isidre afirma que treballava a les 23:00.</p>
+                  </div>
                 </div>
               </motion.div>
             )}
 
-            {/* PESTANYA 4: TRAÇADOR INTERACTIU */}
+            {/* PESTANYA 4: TAULELL HEXAGONAL INTERACTIU */}
             {state.activeTab === 'joc' && (
               <motion.div
                 key="joc"
@@ -454,36 +495,33 @@ export function PlaneBonesGame(props: GameProps) {
                 exit={{ opacity: 0 }}
                 className="space-y-4"
               >
-                {/* Marcador de temps i passos */}
+                {/* Marcador temporal i controls */}
                 <div className="p-3 bg-[#FAF5E9] border-2 border-[#8C6D53] rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-inner">
                   <div>
-                    <div className="text-[10px] font-mono uppercase text-[#8C6D53]">Hora de la ronda</div>
+                    <div className="text-[10px] font-mono uppercase text-[#8C6D53]">Hora de la nit</div>
                     <div className="text-2xl font-bold font-mono text-[#1D3557] flex items-center gap-1.5">
                       <span>🕰️</span>
-                      <span>{formattedTime}</span>
+                      <span>{currentStory.time}</span>
                     </div>
                   </div>
 
-                  <div>
-                    <div className="text-[10px] font-mono uppercase text-[#8C6D53]">Temps transcorregut</div>
-                    <div className="text-sm font-bold font-mono text-[#2B2118]">
-                      {state.totalMinutes} minuts ({state.visitedCells.length - 1} passos)
-                    </div>
+                  <div className="flex-1 min-w-[200px] text-xs font-sans text-[#4A3728] bg-[#EAE0CA] p-2 rounded border border-[#8C6D53]/30">
+                    <strong>Esdeveniment:</strong> {currentStory.narrativeText}
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={handleUndoStep}
-                      disabled={state.visitedCells.length <= 1}
+                      onClick={handleUndo}
+                      disabled={state.playerPath.length <= 1 || state.solved}
                       className="px-2.5 py-1 text-xs font-sans font-bold bg-[#EAE0CA] hover:bg-[#D8CCAE] disabled:opacity-40 text-[#4A3728] rounded border border-[#8C6D53]/40 transition-colors"
-                      title="Desfer darrer pas"
+                      title="Desfer pas"
                     >
                       ↩ Desfer
                     </button>
                     <button
                       type="button"
-                      onClick={handleResetRoute}
+                      onClick={handleReset}
                       className="px-2.5 py-1 text-xs font-sans font-bold bg-amber-200 hover:bg-amber-300 text-amber-950 rounded border border-amber-400 transition-colors"
                     >
                       ↺ Reiniciar
@@ -491,126 +529,191 @@ export function PlaneBonesGame(props: GameProps) {
                   </div>
                 </div>
 
-                {/* Mapa interactiu 4x4 */}
-                <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
-                  {Object.values(CELLS).map(cell => {
-                    const stepIndex = state.visitedCells.indexOf(cell.id)
-                    const isVisited = stepIndex !== -1
-                    const isCurrent = state.visitedCells[state.visitedCells.length - 1] === cell.id
-                    const isForbidden = cell.type === 'prohibit'
+                {/* TAULELL HEXAGONAL SVG */}
+                <div className="w-full overflow-x-auto flex justify-center bg-[#152332] p-3 sm:p-4 rounded-xl border-2 border-[#8C6D53] shadow-xl relative">
+                  {/* Fons nocturn amb textura */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#0B131D] to-[#1E1710] opacity-90 pointer-events-none rounded-xl" />
 
-                    return (
-                      <button
-                        key={cell.id}
-                        type="button"
-                        onClick={() => handleCellClick(cell.id)}
-                        disabled={isForbidden}
-                        className={`p-2 rounded-lg border text-center transition-all flex flex-col justify-between min-h-[76px] sm:min-h-[84px] relative ${
-                          isForbidden
-                            ? 'bg-red-100/60 border-red-300 text-red-800 opacity-60 cursor-not-allowed'
-                            : isCurrent
-                            ? 'bg-[#1D3557] text-[#FAF5E9] border-[#1D3557] ring-2 ring-[#C99E32] shadow-lg font-bold'
-                            : isVisited
-                            ? 'bg-emerald-700 text-white border-emerald-800 shadow font-bold'
-                            : 'bg-[#FAF5E9] text-[#2B2118] border-[#8C6D53]/40 hover:bg-[#E2D6B8]'
-                        }`}
-                      >
-                        {isVisited && (
-                          <span className="absolute top-1 right-1 w-5 h-5 rounded-full bg-[#C99E32] text-[#121E2B] font-mono text-[10px] font-bold flex items-center justify-center shadow">
-                            {stepIndex === 0 ? '0' : stepIndex}
-                          </span>
-                        )}
+                  <svg
+                    viewBox="0 0 410 320"
+                    className="w-full max-w-[440px] h-auto relative z-10 select-none"
+                  >
+                    {/* Renderitzar cada hexàgon */}
+                    {Object.values(HEX_GRID).map(node => {
+                      const isPatrol = currentStory.patrolHex === node.id
+                      const isPlayer = state.playerHex === node.id
+                      const isShadow = currentStory.shadowHex === node.id
+                      const isVisitedByPlayer = state.playerPath.includes(node.id)
+                      const isForbidden = node.type === 'prohibit'
+                      const isReachable =
+                        HEX_GRID[state.playerHex].neighbors.includes(node.id) &&
+                        !isForbidden &&
+                        !state.solved
 
-                        <div className="text-lg">{cell.icon}</div>
-                        <div className="text-[11px] sm:text-xs font-sans font-bold leading-tight">
-                          {cell.name}
-                        </div>
-                        <div className="text-[9px] font-mono opacity-80">
-                          {isForbidden
-                            ? '🚫 Vedat'
-                            : isVisited
-                            ? `${22 + Math.floor((stepIndex * 15) / 60)}:${String((stepIndex * 15) % 60).padStart(2, '0')}`
-                            : `Casella ${cell.id}`}
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
+                      // Colors dels hexàgons
+                      let fillColor = '#2A3B4E'
+                      let strokeColor = '#8C6D53'
+                      let strokeWidth = 1.5
 
-                {/* Ruta recorreguda fins ara */}
-                <div className="p-3 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg text-xs font-sans space-y-1">
-                  <div className="font-bold text-[#1D3557]">Itinerari de la Patrulla:</div>
-                  <div className="text-[#4A3728] leading-relaxed">
-                    {state.visitedCells.map((id, idx) => {
-                      const c = CELLS[id]
-                      const timeStr = `${22 + Math.floor((idx * 15) / 60)}:${String((idx * 15) % 60).padStart(2, '0')}`
+                      if (isForbidden) {
+                        fillColor = '#3A2022'
+                        strokeColor = '#7F1D1D'
+                      } else if (isPatrol) {
+                        fillColor = '#854D0E' // Llum de torxa daurada
+                        strokeColor = '#F59E0B'
+                        strokeWidth = 3
+                      } else if (isPlayer) {
+                        fillColor = '#166534' // Verd esmeralda de Joan
+                        strokeColor = '#4ADE80'
+                        strokeWidth = 2.5
+                      } else if (isReachable) {
+                        fillColor = '#2F4858'
+                        strokeColor = '#C99E32'
+                        strokeWidth = 2
+                      } else if (isVisitedByPlayer) {
+                        fillColor = '#1F3A2E'
+                        strokeColor = '#22C55E'
+                      }
+
                       return (
-                        <span key={id}>
-                          {idx > 0 && ' ➔ '}
-                          <strong className={idx === state.visitedCells.length - 1 ? 'text-[#1D3557]' : ''}>
-                            {c.name} ({timeStr})
-                          </strong>
-                        </span>
+                        <g
+                          key={node.id}
+                          onClick={() => handleHexClick(node.id)}
+                          className={isReachable ? 'cursor-pointer group' : isForbidden ? 'cursor-not-allowed' : ''}
+                        >
+                          {/* Polígon hexagonal */}
+                          <polygon
+                            points={getHexPolygon(node.cx, node.cy)}
+                            fill={fillColor}
+                            stroke={strokeColor}
+                            strokeWidth={strokeWidth}
+                            className="transition-all duration-300 filter drop-shadow-sm"
+                          />
+
+                          {/* Llum radiant si la patrulla hi és */}
+                          {isPatrol && (
+                            <circle
+                              cx={node.cx}
+                              cy={node.cy}
+                              r={HEX_RADIUS + 4}
+                              fill="none"
+                              stroke="#FBBF24"
+                              strokeWidth="2"
+                              strokeDasharray="4 2"
+                              className="animate-pulse opacity-75 pointer-events-none"
+                            />
+                          )}
+
+                          {/* Icona central del lloc */}
+                          <text
+                            x={node.cx}
+                            y={node.cy - 8}
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            fontSize="17"
+                            className="pointer-events-none"
+                          >
+                            {node.icon}
+                          </text>
+
+                          {/* Nom del lloc */}
+                          <text
+                            x={node.cx}
+                            y={node.cy + 10}
+                            textAnchor="middle"
+                            fontSize="8.5"
+                            fontWeight="bold"
+                            fill="#F4EBD9"
+                            fontFamily="sans-serif"
+                            className="pointer-events-none"
+                          >
+                            {node.name}
+                          </text>
+
+                          {/* Indicadors de personatges sobre l'hexàgon */}
+                          <g className="pointer-events-none">
+                            {isPatrol && (
+                              <g transform={`translate(${node.cx - 24}, ${node.cy - 26})`}>
+                                <circle cx="8" cy="8" r="9" fill="#B45309" stroke="#FEF08A" strokeWidth="1.5" />
+                                <text x="8" y="11" textAnchor="middle" fontSize="10">🔥</text>
+                              </g>
+                            )}
+
+                            {isPlayer && (
+                              <g transform={`translate(${node.cx + 10}, ${node.cy - 26})`}>
+                                <circle cx="8" cy="8" r="9" fill="#15803D" stroke="#BBF7D0" strokeWidth="1.5" />
+                                <text x="8" y="11" textAnchor="middle" fontSize="10">👤</text>
+                              </g>
+                            )}
+
+                            {isShadow && (
+                              <g transform={`translate(${node.cx}, ${node.cy - 26})`}>
+                                <circle cx="0" cy="8" r="9" fill="#1E1B4B" stroke="#A5B4FC" strokeWidth="1.5" />
+                                <text x="0" y="11" textAnchor="middle" fontSize="10">🦹</text>
+                              </g>
+                            )}
+
+                            {/* Llum a l'escola si està encesa */}
+                            {node.id === 9 && currentStory.schoolLit && (
+                              <text x={node.cx + 20} y={node.cy + 18} fontSize="12">🕯️</text>
+                            )}
+
+                            {/* Foc a la farga */}
+                            {node.id === 3 && currentStory.forgeLit && (
+                              <text x={node.cx + 20} y={node.cy + 18} fontSize="12">✨</text>
+                            )}
+                          </g>
+                        </g>
                       )
                     })}
+                  </svg>
+                </div>
+
+                {/* Llegenda explicativa */}
+                <div className="flex flex-wrap items-center justify-between text-[11px] text-[#4A3728] font-sans bg-[#FAF5E9] p-2.5 rounded-lg border border-[#8C6D53]/40 gap-2">
+                  <div className="flex items-center gap-1">
+                    <span className="inline-block w-3 h-3 rounded-full bg-amber-600 border border-amber-300" />
+                    <span>🔥 <strong>Patrulla:</strong> Ronda amb torxa</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="inline-block w-3 h-3 rounded-full bg-emerald-600 border border-emerald-300" />
+                    <span>👤 <strong>Tu (Joan):</strong> Mou-te a hexàgons contigus</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="inline-block w-3 h-3 rounded-full bg-indigo-950 border border-indigo-300" />
+                    <span>🦹 <strong>Silueta:</strong> L'ombra de l'escola</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="inline-block w-3 h-3 rounded-full bg-red-900 border border-red-400" />
+                    <span>🌲 <strong>Vedat:</strong> Terreny prohibit</span>
                   </div>
                 </div>
+
+                {state.lastFeedback && state.lastFeedback.type === 'error' && (
+                  <motion.div
+                    animate="shake"
+                    variants={shakeVariants}
+                    className="p-3 bg-red-100 border border-red-300 text-red-900 rounded-lg text-xs font-sans flex items-center justify-between gap-2"
+                  >
+                    <span>⚠️ {state.lastFeedback.message}</span>
+                    <button
+                      type="button"
+                      onClick={handleUndo}
+                      className="px-2 py-1 bg-red-700 text-white rounded font-bold text-xs"
+                    >
+                      Desfer
+                    </button>
+                  </motion.div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </section>
 
-      {/* FORMULARI DE VALIDACIÓ I DEDUCCIÓ */}
-      <section className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl p-4 sm:p-5 shadow-md">
-        {!state.solved ? (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-[#2B2118] font-serif mb-1">
-                A quin lloc arriba la patrulla a les 23:00 hores (després de 60 minuts de ronda)?
-              </label>
-              <p className="text-xs text-[#5C4533] font-sans">
-                Avança pel mapa seguint la prioritat (NORD → EST → OEST → SUD) o escriu el nom de la casella:
-              </p>
-            </div>
-
-            <motion.div
-              animate={state.lastFeedback?.type === 'error' ? 'shake' : 'initial'}
-              variants={shakeVariants}
-              className="flex flex-col sm:flex-row gap-2"
-            >
-              <input
-                type="text"
-                value={state.selectedAnswer}
-                onChange={e =>
-                  setState(prev => ({
-                    ...prev,
-                    selectedAnswer: e.target.value,
-                    lastFeedback: null,
-                  }))
-                }
-                className="flex-1 p-3 border-2 border-[#8C6D53] rounded-lg bg-[#FAF5E9] text-[#1D3557] font-mono font-bold text-base tracking-wider focus:outline-none focus:ring-2 focus:ring-[#C99E32] shadow-inner"
-              />
-
-              <button
-                type="submit"
-                disabled={!state.selectedAnswer.trim()}
-                className="py-3 px-6 bg-[#C99E32] hover:bg-amber-500 disabled:opacity-50 text-[#121E2B] font-bold font-sans rounded-lg shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Validar Lloc</span>
-                <span>➔</span>
-              </button>
-            </motion.div>
-
-            {state.lastFeedback && state.lastFeedback.type === 'error' && (
-              <div className="p-2.5 bg-red-100 border border-red-300 text-red-900 rounded text-xs font-sans flex items-center gap-2">
-                <span>⚠️</span>
-                <span>{state.lastFeedback.message}</span>
-              </div>
-            )}
-          </form>
-        ) : (
-          /* PANTALLA D'ÈXIT I DESCOBERTA D'EVIDÈNCIES */
+      {/* RESULTAT I DESCOBERTA D'EVIDÈNCIES */}
+      {state.solved && (
+        <section className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl p-4 sm:p-5 shadow-md">
           <motion.div
             variants={fadeInVariants}
             initial="hidden"
@@ -620,10 +723,10 @@ export function PlaneBonesGame(props: GameProps) {
             <div className="p-4 bg-emerald-50 border-2 border-emerald-600 rounded-lg text-emerald-950 shadow-inner">
               <div className="flex items-center gap-2 text-base font-bold font-serif text-emerald-900 mb-1">
                 <span>✓</span>
-                <span>Ruta Confirmada: Arribada a La Farga a les 23:00!</span>
+                <span>Missió de Sigil Completada: Has presenciat la nit del 15!</span>
               </div>
               <p className="text-xs font-sans text-emerald-800 leading-relaxed">
-                La patrulla ha completat la seva ronda per la Guixa i ha arribat puntualment a <strong>La Farga</strong> a les 23:00 hores.
+                Has seguit la nit sense ser vist. A les 23:00 has presenciat com la patrulla arribava a La Farga i veia treballar <strong>Isidre el ferrer</strong> davant del foc.
               </p>
             </div>
 
@@ -632,13 +735,13 @@ export function PlaneBonesGame(props: GameProps) {
               {/* Evidència */}
               <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
                 <span className="text-[10px] font-mono uppercase font-bold text-[#8C6D53]">
-                  🗺️ Nova Evidència Desbloquejada
+                  🕯️ Nova Evidència Desbloquejada
                 </span>
                 <h4 className="font-serif font-bold text-sm text-[#1D3557] mt-0.5">
-                  Ruta de la Patrulla Nocturna
+                  Llum a l'Escola a les 22:00
                 </h4>
                 <p className="text-xs text-[#5C4533] mt-1 font-sans">
-                  La guàrdia va passar per davant del taller a les 23:00 i va veure treballar el ferrer.
+                  Mentre el poble dormia, algú redactava una carta a l'aula d'en Bernat i va fugir d'amagat a les 22:30.
                 </p>
               </div>
 
@@ -651,7 +754,7 @@ export function PlaneBonesGame(props: GameProps) {
                   Isidre el Ferrer
                 </h4>
                 <p className="text-xs text-[#5C4533] mt-1 font-sans">
-                  Té una coartada sòlida i verificada per la patrulla. Queda <strong>100% descartat</strong>.
+                  La patrulla el va veure a la forja a les 23:00 en punt. Té coartada i queda <strong>100% descartat</strong>.
                 </p>
               </div>
             </div>
@@ -669,8 +772,8 @@ export function PlaneBonesGame(props: GameProps) {
               </div>
             </div>
           </motion.div>
-        )}
-      </section>
+        </section>
+      )}
     </div>
   )
 }

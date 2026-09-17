@@ -286,6 +286,9 @@ export function FontFerroGame(props: GameProps) {
                   <p>
                     La carta trobada que delata la reunió dels Vigatans no està escrita amb una tinta qualsevol. Els perits han comprovat que es tracta de <strong>tinta ferrosa de gales</strong>, l'única emprada pels escrivans i notaris de la plana.
                   </p>
+                  <p>
+					Els nens que l'han trobada tenien les mans brutes de tinta, devia ser fresca. <strong>Havia estat escrita el mateix dia</strong>, pel matí o a primera hora de la tarda.
+                  </p>
                 </div>
 
                 <div className="space-y-2 text-[#4A3728]">
