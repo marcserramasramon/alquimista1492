@@ -139,9 +139,14 @@ export async function GET(request: NextRequest) {
     // Compute global start/end times if any team is started
     const firstStartedTeam = enriched.find((t) => t.started_at)
     const sessionStartTime = firstStartedTeam?.started_at ? new Date(firstStartedTeam.started_at) : null
-    const sessionEndTime = sessionStartTime
-      ? new Date(sessionStartTime.getTime() + 90 * 60 * 1000)
-      : null
+    
+    // Check if session has a defined expires_at
+    const firstSessionWithExpiry = Array.from(sessionsMap.values()).find((s) => s.expires_at)
+    const sessionEndTime = firstSessionWithExpiry?.expires_at
+      ? new Date(firstSessionWithExpiry.expires_at)
+      : sessionStartTime
+        ? new Date(sessionStartTime.getTime() + 90 * 60 * 1000)
+        : null
 
     return NextResponse.json({
       teams: enriched,

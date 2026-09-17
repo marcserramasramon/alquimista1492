@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
 import { useAudio } from '@/lib/audio/useAudio'
 import {
@@ -11,11 +11,13 @@ import {
 
 interface BoxGameState {
   currentPart: 1 | 2 | 3
-  currentScreen: 'intro' | 'input' | 'open' | 'cards' | 'substitute' | 'emissari' | 'moral' | 'result'
+  currentScreen: 'intro' | 'input' | 'open' | 'cards' | 'card_detail' | 'emissari' | 'moral' | 'result'
   part1Code: string
   part1Attempts: number
   part2SelectedDate: string | null
   part2StolenCards: string[]
+  part2SelectedCard: string | null
+  part3Password: string
   part3Choice: 'A' | 'B' | null
   part3TimeRemaining: number
   isCorrect: boolean
@@ -25,6 +27,15 @@ const CARD_DATES = ['14-05', '15-05', '16-05', '17-05', '13-05', '18-05']
 const CORRECT_DATE = '16-05'
 const EMISSARI_PASSWORD = "L'ALBA VE DE VIC"
 
+const CARD_DETAILS: Record<string, { signature: string; seal: string; desc: string; correct: boolean }> = {
+  '14-05': { signature: 'Jaume', seal: '✓✓', desc: 'Signatura dubtosa', correct: false },
+  '15-05': { signature: 'Bernat', seal: '◆✓', desc: 'Segell irregular', correct: false },
+  '16-05': { signature: 'Bernat', seal: '✓✓', desc: 'Carta original', correct: true },
+  '17-05': { signature: 'Anton', seal: '✓✓', desc: 'Data posterior', correct: false },
+  '13-05': { signature: 'Jaume', seal: '◆', desc: 'Segell incomplet', correct: false },
+  '18-05': { signature: 'Anton', seal: '◆◆', desc: 'Segell falsificat', correct: false },
+}
+
 /**
  * Joc 7: Caixa de les Almoines (Parts 1-3)
  * Part 1: Obrir caixa (codi 4231)
@@ -33,15 +44,23 @@ const EMISSARI_PASSWORD = "L'ALBA VE DE VIC"
  */
 export function BoxGame(props: GameProps) {
   const { play } = useAudio()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
   const [state, setState] = useState<BoxGameState>(() => {
     const saved = props.sharedState as BoxGameState | undefined
-    return saved || {
+    if (saved && 'currentPart' in saved) {
+      return saved
+    }
+    return {
       currentPart: 1,
       currentScreen: 'intro',
       part1Code: '',
       part1Attempts: 0,
       part2SelectedDate: null,
       part2StolenCards: [],
+      part2SelectedCard: null,
+      part3Password: '',
       part3Choice: null,
       part3TimeRemaining: 60,
       isCorrect: false,
@@ -66,18 +85,43 @@ export function BoxGame(props: GameProps) {
   }, [state.currentScreen, state.part3TimeRemaining])
 
   const handlePart1Submit = async () => {
-    const normalized = state.part1Code.replace(/[\s-]/g, '')
-    if (normalized !== '4231') {
-      play('buzzer')
-      setState(prev => ({ ...prev, part1Attempts: prev.part1Attempts + 1 }))
+    if (!state.part1Code.trim()) {
+      setError('Introdueix la contrasenya')
       return
     }
 
-    play('evidence-unlock')
-    setState(prev => ({
-      ...prev,
-      currentScreen: 'open',
-    }))
+    setLoading(true)
+    setError('')
+
+    try {
+      const res = await fetch('/api/game/box', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          part: '1',
+          answer: state.part1Code,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (data.success) {
+        play('evidence-unlock')
+        setState(prev => ({
+          ...prev,
+          currentScreen: 'open',
+        }))
+      } else {
+        play('buzzer')
+        setError(data.message || 'Contrasenya incorrecta')
+        setState(prev => ({ ...prev, part1Attempts: prev.part1Attempts + 1, part1Code: '' }))
+      }
+    } catch (err) {
+      play('buzzer')
+      setError('Error en la validació')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handlePart1Correct = () => {
@@ -98,45 +142,92 @@ export function BoxGame(props: GameProps) {
   }
 
   const handlePart2Submit = async () => {
-    if (!state.part2SelectedDate) return
+    if (!state.part2SelectedDate) {
+      setError('Selecciona una data')
+      return
+    }
 
-    const isCorrect = state.part2SelectedDate === CORRECT_DATE
+    setLoading(true)
+    setError('')
 
-    const result = await props.submit({
-      part: 2,
-      selectedDate: state.part2SelectedDate,
-      isCorrect,
-    })
+    try {
+      const res = await fetch('/api/game/box', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          part: '2',
+          answer: state.part2SelectedDate,
+        }),
+      })
 
-    if (isCorrect) {
-      play('evidence-unlock')
-      setState(prev => ({
-        ...prev,
-        currentPart: 3,
-        currentScreen: 'emissari',
-      }))
-    } else {
+      const data = await res.json()
+
+      if (data.success) {
+        play('evidence-unlock')
+        setState(prev => ({
+          ...prev,
+          currentPart: 3,
+          currentScreen: 'emissari',
+        }))
+      } else {
+        play('buzzer')
+        setError(data.message || 'Data incorrecta')
+        setState(prev => ({
+          ...prev,
+          part2SelectedDate: null,
+          part2SelectedCard: null,
+        }))
+      }
+    } catch (err) {
       play('buzzer')
-      setState(prev => ({
-        ...prev,
-        currentScreen: 'cards',
-        part2SelectedDate: null,
-      }))
+      setError('Error en la validació')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handlePart3Choice = async (choice: 'A' | 'B') => {
+  const handlePart3Password = async () => {
+    if (state.part3Password.toUpperCase().trim() !== EMISSARI_PASSWORD) {
+      play('buzzer')
+      setError('Contrasenya incorrecta')
+      return
+    }
+
+    play('evidence-unlock')
     setState(prev => ({
       ...prev,
-      part3Choice: choice,
-      currentScreen: 'result',
+      currentScreen: 'moral',
     }))
+  }
 
-    await props.submit({
-      part: 3,
-      choice,
-      timeRemaining: state.part3TimeRemaining,
-    })
+  const handlePart3Choice = async (choice: 'A' | 'B') => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const res = await fetch('/api/game/box', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          part: '3',
+          answer: { choice, timeRemaining: state.part3TimeRemaining },
+        }),
+      })
+
+      const data = await res.json()
+
+      setState(prev => ({
+        ...prev,
+        part3Choice: choice,
+        currentScreen: 'result',
+      }))
+
+      play('evidence-unlock')
+    } catch (err) {
+      setError('Error en registrar la decisió')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -146,6 +237,20 @@ export function BoxGame(props: GameProps) {
       animate="visible"
       variants={fadeInVariants}
     >
+      {/* Error banner */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            className="bg-red-100 border border-red-600 text-red-700 p-3 rounded mb-4 text-sm"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+          >
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Timer at top */}
       <div className="text-right text-sm font-mono text-red-600 mb-4">
         12:34:56
@@ -170,20 +275,46 @@ export function BoxGame(props: GameProps) {
       )}
 
       {/* Part 2: Substitució carta */}
-      {state.currentPart === 2 && state.currentScreen === 'cards' && (
-        <Part2CardsScreen
-          dates={CARD_DATES}
-          stolenCards={new Set(state.part2StolenCards)}
-          selectedDate={state.part2SelectedDate}
-          onToggleCard={toggleStolenCard}
-          onSelectDate={val => setState(prev => ({ ...prev, part2SelectedDate: val }))}
-          onSubmit={handlePart2Submit}
-        />
+      {state.currentPart === 2 && (state.currentScreen === 'cards' || state.currentScreen === 'card_detail') && (
+        <>
+          <Part2CardsScreen
+            dates={CARD_DATES}
+            stolenCards={new Set(state.part2StolenCards)}
+            selectedDate={state.part2SelectedDate}
+            selectedCard={state.part2SelectedCard}
+            onSelectCard={date => setState(prev => ({ ...prev, part2SelectedCard: date }))}
+            onToggleCard={toggleStolenCard}
+            onSelectDate={val => setState(prev => ({ ...prev, part2SelectedDate: val }))}
+            onSubmit={handlePart2Submit}
+            loading={loading}
+            error={error}
+          />
+          <AnimatePresence>
+            {state.part2SelectedCard && state.currentScreen === 'cards' && (
+              <CardDetailModal
+                date={state.part2SelectedCard}
+                details={CARD_DETAILS[state.part2SelectedCard]}
+                isStolen={state.part2StolenCards.includes(state.part2SelectedCard)}
+                onRob={() => {
+                  toggleStolenCard(state.part2SelectedCard!)
+                  play('bell-ding')
+                }}
+                onClose={() => setState(prev => ({ ...prev, part2SelectedCard: null }))}
+              />
+            )}
+          </AnimatePresence>
+        </>
       )}
 
       {/* Part 3: Sometent + Decisió moral */}
       {state.currentPart === 3 && state.currentScreen === 'emissari' && (
-        <Part3EmissariScreen onContinue={() => setState(prev => ({ ...prev, currentScreen: 'moral' }))} />
+        <Part3EmissariScreen
+          password={state.part3Password}
+          onPasswordChange={val => setState(prev => ({ ...prev, part3Password: val }))}
+          onSubmit={handlePart3Password}
+          error={error}
+          loading={loading}
+        />
       )}
 
       {state.currentPart === 3 && state.currentScreen === 'moral' && (
@@ -319,52 +450,74 @@ function Part2CardsScreen({
   dates,
   stolenCards,
   selectedDate,
+  selectedCard,
+  onSelectCard,
   onToggleCard,
   onSelectDate,
   onSubmit,
+  loading,
+  error,
 }: {
   dates: string[]
   stolenCards: Set<string>
   selectedDate: string | null
+  selectedCard: string | null
+  onSelectCard: (date: string | null) => void
   onToggleCard: (date: string) => void
   onSelectDate: (date: string | null) => void
   onSubmit: () => void
+  loading: boolean
+  error: string
 }) {
   return (
     <div className="flex flex-col flex-1 gap-4">
       <h2 className="text-2xl font-bold text-center mb-2">DINS LA CAIXA</h2>
 
-      <div className="bg-blue-100 p-4 rounded-lg text-center mb-2">
-        <p className="font-bold">📬 SOBRE (original de Bernat)</p>
+      <motion.div
+        className="bg-blue-100 p-4 rounded-lg text-center mb-2 cursor-pointer hover:bg-blue-150 transition"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <p className="text-3xl mb-2">📬</p>
+        <p className="font-bold">SOBRE (original de Bernat)</p>
         <p className="text-sm">Data: 16-05-1705</p>
-      </div>
+      </motion.div>
 
-      <p className="text-center font-bold text-sm mb-2">6 CARTES SOLTES:</p>
+      <p className="text-center font-bold text-sm mb-2">6 CARTES SOLTES (clica per veure):</p>
 
       <div className="grid grid-cols-3 gap-2 mb-4">
         {dates.map(date => (
-          <button
+          <motion.button
             key={date}
-            onClick={() => onToggleCard(date)}
-            className={`p-3 font-bold rounded border-2 transition ${
+            onClick={() => onSelectCard(date)}
+            className={`p-3 font-bold rounded border-2 transition text-center ${
               stolenCards.has(date)
                 ? 'bg-amber-900 text-amber-50 border-amber-900'
-                : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-150'
+                : selectedCard === date
+                  ? 'bg-blue-200 text-blue-900 border-blue-600'
+                  : 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-150'
             }`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            📄<br />
-            {date}
-          </button>
+            <div className="text-xl mb-1">📄</div>
+            <div className="text-xs">{date}</div>
+          </motion.button>
         ))}
       </div>
 
       {stolenCards.size > 0 && (
-        <>
-          <p className="text-center font-bold text-sm">Quina carta substitueixes la del sobre?</p>
+        <motion.div
+          className="bg-green-100 border border-green-600 p-4 rounded-lg"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <p className="text-center font-bold text-sm mb-3">Cartes robades: {stolenCards.size}/6</p>
+          <p className="text-center font-bold text-sm mb-3">Quina substitueixes a l'sobre?</p>
           <select
             value={selectedDate || ''}
             onChange={e => onSelectDate(e.target.value || null)}
-            className="w-full p-3 border-2 border-amber-900"
+            className="w-full p-3 border-2 border-amber-900 rounded"
           >
             <option value="">Selecciona data...</option>
             {Array.from(stolenCards).map(date => (
@@ -373,25 +526,39 @@ function Part2CardsScreen({
               </option>
             ))}
           </select>
-        </>
+        </motion.div>
       )}
 
-      <button
+      <motion.button
         onClick={onSubmit}
-        disabled={!selectedDate}
+        disabled={!selectedDate || loading}
         className={`w-full p-4 font-bold text-lg border-2 transition ${
-          selectedDate
+          selectedDate && !loading
             ? 'bg-amber-900 text-amber-50 border-amber-900 hover:bg-amber-800'
             : 'bg-gray-300 text-gray-600 border-gray-300 cursor-not-allowed'
         }`}
+        whileHover={selectedDate && !loading ? { scale: 1.02 } : {}}
+        whileTap={selectedDate && !loading ? { scale: 0.98 } : {}}
       >
-        SUBSTITUIR
-      </button>
+        {loading ? '⏳ Validant...' : 'SUBSTITUIR'}
+      </motion.button>
     </div>
   )
 }
 
-function Part3EmissariScreen({ onContinue }: { onContinue: () => void }) {
+function Part3EmissariScreen({
+  password,
+  onPasswordChange,
+  onSubmit,
+  error,
+  loading,
+}: {
+  password: string
+  onPasswordChange: (val: string) => void
+  onSubmit: () => void
+  error: string
+  loading: boolean
+}) {
   return (
     <div className="flex flex-col justify-center flex-1 gap-4">
       <h2 className="text-2xl font-bold text-center mb-4">PORTA DEL CAMPANAR</h2>
@@ -401,28 +568,117 @@ function Part3EmissariScreen({ onContinue }: { onContinue: () => void }) {
         <p className="font-bold italic">"Qui va? On aneu?"</p>
       </div>
 
-      <input
+      <motion.input
         type="text"
-        placeholder={'Ex: "L\'ALBA VE DE VIC"'}
-        disabled
-        className="w-full p-4 border-2 border-amber-900 bg-gray-100 text-center font-bold"
+        placeholder='Introdueix la contrasenya...'
+        value={password}
+        onChange={e => onPasswordChange(e.target.value)}
+        className="w-full p-4 border-2 border-amber-900 text-center font-bold rounded text-lg uppercase"
+        whileFocus={{ scale: 1.02 }}
       />
 
-      <p className="text-center text-sm text-amber-800">
-        Contrasenya: L'ALBA VE DE VIC
+      <p className="text-center text-xs text-amber-700">
+        💡 Pista: "L'ALBA..."
       </p>
 
-      <div className="bg-green-100 border-2 border-green-600 p-4 rounded-lg">
-        <p className="text-center font-bold text-green-700">✓ Carta acceptada</p>
-      </div>
+      {error && (
+        <motion.div
+          className="bg-red-100 border border-red-600 text-red-700 p-3 rounded text-sm text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          {error}
+        </motion.div>
+      )}
 
-      <button
-        onClick={onContinue}
-        className="w-full p-4 bg-amber-900 text-amber-50 font-bold text-lg border-2 border-amber-900 hover:bg-amber-800 transition"
+      <motion.button
+        onClick={onSubmit}
+        disabled={loading || !password.trim()}
+        className={`w-full p-4 font-bold text-lg border-2 transition ${
+          password.trim() && !loading
+            ? 'bg-amber-900 text-amber-50 border-amber-900 hover:bg-amber-800'
+            : 'bg-gray-300 text-gray-600 border-gray-300 cursor-not-allowed'
+        }`}
+        whileHover={password.trim() && !loading ? { scale: 1.02 } : {}}
+        whileTap={password.trim() && !loading ? { scale: 0.98 } : {}}
       >
-        CONTINUAR
-      </button>
+        {loading ? '⏳ Validant...' : 'ENTREGAR CARTA'}
+      </motion.button>
     </div>
+  )
+}
+
+function CardDetailModal({
+  date,
+  details,
+  isStolen,
+  onRob,
+  onClose,
+}: {
+  date: string
+  details: { signature: string; seal: string; desc: string; correct: boolean }
+  isStolen: boolean
+  onRob: () => void
+  onClose: () => void
+}) {
+  return (
+    <motion.div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.div
+        className="bg-amber-50 border-4 border-amber-900 rounded-lg p-6 max-w-sm w-full"
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+        onClick={e => e.stopPropagation()}
+      >
+        <h3 className="text-2xl font-bold text-center mb-4">CARTA</h3>
+
+        <div className="bg-white border-2 border-amber-900 p-4 rounded mb-4">
+          <p className="text-center text-sm text-amber-700 mb-2">📜</p>
+          <p className="text-center font-bold mb-2">Data: {date}-1705</p>
+          <p className="text-center text-sm mb-3">Signatura: {details.signature}</p>
+          <p className="text-center text-sm mb-3">Segell: {details.seal}</p>
+          <p className="text-center italic text-xs text-amber-600">{details.desc}</p>
+        </div>
+
+        {details.correct && (
+          <div className="bg-green-100 border border-green-600 p-2 rounded mb-4">
+            <p className="text-center text-xs font-bold text-green-700">✓ AQUESTA SEMBLA CORRECTA</p>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <motion.button
+            onClick={onClose}
+            className="flex-1 p-3 bg-gray-300 text-gray-800 font-bold border-2 border-gray-400 hover:bg-gray-400 transition rounded"
+            whileTap={{ scale: 0.95 }}
+          >
+            TANCAR
+          </motion.button>
+
+          <motion.button
+            onClick={() => {
+              onRob()
+              onClose()
+            }}
+            disabled={isStolen}
+            className={`flex-1 p-3 font-bold border-2 rounded transition ${
+              isStolen
+                ? 'bg-gray-300 text-gray-600 border-gray-300 cursor-not-allowed'
+                : 'bg-amber-900 text-amber-50 border-amber-900 hover:bg-amber-800'
+            }`}
+            whileTap={!isStolen ? { scale: 0.95 } : {}}
+          >
+            {isStolen ? '✓ ROBADA' : '🏴 ROBAR'}
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
@@ -433,36 +689,50 @@ function Part3MoralScreen({
   timeRemaining: number
   onChoose: (choice: 'A' | 'B') => void
 }) {
+  const isTimeWarning = timeRemaining < 15
+
   return (
     <div className="flex flex-col justify-center flex-1 gap-4">
-      <h2 className="text-2xl font-bold text-center mb-4">DECISIÓ MORAL</h2>
+      <h2 className="text-2xl font-bold text-center mb-2">DECISIÓ MORAL</h2>
 
       <div className="bg-amber-100 p-4 rounded-lg text-center mb-4">
-        <p className="italic mb-4">Bernat espera la resposta...</p>
+        <p className="italic mb-2 text-sm">Bernat espera la resposta...</p>
         <p className="font-bold">"Vosaltres... què hauríeu fet?"</p>
       </div>
 
       <div className="flex-1 space-y-3 mb-4">
-        <button
+        <motion.button
           onClick={() => onChoose('A')}
-          className="w-full p-4 bg-blue-100 border-2 border-blue-600 hover:bg-blue-150 transition text-left"
+          className="w-full p-4 bg-blue-100 border-2 border-blue-600 hover:bg-blue-200 transition text-left rounded"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          <p className="font-bold text-blue-900">OPCIÓ A: ACCEPTAR TRACTE</p>
+          <p className="font-bold text-blue-900">A: COMPASSIÓ</p>
           <p className="text-sm text-blue-700 mt-2">Deixa que fugis a buscar el teu fill.</p>
-        </button>
+        </motion.button>
 
-        <button
+        <motion.button
           onClick={() => onChoose('B')}
-          className="w-full p-4 bg-red-100 border-2 border-red-600 hover:bg-red-150 transition text-left"
+          className="w-full p-4 bg-red-100 border-2 border-red-600 hover:bg-red-200 transition text-left rounded"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
         >
-          <p className="font-bold text-red-900">OPCIÓ B: REBUTJAR TRACTE</p>
+          <p className="font-bold text-red-900">B: JUSTICIA</p>
           <p className="text-sm text-red-700 mt-2">No. Bernat, estás detingut.</p>
-        </button>
+        </motion.button>
       </div>
 
-      <div className="text-center font-bold text-red-600">
+      <motion.div
+        className={`text-center font-bold p-3 rounded ${
+          isTimeWarning
+            ? 'bg-red-200 text-red-800 animate-pulse'
+            : 'bg-amber-100 text-amber-800'
+        }`}
+        animate={isTimeWarning ? { scale: [1, 1.05, 1] } : {}}
+        transition={{ repeat: isTimeWarning ? Infinity : 0, duration: 1 }}
+      >
         ⏱️ TEMPS: {timeRemaining} seg
-      </div>
+      </motion.div>
     </div>
   )
 }

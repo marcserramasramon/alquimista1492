@@ -1,58 +1,74 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
 import { useAudio } from '@/lib/audio/useAudio'
 import {
   fadeInVariants,
   containerVariants,
   itemVariants,
+  shakeVariants,
 } from '@/lib/animations/useAnimations'
 
 interface AccusationGameState {
   currentScreen: 'intro' | 'suspect_select' | 'evidence_select' | 'giro' | 'result' | 'incorrect'
   selectedSuspect: string | null
-  selectedEvidence: Set<string>
+  selectedEvidence: string[] // Serialitzable com array
   attempts: number
   hasSeenGiro: boolean
   isCorrect: boolean
 }
 
 const SUSPECTS = [
-  { id: 'anton', name: 'Anton l\'Escolà', desc: 'Escolà, vetlla del rector' },
-  { id: 'bernat', name: 'Bernat Mestre d\'Escola', desc: 'Mestre, coordina l\'equip' },
+  {
+    id: 'anton',
+    name: "Anton l'Escolà",
+    role: "Escolà de la Parròquia",
+    desc: "Ajudant de missa i confiança de la rectoria. Sempre a prop del rector.",
+    icon: '🕯️',
+  },
+  {
+    id: 'bernat',
+    name: "Bernat Mestre d'Escola",
+    role: "Mestre de la Guixa",
+    desc: "Instruït, sap de lletra i redacta documents per al poble. Coordina els conjurats.",
+    icon: '📜',
+  },
+]
+
+const DISCARDED_SUSPECTS = [
+  { id: 'pere', name: 'Pere del Molí', station: 'Joc 1: Serrat', reason: 'No sap de lletra (analfabet)' },
+  { id: 'joan', name: 'Joan el traginer', station: 'Joc 1: Serrat', reason: 'No sap de lletra (analfabet)' },
+  { id: 'marianna', name: "Marianna de l'Hostal", station: 'Joc 2: Font del Ferro', reason: 'Coartada del registre de càntirs (dia 12)' },
+  { id: 'isidre', name: 'Isidre el ferrer', station: 'Joc 3: Planes Bones', reason: 'Coartada del paller i del molí fins a les 23:00' },
 ]
 
 const ALL_EVIDENCE = [
-  { id: 'seal', name: 'Segell ploma i clau', source: 'Joc 4 Cementiri' },
-  { id: 'light', name: 'Llum escola nit 15', source: 'Joc 3 Planes Bones' },
-  { id: 'cantirs', name: 'Dos càntirs escola dia 12', source: 'Joc 2 Font del Ferro' },
-  { id: 'literacy', name: 'Sap de lletra', source: 'Joc 1 Serrat' },
-  { id: 'caligraphia', name: 'Full cal·ligrafia + noms registre', source: 'Joc 6 Primer Intent' },
-  { id: 'filigrana', name: 'Filigrana àncora idèntica', source: 'Joc 4 Cementiri' },
+  { id: 'seal', name: 'Segell de cera amb ploma i clau', source: 'Joc 4: Cementiri', detail: 'Trobat al pergamí ocult de la tomba del canonge.' },
+  { id: 'light', name: 'Llum encesa a l’escola la nit del 15', source: 'Joc 3: Planes Bones', detail: 'Els veïns van veure llum de llàntia a l’aula a deshores.' },
+  { id: 'cantirs', name: 'Dos càntirs a l’escola el dia 12', source: 'Joc 2: Font del Ferro', detail: 'Registre notarial de recollida de tinta ferrogàl·lica.' },
+  { id: 'literacy', name: 'Capacitat d’escriure i redactar (sap de lletra)', source: 'Joc 1: Serrat de les Bruixes', detail: 'La carta al Virrei està redactada amb sintaxi culta.' },
+  { id: 'caligraphia', name: 'Plana de cal·ligrafia amb noms de conjurats', source: 'Quadern d’investigació', detail: 'Mateix traç que la llista enviada a la guarnició de Vic.' },
+  { id: 'filigrana', name: 'Paper amb filigrana d’àncora idèntica', source: 'Joc 4: Cementiri', detail: 'Reserva exclusiva de paper del mestre d’escola.' },
 ]
 
-const VALID_EVIDENCE_FOR_BERNAT = ['seal', 'light', 'cantirs', 'literacy', 'caligraphia', 'filigrana']
-const VALID_EVIDENCE_FOR_ANTON: string[] = []
-
-/**
- * Joc 6: Accusació (L'Acusació)
- * Seleccionar sospitós + 3 proves vàlides
- * Si acusen Anton primer → GIR narratiu
- * Si Bernat + 3 proves vàlides → Correcte
- */
 export function AccusationGame(props: GameProps) {
   const { play } = useAudio()
+
   const [state, setState] = useState<AccusationGameState>(() => {
-    const saved = props.sharedState as AccusationGameState | undefined
-    return saved || {
-      currentScreen: 'intro',
-      selectedSuspect: null,
-      selectedEvidence: new Set(),
-      attempts: 0,
-      hasSeenGiro: false,
-      isCorrect: false,
+    const saved =
+      props.sharedState && typeof props.sharedState === 'object'
+        ? (props.sharedState as Partial<AccusationGameState>)
+        : {}
+
+    return {
+      currentScreen: saved.currentScreen || 'intro',
+      selectedSuspect: saved.selectedSuspect || null,
+      selectedEvidence: Array.isArray(saved.selectedEvidence) ? saved.selectedEvidence : [],
+      attempts: saved.attempts || 0,
+      hasSeenGiro: saved.hasSeenGiro || false,
+      isCorrect: props.solved || saved.isCorrect || false,
     }
   })
 
@@ -65,55 +81,85 @@ export function AccusationGame(props: GameProps) {
       ...prev,
       selectedSuspect: suspectId,
       currentScreen: 'evidence_select',
-      selectedEvidence: new Set(),
+      selectedEvidence: [], // Reset proves en canviar de sospitós
+    }))
+  }
+
+  const handleBackToSuspects = () => {
+    setState(prev => ({
+      ...prev,
+      currentScreen: 'suspect_select',
+    }))
+  }
+
+  const handleBackToIntro = () => {
+    setState(prev => ({
+      ...prev,
+      currentScreen: 'intro',
+    }))
+  }
+
+  const handleBackFromResults = () => {
+    setState(prev => ({
+      ...prev,
+      currentScreen: 'suspect_select',
+      isCorrect: false,
     }))
   }
 
   const toggleEvidence = (evidenceId: string) => {
     setState(prev => {
-      const newEvidence = new Set(prev.selectedEvidence)
-      if (newEvidence.has(evidenceId)) {
-        newEvidence.delete(evidenceId)
+      const exists = prev.selectedEvidence.includes(evidenceId)
+      let updated: string[]
+      if (exists) {
+        updated = prev.selectedEvidence.filter(id => id !== evidenceId)
       } else {
-        newEvidence.add(evidenceId)
+        if (prev.selectedEvidence.length >= 3) {
+          // Reemplaça el més antic o no permet més de 3
+          updated = [...prev.selectedEvidence.slice(1), evidenceId]
+        } else {
+          updated = [...prev.selectedEvidence, evidenceId]
+        }
       }
-      return { ...prev, selectedEvidence: newEvidence }
+      return { ...prev, selectedEvidence: updated }
     })
   }
 
   const handleSubmitAccusation = async () => {
-    if (!state.selectedSuspect || state.selectedEvidence.size < 3) return
+    if (!state.selectedSuspect || state.selectedEvidence.length !== 3) return
 
-    const result = await props.submit({
-      suspect: state.selectedSuspect,
-      evidence: Array.from(state.selectedEvidence),
-    })
+    try {
+      const result = await props.submit({
+        suspect: state.selectedSuspect,
+        evidence: state.selectedEvidence,
+      })
 
-    if (result.correct) {
-      // If accusing Anton first, show giro
-      if (state.selectedSuspect === 'anton' && !state.hasSeenGiro) {
-        play('bell-ring')
-        setState(prev => ({
-          ...prev,
-          currentScreen: 'giro',
-          hasSeenGiro: true,
-        }))
+      if (result.correct) {
+        if (state.selectedSuspect === 'anton' && !state.hasSeenGiro) {
+          play('bell-ring')
+          setState(prev => ({
+            ...prev,
+            currentScreen: 'giro',
+            hasSeenGiro: true,
+          }))
+        } else {
+          play('bell-ring')
+          setState(prev => ({
+            ...prev,
+            currentScreen: 'result',
+            isCorrect: true,
+          }))
+        }
       } else {
-        // Bernat is correct
-        play('bell-ring')
+        play('buzzer')
         setState(prev => ({
           ...prev,
-          currentScreen: 'result',
-          isCorrect: true,
+          currentScreen: 'incorrect',
+          attempts: prev.attempts + 1,
         }))
       }
-    } else {
-      play('buzzer')
-      setState(prev => ({
-        ...prev,
-        currentScreen: 'incorrect',
-        attempts: prev.attempts + 1,
-      }))
+    } catch (err) {
+      console.error('Error enviant acusació:', err)
     }
   }
 
@@ -122,287 +168,477 @@ export function AccusationGame(props: GameProps) {
       ...prev,
       currentScreen: 'suspect_select',
       selectedSuspect: null,
-      selectedEvidence: new Set(),
+      selectedEvidence: [],
     }))
   }
 
-  return (
-    <motion.div
-      className="w-full max-w-md mx-auto p-4 min-h-screen bg-amber-50 flex flex-col"
-      initial="hidden"
-      animate="visible"
-      variants={fadeInVariants}
-    >
-      {/* Timer at top */}
-      <div className="text-right text-sm font-mono text-red-600 mb-4">
-        12:34:56
-      </div>
+  const handleRetryIncorrect = () => {
+    setState(prev => ({
+      ...prev,
+      currentScreen: 'evidence_select',
+    }))
+  }
 
-      {state.currentScreen === 'intro' && (
-        <IntroScreen onContinue={() => setState(prev => ({ ...prev, currentScreen: 'suspect_select' }))} />
-      )}
-
-      {state.currentScreen === 'suspect_select' && (
-        <SuspectSelectScreen suspects={SUSPECTS} onSelectSuspect={handleSuspectSelect} />
-      )}
-
-      {state.currentScreen === 'evidence_select' && state.selectedSuspect && (
-        <EvidenceSelectScreen
-          suspect={SUSPECTS.find(s => s.id === state.selectedSuspect)!}
-          evidence={ALL_EVIDENCE}
-          selectedEvidence={state.selectedEvidence}
-          onToggleEvidence={toggleEvidence}
-          onSubmit={handleSubmitAccusation}
-        />
-      )}
-
-      {state.currentScreen === 'giro' && (
-        <GiroScreen onContinue={handleRetryAfterGiro} />
-      )}
-
-      {state.currentScreen === 'result' && (
-        <ResultScreen isCorrect={state.isCorrect} suspect={state.selectedSuspect} />
-      )}
-
-      {state.currentScreen === 'incorrect' && (
-        <IncorrectScreen
-          attempt={state.attempts}
-          onRetry={() => setState(prev => ({ ...prev, currentScreen: 'suspect_select', selectedSuspect: null, selectedEvidence: new Set() }))}
-        />
-      )}
-    </motion.div>
-  )
-}
-
-function IntroScreen({ onContinue }: { onContinue: () => void }) {
-  return (
-    <div className="flex flex-col justify-center flex-1 gap-4">
-      <h1 className="text-3xl font-bold text-center mb-4">PLA DE MASSET</h1>
-      <h2 className="text-2xl font-bold text-center mb-6">L'Acusació</h2>
-
-      <div className="bg-amber-100 p-4 rounded-lg mb-4">
-        <p className="font-bold mb-2">HAS RECOLLIT 4 XIFRES: 4-2-3-1</p>
-        <p className="text-sm mb-3 font-bold">SOSPITOSOS DESCARTATS:</p>
-        <div className="text-sm space-y-1 mb-3">
-          <p>✓ Pere del Molí (Serrat)</p>
-          <p>✓ Joan (Serrat)</p>
-          <p>✓ Marianna (Font)</p>
-          <p>✓ Isidre (Planes)</p>
-        </div>
-      </div>
-
-      <div className="border-t-2 border-b-2 border-amber-900 py-4 my-4">
-        <p className="font-bold mb-3">QUEDEN DOS:</p>
-        <p>• Anton l'Escolà</p>
-        <p>• Bernat Mestre d'Escola</p>
-      </div>
-
-      <p className="text-sm mb-4">Consulta el teu Quadern. Marca 3 proves vàlides i acusa el traïdor.</p>
-
-      <button
-        onClick={onContinue}
-        className="w-full p-4 bg-amber-900 text-amber-50 font-bold text-lg border-2 border-amber-900 hover:bg-amber-800 transition"
-      >
-        CONTINUAR
-      </button>
-    </div>
-  )
-}
-
-function SuspectSelectScreen({
-  suspects,
-  onSelectSuspect,
-}: {
-  suspects: typeof SUSPECTS
-  onSelectSuspect: (id: string) => void
-}) {
-  return (
-    <div className="flex flex-col justify-center flex-1 gap-4">
-      <h2 className="text-2xl font-bold text-center mb-6">QUI ÉS EL TRAÏDOR?</h2>
-
-      <p className="text-center text-sm mb-4">Sospitosos que resten:</p>
-
-      <div className="space-y-3">
-        {suspects.map(suspect => (
-          <button
-            key={suspect.id}
-            onClick={() => onSelectSuspect(suspect.id)}
-            className="w-full p-4 bg-amber-100 border-2 border-amber-900 hover:bg-amber-200 transition text-left"
-          >
-            <p className="font-bold">{suspect.name}</p>
-            <p className="text-sm text-amber-800">{suspect.desc}</p>
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function EvidenceSelectScreen({
-  suspect,
-  evidence,
-  selectedEvidence,
-  onToggleEvidence,
-  onSubmit,
-}: {
-  suspect: typeof SUSPECTS[0]
-  evidence: typeof ALL_EVIDENCE
-  selectedEvidence: Set<string>
-  onToggleEvidence: (id: string) => void
-  onSubmit: () => void
-}) {
-  const canSubmit = selectedEvidence.size === 3
+  const currentSuspectObj = SUSPECTS.find(s => s.id === state.selectedSuspect)
 
   return (
-    <motion.div
-      className="flex flex-col flex-1 gap-4"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
-      <h2 className="text-2xl font-bold text-center mb-2">HAS ACUSAT:</h2>
-      <p className="text-center font-bold text-amber-900 mb-4">{suspect.name}</p>
-
-      <p className="text-center text-sm font-bold mb-4">Marca 3 proves vàlides del Quadern:</p>
-
-      <motion.div className="space-y-2 flex-1 overflow-y-auto" variants={containerVariants}>
-        {evidence.map(ev => (
-          <motion.label
-            key={ev.id}
-            variants={itemVariants}
-            className="flex items-start gap-3 p-3 bg-amber-100 border border-amber-300 cursor-pointer hover:bg-amber-150 transition"
-          >
-            <input
-              type="checkbox"
-              checked={selectedEvidence.has(ev.id)}
-              onChange={() => onToggleEvidence(ev.id)}
-              className="mt-1"
-            />
-            <div className="flex-1">
-              <p className="font-bold text-sm">{ev.name}</p>
-              <p className="text-xs text-amber-700">{ev.source}</p>
-            </div>
-          </motion.label>
-        ))}
-      </motion.div>
-
-      <div className="border-t-2 border-amber-900 pt-4">
-        <p className="text-center font-bold mb-4">Proves marcades: {selectedEvidence.size}/3</p>
-
-        <button
-          onClick={onSubmit}
-          disabled={!canSubmit}
-          className={`w-full p-4 font-bold text-lg border-2 transition ${
-            canSubmit
-              ? 'bg-amber-900 text-amber-50 border-amber-900 hover:bg-amber-800'
-              : 'bg-gray-300 text-gray-600 border-gray-300 cursor-not-allowed'
-          }`}
-        >
-          VALIDAR
-        </button>
-      </div>
-    </motion.div>
-  )
-}
-
-function GiroScreen({ onContinue }: { onContinue: () => void }) {
-  return (
-    <div className="flex flex-col justify-center flex-1 gap-4">
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold mb-4">[ÀUDIO ANTON]</h2>
-      </div>
-
-      <div className="bg-red-100 border-2 border-red-600 p-6 rounded-lg text-center mb-4">
-        <p className="text-lg font-bold text-red-800 leading-relaxed mb-4">
-          "El rector! L'han ferit!"
+    <div className="w-full max-w-2xl mx-auto space-y-5 pb-8 font-serif">
+      {/* CAPÇALERA HISTÒRICA */}
+      <header className="border-b-2 border-[#8C6D53] pb-3 mb-4 text-center">
+        <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
+          Estació 6 · PLA DE MASSET
+        </span>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
+          L'ACUSACIÓ FINAL
+        </h1>
+        <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">
+          "Assenyala el traïdor de la Guixa i aporta les 3 proves concloents"
         </p>
-        <p className="text-base text-red-700 leading-relaxed">
-          "He estat vetllant-lo tota la nit del 15 de maig!"
-        </p>
-      </div>
+      </header>
 
-      <div className="bg-amber-100 p-4 rounded-lg mb-4">
-        <p className="font-bold mb-3 text-sm">SE DESBLOQUEJA:</p>
-        <div className="text-sm space-y-2">
-          <p>✓ Declaració del Rector</p>
-          <p>"L'Anton va vetllar-me tota la nit"</p>
-          <p className="mt-3">✓ Full de cal·ligrafia (Escola)</p>
-          <p>"Noms de difunts copiats per nens"</p>
-        </div>
-      </div>
+      {/* CONTINGUT PRINCIPAL DEL JOC */}
+      <main className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl p-4 sm:p-6 shadow-md">
+        <AnimatePresence mode="wait">
+          {/* PANTALLA 1: INTRODUCCIÓ I RESUM DEL CAS */}
+          {state.currentScreen === 'intro' && (
+            <motion.div
+              key="intro"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="space-y-5"
+            >
+              <div className="p-4 bg-[#F4EBD9] border-l-4 border-[#8C6D53] rounded-r shadow-inner">
+                <h2 className="font-bold text-[#1D3557] text-base font-serif mb-1.5">
+                  El Moment de la Veritat
+                </h2>
+                <p className="text-xs sm:text-sm leading-relaxed text-[#2B2118]">
+                  Heu recorregut el terme de la Guixa recopilant les 4 xifres dels elements ancestrals
+                  (<strong className="font-mono text-[#1D3557]">🔥 4 · 💧 2 · 🌍 3 · 🪨 1</strong>) i
+                  recollint proves sobre els moviments de la nit del 15 de maig.
+                </p>
+              </div>
 
-      <div className="border-t-2 border-b-2 border-amber-900 py-4">
-        <p className="text-center font-bold text-lg text-red-600">ANTON ESTÀ INNOCENT.</p>
-        <p className="text-center mt-2">Llavors... QUI ÉS EL TRAÏDOR?</p>
-      </div>
+              {/* Sospitosos descartats */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-mono uppercase tracking-wider text-[#5C4533] font-bold">
+                  Sospitosos Descartats al Llarg de la Recerca (4 de 6):
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {DISCARDED_SUSPECTS.map(s => (
+                    <div
+                      key={s.id}
+                      className="p-2.5 bg-[#FAF5E9] border border-[#8C6D53]/40 rounded-lg text-xs flex items-start gap-2 text-[#4A3728]"
+                    >
+                      <span className="text-emerald-700 font-bold">✓</span>
+                      <div>
+                        <strong className="text-[#2B2118]">{s.name}</strong> ({s.station})
+                        <p className="text-[11px] text-[#5C4533]">{s.reason}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
-      <button
-        onClick={onContinue}
-        className="w-full p-4 bg-amber-900 text-amber-50 font-bold text-lg border-2 border-amber-900 hover:bg-amber-800 transition"
-      >
-        TORNAR A ACUSAR
-      </button>
-    </div>
-  )
-}
+              {/* Els dos finalistes */}
+              <div className="p-4 bg-[#D8CCAE]/70 rounded-xl border border-[#8C6D53] text-center space-y-1">
+                <span className="text-xs font-mono uppercase text-[#1D3557] font-bold">
+                  Només resten 2 sospitosos al poble:
+                </span>
+                <div className="text-base sm:text-lg font-bold text-[#2B2118] font-serif">
+                  Anton l'Escolà &nbsp;o&nbsp; Bernat Mestre d'Escola
+                </div>
+                <p className="text-xs text-[#5C4533]">
+                  Haureu de triar a qui assenyaleu i justificar-ho amb 3 proves clares del vostre quadern.
+                </p>
+              </div>
 
-function ResultScreen({ isCorrect, suspect }: { isCorrect: boolean; suspect: string | null }) {
-  return (
-    <div className="flex flex-col justify-center flex-1 gap-4">
-      {isCorrect ? (
-        <>
-          <h2 className="text-3xl font-bold text-center text-green-600 mb-4">✓ CORRECTE!</h2>
-          <p className="text-center font-bold text-lg mb-4">
-            BERNAT, MESTRE D'ESCOLA, ÉS EL TRAÏDOR.
-          </p>
+              <button
+                type="button"
+                onClick={() => setState(prev => ({ ...prev, currentScreen: 'suspect_select' }))}
+                className="w-full py-3.5 px-4 bg-[#C99E32] hover:bg-amber-500 text-[#121E2B] font-bold font-sans rounded-lg shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base"
+              >
+                <span>Procedir a l'Acusació</span>
+                <span>➔</span>
+              </button>
+            </motion.div>
+          )}
 
-          <div className="bg-green-50 border-2 border-green-600 p-6 rounded-lg mb-4">
-            <p className="font-bold mb-3 text-sm">SE DESBLOQUEJA:</p>
-            <div className="text-sm space-y-2">
-              <p>✓ RIMA DEL CODI (Joc 9):</p>
-              <p className="italic">"Del cim baixa l'avís,..."</p>
-              <p className="mt-3">✓ UBICACIÓ DE LA CLAU (Joc 7):</p>
-              <p className="italic">"La clau està a la foscor,..."</p>
-            </div>
-          </div>
+          {/* PANTALLA 2: TRIAR SOSPITÓS */}
+          {state.currentScreen === 'suspect_select' && (
+            <motion.div
+              key="suspect_select"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="space-y-4"
+            >
+              {/* Botó de tornar enrere a la intro */}
+              <div className="flex items-center justify-between border-b border-[#8C6D53]/40 pb-2">
+                <button
+                  type="button"
+                  onClick={handleBackToIntro}
+                  className="px-3 py-1.5 text-xs font-bold text-[#1D3557] bg-[#FAF5E9] hover:bg-[#D8CCAE] border border-[#8C6D53] rounded-lg transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>←</span>
+                  <span>Tornar al sumari</span>
+                </button>
+                <span className="text-xs text-[#5C4533] font-mono">Pas 1 de 2: Qui és?</span>
+              </div>
 
-          <div className="bg-amber-100 p-4 rounded-lg">
-            <p className="font-bold mb-2">MOTIU DE LA TRAÏCIÓ:</p>
-            <p className="text-sm">En Jaume, fill de Bernat, és pres a la guarnició de Vic. El capità ha promès alliberarlo a canvi dels noms dels conjurats.</p>
-          </div>
+              <div className="text-center space-y-1">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#1D3557] font-serif">
+                  Qui és el Traïdor?
+                </h2>
+                <p className="text-xs sm:text-sm text-[#5C4533] font-sans">
+                  Fes clic sobre la persona que vols acusar formalment:
+                </p>
+              </div>
 
-          <p className="text-center font-bold text-lg text-green-600 mt-4">+100 punts</p>
-        </>
-      ) : (
-        <>
-          <h2 className="text-3xl font-bold text-center text-red-600 mb-4">✗ INCORRECTE</h2>
-          <p className="text-center mb-4">Les proves marcades no corresponen al sospitós acusat.</p>
-        </>
-      )}
-    </div>
-  )
-}
+              {/* Llista de sospitosos a acusar */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                {SUSPECTS.map(suspect => (
+                  <button
+                    key={suspect.id}
+                    type="button"
+                    onClick={() => handleSuspectSelect(suspect.id)}
+                    className="p-4 bg-[#FAF5E9] hover:bg-[#F4EBD9] border-2 border-[#8C6D53] hover:border-[#1D3557] rounded-xl text-left shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-3xl">{suspect.icon}</span>
+                        <span className="text-xs font-bold font-sans px-2 py-0.5 rounded bg-[#D8CCAE] text-[#1D3557] group-hover:bg-[#1D3557] group-hover:text-white transition-colors">
+                          Acusar ➔
+                        </span>
+                      </div>
+                      <h3 className="font-bold text-base text-[#2B2118] font-serif">
+                        {suspect.name}
+                      </h3>
+                      <span className="text-xs font-bold text-[#8C6D53] block font-sans">
+                        {suspect.role}
+                      </span>
+                      <p className="text-xs text-[#4A3728] mt-2 font-sans leading-relaxed">
+                        {suspect.desc}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
 
-function IncorrectScreen({ attempt, onRetry }: { attempt: number; onRetry: () => void }) {
-  return (
-    <div className="flex flex-col justify-center flex-1 gap-4">
-      <h2 className="text-2xl font-bold text-center text-red-600 mb-4">✗ INCORRECTE</h2>
+              {/* Acordió / info dels descartats */}
+              <div className="mt-4 pt-4 border-t border-[#8C6D53]/40">
+                <details className="text-xs text-[#5C4533] cursor-pointer">
+                  <summary className="font-bold hover:text-[#1D3557] transition">
+                    Veure els 4 sospitosos ja descartats
+                  </summary>
+                  <div className="mt-2 pl-2 space-y-1 font-sans text-[11px]">
+                    <p>• Pere del Molí — Descartat al Serrat (Analfabet)</p>
+                    <p>• Joan el traginer — Descartat al Serrat (Analfabet)</p>
+                    <p>• Marianna de l'Hostal — Descartada a la Font del Ferro (Càntirs)</p>
+                    <p>• Isidre el ferrer — Descartat a Planes Bones (Coartada a La Farga)</p>
+                  </div>
+                </details>
+              </div>
+            </motion.div>
+          )}
 
-      <p className="text-center mb-4">
-        NO hi ha prou proves vàlides per a aquesta persona, o les proves no corresponen al sospitós acusat.
-      </p>
+          {/* PANTALLA 3: SELECCIÓ DE PROVES (UN COP HAS ACUSAT) */}
+          {state.currentScreen === 'evidence_select' && currentSuspectObj && (
+            <motion.div
+              key="evidence_select"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="space-y-4"
+            >
+              {/* BARRA SUPERIOR AMB BOTÓ CLAR DE TORNAR ENRERE / CANVIAR SOSPITÓS */}
+              <div className="flex items-center justify-between border-b border-[#8C6D53]/40 pb-2">
+                <button
+                  type="button"
+                  onClick={handleBackToSuspects}
+                  className="px-3 py-1.5 text-xs font-bold text-[#1D3557] bg-[#FAF5E9] hover:bg-[#D8CCAE] border border-[#8C6D53] rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <span>←</span>
+                  <span>Canviar de sospitós / Tornar enrere</span>
+                </button>
 
-      <div className="bg-red-100 p-4 rounded-lg mb-4">
-        <p className="text-center font-bold">−10 punts</p>
-        <p className="text-center text-sm mt-2">Intent {attempt}/3</p>
-      </div>
+                <span className="text-xs font-mono font-bold text-[#8C6D53]">
+                  {state.selectedEvidence.length}/3 proves
+                </span>
+              </div>
 
-      <button
-        onClick={onRetry}
-        className="w-full p-4 bg-amber-900 text-amber-50 font-bold text-lg border-2 border-amber-900 hover:bg-amber-800 transition"
-      >
-        TORNAR A INTENTAR
-      </button>
+              {/* Targeta del sospitós seleccionat */}
+              <div className="p-3.5 bg-[#FAF5E9] border-2 border-[#1D3557] rounded-xl flex items-center justify-between shadow-inner">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{currentSuspectObj.icon}</span>
+                  <div>
+                    <div className="text-[11px] font-mono uppercase font-bold text-[#8C6D53]">
+                      Has acusat com a traïdor:
+                    </div>
+                    <div className="text-base sm:text-lg font-bold text-[#1D3557] font-serif">
+                      {currentSuspectObj.name}
+                    </div>
+                    <div className="text-xs text-[#5C4533] font-sans">
+                      {currentSuspectObj.role}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleBackToSuspects}
+                  className="text-xs text-[#8C6D53] hover:text-[#1D3557] underline font-sans cursor-pointer"
+                >
+                  Canviar
+                </button>
+              </div>
+
+              {/* Indicacions */}
+              <div>
+                <h3 className="text-sm font-bold text-[#2B2118] font-serif">
+                  Aporta exactament 3 proves vàlides del Quadern d'Investigació:
+                </h3>
+                <p className="text-xs text-[#5C4533] font-sans mt-0.5">
+                  Marca les proves que incriminen directament aquest sospitós:
+                </p>
+              </div>
+
+              {/* Llista de proves seleccionables */}
+              <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+                {ALL_EVIDENCE.map(ev => {
+                  const isSelected = state.selectedEvidence.includes(ev.id)
+                  return (
+                    <div
+                      key={ev.id}
+                      onClick={() => toggleEvidence(ev.id)}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all flex items-start gap-3 ${
+                        isSelected
+                          ? 'bg-amber-50 border-amber-600 shadow-sm ring-2 ring-amber-300'
+                          : 'bg-[#FAF5E9] border-[#8C6D53]/40 hover:bg-[#F4EBD9]'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => {}} // Gestionat pel div contenidor
+                        className="mt-1 h-4 w-4 text-amber-600 rounded border-[#8C6D53] focus:ring-amber-500 cursor-pointer"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-xs sm:text-sm text-[#2B2118] font-serif">
+                            {ev.name}
+                          </h4>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 bg-[#D8CCAE] rounded text-[#1D3557]">
+                            {ev.source}
+                          </span>
+                        </div>
+                        <p className="text-[11px] sm:text-xs text-[#5C4533] font-sans mt-0.5">
+                          {ev.detail}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Botons d'acció inferiors */}
+              <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleBackToSuspects}
+                  className="py-3 px-4 bg-[#FAF5E9] hover:bg-[#D8CCAE] border border-[#8C6D53] text-[#1D3557] font-bold font-sans rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer text-xs sm:text-sm"
+                >
+                  <span>←</span>
+                  <span>Canviar de sospitós</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSubmitAccusation}
+                  disabled={state.selectedEvidence.length !== 3}
+                  className={`flex-1 py-3 px-4 font-bold font-sans rounded-lg shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base ${
+                    state.selectedEvidence.length === 3
+                      ? 'bg-[#C99E32] hover:bg-amber-500 text-[#121E2B]'
+                      : 'bg-gray-300 text-gray-600 border border-gray-400 cursor-not-allowed opacity-70'
+                  }`}
+                >
+                  <span>Validar Acusació ({state.selectedEvidence.length}/3)</span>
+                  <span>➔</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* PANTALLA 4: GIR NARRATIU (QUAN ACUSEN ANTON PRIMER) */}
+          {state.currentScreen === 'giro' && (
+            <motion.div
+              key="giro"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-4"
+            >
+              <div className="p-4 bg-red-50 border-2 border-red-600 rounded-xl text-center space-y-2 shadow-inner">
+                <span className="text-2xl">⚡</span>
+                <h2 className="text-lg sm:text-xl font-bold text-red-900 font-serif">
+                  «El Rector! L'han ferit!»
+                </h2>
+                <p className="text-xs sm:text-sm italic text-red-800 font-serif">
+                  «Jo no he sortit de la rectoria en tota la nit del 15 de maig! Vaig estar vetllant el mossèn i sostenint-li el cap fins que va arribar el metge!»
+                </p>
+              </div>
+
+              {/* Noves revelacions */}
+              <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg space-y-2 text-xs font-sans">
+                <span className="text-[10px] font-mono uppercase font-bold text-emerald-700">
+                  📜 Testimoni Notarial del Rector
+                </span>
+                <p className="text-[#2B2118]">
+                  El rector ferit confirma la coartada: l'Anton l'Escolà va estar amb ell tota la nit sense separar-se del seu llit.
+                </p>
+                <div className="pt-2 border-t border-[#8C6D53]/30">
+                  <p className="font-bold text-[#1D3557]">
+                    Anton és innocent. Per tant... només queda una persona possible!
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleRetryAfterGiro}
+                  className="flex-1 py-3.5 px-4 bg-[#C99E32] hover:bg-amber-500 text-[#121E2B] font-bold font-sans rounded-lg shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base"
+                >
+                  <span>Tornar a acusar ➔</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setState(prev => ({ ...prev, currentScreen: 'evidence_select' }))}
+                  className="py-3 px-4 bg-[#FAF5E9] hover:bg-[#D8CCAE] border border-[#8C6D53] text-[#1D3557] font-bold font-sans rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer text-xs"
+                >
+                  <span>← Revisar proves d'Anton</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* PANTALLA 5: INCORRECTE (PROVES NO VÀLIDES) */}
+          {state.currentScreen === 'incorrect' && (
+            <motion.div
+              key="incorrect"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-4"
+            >
+              <div className="p-4 bg-red-100 border-2 border-red-500 rounded-xl text-center space-y-2">
+                <span className="text-2xl">⚠️</span>
+                <h2 className="text-lg sm:text-xl font-bold text-red-900 font-serif">
+                  Acusació Desestimada
+                </h2>
+                <p className="text-xs sm:text-sm text-red-800 font-sans leading-relaxed">
+                  Les proves seleccionades no corresponen a aquest sospitós o no són prou concloents per formular una acusació ferma.
+                </p>
+                <div className="inline-block px-3 py-1 bg-red-200/80 rounded font-mono text-xs text-red-900 font-bold mt-1">
+                  Intent {state.attempts} registrat (−10 punts)
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+                <button
+                  type="button"
+                  onClick={handleRetryIncorrect}
+                  className="flex-1 py-3 px-4 bg-[#C99E32] hover:bg-amber-500 text-[#121E2B] font-bold font-sans rounded-lg shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-sm font-bold"
+                >
+                  <span>Revisar les proves seleccionades</span>
+                  <span>➔</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleBackToSuspects}
+                  className="py-3 px-4 bg-[#FAF5E9] hover:bg-[#D8CCAE] border border-[#8C6D53] text-[#1D3557] font-bold font-sans rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer text-xs"
+                >
+                  <span>← Canviar de sospitós</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* PANTALLA 6: RESULTAT CORRECTE (BERNAT ACUSAT AMB ÈXIT) */}
+          {state.currentScreen === 'result' && (
+            <motion.div
+              key="result"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-4"
+            >
+              <div className="p-4 bg-emerald-50 border-2 border-emerald-600 rounded-xl text-emerald-950 shadow-inner">
+                <div className="flex items-center gap-2 text-base sm:text-lg font-bold font-serif text-emerald-900 mb-1">
+                  <span>✓</span>
+                  <span>Acusació Demostrada: Bernat Mestre d'Escola és el Traïdor!</span>
+                </div>
+                <p className="text-xs sm:text-sm font-sans text-emerald-800 leading-relaxed">
+                  Totes les proves coincideixen: el paper d'àncora, el segell notarial, la llum a l'escola a deshores i la seva capacitat d'escriure la carta dirigida a Vic.
+                </p>
+              </div>
+
+              {/* El Motiu de la Traïció */}
+              <div className="p-4 bg-[#FAF5E9] border border-[#8C6D53] rounded-xl space-y-1.5">
+                <span className="text-[10px] font-mono uppercase font-bold text-[#8C6D53]">
+                  Confessió i Motiu de la Traïció
+                </span>
+                <p className="text-xs sm:text-sm text-[#2B2118] leading-relaxed">
+                  En Jaume, el fill únic d'en Bernat, està empresonat pel Virrei a la guarnició de Vic. El capità reial li va prometre l'indult i la llibertat a canvi dels noms de tots els conjurats de la Guixa.
+                </p>
+              </div>
+
+              {/* Elements desbloquejats */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg">
+                  <span className="text-[10px] font-mono uppercase font-bold text-[#1D3557]">
+                    🔑 Ubicació de la Clau
+                  </span>
+                  <p className="text-xs text-[#5C4533] mt-1 font-sans">
+                    La clau de la Caixa de les Almoines és amagada sota la rajola trencada de l'altar major.
+                  </p>
+                </div>
+
+                <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg">
+                  <span className="text-[10px] font-mono uppercase font-bold text-[#1D3557]">
+                    📜 La Rima del Codi
+                  </span>
+                  <p className="text-xs text-[#5C4533] mt-1 font-sans">
+                    «Del cim baixa l'avís, la font en dóna el secret, la terra obre el pas i la pedra tanca el destí.»
+                  </p>
+                </div>
+              </div>
+
+              {/* Recompensa */}
+              <div className="p-3 bg-[#1D3557] text-[#FAF5E9] rounded-lg border-2 border-[#C99E32] text-center font-serif">
+                <span className="text-xs font-mono uppercase text-[#C99E32] font-bold">
+                  ENIGMA COMPLETAT AMB ÈXIT
+                </span>
+                <div className="text-xl font-bold mt-0.5">+100 Punts d'Equip</div>
+              </div>
+
+              {/* BOTÓ CRUCIAL PER TORNAR ENRERE / MODIFICAR L'ACUSACIÓ */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleBackFromResults}
+                  className="w-full py-3 px-4 bg-[#FAF5E9] hover:bg-[#D8CCAE] border-2 border-[#8C6D53] text-[#1D3557] font-bold font-sans rounded-lg shadow transition flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm"
+                >
+                  <span>←</span>
+                  <span>Tornar enrere / Modificar l'acusació</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
     </div>
   )
 }

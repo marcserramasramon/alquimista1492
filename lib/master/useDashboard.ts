@@ -85,8 +85,8 @@ export function useMasterDashboard() {
     }
   }, [])
 
-  // Action to reset game for the 8 teams
-  const resetGame = useCallback(async () => {
+  // Action to reset game for the 8 teams with custom duration
+  const resetGame = useCallback(async (durationMinutes: number = 90) => {
     setIsResetting(true)
     try {
       const token = localStorage.getItem('master_token')
@@ -100,6 +100,7 @@ export function useMasterDashboard() {
       const res = await fetch('/api/master/reset', {
         method: 'POST',
         headers,
+        body: JSON.stringify({ durationMinutes }),
       })
 
       if (!res.ok) {
@@ -117,6 +118,39 @@ export function useMasterDashboard() {
     }
   }, [fetchTeams])
 
+  // Action to adjust bell / countdown in real time
+  const adjustBell = useCallback(
+    async (params: { addMinutes?: number; triggerNow?: boolean; setDurationMinutes?: number }) => {
+      try {
+        const token = localStorage.getItem('master_token')
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        }
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+
+        const res = await fetch('/api/master/bell', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(params),
+        })
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}))
+          throw new Error(errData.error || 'Error ajustant la campana')
+        }
+
+        await fetchTeams()
+        return true
+      } catch (err) {
+        console.error('Error adjusting bell:', err)
+        throw err
+      }
+    },
+    [fetchTeams]
+  )
+
   useEffect(() => {
     // Initial fetch
     fetchTeams()
@@ -133,6 +167,7 @@ export function useMasterDashboard() {
     ...data,
     refetch: fetchTeams,
     resetGame,
+    adjustBell,
     isResetting,
   }
 }

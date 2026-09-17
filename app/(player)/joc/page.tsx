@@ -5,11 +5,14 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/db'
 import { useTeamState } from '@/lib/realtime/useTeamState'
 import { useGameNavigation } from '@/lib/context/GameNavigationContext'
+import { useEmissariAlert } from '@/lib/hooks/useEmissariAlert'
 import { MapTab } from '@/components/player/MapTab'
 import { NotebookTab } from '@/components/player/NotebookTab'
 import { SalconduitTab } from '@/components/player/SalconduitTab'
 import { AccuseTab } from '@/components/player/AccuseTab'
 import { QRScanner } from '@/components/player/QRScanner'
+import { PlayerTimer } from '@/components/player/PlayerTimer'
+import { EmissariAlertModal } from '@/components/game/EmissariAlertModal'
 
 type Tab = 'map' | 'notebook' | 'historia' | 'salconduit' | 'accuse'
 
@@ -31,6 +34,7 @@ export default function JocHubPage() {
   const [showScanner, setShowScanner] = useState(false)
 
   const teamState = useTeamState(playerSession?.teamId)
+  const { showAlert, dismissAlert, coartadaFrase } = useEmissariAlert(teamState.evidences, playerSession?.teamId)
 
   // Get player session on mount
   useEffect(() => {
@@ -155,14 +159,20 @@ export default function JocHubPage() {
       {/* Header */}
       <header className="bg-white border-b-4 border-amber-700 shadow-lg sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          {/* Title */}
-          <div className="mb-3">
-            <h1 className="text-2xl font-bold text-amber-900">
-              El Traïdor de la Guixa
-            </h1>
-            <p className="text-sm text-amber-700">
-              Equip: <span className="font-semibold">{playerSession.teamName}</span>
-            </p>
+          {/* Title & Countdown Timer */}
+          <div className="flex items-start justify-between mb-3 gap-2">
+            <div>
+              <h1 className="text-2xl font-bold text-amber-900">
+                El Traïdor de la Guixa
+              </h1>
+              <p className="text-sm text-amber-700">
+                Equip: <span className="font-semibold">{playerSession.teamName}</span>
+              </p>
+            </div>
+            <PlayerTimer
+              expiresAt={teamState.session?.expires_at}
+              startedAt={teamState.session?.started_at || teamState.team?.started_at}
+            />
           </div>
 
           {/* Stats Row */}
@@ -229,6 +239,15 @@ export default function JocHubPage() {
 
       {/* QR Scanner Modal */}
       {showScanner && <QRScanner onClose={() => setShowScanner(false)} />}
+
+      {/* Emissari Alert Modal */}
+      {coartadaFrase && (
+        <EmissariAlertModal
+          show={showAlert}
+          frase={coartadaFrase}
+          onDismiss={dismissAlert}
+        />
+      )}
 
       {/* Bottom Navigation Menu */}
       <nav className="border-t-4 border-amber-700 bg-white shadow-lg sticky bottom-0 z-40">

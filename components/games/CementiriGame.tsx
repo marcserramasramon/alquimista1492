@@ -41,21 +41,25 @@ const REGISTRY = [
 export function CementiriGame(props: GameProps) {
   const { play } = useAudio()
   const [state, setState] = useState<GameState>(() => {
-    const saved = props.sharedState as GameState | undefined
-    return (
-      saved || {
-        activeDocTab: 'carta',
-        selectedLapida: null,
-        attempts: 0,
-        solved: props.solved || false,
-        lastFeedback: null,
-      }
-    )
+    const saved =
+      props.sharedState && typeof props.sharedState === 'object'
+        ? (props.sharedState as Partial<GameState>)
+        : {}
+
+    return {
+      activeDocTab: saved.activeDocTab || 'carta',
+      selectedLapida: saved.selectedLapida ?? null,
+      attempts: saved.attempts || 0,
+      solved: props.solved || saved.solved || false,
+      lastFeedback: saved.lastFeedback || null,
+    }
   })
 
   useEffect(() => {
     props.setSharedState(state)
   }, [state, props])
+
+  const activeDocTab = state.activeDocTab || 'carta'
 
   const selectedLapidaObj = LAPIDES.find(l => l.id === state.selectedLapida)
 
@@ -101,10 +105,10 @@ export function CementiriGame(props: GameProps) {
       {/* Capçalera històrica */}
       <header className="border-b-2 border-[#8C6D53] pb-3 mb-4 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
-          Estació 4 · Cementiri de la Guixa
+          Estació 4 · Cementiri
         </span>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
-          La Signatura del Difunt
+          LA SIGNATURA DEL DIFUNT
         </h1>
         <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">
           "La carta secreta trobada al paller va signada amb el nom d'un difunt. Compara la carta amb el registre parroquial i les làpides per descobrir d'on van copiar la signatura."
@@ -118,7 +122,7 @@ export function CementiriGame(props: GameProps) {
             type="button"
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'carta' }))}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
-              state.activeDocTab === 'carta'
+              activeDocTab === 'carta'
                 ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
                 : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
             }`}
@@ -131,7 +135,7 @@ export function CementiriGame(props: GameProps) {
             type="button"
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'registre' }))}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
-              state.activeDocTab === 'registre'
+              activeDocTab === 'registre'
                 ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
                 : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
             }`}
@@ -144,7 +148,7 @@ export function CementiriGame(props: GameProps) {
             type="button"
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'secret' }))}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
-              state.activeDocTab === 'secret'
+              activeDocTab === 'secret'
                 ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
                 : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
             }`}
@@ -157,7 +161,7 @@ export function CementiriGame(props: GameProps) {
         {/* Contingut de les pestanyes de consulta */}
         <div className="p-4 sm:p-5">
           <AnimatePresence mode="wait">
-            {state.activeDocTab === 'carta' && (
+            {activeDocTab === 'carta' && (
               <motion.div
                 key="carta"
                 initial={{ opacity: 0, y: 5 }}
@@ -175,18 +179,16 @@ export function CementiriGame(props: GameProps) {
                   "Si el Pacte cau, els homes de Sentfoses hauran de fugir. Només l'Emissari pot salvar-nos si li donem la clau de la Rectoria. Els conjurats sabran qui ha triat deixar morir el Pacte..."
                 </p>
                 <div className="mt-4 pt-3 border-t border-[#8C6D53]/40 flex items-baseline justify-between">
-                  <span className="text-xs text-[#5C4533]">Signatura manuscrita:</span>
+                  <span className="text-xs text-[#5C4533]">Signat:</span>
                   <span className="text-lg sm:text-xl font-bold font-serif text-[#7A1F26] underline decoration-wavy decoration-[#C99E32]">
                     Corminas
                   </span>
                 </div>
-                <div className="mt-2 text-[11px] text-[#7A1F26] font-sans font-semibold text-right">
-                  ⚠️ Atenció: Fixa't bé en com està escrit el cognom a la signatura!
-                </div>
+                
               </motion.div>
             )}
 
-            {state.activeDocTab === 'registre' && (
+            {activeDocTab === 'registre' && (
               <motion.div
                 key="registre"
                 initial={{ opacity: 0, y: 5 }}
@@ -223,7 +225,7 @@ export function CementiriGame(props: GameProps) {
               </motion.div>
             )}
 
-            {state.activeDocTab === 'secret' && (
+            {activeDocTab === 'secret' && (
               <motion.div
                 key="secret"
                 initial={{ opacity: 0, y: 5 }}

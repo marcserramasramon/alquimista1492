@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      accusations: {
+        Row: {
+          correct: boolean | null
+          created_at: string | null
+          evidence_ids: string[] | null
+          id: string
+          points_awarded: number | null
+          suspect_id: string
+          team_id: string
+        }
+        Insert: {
+          correct?: boolean | null
+          created_at?: string | null
+          evidence_ids?: string[] | null
+          id?: string
+          points_awarded?: number | null
+          suspect_id: string
+          team_id: string
+        }
+        Update: {
+          correct?: boolean | null
+          created_at?: string | null
+          evidence_ids?: string[] | null
+          id?: string
+          points_awarded?: number | null
+          suspect_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accusations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attempts: {
         Row: {
           answer: string | null
@@ -58,6 +96,113 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          operation: string
+          record_id: string
+          table_name: string
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          operation?: string
+          record_id?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          event_type: string
+          id: string
+          session_id: string
+          team_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          event_type: string
+          id?: string
+          session_id: string
+          team_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          event_type?: string
+          id?: string
+          session_id?: string
+          team_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hints_used: {
+        Row: {
+          created_at: string | null
+          hint_id: string
+          id: string
+          team_id: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          hint_id: string
+          id?: string
+          team_id: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          hint_id?: string
+          id?: string
+          team_id?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hints_used_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       master_sessions: {
         Row: {
           id: string
@@ -78,6 +223,82 @@ export type Database = {
           master_id?: string
         }
         Relationships: []
+      }
+      passes: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          pass_token: string
+          station_id: string | null
+          team_id: string
+          used_at: string | null
+          used_on_station_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          pass_token: string
+          station_id?: string | null
+          team_id: string
+          used_at?: string | null
+          used_on_station_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          pass_token?: string
+          station_id?: string | null
+          team_id?: string
+          used_at?: string | null
+          used_on_station_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passes_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_coartada_frases: {
+        Row: {
+          created_at: string | null
+          frase_content: string
+          frase_number: number
+          id: string
+          player_index: number
+          team_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          frase_content: string
+          frase_number: number
+          id?: string
+          player_index: number
+          team_id: string
+        }
+        Update: {
+          created_at?: string | null
+          frase_content?: string
+          frase_number?: number
+          id?: string
+          player_index?: number
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_coartada_frases_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       players: {
         Row: {
@@ -152,6 +373,41 @@ export type Database = {
           },
         ]
       }
+      score_events: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          points: number
+          team_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          points: number
+          team_id: string
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          points?: number
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "score_events_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessions: {
         Row: {
           code_digits: string[] | null
@@ -208,6 +464,138 @@ export type Database = {
           suspects_dismissed?: string[] | null
         }
         Relationships: []
+      }
+      solutions_private: {
+        Row: {
+          created_at: string | null
+          hints: Json | null
+          id: string
+          solution: Json
+          station_id: string
+          variant: Database["public"]["Enums"]["session_variant"]
+        }
+        Insert: {
+          created_at?: string | null
+          hints?: Json | null
+          id?: string
+          solution: Json
+          station_id: string
+          variant: Database["public"]["Enums"]["session_variant"]
+        }
+        Update: {
+          created_at?: string | null
+          hints?: Json | null
+          id?: string
+          solution?: Json
+          station_id?: string
+          variant?: Database["public"]["Enums"]["session_variant"]
+        }
+        Relationships: []
+      }
+      team_coartadas: {
+        Row: {
+          assigned_at: string | null
+          coartada_id: string
+          created_at: string | null
+          id: string
+          team_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          coartada_id: string
+          created_at?: string | null
+          id?: string
+          team_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          coartada_id?: string
+          created_at?: string | null
+          id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_coartadas_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_evidences: {
+        Row: {
+          created_at: string | null
+          evidence_id: string
+          id: string
+          team_id: string
+          unlocked_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          evidence_id: string
+          id?: string
+          team_id: string
+          unlocked_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          evidence_id?: string
+          id?: string
+          team_id?: string
+          unlocked_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_evidences_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_stations: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          id: string
+          solved: boolean | null
+          solved_at: string | null
+          station_id: string
+          team_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          solved?: boolean | null
+          solved_at?: string | null
+          station_id: string
+          team_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          solved?: boolean | null
+          solved_at?: string | null
+          station_id?: string
+          team_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_stations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teams: {
         Row: {
@@ -266,300 +654,13 @@ export type Database = {
           },
         ]
       }
-      team_stations: {
-        Row: {
-          attempts: number | null
-          created_at: string | null
-          id: string
-          solved: boolean | null
-          solved_at: string | null
-          station_id: string
-          team_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          attempts?: number | null
-          created_at?: string | null
-          id?: string
-          solved?: boolean | null
-          solved_at?: string | null
-          station_id: string
-          team_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          attempts?: number | null
-          created_at?: string | null
-          id?: string
-          solved?: boolean | null
-          solved_at?: string | null
-          station_id?: string
-          team_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "team_stations_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      team_evidences: {
-        Row: {
-          created_at: string | null
-          evidence_id: string
-          id: string
-          team_id: string
-          unlocked_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          evidence_id: string
-          id?: string
-          team_id: string
-          unlocked_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          evidence_id?: string
-          id?: string
-          team_id?: string
-          unlocked_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "team_evidences_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      score_events: {
-        Row: {
-          created_at: string | null
-          details: Json | null
-          event_type: string
-          id: string
-          points: number
-          team_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          details?: Json | null
-          event_type: string
-          id?: string
-          points: number
-          team_id: string
-        }
-        Update: {
-          created_at?: string | null
-          details?: Json | null
-          event_type?: string
-          id?: string
-          points?: number
-          team_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "score_events_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      hints_used: {
-        Row: {
-          created_at: string | null
-          hint_id: string
-          id: string
-          team_id: string
-          used_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          hint_id: string
-          id?: string
-          team_id: string
-          used_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          hint_id?: string
-          id?: string
-          team_id?: string
-          used_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "hints_used_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      accusations: {
-        Row: {
-          correct: boolean | null
-          created_at: string | null
-          evidence_ids: string[] | null
-          id: string
-          points_awarded: number | null
-          suspect_id: string
-          team_id: string
-        }
-        Insert: {
-          correct?: boolean | null
-          created_at?: string | null
-          evidence_ids?: string[] | null
-          id?: string
-          points_awarded?: number | null
-          suspect_id: string
-          team_id: string
-        }
-        Update: {
-          correct?: boolean | null
-          created_at?: string | null
-          evidence_ids?: string[] | null
-          id?: string
-          points_awarded?: number | null
-          suspect_id?: string
-          team_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "accusations_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      passes: {
-        Row: {
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          pass_token: string
-          station_id: string
-          team_id: string
-          used_at: string | null
-          used_on_station_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          pass_token: string
-          station_id: string
-          team_id: string
-          used_at?: string | null
-          used_on_station_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          pass_token?: string
-          station_id?: string
-          team_id?: string
-          used_at?: string | null
-          used_on_station_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "passes_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      events: {
-        Row: {
-          created_at: string | null
-          data: Json | null
-          event_type: string
-          id: string
-          session_id: string
-          team_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          data?: Json | null
-          event_type: string
-          id?: string
-          session_id: string
-          team_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          data?: Json | null
-          event_type?: string
-          id?: string
-          session_id?: string
-          team_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "events_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "sessions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "events_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      solutions_private: {
-        Row: {
-          created_at: string | null
-          hints: Json | null
-          id: string
-          solution: Json
-          station_id: string
-          variant: Database["public"]["Enums"]["session_variant"]
-        }
-        Insert: {
-          created_at?: string | null
-          hints?: Json | null
-          id?: string
-          solution: Json
-          station_id: string
-          variant: Database["public"]["Enums"]["session_variant"]
-        }
-        Update: {
-          created_at?: string | null
-          hints?: Json | null
-          id?: string
-          solution?: Json
-          station_id?: string
-          variant?: Database["public"]["Enums"]["session_variant"]
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       current_user_id: { Args: never; Returns: string }
+      get_current_user_team_id: { Args: never; Returns: string }
     }
     Enums: {
       attempt_status: "correct" | "incorrect" | "partial"

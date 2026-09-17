@@ -18,11 +18,13 @@ export default function MasterDashboard() {
     error,
     refetch,
     resetGame,
+    adjustBell,
     isResetting,
   } = useMasterDashboard()
 
   const [isQRModalOpen, setIsQRModalOpen] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [selectedDuration, setSelectedDuration] = useState(90)
 
   // Check authentication on mount
   useEffect(() => {
@@ -47,7 +49,7 @@ export default function MasterDashboard() {
 
   const handleConfirmReset = async () => {
     try {
-      await resetGame()
+      await resetGame(selectedDuration)
       setShowResetConfirm(false)
     } catch (err) {
       alert('Error reiniciant la partida. Revisa la consola.')
@@ -126,7 +128,11 @@ export default function MasterDashboard() {
 
         {/* Timer Section */}
         <div className="mb-8">
-          <GameTimer startTime={sessionStartTime} endTime={sessionEndTime} />
+          <GameTimer
+            startTime={sessionStartTime}
+            endTime={sessionEndTime}
+            onAdjustBell={adjustBell}
+          />
         </div>
 
         {/* Teams Table */}
@@ -152,7 +158,7 @@ export default function MasterDashboard() {
         teams={teams}
       />
 
-      {/* Modal de confirmació de reinici de partida */}
+      {/* Modal de confirmació de reinici de partida amb selector de durada */}
       {showResetConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border-2 border-amber-300 text-stone-800">
@@ -162,11 +168,47 @@ export default function MasterDashboard() {
             <p className="text-sm text-stone-600 mb-4">
               Aquesta acció <strong>restablirà els 8 equips a zero</strong> per començar una nova partida única:
             </p>
-            <ul className="text-xs text-stone-600 list-disc list-inside space-y-1 mb-6 bg-amber-50 p-3 rounded-lg border border-amber-200">
+
+            {/* Selector de Durada */}
+            <div className="mb-4 bg-amber-50/80 p-3 rounded-xl border border-amber-200">
+              <label className="block text-xs font-bold uppercase tracking-wider text-amber-900 mb-2">
+                ⏱️ Durada de la Partida (Compte Enrere):
+              </label>
+              <div className="grid grid-cols-3 gap-1.5 mb-2">
+                {[60, 75, 90, 105, 120].map((mins) => (
+                  <button
+                    key={mins}
+                    type="button"
+                    onClick={() => setSelectedDuration(mins)}
+                    className={`py-1.5 text-xs font-semibold rounded-lg border transition ${
+                      selectedDuration === mins
+                        ? 'bg-amber-800 text-white border-amber-900 shadow-sm'
+                        : 'bg-white text-amber-950 border-amber-200 hover:bg-amber-100'
+                    }`}
+                  >
+                    {mins} min
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-amber-200/60">
+                <span className="text-xs text-amber-800">O minuts personalitzats:</span>
+                <input
+                  type="number"
+                  min="5"
+                  max="300"
+                  value={selectedDuration}
+                  onChange={(e) => setSelectedDuration(Math.max(1, Number(e.target.value)))}
+                  className="w-20 px-2 py-1 bg-white border border-amber-300 rounded text-center text-xs font-bold"
+                />
+                <span className="text-xs text-amber-700">min</span>
+              </div>
+            </div>
+
+            <ul className="text-xs text-stone-600 list-disc list-inside space-y-1 mb-6 bg-stone-50 p-3 rounded-lg border border-stone-200">
               <li>S'esborraran els jugadors anteriors dels 8 equips.</li>
               <li>Tots els salconduits es restauraran a 3.</li>
               <li>Les estacions superades i la puntuació tornaran a 0.</li>
-              <li>Els codis QR dels 8 equips es mantenen (EQUIP1..EQUIP8).</li>
+              <li>La campana sonarà automàticament en acabar els {selectedDuration} minuts.</li>
             </ul>
 
             <div className="flex justify-end gap-3">

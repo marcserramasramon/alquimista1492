@@ -26,7 +26,10 @@ export function BellGame(props: GameProps) {
   const { play } = useAudio()
   const [state, setState] = useState<BellGameState>(() => {
     const saved = props.sharedState as BellGameState | undefined
-    return saved || {
+    if (saved && 'currentScreen' in saved) {
+      return saved
+    }
+    return {
       currentScreen: 'intro',
       code: '',
       isSubmitting: false,

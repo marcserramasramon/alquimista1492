@@ -24,7 +24,10 @@ export function MoralChoiceGame(props: GameProps) {
   const { play } = useAudio()
   const [state, setState] = useState<MoralChoiceGameState>(() => {
     const saved = props.sharedState as MoralChoiceGameState | undefined
-    return saved || {
+    if (saved && 'currentScreen' in saved) {
+      return saved
+    }
+    return {
       currentScreen: 'intro',
       choice: null,
       timeRemaining: 60,

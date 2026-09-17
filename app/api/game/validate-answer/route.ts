@@ -94,9 +94,17 @@ function compareAnswers(
       }
     }
 
-    // Variants especials de Planes Bones (Farga / 23:00 / Casella 3)
+    // Variants especials de Planes Bones (Joan i Pere / Farga / 23:00 / Casella 3)
     if (stationType.includes('plane') || stationType.includes('bones')) {
       if (
+        subClean === 'JOAN I PERE' ||
+        subClean === 'PERE I JOAN' ||
+        subClean === 'JOAN I PERE DEL MOLI' ||
+        subClean === 'JOAN PERE' ||
+        subClean === 'PERE JOAN' ||
+        subClean === 'JOAN, PERE' ||
+        subClean === 'PERE, JOAN' ||
+        (subClean.includes('JOAN') && subClean.includes('PERE')) ||
         subClean === 'FARGA' ||
         subClean === 'LA FARGA' ||
         subClean === '3' ||
@@ -107,7 +115,8 @@ function compareAnswers(
         subClean === '60 MIN' ||
         subCompact === 'FARGA' ||
         subCompact === 'LAFARGA' ||
-        subCompact.includes('FARGA')
+        subCompact.includes('FARGA') ||
+        (subCompact.includes('JOAN') && subCompact.includes('PERE'))
       ) {
         return true
       }

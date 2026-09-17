@@ -62,6 +62,20 @@ export function usePlayerSignIn() {
         })
       }
 
+      // Initialize coartadas for the team (non-blocking)
+      if (data.teamId) {
+        fetch('/api/game/init-coartada', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ teamId: data.teamId }),
+        })
+          .then(r => r.json())
+          .then(data => console.log('[COARTADA INIT]', data))
+          .catch(err => console.error('[COARTADA INIT ERROR]', err))
+      }
+
       // Redirect to game hub on success
       router.push('/joc')
       return true

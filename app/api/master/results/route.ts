@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyMasterToken } from '@/lib/auth/master'
 import { getServiceRoleClient } from '@/lib/db'
+import { DEFAULT_TEAMS } from '@/lib/master/config'
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,7 +41,10 @@ export async function GET(request: NextRequest) {
       playersCountMap.set(p.team_id, (playersCountMap.get(p.team_id) || 0) + 1)
     }
 
-    const enriched = (teamsRes.data || [])
+    const officialCodes = new Set(DEFAULT_TEAMS.map((d) => d.code))
+    const officialTeams = (teamsRes.data || []).filter((t) => officialCodes.has(t.code))
+
+    const enriched = officialTeams
       .map((team) => {
         const result = resultsMap.get(team.id)
         const session = team.session_id ? sessionsMap.get(team.session_id) : null

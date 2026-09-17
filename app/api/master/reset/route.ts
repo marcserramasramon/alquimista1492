@@ -21,7 +21,12 @@ export async function POST(request: NextRequest) {
     }
 
     const serviceClient = getServiceRoleClient()
-    const nowIso = new Date().toISOString()
+    const body = await request.json().catch(() => ({}))
+    const durationMinutes = Number(body.durationMinutes) || 90
+
+    const now = new Date()
+    const nowIso = now.toISOString()
+    const expiresAtIso = new Date(now.getTime() + durationMinutes * 60 * 1000).toISOString()
 
     // 2. Process each of the 8 default teams
     for (const defTeam of DEFAULT_TEAMS) {
@@ -44,6 +49,8 @@ export async function POST(request: NextRequest) {
             suspects_dismissed: [],
             salconduits_remaining: 3,
             salconduits_used: [],
+            started_at: nowIso,
+            expires_at: expiresAtIso,
           })
           .select('id')
           .single()
@@ -88,6 +95,8 @@ export async function POST(request: NextRequest) {
               suspects_dismissed: [],
               salconduits_remaining: 3,
               salconduits_used: [],
+              started_at: nowIso,
+              expires_at: expiresAtIso,
             })
             .eq('id', team.session_id)
         } else {
@@ -102,6 +111,8 @@ export async function POST(request: NextRequest) {
               suspects_dismissed: [],
               salconduits_remaining: 3,
               salconduits_used: [],
+              started_at: nowIso,
+              expires_at: expiresAtIso,
             })
             .select('id')
             .single()
@@ -133,6 +144,8 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Partida reiniciada amb èxit per als 8 equips',
       startedAt: nowIso,
+      expiresAt: expiresAtIso,
+      durationMinutes,
     })
   } catch (error) {
     console.error('Error a /api/master/reset:', error)

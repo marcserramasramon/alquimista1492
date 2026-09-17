@@ -11,32 +11,27 @@ export default function PlanesBonesPage() {
   const handleSubmit = async (answer: unknown): Promise<SubmitResult> => {
     console.log('Resposta enviada a Planes Bones:', answer)
     const obj = typeof answer === 'object' && answer !== null ? (answer as Record<string, unknown>) : {}
-    const raw = String(obj.location || obj.answer || obj.destination || answer || '')
+    const raw = String(obj.answer || obj.location || obj.destination || answer || '')
     const clean = raw
       .toUpperCase()
       .trim()
       .replace(/[.,;:!?'"`·\-]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
-    const compact = clean.replace(/\s+/g, '')
 
-    const isCorrect =
-      clean === 'FARGA' ||
-      clean === 'LA FARGA' ||
-      clean === '3' ||
-      clean === 'CASELLA 3' ||
-      compact === 'FARGA' ||
-      compact === 'LAFARGA' ||
-      compact.includes('FARGA') ||
-      (Array.isArray(obj.visitedCells) && obj.visitedCells.includes(3))
+    const hasJoan = clean.includes('JOAN') || (Array.isArray(obj.suspects) && obj.suspects.includes('joan'))
+    const hasPere = clean.includes('PERE') || (Array.isArray(obj.suspects) && obj.suspects.includes('pere'))
+    const hasMarianna = clean.includes('MARIANNA') || (Array.isArray(obj.suspects) && obj.suspects.includes('marianna'))
+
+    const isCorrect = (hasJoan && hasPere && !hasMarianna) || clean.includes('FARGA')
 
     if (isCorrect) setSolved(true)
 
     return {
       correct: isCorrect,
       message: isCorrect
-        ? 'Molt bé! La patrulla arriba a La Farga a les 23:00 i confirma la coartada del ferrer Isidre.'
-        : 'Lloc incorrecte. Segueix la prioritat de la patrulla (NORD → EST → OEST → SUD) des de la Plaça.',
+        ? 'Molt bé! En Joan i en Pere confirmen que Isidre anava cap a la Farga a les 23:00.'
+        : 'Resposta incorrecta. Revisa les 5 pistes per determinar quins 2 personatges va visitar Isidre.',
       score: isCorrect ? 100 : -10,
     }
   }

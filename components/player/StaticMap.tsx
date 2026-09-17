@@ -79,9 +79,9 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
     document.addEventListener('touchend', handleTouchEnd)
   }
 
-  const selectedStation = selectedStationId ? getStation(selectedStationId) : null
+  const selectedStation = selectedStationId ? getStation(selectedStationId) || null : null
   const selectedTeamStation = selectedStationId
-    ? getTeamStation(stations, selectedStationId)
+    ? getTeamStation(stations, selectedStationId) || null
     : null
 
   // Map bounds (from IGN WMS BBOX: 2.2212,41.9068,2.2380,41.9166)
