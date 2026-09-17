@@ -206,7 +206,7 @@ export function BellsGame(props: GameProps) {
                 Les campanades del campanar són l'últim senyal. Els conjurats de Sant Sebastià esperen aquest soroll per fugir pel camí segur.
               </p>
               <p className="text-sm text-[#5C4533] mt-3 italic">
-                "La carta és a l'Emissari. Ahora, una decisió final: compassió o justícia?"
+                &quot;La carta és a l'Emissari. Ahora, una decisió final: compassió o justícia?&quot;
               </p>
             </motion.div>
             <motion.button
@@ -247,7 +247,7 @@ export function BellsGame(props: GameProps) {
               whileTap={{ scale: 0.98 }}
             >
               <p className="font-bold text-[#C0392B]">B: JUSTÍCIA</p>
-              <p className="text-sm text-[#E74C3C] mt-1">No. Bernat, estás detingut.</p>
+              <p className="text-sm text-[#E74C3C] mt-1">No. Bernat, estàs detingut.</p>
             </motion.button>
 
             {state.moralChoice && (
