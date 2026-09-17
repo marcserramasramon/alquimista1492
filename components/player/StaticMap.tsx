@@ -14,6 +14,39 @@ interface StaticMapProps {
 export function StaticMap({ stations, teamId }: StaticMapProps) {
   const allStations = getAllStations()
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null)
+  const [zoom, setZoom] = useState(1)
+  const [panX, setPanX] = useState(0)
+  const [panY, setPanY] = useState(0)
+  const svgRef = useState<SVGSVGElement | null>(null)[1]
+
+  const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
+    e.preventDefault()
+    const delta = e.deltaY > 0 ? 0.9 : 1.1
+    setZoom((prev) => Math.min(Math.max(prev * delta, 0.8), 4))
+  }
+
+  const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (e.button !== 2) return // right click only
+    let startX = e.clientX
+    let startY = e.clientY
+    let startPanX = panX
+    let startPanY = panY
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX
+      const deltaY = moveEvent.clientY - startY
+      setPanX(startPanX + deltaX)
+      setPanY(startPanY + deltaY)
+    }
+
+    const handleMouseUp = () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
 
   const selectedStation = selectedStationId ? getStation(selectedStationId) : null
   const selectedTeamStation = selectedStationId
@@ -45,17 +78,26 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
       <div className="px-6 py-4 border-b border-amber-200 flex-shrink-0">
         <h2 className="text-xl font-bold text-amber-900">Mapa del Joc</h2>
         <p className="text-sm text-amber-700 mt-1">
-          Clica una estació per veure més opcions
+          Clica una estació per veure més opcions • 🖱️ Scroll per fer zoom • Clic dret per moure
         </p>
       </div>
 
       {/* Map Container */}
-      <div className="flex-1 relative overflow-hidden flex items-center justify-center p-4">
+      <div className="flex-1 relative overflow-hidden flex items-center justify-center p-4 bg-gray-100">
         <svg
+          ref={svgRef as any}
           width={svgWidth}
           height={svgHeight}
-          className="border-2 border-amber-300 rounded-lg shadow-lg"
-          style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))' }}
+          className="border-2 border-amber-300 rounded-lg shadow-lg cursor-grab active:cursor-grabbing"
+          style={{
+            filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
+            transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`,
+            transformOrigin: 'center',
+            transition: zoom === 1 && panX === 0 && panY === 0 ? 'transform 0.3s ease-out' : 'none',
+          }}
+          onWheel={handleWheel}
+          onMouseDown={handleMouseDown}
+          onContextMenu={(e) => e.preventDefault()}
         >
           {/* Background image - IGN satellite map */}
           <image
