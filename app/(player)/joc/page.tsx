@@ -263,7 +263,7 @@ export default function JocHubPage() {
             <TabButton
               id="historia"
               icon="📖"
-              label="Históra"
+              label="História"
               isActive={activeTab === 'historia'}
               onClick={() => setActiveTab('historia')}
             />
