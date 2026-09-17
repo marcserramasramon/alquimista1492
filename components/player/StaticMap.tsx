@@ -151,28 +151,46 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
             // Determine marker color
             let markerColor = '#f59e0b' // amber (not visited)
             let borderColor = '#b45309'
+            let statusLabel = 'No visitada'
 
             if (visited && solved) {
               markerColor = '#22c55e' // green (solved)
               borderColor = '#15803d'
+              statusLabel = 'Completada'
             } else if (visited) {
               markerColor = '#eab308' // yellow (in progress)
               borderColor = '#b8860b'
+              statusLabel = 'En progres'
             }
 
+            const markerRadius = 24
+            const fontSize = 14
+            const labelFontSize = 11
+
             return (
-              <g key={station.id}>
+              <g
+                key={station.id}
+                onClick={() => setSelectedStationId(station.id)}
+                style={{ cursor: 'pointer' }}
+              >
+                {/* Marker shadow */}
+                <circle
+                  cx={x + 2}
+                  cy={y + 2}
+                  r={markerRadius}
+                  fill="rgba(0,0,0,0.1)"
+                  style={{ pointerEvents: 'none' }}
+                />
+
                 {/* Marker circle */}
                 <circle
                   cx={x}
                   cy={y}
-                  r="18"
+                  r={markerRadius}
                   fill={markerColor}
                   stroke={borderColor}
                   strokeWidth="3"
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => setSelectedStationId(station.id)}
-                  className="hover:opacity-80 transition-opacity"
+                  style={{ pointerEvents: 'all' }}
                 />
 
                 {/* Marker icon */}
@@ -181,23 +199,36 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
                   y={y}
                   textAnchor="middle"
                   dominantBaseline="central"
-                  fontSize="16"
-                  style={{ cursor: 'pointer', pointerEvents: 'none' }}
+                  fontSize={fontSize}
+                  style={{ pointerEvents: 'none', fontWeight: 'bold' }}
                 >
                   {station.icon}
                 </text>
 
-                {/* Label */}
+                {/* Background for label */}
+                <rect
+                  x={x - 50}
+                  y={y + markerRadius + 8}
+                  width="100"
+                  height="18"
+                  fill="white"
+                  stroke={borderColor}
+                  strokeWidth="1"
+                  rx="3"
+                  style={{ pointerEvents: 'none' }}
+                />
+
+                {/* Station name label */}
                 <text
                   x={x}
-                  y={y + 30}
+                  y={y + markerRadius + 22}
                   textAnchor="middle"
-                  fontSize="10"
+                  fontSize={labelFontSize}
                   fill="#78350f"
                   fontWeight="bold"
                   style={{ pointerEvents: 'none' }}
                 >
-                  {station.catalan.split(' ')[0]}
+                  {station.catalan}
                 </text>
               </g>
             )
