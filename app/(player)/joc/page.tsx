@@ -228,11 +228,11 @@ export default function JocHubPage() {
       {/* QR Scanner Modal */}
       {showScanner && <QRScanner onClose={() => setShowScanner(false)} />}
 
-      {/* Bottom Navigation Tabs */}
+      {/* Bottom Navigation Menu */}
       <nav className="border-t-4 border-amber-700 bg-white shadow-lg sticky bottom-0 z-40">
-        <div className="max-w-4xl mx-auto px-2 py-3 flex gap-2 items-end justify-center relative h-24">
+        <menu className="max-w-4xl mx-auto px-2 py-3 flex gap-2 items-end justify-center relative h-24 list-none m-0 p-0">
           {/* Left side buttons */}
-          <div className="flex gap-2">
+          <li className="flex gap-2">
             <TabButton
               id="map"
               icon="📍"
@@ -248,29 +248,31 @@ export default function JocHubPage() {
               onClick={() => setActiveTab('notebook')}
               badge={teamState.evidences.length}
             />
-          </div>
+          </li>
 
           {/* Center QR Scanner or Game Button - Larger and circular */}
-          <button
-            onClick={() => {
-              if (isGameActive && gameState.activeToken) {
-                router.push(`/s/${gameState.activeToken}`)
-              } else {
-                setShowScanner(true)
-              }
-            }}
-            className="absolute bottom-3 left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full hover:scale-110 active:scale-95 transition-all flex items-center justify-center text-3xl shadow-xl border-4"
-            style={{
-              backgroundColor: '#D4AF37',
-              borderColor: '#B8860B',
-            }}
-            title={isGameActive ? 'Torna al joc' : 'Escaneja QR'}
-          >
-            {isGameActive ? '🎮' : '🔍'}
-          </button>
+          <li className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
+            <button
+              onClick={() => {
+                if (isGameActive && gameState.activeToken) {
+                  router.push(`/s/${gameState.activeToken}`)
+                } else {
+                  setShowScanner(true)
+                }
+              }}
+              className="w-16 h-16 rounded-full hover:scale-110 active:scale-95 transition-all flex items-center justify-center text-3xl shadow-xl border-4"
+              style={{
+                backgroundColor: '#D4AF37',
+                borderColor: '#B8860B',
+              }}
+              title={isGameActive ? 'Torna al joc' : 'Escaneja QR'}
+            >
+              {isGameActive ? '🎮' : '🔍'}
+            </button>
+          </li>
 
           {/* Right side buttons */}
-          <div className="flex gap-2">
+          <li className="flex gap-2">
             <TabButton
               id="historia"
               icon="📖"
@@ -286,8 +288,8 @@ export default function JocHubPage() {
               onClick={() => setActiveTab('salconduit')}
               badge={teamState.passes.filter((p) => !p.used_at).length}
             />
-          </div>
-        </div>
+          </li>
+        </menu>
       </nav>
     </div>
   )
