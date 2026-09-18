@@ -40,6 +40,7 @@ class AudioManager {
       this.sounds.set(clipKey, new Howl({
         src: [src],
         volume: this.getVolumeForClip(clipKey),
+        preload: true,
         onloaderror: (id, error) => {
           this.failedLoads.add(clipKey);
           console.warn(`Failed to load audio clip "${clipKey}": ${error}`);
