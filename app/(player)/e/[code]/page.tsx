@@ -36,7 +36,7 @@ export default function PlayerEntryPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-amber-900 mb-2">
-            El Traïdor de la Guixa
+            El Traïdor de la Guixass
           </h1>
           <p className="text-lg text-amber-700 mb-1">
             Entrada de Jugador

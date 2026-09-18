@@ -1,8 +1,11 @@
 import { Howl } from 'howler';
 
-export type AudioClip = 'game-correct' | 'game-incorrect' | 'evidence-unlock' | 'bell-ring' | 'bell-ding' | 'buzzer' | 'bell-do' | 'bell-re' | 'bell-mi' | 'bell-fa';
+export type AudioClip = 'game-correct' | 'game-incorrect' | 'evidence-unlock' | 'bell-ring' | 'bell-ding' | 'buzzer' | 'bell-do' | 'bell-re' | 'bell-mi' | 'bell-fa' | 'night-signals';
 export type VoiceActor = 'bernat' | 'mossen' | 'emissari';
 export type VoiceClip = `voice-${VoiceActor}-act1` | `voice-${VoiceActor}-act2` | `voice-${VoiceActor}-act3`;
+
+// Clips que s'han de reproduir en bucle (ambients, no efectes puntuals)
+const LOOPING_CLIPS: ReadonlySet<AudioClip> = new Set(['night-signals']);
 
 /**
  * AudioManager wraps Howler.js to provide a centralized audio control system.
@@ -33,6 +36,7 @@ class AudioManager {
       'bell-re': '/audio/bells/re.mp3',
       'bell-mi': '/audio/bells/mi.mp3',
       'bell-fa': '/audio/bells/fa.mp3',
+      'night-signals': '/audio/effects/night-signals.mp3',
     };
 
     Object.entries(soundEffects).forEach(([key, src]) => {
@@ -41,6 +45,7 @@ class AudioManager {
         src: [src],
         format: ['mp3'],
         volume: this.getVolumeForClip(clipKey),
+        loop: LOOPING_CLIPS.has(clipKey),
         preload: true,
         onload: () => {
           console.debug(`Loaded audio clip "${clipKey}"`);
@@ -84,6 +89,7 @@ class AudioManager {
       'bell-re': 0.7,
       'bell-mi': 0.7,
       'bell-fa': 0.7,
+      'night-signals': 0.5,
     };
     return volumeMap[clip] ?? 0.8;
   }

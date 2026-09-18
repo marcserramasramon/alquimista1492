@@ -140,6 +140,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 3. Start the shared game clock — this is the only place the countdown
+    // is allowed to start. Players see it flip from "pending" to "active"
+    // and get notified the moment this write lands.
+    await serviceClient
+      .from('game_config')
+      .upsert({
+        id: 1,
+        status: 'active',
+        duration_minutes: durationMinutes,
+        started_at: nowIso,
+        expires_at: expiresAtIso,
+        updated_at: nowIso,
+      })
+
     return NextResponse.json({
       success: true,
       message: 'Partida reiniciada amb èxit per als 8 equips',

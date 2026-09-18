@@ -1,6 +1,5 @@
-import { redirect } from 'next/navigation'
+import { EntryGate } from '@/components/player/EntryGate'
 
 export default function Home() {
-  // Redirect to master login by default
-  redirect('/login')
+  return <EntryGate />
 }

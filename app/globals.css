@@ -31,6 +31,7 @@
   --font-sans: var(--font-eb-garamond);
   --font-serif: var(--font-libre-caslon);
   --font-accent: var(--font-cinzel);
+  --font-signature: var(--font-lavishly-yours);
 }
 
 body {

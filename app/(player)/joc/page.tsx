@@ -4,14 +4,19 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/db'
 import { useTeamState } from '@/lib/realtime/useTeamState'
+import { useGameClockAlerts } from '@/lib/realtime/useGameClockAlerts'
 import { useGameNavigation } from '@/lib/context/GameNavigationContext'
 import { useEmissariAlert } from '@/lib/hooks/useEmissariAlert'
 import { MapTab } from '@/components/player/MapTab'
+import { IntroTab } from '@/components/player/IntroTab'
 import { NotebookTab } from '@/components/player/NotebookTab'
 import { SalconduitTab } from '@/components/player/SalconduitTab'
 import { AccuseTab } from '@/components/player/AccuseTab'
 import { QRScanner } from '@/components/player/QRScanner'
+import { BottomNav, type NavTabId } from '@/components/player/BottomNav'
 import { PlayerTimer } from '@/components/player/PlayerTimer'
+import { GameStartedModal } from '@/components/player/GameStartedModal'
+import { BellRungModal } from '@/components/player/BellRungModal'
 import { EmissariAlertModal } from '@/components/game/EmissariAlertModal'
 
 type Tab = 'map' | 'notebook' | 'historia' | 'salconduit' | 'accuse'
@@ -26,7 +31,7 @@ interface PlayerSession {
 export default function JocHubPage() {
   const router = useRouter()
   const { gameState, clearActiveGame, isGameActive } = useGameNavigation()
-  const [activeTab, setActiveTab] = useState<Tab>('map')
+  const [activeTab, setActiveTab] = useState<Tab>('historia')
   const [playerSession, setPlayerSession] = useState<PlayerSession | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -35,6 +40,7 @@ export default function JocHubPage() {
 
   const teamState = useTeamState(playerSession?.teamId)
   const { showAlert, dismissAlert, coartadaFrase } = useEmissariAlert(teamState.evidences, playerSession?.teamId)
+  const gameClock = useGameClockAlerts()
 
   // Get player session on mount
   useEffect(() => {
@@ -46,7 +52,7 @@ export default function JocHubPage() {
         // Get current user
         const { data: { user }, error: userError } = await supabase.auth.getUser()
         if (userError || !user) {
-          router.push('/e/INVALID')
+          router.push('/')
           return
         }
 
@@ -59,14 +65,14 @@ export default function JocHubPage() {
 
         if (playerError || !player) {
           console.error('Player lookup error:', playerError)
-          router.push('/e/INVALID')
+          router.push('/')
           return
         }
 
         const team = Array.isArray(player.teams) ? player.teams[0] : player.teams
         if (!team) {
           console.error('No team found')
-          router.push('/e/INVALID')
+          router.push('/')
           return
         }
 
@@ -79,7 +85,7 @@ export default function JocHubPage() {
       } catch (err) {
         console.error('Session fetch error:', err)
         setError('Error al caregar la sessió')
-        setTimeout(() => router.push('/e/INVALID'), 1500)
+        setTimeout(() => router.push('/'), 1500)
       } finally {
         setLoading(false)
       }
@@ -126,13 +132,13 @@ export default function JocHubPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-amber-50 to-white">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-parchment text-ink">
         <div className="text-center">
           <div className="text-4xl mb-4">⏳</div>
-          <h1 className="text-2xl font-bold text-amber-900 mb-2">
+          <h1 className="text-2xl font-bold text-prussian font-serif mb-2">
             Carregant Joc
           </h1>
-          <p className="text-amber-700">Preparant l'investigació...</p>
+          <p className="text-leather">Preparant l&apos;investigació...</p>
         </div>
       </div>
     )
@@ -140,11 +146,11 @@ export default function JocHubPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-amber-50 to-white p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-parchment text-ink p-4">
         <div className="text-center">
           <div className="text-4xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-red-900 mb-2">Error</h1>
-          <p className="text-red-700">{error}</p>
+          <h1 className="text-2xl font-bold text-cochineal font-serif mb-2">Error</h1>
+          <p className="text-cochineal">{error}</p>
         </div>
       </div>
     )
@@ -155,40 +161,37 @@ export default function JocHubPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white flex flex-col">
+    <div className="min-h-screen bg-parchment text-ink flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b-4 border-amber-700 shadow-lg sticky top-0 z-40">
+      <header className="bg-parchment border-b-2 border-leather shadow-sm sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-4">
           {/* Title & Countdown Timer */}
           <div className="flex items-start justify-between mb-3 gap-2">
             <div>
-              <h1 className="text-2xl font-bold text-amber-900">
+              <span className="text-xs uppercase tracking-widest text-leather font-sans font-bold block">
+                Equip: {playerSession.teamName}
+              </span>
+				<h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
                 El Traïdor de la Guixa
               </h1>
-              <p className="text-sm text-amber-700">
-                Equip: <span className="font-semibold">{playerSession.teamName}</span>
-              </p>
             </div>
-            <PlayerTimer
-              expiresAt={teamState.session?.expires_at}
-              startedAt={teamState.session?.started_at || teamState.team?.started_at}
-            />
+            <PlayerTimer status={gameClock.status} expiresAt={gameClock.expiresAt} />
           </div>
 
           {/* Stats Row */}
           {teamState.team && teamState.session && (
-            <div className="flex gap-4 text-sm font-semibold">
-              <div className="flex items-center gap-1 text-amber-900">
+            <div className="flex gap-4 text-xs sm:text-sm font-sans font-bold text-ink">
+              <div className="flex items-center gap-1">
                 <span>📍</span>
                 <span>
                   {teamState.stations.filter((s) => s.solved).length}/{teamState.stations.length} Estacions
                 </span>
               </div>
-              <div className="flex items-center gap-1 text-amber-900">
+              <div className="flex items-center gap-1">
                 <span>📋</span>
                 <span>{teamState.evidences.length} Proves</span>
               </div>
-              <div className="flex items-center gap-1 text-amber-900">
+              <div className="flex items-center gap-1">
                 <span>🎫</span>
                 <span>
                   {teamState.session?.salconduits_remaining ?? 2} Salvos
@@ -210,19 +213,13 @@ export default function JocHubPage() {
           {activeTab === 'notebook' && (
             <NotebookTab
               evidences={teamState.evidences}
+              stations={teamState.stations}
               coartadaFrase={coartadaFrase}
             />
           )}
 
           {activeTab === 'historia' && (
-            <div className="px-6 py-4 overflow-y-auto">
-              <h2 className="text-xl font-bold text-amber-900 mb-4">
-                📖 La Trama
-              </h2>
-              <p className="text-amber-700 text-sm">
-                Històries i pistes descobertes apareixeran aquí
-              </p>
-            </div>
+            <IntroTab stations={teamState.stations} onOpenMap={() => setActiveTab('map')} />
           )}
 
           {activeTab === 'salconduit' && (
@@ -257,112 +254,32 @@ export default function JocHubPage() {
         />
       )}
 
+      {/* Game Clock Modals */}
+      <GameStartedModal
+        show={gameClock.showStartedPopup}
+        durationMinutes={gameClock.durationMinutes}
+        onDismiss={gameClock.dismissStartedPopup}
+      />
+      <BellRungModal
+        show={gameClock.showBellPopup}
+        onViewResults={() => router.push('/results')}
+      />
+
       {/* Bottom Navigation Menu */}
-      <nav className="border-t-4 border-amber-700 bg-white shadow-lg sticky bottom-0 z-40">
-        <menu className="max-w-4xl mx-auto px-2 py-3 flex gap-2 items-end justify-center relative h-24 list-none m-0 p-0">
-          {/* Left side buttons */}
-          <li className="flex gap-2">
-            <TabButton
-              id="map"
-              icon="📍"
-              label="Mapa"
-              isActive={activeTab === 'map'}
-              onClick={() => setActiveTab('map')}
-            />
-            <TabButton
-              id="notebook"
-              icon="📔"
-              label="Quadern"
-              isActive={activeTab === 'notebook'}
-              onClick={() => setActiveTab('notebook')}
-              badge={teamState.evidences.length}
-            />
-          </li>
-
-          {/* Center QR Scanner or Game Button - Larger and circular */}
-          <li className="absolute bottom-3 left-1/2 transform -translate-x-1/2">
-            <button
-              onClick={() => {
-                if (isGameActive && gameState.activeToken) {
-                  router.push(`/s/${gameState.activeToken}`)
-                } else {
-                  setShowScanner(true)
-                }
-              }}
-              className="w-16 h-16 rounded-full hover:scale-110 active:scale-95 transition-all flex items-center justify-center text-3xl shadow-xl border-4"
-              style={{
-                backgroundColor: '#D4AF37',
-                borderColor: '#B8860B',
-              }}
-              title={isGameActive ? 'Torna al joc' : 'Escaneja QR'}
-            >
-              {isGameActive ? '🎮' : '🔍'}
-            </button>
-          </li>
-
-          {/* Right side buttons */}
-          <li className="flex gap-2">
-            <TabButton
-              id="historia"
-              icon="📖"
-              label="História"
-              isActive={activeTab === 'historia'}
-              onClick={() => setActiveTab('historia')}
-            />
-            <TabButton
-              id="salconduit"
-              icon="🎖️"
-              label="Salvos"
-              isActive={activeTab === 'salconduit'}
-              onClick={() => setActiveTab('salconduit')}
-              badge={teamState.session?.salconduits_remaining ?? 2}
-            />
-          </li>
-        </menu>
-      </nav>
+      <BottomNav
+        activeTab={activeTab === 'accuse' ? 'map' : activeTab}
+        onTabChange={setActiveTab}
+        evidencesCount={teamState.evidences.length}
+        salconduitsRemaining={teamState.session?.salconduits_remaining ?? 2}
+        isGameActive={isGameActive}
+        onCenterAction={() => {
+          if (isGameActive && gameState.activeToken) {
+            router.push(`/s/${gameState.activeToken}`)
+          } else {
+            setShowScanner(true)
+          }
+        }}
+      />
     </div>
-  )
-}
-
-interface TabButtonProps {
-  id: string
-  icon: string
-  label: string
-  isActive: boolean
-  onClick: () => void
-  badge?: number
-  disabled?: boolean
-}
-
-function TabButton({
-  id,
-  icon,
-  label,
-  isActive,
-  onClick,
-  badge,
-  disabled = false,
-}: TabButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      data-testid={`tab-${id}`}
-      className={`w-12 h-12 rounded-lg font-semibold text-xs transition-all flex flex-col items-center justify-center gap-0.5 relative ${
-        isActive
-          ? 'bg-amber-700 text-white shadow-lg'
-          : disabled
-            ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-            : 'bg-amber-100 text-amber-900 hover:bg-amber-200'
-      }`}
-    >
-      <span className="text-lg">{icon}</span>
-      {label && <span className="text-xs leading-none">{label}</span>}
-      {badge !== undefined && badge > 0 && (
-        <div className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-          {badge}
-        </div>
-      )}
-    </button>
   )
 }

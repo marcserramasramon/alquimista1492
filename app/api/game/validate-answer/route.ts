@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { getServiceRoleClient } from '@/lib/db'
+import { getGameClock, isGameOver } from '@/lib/scoring/gameClock'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -18,6 +19,18 @@ interface ValidateAnswerResponse {
   success: boolean
   message: string
   reward: number
+}
+
+/**
+ * Proves que desbloqueja cada fita en resoldre-la correctament.
+ * IDs segons content/public/evidence.ts (veure content/private/evidence-mapping.ts
+ * per a l'origen narratiu de cada prova).
+ */
+const STATION_EVIDENCE: Record<string, string[]> = {
+  serrat: ['literacy'],
+  font_ferro: ['cantirs', 'ink'],
+  planes_bones: ['light'],
+  cementiri: ['seal', 'filigrana'],
 }
 
 /**
@@ -202,6 +215,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { sessionId, stationId, answer } = validation.data
+
+    const clock = await getGameClock()
+    if (isGameOver(clock)) {
+      return NextResponse.json(
+        { success: false, message: 'La partida ha acabat', code: 'GAME_OVER' },
+        { status: 403 }
+      )
+    }
+
     const serviceClient = getServiceRoleClient()
 
     // === Step 1: Get session and find associated team ===
@@ -356,6 +378,18 @@ export async function POST(request: NextRequest) {
         .from('sessions')
         .update({ score: newScore })
         .eq('id', sessionId)
+
+      // Desbloqueja les proves associades a la fita, perquè apareguin al Quadern
+      const evidenceIds = STATION_EVIDENCE[stationId]
+      if (evidenceIds) {
+        await serviceClient.from('team_evidences').upsert(
+          evidenceIds.map((evidenceId) => ({
+            team_id: team.id,
+            evidence_id: evidenceId,
+          })),
+          { onConflict: 'team_id,evidence_id', ignoreDuplicates: true }
+        )
+      }
     }
 
     // === Step 7: Return response ===

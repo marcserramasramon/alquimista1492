@@ -51,10 +51,14 @@ Components del joc:
 ## 5. Fluxos principals
 
 ### 5.1 Entrada d'un jugador
-1. Escaneja el QR d'equip → `/e/[code]`
-2. Si no té sessió anònima, se'n crea una
-3. Pantalla de nom. Si l'equip ja té jugadors, es mostren i pot triar "sóc jo" (reconnexió) o afegir-se com a nou
-4. Sala d'espera fins que el màster inicia
+1. **Benvinguda** (navegador, app no instal·lada): títol + botó "Descarrega l'app" (PWA: `beforeinstallprompt` a Android/Chrome; instruccions manuals "Comparteix → Afegeix a pantalla d'inici" a iOS Safari, que no té prompt natiu). Enllaç petit "Accés màster" cap a `/login`. Botó secundari "Continua sense instal·lar" per no bloquejar la partida si la instal·lació falla
+2. **Pantalla d'inici de l'app instal·lada**: títol, subtítol, instruccions curtes i botó "Escanejar". L'escaneig del QR d'equip es fa **dins l'app** (càmera in-app), no amb la càmera nativa del mòbil, perquè el jugador no surti mai del mode standalone
+3. El QR d'equip segueix codificant `${origin}/e/[code]` (el mateix format que ja genera el màster); l'escàner in-app en detecta el codi de 6 caràcters i navega a `/e/[code]` sense sortir de l'app
+4. Si no té sessió anònima, se'n crea una
+5. Pantalla de nom. Si l'equip ja té jugadors, es mostren i pot triar "sóc jo" (reconnexió) o afegir-se com a nou
+6. Sala d'espera fins que el màster inicia
+
+**Reconnexió:** en obrir l'app (instal·lada o no), si ja hi ha una sessió de jugador desada localment (Supabase la persisteix sola) i l'equip associat encara és actiu, es salta directament a la pantalla principal (`/joc`) sense passar per les pantalles 1–2. Si la partida ja no és activa (acabada o equip reiniciat pel màster), es descarta la sessió desada i cal tornar a escanejar el QR de grup.
 
 ### 5.2 Estació
 1. Equip escaneja QR d'estació → `/s/[token]`
@@ -122,20 +126,24 @@ Navegació inferior fixa (durant la partida): **Hub · Mapa · Quadern · Salcon
 
 | # | Pantalla | Contingut |
 |---|---|---|
-| 1 | Entrada | Crea sessió, carrega equip |
-| 2 | Nom | Input nom / triar jugador existent |
-| 3 | Sala d'espera | Membres en directe, missatge "esperant l'Emissari" |
-| 4 | Intro | Narrativa inicial (una vegada, es pot tornar a veure) |
-| 5 | Hub | 6 estacions amb estat, punts, temps, botó escanejar |
-| 6 | Mapa | Leaflet + OSM, estacions amb color per estat, posició pròpia opcional |
-| 7 | Escàner | Càmera + codi manual |
-| 8 | Estació | Narrativa + joc + resposta, pistes |
-| 9 | Quadern | Evidències desbloquejades, fitxes de sospitosos |
-| 10 | Pista | Modal de confirmació i contingut |
-| 11 | Missatge | Overlay pantalla completa amb missatges del màster |
-| 12 | Salconduit | QR rotatiu a pantalla completa |
-| 13 | Acusació | Tria sospitós + evidències, confirmació |
-| 14 | Final | Campana, resultat equip, rànquing |
+| 1 | Benvinguda | Títol, botó "Descarrega l'app" (PWA), enllaç accés màster |
+| 2 | Inici app instal·lada | Títol, subtítol, instruccions, botó "Escanejar" (QR d'equip, in-app) |
+| 3 | Entrada | Crea sessió, carrega equip (des de `/e/[code]`) |
+| 4 | Nom | Input nom / triar jugador existent |
+| 5 | Sala d'espera | Membres en directe, missatge "esperant l'Emissari" |
+| 6 | Intro | Narrativa inicial (una vegada, es pot tornar a veure) |
+| 7 | Hub | 6 estacions amb estat, punts, temps, botó escanejar |
+| 8 | Mapa | Leaflet + OSM, estacions amb color per estat, posició pròpia opcional |
+| 9 | Escàner | Càmera + codi manual (estacions) |
+| 10 | Estació | Narrativa + joc + resposta, pistes |
+| 11 | Quadern | Evidències desbloquejades, fitxes de sospitosos |
+| 12 | Pista | Modal de confirmació i contingut |
+| 13 | Missatge | Overlay pantalla completa amb missatges del màster |
+| 14 | Salconduit | QR rotatiu a pantalla completa |
+| 15 | Acusació | Tria sospitós + evidències, confirmació |
+| 16 | Final | Campana, resultat equip, rànquing |
+
+Pantalles 1–2: només es veuen si no hi ha una sessió de jugador vàlida desada al dispositiu (vegeu 5.1, Reconnexió).
 
 Estats de les estacions: `hidden` (no descoberta), `discovered`, `solved`.
 

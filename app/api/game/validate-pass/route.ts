@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { getServiceRoleClient } from '@/lib/db'
+import { getGameClock, isGameOver } from '@/lib/scoring/gameClock'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -25,6 +26,20 @@ export async function POST(request: NextRequest) {
     }
 
     const { token } = validation.data
+
+    // === Step 0: The game clock is authoritative — no station is
+    // reachable once it is over, regardless of what the client believes ===
+    const clock = await getGameClock()
+    if (isGameOver(clock)) {
+      return NextResponse.json(
+        {
+          code: 'GAME_OVER',
+          message: 'La partida ha acabat',
+        },
+        { status: 403 }
+      )
+    }
+
     const serviceClient = getServiceRoleClient()
 
     // === Step 1: Find pass by token ===

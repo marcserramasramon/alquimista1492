@@ -26,29 +26,30 @@ interface HexNode {
   type: 'cami' | 'edifici' | 'farga' | 'lloc' | 'prohibit'
 }
 
-const HEX_RADIUS = 38
+const HEX_RADIUS = 42
 
-// Xarxa hexagonal 4x4
+// Xarxa hexagonal 4x4 en rusc d'abelles real: files alternes desplaçades mig pas
+// perquè cada hexàgon encaixi a la cavitat dels dos veïns de la fila adjacent.
 const HEX_GRID: Record<number, HexNode> = {
-  1: { id: 1, cx: 65, cy: 50, name: 'Camí de Vic', subtitle: 'Nord', icon: '🛤️', type: 'cami' },
-  2: { id: 2, cx: 145, cy: 50, name: 'Molí Fariner', subtitle: 'Pere del Molí', icon: '⚙️', type: 'edifici', character: { id: 'pere', name: 'Pere del Molí', role: 'Moliner', time: '22:40' } },
-  3: { id: 3, cx: 225, cy: 50, name: 'La Farga', subtitle: 'Destí 23:00', icon: '⚒️', type: 'farga', character: { id: 'isidre', name: 'Isidre (Forja)', role: 'Ferrer', time: '23:00' } },
-  4: { id: 4, cx: 305, cy: 50, name: 'Bosc Espès', subtitle: 'Vedat', icon: '🌲', type: 'prohibit' },
+  1: { id: 1, cx: 44.4, cy: 50, name: 'Camí de Vic', subtitle: 'Nord', icon: '🛤️', type: 'cami' },
+  2: { id: 2, cx: 118.2, cy: 50, name: 'Molí Fariner', subtitle: 'Pere del Molí', icon: '⚙️', type: 'edifici', character: { id: 'pere', name: 'Pere del Molí', role: 'Moliner', time: '22:40' } },
+  3: { id: 3, cx: 191.9, cy: 50, name: 'La Farga', subtitle: 'Destí 23:00', icon: '⚒️', type: 'farga', character: { id: 'isidre', name: 'Isidre (Forja)', role: 'Ferrer', time: '23:00' } },
+  4: { id: 4, cx: 265.7, cy: 50, name: 'Bosc Espès', subtitle: 'Vedat', icon: '🌲', type: 'prohibit' },
 
-  5: { id: 5, cx: 105, cy: 120, name: 'Hostal del Sol', subtitle: 'Marianna', icon: '🏠', type: 'edifici', character: { id: 'marianna', name: 'Marianna', role: 'Hostalera' } },
-  6: { id: 6, cx: 185, cy: 120, name: 'Pou Comunal', subtitle: 'Carrer Gran', icon: '🪣', type: 'lloc' },
-  7: { id: 7, cx: 265, cy: 120, name: "L'Era", subtitle: 'Espai obert', icon: '🌾', type: 'lloc' },
-  8: { id: 8, cx: 345, cy: 120, name: 'Bosc Fosc', subtitle: 'Vedat', icon: '🌲', type: 'prohibit' },
+  5: { id: 5, cx: 81.3, cy: 114, name: 'Hostal del Sol', subtitle: 'Marianna', icon: '🏠', type: 'edifici', character: { id: 'marianna', name: 'Marianna', role: 'Hostalera' } },
+  6: { id: 6, cx: 155.0, cy: 114, name: 'Pou Comunal', subtitle: 'Carrer Gran', icon: '🪣', type: 'lloc' },
+  7: { id: 7, cx: 228.8, cy: 114, name: "L'Era", subtitle: 'Espai obert', icon: '🌾', type: 'lloc' },
+  8: { id: 8, cx: 302.5, cy: 114, name: 'Bosc Fosc', subtitle: 'Vedat', icon: '🌲', type: 'prohibit' },
 
-  9: { id: 9, cx: 65, cy: 190, name: "L'Escola", subtitle: 'Aula de Bernat', icon: '📚', type: 'edifici' },
-  10: { id: 10, cx: 145, cy: 190, name: 'La Rectoria', subtitle: 'Església', icon: '⛪', type: 'edifici' },
-  11: { id: 11, cx: 225, cy: 190, name: 'Hort de Feixes', subtitle: 'Conreus', icon: '🥬', type: 'lloc' },
-  12: { id: 12, cx: 305, cy: 190, name: 'Font del Torrent', subtitle: 'Aigua', icon: '💧', type: 'lloc' },
+  9: { id: 9, cx: 44.4, cy: 178, name: "L'Escola", subtitle: 'Aula de Bernat', icon: '📚', type: 'edifici' },
+  10: { id: 10, cx: 118.2, cy: 178, name: 'La Rectoria', subtitle: 'Església', icon: '⛪', type: 'edifici' },
+  11: { id: 11, cx: 191.9, cy: 178, name: 'Hort de Feixes', subtitle: 'Conreus', icon: '🥬', type: 'lloc' },
+  12: { id: 12, cx: 265.7, cy: 178, name: 'Font del Torrent', subtitle: 'Aigua', icon: '💧', type: 'lloc' },
 
-  13: { id: 13, cx: 105, cy: 260, name: 'Cementiri Vell', subtitle: 'Prohibit', icon: '🪦', type: 'prohibit' },
-  14: { id: 14, cx: 185, cy: 260, name: 'Plaça Major', subtitle: 'Sortida 22:00', icon: '🏛️', type: 'lloc' },
-  15: { id: 15, cx: 265, cy: 260, name: 'El Paller', subtitle: 'Joan el traginer', icon: '🛖', type: 'lloc', character: { id: 'joan', name: 'Joan el traginer', role: 'Traginer', time: '22:20' } },
-  16: { id: 16, cx: 345, cy: 260, name: 'Riera Brava', subtitle: 'Gual d’aigua', icon: '🌊', type: 'prohibit' },
+  13: { id: 13, cx: 81.3, cy: 242, name: 'Cementiri Vell', subtitle: 'Prohibit', icon: '🪦', type: 'prohibit' },
+  14: { id: 14, cx: 155.0, cy: 242, name: 'Plaça Major', subtitle: 'Sortida 22:00', icon: '🏛️', type: 'lloc' },
+  15: { id: 15, cx: 228.8, cy: 242, name: 'El Paller', subtitle: 'Joan el traginer', icon: '🛖', type: 'lloc', character: { id: 'joan', name: 'Joan el traginer', role: 'Traginer', time: '22:20' } },
+  16: { id: 16, cx: 302.5, cy: 242, name: 'Riera Brava', subtitle: 'Gual d’aigua', icon: '🌊', type: 'prohibit' },
 }
 
 function getHexPolygon(cx: number, cy: number, r: number = HEX_RADIUS): string {
@@ -193,7 +194,7 @@ export function PlaneBonesGame(props: GameProps) {
             }`}
           >
             <span>📜</span>
-            <span>La Coartada</span>
+            <span>La Història</span>
           </button>
 
           <button
@@ -472,10 +473,10 @@ export function PlaneBonesGame(props: GameProps) {
                   <span className="text-xs text-[#5C4533] font-sans">Terme de la Guixa (1705)</span>
                 </div>
 
-                <div className="w-full overflow-x-auto flex justify-center bg-[#152332] p-3 rounded-xl border-2 border-[#8C6D53] shadow-inner relative">
-                  <div className="absolute inset-0 bg-gradient-to-b from-[#0B131D] to-[#1E1710] opacity-90 pointer-events-none rounded-xl" />
+                <div className="w-full overflow-x-auto flex justify-center bg-[#5D4E37] p-3 rounded-xl border-2 border-[#8C6D53] shadow-inner relative">
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#4A3728] to-[#5D4E37] opacity-90 pointer-events-none rounded-xl" />
 
-                  <svg viewBox="0 0 410 320" className="w-full max-w-[420px] h-auto relative z-10 select-none">
+                  <svg viewBox="0 0 350 300" className="w-full max-w-[420px] h-auto relative z-10 select-none">
                     {Object.values(HEX_GRID).map(node => {
                       const isFarga = node.id === 3
                       const isPlaca = node.id === 14
@@ -484,13 +485,13 @@ export function PlaneBonesGame(props: GameProps) {
                       const isHostal = node.id === 5
                       const isForbidden = node.type === 'prohibit'
 
-                      let fillColor = '#2A3B4E'
-                      let strokeColor = '#8C6D53'
+                      let fillColor = '#6B5842'
+                      let strokeColor = '#D8CCAE'
                       let strokeWidth = 1.5
 
                       if (isForbidden) {
-                        fillColor = '#3A2022'
-                        strokeColor = '#7F1D1D'
+                        fillColor = '#5C2A22'
+                        strokeColor = '#A0522D'
                       } else if (isFarga) {
                         fillColor = '#854D0E'
                         strokeColor = '#F59E0B'
@@ -504,8 +505,8 @@ export function PlaneBonesGame(props: GameProps) {
                         strokeColor = '#4ADE80'
                         strokeWidth = 2.5
                       } else if (isHostal) {
-                        fillColor = '#374151'
-                        strokeColor = '#9CA3AF'
+                        fillColor = '#7A6A57'
+                        strokeColor = '#D8CCAE'
                       }
 
                       return (
@@ -518,16 +519,16 @@ export function PlaneBonesGame(props: GameProps) {
                             className="filter drop-shadow-sm"
                           />
 
-                          <text x={node.cx} y={node.cy - 7} textAnchor="middle" fontSize="16">
+                          <text x={node.cx} y={node.cy - 9} textAnchor="middle" fontSize="20">
                             {node.icon}
                           </text>
 
-                          <text x={node.cx} y={node.cy + 11} textAnchor="middle" fontSize="8.5" fontWeight="bold" fill="#F4EBD9" fontFamily="sans-serif">
+                          <text x={node.cx} y={node.cy + 13} textAnchor="middle" fontSize="10" fontWeight="bold" fill="#F4EBD9" fontFamily="sans-serif">
                             {node.name}
                           </text>
 
                           {node.character?.time && (
-                            <text x={node.cx} y={node.cy + 22} textAnchor="middle" fontSize="8" fontWeight="bold" fill="#FBBF24" fontFamily="monospace">
+                            <text x={node.cx} y={node.cy + 26} textAnchor="middle" fontSize="9.5" fontWeight="bold" fill="#FBBF24" fontFamily="monospace">
                               {node.character.time}
                             </text>
                           )}

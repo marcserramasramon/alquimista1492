@@ -2,6 +2,7 @@ import 'server-only'
 
 import { getServiceRoleClient, supabase } from '@/lib/db'
 import { GAME_SOLUTIONS } from '@/content/private/game-solutions'
+import { getGameClock, isGameOver } from '@/lib/scoring/gameClock'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -133,6 +134,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { moralChoice, bellSequence } = validation.data
+
+    const clock = await getGameClock()
+    if (isGameOver(clock)) {
+      return NextResponse.json(
+        { success: false, message: 'La partida ha acabat', code: 'GAME_OVER' },
+        { status: 403 }
+      )
+    }
+
     const serviceClient = getServiceRoleClient()
 
     // Get current player from auth

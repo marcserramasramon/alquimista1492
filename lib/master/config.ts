@@ -33,5 +33,4 @@ export const GAME_STATIONS: StationConfig[] = [
   { id: 'pla-masset-accusation', name: 'Pla de Masset — Acusació', catalan: 'Pla de Masset', order: 6, gameComponent: 'AccusationGame' },
   { id: 'caixa-almoines', name: 'Caixa de les Almoines', catalan: 'Caixa de les Almoines', order: 7, gameComponent: 'BoxGame' },
   { id: 'bells-sometent', name: 'Campanar de Sant Sebastià', catalan: 'Campanar de Sant Sebastià', order: 8, gameComponent: 'BellsGame' },
-  { id: 'decisio-moral', name: 'Decisió Moral', catalan: 'Decisió Moral', order: 9, gameComponent: 'MoralChoiceGame' },
 ]

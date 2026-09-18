@@ -6,9 +6,19 @@ import { SubmitResult } from '@/components/gameTypes'
 import { SalconduitTab } from '@/components/player/SalconduitTab'
 import { EmissariAlertModal } from '@/components/game/EmissariAlertModal'
 import { NotebookTab } from '@/components/player/NotebookTab'
-import type { TeamRow, SessionRow } from '@/lib/realtime/useTeamState'
+import { InstalledHomeScreen } from '@/components/player/InstalledHomeScreen'
+import { MapTab } from '@/components/player/MapTab'
+import { IntroTab } from '@/components/player/IntroTab'
+import { ResultsView } from '@/components/player/ResultsView'
+import { BottomNav, type NavTabId } from '@/components/player/BottomNav'
+import { PlayerTimer } from '@/components/player/PlayerTimer'
+import { getAllStations } from '@/content/public/stations'
+import type { TeamRow, SessionRow, TeamStationRow } from '@/lib/realtime/useTeamState'
 
 const GAME_TABS = [
+  { id: 'home-view', name: '🏠 Home', tag: 'Pantalla d\'inici' },
+  { id: 'hub-view', name: '🏰 Hub del Joc', tag: 'Pantalla principal' },
+  { id: 'mapa-fites-view', name: '🗺️ Mapa de les Fites', tag: 'Estacions' },
   { id: 'serrat-bruixes', name: '1. Serrat Bruixes', tag: 'Foc / Polibi' },
   { id: 'font-ferro', name: '2. Font del Ferro', tag: 'Tinta / Dates' },
   { id: 'planes-bones', name: '3. Planes Bones', tag: 'Ruta 4x4' },
@@ -18,7 +28,40 @@ const GAME_TABS = [
   { id: 'pla-masset-accusation', name: '6. Acusació', tag: 'Traïdor' },
   { id: 'caixa-almoines', name: '7. Caixa Almoines', tag: '3 Fases' },
   { id: 'sometent-campanar', name: '8. Campanar', tag: 'Sometent · Decisió · Final' },
+  { id: 'results-view', name: '🏆 Resultats Finals', tag: 'Pop-up de fi de partida' },
 ]
+
+const PREVIEW_STATIONS: TeamStationRow[] = getAllStations()
+  .slice(0, 2)
+  .map((station, idx) => ({
+    id: `preview-team-station-${idx}`,
+    team_id: 'preview-team-id',
+    station_id: station.id,
+    solved: true,
+    solved_at: new Date().toISOString(),
+    attempts: 1,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  }))
+
+const PREVIEW_RESULTS = {
+  teamResult: {
+    teamName: 'Els Conjurats de la Guixa',
+    teamColor: '#1D3557',
+    teamCode: 'EQUIP1',
+    score: 480,
+    timeElapsed: 4620,
+    moralChoice: 'A',
+    isCorrect: true,
+    solvedStations: 8,
+    salconduitsRemaining: 1,
+  },
+  ranking: [
+    { id: '1', name: 'Els Conjurats de la Guixa', code: 'EQUIP1', color: '#1D3557', score: 480, timeElapsed: 4620, finished: true },
+    { id: '2', name: 'La Ronda de Sentfores', code: 'EQUIP2', color: '#C99E32', score: 430, timeElapsed: 4980, finished: true },
+    { id: '3', name: 'El Sometent', code: 'EQUIP3', color: '#8C6D53', score: 390, timeElapsed: 5100, finished: true },
+  ],
+}
 
 const PREVIEW_COARTADES = [
   {
@@ -68,6 +111,23 @@ const PREVIEW_COARTADES = [
   },
 ]
 
+const PREVIEW_EVIDENCES = [
+  {
+    id: 'mock-ev-1',
+    team_id: 'preview-team-id',
+    evidence_id: 'ev-foc-1',
+    unlocked_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 'mock-ev-2',
+    team_id: 'preview-team-id',
+    evidence_id: 'ev-tinta-2',
+    unlocked_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+  },
+]
+
 export default function PreviewPage() {
   const [selectedGame, setSelectedGame] = useState('serrat-bruixes')
   const [sharedState, setSharedState] = useState<unknown>({})
@@ -79,7 +139,11 @@ export default function PreviewPage() {
   const [selectedFraseIdx, setSelectedFraseIdx] = useState(0)
   const [showAlertModal, setShowAlertModal] = useState(false)
 
-  const isSpecialView = selectedGame === 'salconduit-view' || selectedGame === 'emissari-alert-view'
+  // Estat de pestanya activa dins la simulació del Hub del Joc
+  const [hubTab, setHubTab] = useState<NavTabId>('historia')
+
+  const SPECIAL_VIEWS = ['home-view', 'hub-view', 'mapa-fites-view', 'salconduit-view', 'emissari-alert-view', 'results-view']
+  const isSpecialView = SPECIAL_VIEWS.includes(selectedGame)
   const GameComponent = !isSpecialView ? getGameComponent(selectedGame) : null
 
   const activeFrase = PREVIEW_COARTADES[selectedTemplateIdx].frases[selectedFraseIdx]
@@ -242,6 +306,142 @@ export default function PreviewPage() {
       {/* Main Container */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6">
         <div className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl shadow-lg overflow-hidden min-h-[600px] flex flex-col">
+          {/* PANTALLA ESPECIAL: HOME (PANTALLA D'INICI) */}
+          {selectedGame === 'home-view' && (
+            <div className="flex-1 flex flex-col">
+              <div className="bg-[#DFD4BC] border-b border-[#8C6D53] p-3 text-xs font-sans flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-[#1D3557]">
+                    🏠 Pantalla d&apos;inici de l&apos;app instal·lada
+                  </span>
+                  <span className="text-gray-600 block sm:inline sm:ml-2">
+                    — Primera pantalla en obrir l&apos;app, punt de partida per escanejar el QR d&apos;equip
+                  </span>
+                </div>
+                <span className="bg-[#C99E32] text-[#2B2118] font-bold px-2 py-0.5 rounded text-[11px]">
+                  Vista Jugador
+                </span>
+              </div>
+
+              <div className="flex-1">
+                <InstalledHomeScreen onScan={() => handleSelectGame('mapa-fites-view')} />
+              </div>
+            </div>
+          )}
+
+          {/* PANTALLA ESPECIAL: HUB DEL JOC (PANTALLA PRINCIPAL) */}
+          {selectedGame === 'hub-view' && (
+            <div className="flex-1 flex flex-col">
+              <div className="bg-[#DFD4BC] border-b border-[#8C6D53] p-3 text-xs font-sans flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-[#1D3557]">
+                    🏰 Hub del Joc
+                  </span>
+                  <span className="text-gray-600 block sm:inline sm:ml-2">
+                    — Pantalla principal després d&apos;entrar a l&apos;equip: capçalera amb cronòmetre i estadístiques, pestanyes i navegació inferior
+                  </span>
+                </div>
+                <span className="bg-[#C99E32] text-[#2B2118] font-bold px-2 py-0.5 rounded text-[11px]">
+                  Vista Jugador
+                </span>
+              </div>
+
+              <div className="flex-1 flex flex-col bg-parchment text-ink min-h-[600px]">
+                <header className="bg-parchment border-b-2 border-leather shadow-sm">
+                  <div className="max-w-4xl mx-auto px-4 py-4">
+                    <div className="flex items-start justify-between mb-3 gap-2">
+                      <div>
+                        <span className="text-xs uppercase tracking-widest text-leather font-sans font-bold block">
+                          Equip: {mockTeam.name}
+                        </span>
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink font-serif mt-1">
+                          El Traïdor de la Guixa
+                        </h1>
+                      </div>
+                      <PlayerTimer status="active" expiresAt={mockSession.expires_at} />
+                    </div>
+
+                    <div className="flex gap-4 text-xs sm:text-sm font-sans font-bold text-ink">
+                      <div className="flex items-center gap-1">
+                        <span>📍</span>
+                        <span>{PREVIEW_STATIONS.length}/8 Estacions</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span>📋</span>
+                        <span>{PREVIEW_EVIDENCES.length} Proves</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span>🎫</span>
+                        <span>{mockSession.salconduits_remaining} Salvos</span>
+                      </div>
+                    </div>
+                  </div>
+                </header>
+
+                <main className="flex-1 max-w-4xl w-full mx-auto flex flex-col overflow-hidden">
+                  <div className="flex-1 overflow-hidden flex flex-col">
+                    {hubTab === 'map' && (
+                      <MapTab stations={PREVIEW_STATIONS} teamId={mockTeam.id} />
+                    )}
+
+                    {hubTab === 'notebook' && (
+                      <NotebookTab
+                        evidences={PREVIEW_EVIDENCES}
+                        stations={PREVIEW_STATIONS}
+                        coartadaFrase={activeFrase}
+                      />
+                    )}
+
+                    {hubTab === 'historia' && (
+                      <IntroTab onOpenMap={() => setHubTab('map')} />
+                    )}
+
+                    {hubTab === 'salconduit' && (
+                      <SalconduitTab
+                        team={mockTeam}
+                        session={mockSession}
+                        passes={[]}
+                        onOpenNotebook={() => setHubTab('notebook')}
+                      />
+                    )}
+                  </div>
+                </main>
+
+                <BottomNav
+                  activeTab={hubTab}
+                  onTabChange={setHubTab}
+                  evidencesCount={PREVIEW_EVIDENCES.length}
+                  salconduitsRemaining={mockSession.salconduits_remaining}
+                  isGameActive={false}
+                  onCenterAction={() => handleSelectGame('serrat-bruixes')}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* PANTALLA ESPECIAL: MAPA DE LES FITES */}
+          {selectedGame === 'mapa-fites-view' && (
+            <div className="flex-1 flex flex-col">
+              <div className="bg-[#DFD4BC] border-b border-[#8C6D53] p-3 text-xs font-sans flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-[#1D3557]">
+                    🗺️ Mapa de les Fites
+                  </span>
+                  <span className="text-gray-600 block sm:inline sm:ml-2">
+                    — Estacions del joc situades al mapa, amb l&apos;estat de cada equip
+                  </span>
+                </div>
+                <span className="bg-[#C99E32] text-[#2B2118] font-bold px-2 py-0.5 rounded text-[11px]">
+                  Vista Jugador
+                </span>
+              </div>
+
+              <div className="flex-1 h-[600px]">
+                <MapTab stations={PREVIEW_STATIONS} teamId={mockTeam.id} />
+              </div>
+            </div>
+          )}
+
           {/* PANTALLA ESPECIAL 1: SALVOS (JUGADOR) */}
           {selectedGame === 'salconduit-view' && (
             <div className="flex-1 flex flex-col">
@@ -352,22 +552,8 @@ export default function PreviewPage() {
 
                 <div className="bg-white rounded-xl border-2 border-[#8C6D53] shadow overflow-hidden h-[420px] flex flex-col">
                   <NotebookTab
-                    evidences={[
-                      {
-                        id: 'mock-ev-1',
-                        team_id: mockTeam.id,
-                        evidence_id: 'ev-foc-1',
-                        unlocked_at: new Date().toISOString(),
-                        created_at: new Date().toISOString(),
-                      },
-                      {
-                        id: 'mock-ev-2',
-                        team_id: mockTeam.id,
-                        evidence_id: 'ev-tinta-2',
-                        unlocked_at: new Date().toISOString(),
-                        created_at: new Date().toISOString(),
-                      },
-                    ]}
+                    evidences={PREVIEW_EVIDENCES}
+                    stations={PREVIEW_STATIONS}
                     coartadaFrase={activeFrase}
                   />
                 </div>
@@ -379,6 +565,29 @@ export default function PreviewPage() {
                 frase={activeFrase}
                 onDismiss={() => setShowAlertModal(false)}
               />
+            </div>
+          )}
+
+          {/* PANTALLA ESPECIAL 3: RESULTATS FINALS (FI DE PARTIDA) */}
+          {selectedGame === 'results-view' && (
+            <div className="flex-1 flex flex-col">
+              <div className="bg-[#DFD4BC] border-b border-[#8C6D53] p-3 text-xs font-sans flex items-center justify-between">
+                <div>
+                  <span className="font-bold text-[#1D3557]">
+                    🏆 Pantalla final de fi de partida
+                  </span>
+                  <span className="text-gray-600 block sm:inline sm:ml-2">
+                    — Es mostra quan la campana toca o l&apos;equip envia l&apos;acusació: veredicte, epíleg i classificació
+                  </span>
+                </div>
+                <span className="bg-[#C99E32] text-[#2B2118] font-bold px-2 py-0.5 rounded text-[11px]">
+                  Vista Jugador
+                </span>
+              </div>
+
+              <div className="flex-1">
+                <ResultsView teamResult={PREVIEW_RESULTS.teamResult} ranking={PREVIEW_RESULTS.ranking} />
+              </div>
             </div>
           )}
 

@@ -7,7 +7,7 @@ import { useAudio } from '@/lib/audio/useAudio'
 import { fadeInVariants, scaleVariants } from '@/lib/animations/useAnimations'
 
 interface GameState {
-  activeDocTab: 'carta' | 'registre' | 'secret'
+  activeDocTab: 'historia' | 'carta' | 'registre' | 'secret' | 'lapides'
   selectedLapida: number | null
   attempts: number
   solved: boolean
@@ -24,9 +24,16 @@ const LAPIDES = [
   { id: 7, name: 'Solà', year: 1699, isCorrectTarget: false },
   { id: 8, name: 'Puig', year: 1703, isCorrectTarget: false },
   { id: 9, name: 'Molí', year: 1701, isCorrectTarget: false },
+  { id: 10, name: 'Vila', year: 1696, isCorrectTarget: false },
+  { id: 11, name: 'Bosch', year: 1706, isCorrectTarget: false },
+  { id: 12, name: 'Ferrer', year: 1708, isCorrectTarget: false },
 ]
 
 const REGISTRY = [
+  { year: 1689, name: 'Anna Vilar', note: 'Difunta' },
+  { year: 1691, name: 'Ramon Puigdomènech', note: 'Difunt' },
+  { year: 1693, name: 'Isabel Font', note: 'Difunta' },
+  { year: 1696, name: 'Marià Vila', note: 'Difunt' },
   { year: 1697, name: 'Joan Corminelles', note: 'Difunt' },
   { year: 1698, name: 'Joseph Coromines', note: 'Nom canònic oficial' },
   { year: 1699, name: 'Miquel Solà', note: 'Difunt' },
@@ -36,6 +43,8 @@ const REGISTRY = [
   { year: 1703, name: 'Antoni Puig', note: 'Difunt' },
   { year: 1704, name: 'Jaume Carrió', note: 'Difunt' },
   { year: 1705, name: 'Jaume Corbella', note: 'Difunt' },
+  { year: 1706, name: 'Teresa Bosch', note: 'Difunta' },
+  { year: 1708, name: 'Narcís Ferrer', note: 'Difunt' },
 ]
 
 export function CementiriGame(props: GameProps) {
@@ -47,7 +56,7 @@ export function CementiriGame(props: GameProps) {
         : {}
 
     return {
-      activeDocTab: saved.activeDocTab || 'carta',
+      activeDocTab: saved.activeDocTab || 'historia',
       selectedLapida: saved.selectedLapida ?? null,
       attempts: saved.attempts || 0,
       solved: props.solved || saved.solved || false,
@@ -59,7 +68,7 @@ export function CementiriGame(props: GameProps) {
     props.setSharedState(state)
   }, [state, props])
 
-  const activeDocTab = state.activeDocTab || 'carta'
+  const activeDocTab = state.activeDocTab || 'historia'
 
   const selectedLapidaObj = LAPIDES.find(l => l.id === state.selectedLapida)
 
@@ -120,6 +129,19 @@ export function CementiriGame(props: GameProps) {
         <div className="bg-[#D8CCAE] border-b border-[#8C6D53] flex">
           <button
             type="button"
+            onClick={() => setState(prev => ({ ...prev, activeDocTab: 'historia' }))}
+            className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+              activeDocTab === 'historia'
+                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+            }`}
+          >
+            <span>📜</span>
+            <span>La Història</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'carta' }))}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               activeDocTab === 'carta'
@@ -127,8 +149,8 @@ export function CementiriGame(props: GameProps) {
                 : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
             }`}
           >
-            <span>📜</span>
-            <span>La Carta del Traïdor</span>
+            <span>🧩</span>
+            <span>La Prova</span>
           </button>
 
           <button
@@ -156,11 +178,47 @@ export function CementiriGame(props: GameProps) {
             <span>🔍</span>
             <span>El Secret</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setState(prev => ({ ...prev, activeDocTab: 'lapides' }))}
+            className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+              activeDocTab === 'lapides'
+                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+            }`}
+          >
+            <span>⚰️</span>
+            <span>Làpides</span>
+          </button>
         </div>
 
         {/* Contingut de les pestanyes de consulta */}
         <div className="p-4 sm:p-5">
           <AnimatePresence mode="wait">
+            {activeDocTab === 'historia' && (
+              <motion.div
+                key="historia"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="bg-[#F4EBD9] border border-[#8C6D53] p-3.5 rounded-lg text-xs sm:text-sm text-[#2B2118] space-y-2 leading-relaxed"
+              >
+			<h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif mb-1">
+            La Signatura falsificada
+			</h3>
+                <p className="italic">
+                  "La carta va signada amb el nom d'un mort fa sis anys. Només qui consulta el registre de difunts podia saber aquell nom.
+                </p>
+                <p className="italic">
+                  Els picapedrers fan errors: alguns noms a les làpides no van escrits tal com es van enterrar.
+                </p>
+                <p className="italic">
+                  Compareu la signatura errada de la carta amb les làpides fictícies. Descobrireu qui tenia accés al registre real."
+                </p>
+              </motion.div>
+            )}
+
             {activeDocTab === 'carta' && (
               <motion.div
                 key="carta"
@@ -172,6 +230,10 @@ export function CementiriGame(props: GameProps) {
                 <div className="absolute top-2 right-3 text-[10px] font-sans uppercase font-bold text-[#8C6D53] tracking-widest">
                   Fragment Trobat
                 </div>
+				
+				 <h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif mb-1">
+			  La Carta del Traïdor
+			  </h3>
                 <div className="text-xs text-[#5C4533] font-bold mb-2">
                   15 de maig de 1705 — Paller de la rectoria
                 </div>
@@ -180,7 +242,7 @@ export function CementiriGame(props: GameProps) {
                 </p>
                 <div className="mt-4 pt-3 border-t border-[#8C6D53]/40 flex items-baseline justify-between">
                   <span className="text-xs text-[#5C4533]">Signat:</span>
-                  <span className="text-lg sm:text-xl font-bold font-serif text-[#7A1F26] underline decoration-wavy decoration-[#C99E32]">
+                  <span className="text-xl sm:text-2xl font-bold font-signature text-[#7A1F26]">
                     Corminas
                   </span>
                 </div>
@@ -200,19 +262,12 @@ export function CementiriGame(props: GameProps) {
                   <span className="text-xs font-bold text-[#1D3557] font-sans uppercase tracking-wide">
                     Llibre Parroquial de Defuncions (Sentfores)
                   </span>
-                  <span className="text-[10px] text-[#5C4533] font-sans italic">
-                    Escriu: L'Escolà de la parròquia
-                  </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs max-h-48 overflow-y-auto pr-1">
                   {REGISTRY.map(r => (
                     <div
                       key={r.year}
-                      className={`p-2 rounded border flex justify-between items-center ${
-                        r.year === 1698
-                          ? 'bg-[#F2E5C8] border-[#C99E32] font-bold text-[#1D3557]'
-                          : 'bg-white/70 border-[#D8CCAE]'
-                      }`}
+                      className="p-2 rounded border flex justify-between items-center bg-white/70 border-[#D8CCAE]"
                     >
                       <span className="font-mono text-[11px] text-[#8C6D53]">{r.year}</span>
                       <span className="font-serif">{r.name}</span>
@@ -244,133 +299,167 @@ export function CementiriGame(props: GameProps) {
                 </p>
               </motion.div>
             )}
-          </AnimatePresence>
-        </div>
-      </section>
 
-      {/* PUNT 2: LES 9 LÀPIDES INTEGRADES DIRECTAMENT AMB SELECCIÓ */}
-      <section className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl p-4 sm:p-5 shadow-md">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
-          <h2 className="text-base sm:text-lg font-bold text-[#2B2118] font-serif flex items-center gap-1.5">
-            <span>⚰️</span>
-            <span>Les 9 Làpides del Cementiri</span>
-          </h2>
-          <span className="text-xs text-[#5C4533] font-sans">
-            Tria quina tomba té la signatura copiada
-          </span>
-        </div>
-
-        {/* Graella visual de les 9 làpides */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-3 my-3">
-          {LAPIDES.map(lapida => {
-            const isSelected = state.selectedLapida === lapida.id
-            return (
-              <motion.button
-                key={lapida.id}
-                type="button"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => {
-                  if (state.solved) return
-                  setState(prev => ({
-                    ...prev,
-                    selectedLapida: lapida.id,
-                    lastFeedback: null,
-                  }))
-                }}
-                className={`relative flex flex-col items-center justify-center p-3 rounded-t-2xl rounded-b-md border-2 transition-all shadow-sm ${
-                  isSelected
-                    ? 'bg-[#F4EBD9] border-[#C99E32] ring-2 ring-[#C99E32] shadow-md -translate-y-1'
-                    : 'bg-[#DCD5C6] border-[#8C6D53] hover:bg-[#E8E2D5] hover:border-[#735A42]'
-                } ${state.solved && lapida.isCorrectTarget ? 'bg-emerald-100 border-emerald-600 ring-2 ring-emerald-500' : ''}`}
+            {activeDocTab === 'lapides' && (
+              <motion.div
+                key="lapides"
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
               >
-                {/* Icona funerària en relleu */}
-                <span className="text-xs opacity-50 mb-1">✝</span>
-                <span
-                  className={`font-bold font-serif text-xs sm:text-sm tracking-wide ${
-                    isSelected ? 'text-[#1D3557]' : 'text-[#2B2118]'
-                  }`}
-                >
-                  {lapida.name}
-                </span>
-                <span className="text-[10px] sm:text-xs font-mono text-[#5C4533] mt-0.5">
-                  {lapida.year}
-                </span>
-
-                {/* Marcador de selecció */}
-                {isSelected && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-[#C99E32] text-[#2B2118] text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow">
-                    ✓
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
+                  <h2 className="text-base sm:text-lg font-bold text-[#2B2118] font-serif flex items-center gap-1.5">
+                    <span>⚰️</span>
+                    <span>Les 12 Làpides del Cementiri</span>
+                  </h2>
+                  <span className="text-xs text-[#5C4533] font-sans">
+                    Tria quina tomba té la signatura copiada
                   </span>
-                )}
-              </motion.button>
-            )
-          })}
-        </div>
-
-        {/* Panell de decisió i validació */}
-        <div className="mt-4 pt-4 border-t border-[#8C6D53]/30">
-          {!state.solved ? (
-            <div className="space-y-3">
-              <div className="bg-[#DFD4BC] p-2.5 rounded-lg text-xs flex items-center justify-between">
-                <span className="text-[#5C4533]">Làpida seleccionada:</span>
-                <span className="font-bold text-sm text-[#1D3557] font-serif">
-                  {selectedLapidaObj ? (
-                    `${selectedLapidaObj.name} (${selectedLapidaObj.year})`
-                  ) : (
-                    <span className="text-[#8C6D53] italic">Cap làpida triada</span>
-                  )}
-                </span>
-              </div>
-
-              {state.lastFeedback && state.lastFeedback.type === 'error' && (
-                <div className="p-2.5 bg-red-100 border border-red-300 text-red-900 rounded text-xs font-sans">
-                  ⚠️ {state.lastFeedback.message}
                 </div>
-              )}
-
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={!state.selectedLapida}
-                className="w-full py-3 px-4 bg-[#1D3557] hover:bg-[#152740] disabled:opacity-40 disabled:hover:bg-[#1D3557] text-white font-sans font-bold text-sm tracking-wide rounded-lg shadow transition-colors flex items-center justify-center gap-2"
-              >
-                <span>🔍</span>
-                <span>Validar aquesta Làpida</span>
-              </button>
-            </div>
-          ) : (
-            /* PANORAMA D'ÈXIT */
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-emerald-50 border-2 border-emerald-600 p-4 rounded-xl text-center space-y-3"
-            >
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-600 text-white rounded-full text-xs font-bold font-sans uppercase">
-                <span>✓</span>
-                <span>Enigma del Cementiri Resolt!</span>
-              </div>
-
-              <h3 className="text-lg font-bold text-emerald-950 font-serif">
-                Has descobert la pista de la làpida nº 1: Corminas (1698)
-              </h3>
-
-              <p className="text-xs sm:text-sm text-emerald-900 leading-relaxed max-w-md mx-auto">
-                El picapedrer va gravar <strong>"Corminas"</strong> a la pedra, però al registre parroquial l'Escolà va anotar oficialment <strong>"Joseph Coromines"</strong>.
-                <br />
-                Només qui consultava el registre sabia la diferència... i podia copiar la falta d'ortografia a propòsit per inculpar algú altre!
-              </p>
-
-              <div className="bg-amber-100 border-2 border-[#C99E32] p-3 rounded-lg text-[#2B2118] font-bold text-sm flex items-center justify-center gap-2">
-                <span>🪨</span>
-                <span>XIFRA DE L'ELEMENT DESBLOQUEJADA: <strong>PEDRA = 1</strong></span>
-              </div>
-
-              <div className="text-xs font-sans font-bold text-emerald-700">
-                +100 punts sumats al marcador de l'equip
-              </div>
-            </motion.div>
-          )}
+        
+                {/* Graella visual de les 9 làpides */}
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 my-3">
+                  {LAPIDES.map(lapida => {
+                    const isSelected = state.selectedLapida === lapida.id
+                    return (
+                      <motion.button
+                        key={lapida.id}
+                        type="button"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => {
+                          if (state.solved) return
+                          setState(prev => ({
+                            ...prev,
+                            selectedLapida: lapida.id,
+                            lastFeedback: null,
+                          }))
+                        }}
+                        className={`relative flex flex-col items-center justify-center p-3 rounded-t-2xl rounded-b-md border-2 transition-all shadow-sm ${
+                          isSelected
+                            ? 'bg-[#F4EBD9] border-[#C99E32] ring-2 ring-[#C99E32] shadow-md -translate-y-1'
+                            : 'bg-[#DCD5C6] border-[#8C6D53] hover:bg-[#E8E2D5] hover:border-[#735A42]'
+                        } ${state.solved && lapida.isCorrectTarget ? 'bg-emerald-100 border-emerald-600 ring-2 ring-emerald-500' : ''}`}
+                      >
+                        {/* Icona funerària en relleu */}
+                        <span className="text-xs opacity-50 mb-1">✝</span>
+                        <span
+                          className={`font-bold font-serif text-xs sm:text-sm tracking-wide ${
+                            isSelected ? 'text-[#1D3557]' : 'text-[#2B2118]'
+                          }`}
+                        >
+                          {lapida.name}
+                        </span>
+                        <span className="text-[10px] sm:text-xs font-mono text-[#5C4533] mt-0.5">
+                          {lapida.year}
+                        </span>
+        
+                        {/* Marcador de selecció */}
+                        {isSelected && (
+                          <span className="absolute -top-1.5 -right-1.5 bg-[#C99E32] text-[#2B2118] text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow">
+                            ✓
+                          </span>
+                        )}
+                      </motion.button>
+                    )
+                  })}
+                </div>
+        
+                {/* Panell de decisió i validació */}
+                <div className="mt-4 pt-4 border-t border-[#8C6D53]/30">
+                  {!state.solved ? (
+                    <div className="space-y-3">
+                      <div className="bg-[#DFD4BC] p-2.5 rounded-lg text-xs flex items-center justify-between">
+                        <span className="text-[#5C4533]">Làpida seleccionada:</span>
+                        <span className="font-bold text-sm text-[#1D3557] font-serif">
+                          {selectedLapidaObj ? (
+                            `${selectedLapidaObj.name} (${selectedLapidaObj.year})`
+                          ) : (
+                            <span className="text-[#8C6D53] italic">Cap làpida triada</span>
+                          )}
+                        </span>
+                      </div>
+        
+                      {state.lastFeedback && state.lastFeedback.type === 'error' && (
+                        <div className="p-2.5 bg-red-100 border border-red-300 text-red-900 rounded text-xs font-sans">
+                          ⚠️ {state.lastFeedback.message}
+                        </div>
+                      )}
+        
+                      <button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={!state.selectedLapida}
+                        className="w-full py-3 px-4 bg-[#1D3557] hover:bg-[#152740] disabled:opacity-40 disabled:hover:bg-[#1D3557] text-white font-sans font-bold text-sm tracking-wide rounded-lg shadow transition-colors flex items-center justify-center gap-2"
+                      >
+                        <span>🔍</span>
+                        <span>Validar aquesta Làpida</span>
+                      </button>
+                    </div>
+                  ) : (
+                    /* PANTALLA D'ÈXIT I DESCOBERTA D'EVIDÈNCIES */
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="space-y-4"
+                    >
+                      <div className="p-4 bg-emerald-50 border-2 border-emerald-600 rounded-lg text-emerald-950 shadow-inner">
+                        <div className="flex items-center gap-2 text-base font-bold font-serif text-emerald-900 mb-1">
+                          <span>✓</span>
+                          <span>Enigma del Cementiri Resolt: Làpida nº 1, Corminas (1698)!</span>
+                        </div>
+                        <p className="text-xs font-sans text-emerald-800 leading-relaxed">
+                          El picapedrer va gravar <strong>"Corminas"</strong> a la pedra, però al registre parroquial l'Escolà va anotar oficialment <strong>"Joseph Coromines"</strong>. Només qui consultava el registre sabia la diferència... i podia copiar la falta d'ortografia a propòsit per inculpar algú altre.
+                        </p>
+                      </div>
+        
+                      {/* DESCOBERTA D'EVIDÈNCIA I SOSPITÓS IMPLICAT */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Evidència */}
+                        <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
+                          <span className="text-[10px] font-mono uppercase font-bold text-[#8C6D53]">
+                            ⚰️ Nova Evidència Desbloquejada
+                          </span>
+                          <h4 className="font-serif font-bold text-sm text-[#1D3557] mt-0.5">
+                            Fragment de la Carta i Làpides
+                          </h4>
+                          <p className="text-xs text-[#5C4533] mt-1 font-sans">
+                            La signatura de la carta coincideix, lletra per lletra, amb l'errada gravada a la làpida nº 1.
+                          </p>
+                        </div>
+        
+                        {/* Sospitós Implicat */}
+                        <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
+                          <span className="text-[10px] font-mono uppercase font-bold text-[#7A1F26]">
+                            ⚠️ Sospitós Implicat
+                          </span>
+                          <h4 className="font-serif font-bold text-sm text-[#2B2118] mt-0.5">
+                            Anton, l'Escolà
+                          </h4>
+                          <p className="text-xs text-[#5C4533] mt-1 font-sans">
+                            Ell va escriure el registre de defuncions: tenia accés al nom correcte i podia copiar l'errada a propòsit.
+                          </p>
+                        </div>
+                      </div>
+        
+                      {/* XIFRA DE L'ELEMENT PEDRA */}
+                      <div className="p-3.5 bg-[#1D3557] text-[#FAF5E9] rounded-lg border-2 border-[#C99E32] shadow text-center">
+                        <div className="text-[11px] font-mono uppercase tracking-widest text-[#C99E32]">
+                          XIFRA DE L'ELEMENT DESCOBERTA
+                        </div>
+                        <div className="text-xl sm:text-2xl font-bold font-serif mt-0.5">
+                          🪨 PEDRA = 1
+                        </div>
+                        <div className="text-[11px] text-[#FAF5E9]/80 font-sans mt-0.5">
+                          Anota aquesta xifra al teu quadern d'equip!
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
     </motion.div>

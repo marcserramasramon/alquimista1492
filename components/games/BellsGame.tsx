@@ -281,7 +281,10 @@ export function BellsGame(props: GameProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <p className="text-sm text-[#2B2118] leading-relaxed">
+                <h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif mb-1">
+                    El Sometent
+                  </h3>             
+			 <p className="text-sm text-[#2B2118] leading-relaxed">
                 Les campanades del campanar són l'últim senyal. Els conjurats de Sant Sebastià esperen aquest soroll per fugir pel camí segur.
               </p>
               <p className="text-sm text-[#5C4533] mt-3 italic">

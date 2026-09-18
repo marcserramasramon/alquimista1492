@@ -2,6 +2,7 @@ import 'server-only'
 
 import { getServiceRoleClient, supabase } from '@/lib/db'
 import { GAME_SOLUTIONS } from '@/content/private/game-solutions'
+import { getGameClock, isGameOver } from '@/lib/scoring/gameClock'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
@@ -23,6 +24,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { part, answer } = validation.data
+
+    const clock = await getGameClock()
+    if (isGameOver(clock)) {
+      return NextResponse.json(
+        { success: false, message: 'La partida ha acabat', code: 'GAME_OVER' },
+        { status: 403 }
+      )
+    }
+
     const serviceClient = getServiceRoleClient()
 
     // Get current player from auth
@@ -163,13 +173,20 @@ export async function POST(request: NextRequest) {
     if (isCorrect) {
       scoreReward = 100
 
+      // Part 1: Insert nota_capita evidence when part 1 is solved correctly
+      if (part === '1') {
+        await serviceClient.from('team_evidences').upsert(
+          { team_id: player.team_id, evidence_id: 'nota_capita' },
+          { onConflict: 'team_id,evidence_id', ignoreDuplicates: true }
+        )
+      }
+
       // Part 2: Insert carta_falsa evidence when part 2 is solved correctly
       if (part === '2') {
-        await serviceClient.from('team_evidence').insert({
-          team_id: player.team_id,
-          evidence_id: 'carta_falsa',
-          discovered_at: new Date().toISOString(),
-        })
+        await serviceClient.from('team_evidences').upsert(
+          { team_id: player.team_id, evidence_id: 'carta_falsa' },
+          { onConflict: 'team_id,evidence_id', ignoreDuplicates: true }
+        )
       }
 
       // Mark as solved on final part (part 3)

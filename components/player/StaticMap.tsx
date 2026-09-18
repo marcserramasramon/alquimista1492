@@ -11,8 +11,17 @@ interface StaticMapProps {
   teamId?: string
 }
 
+// Fites principals de l'Acte 1 (elements): sempre en verd clar
+const FITES_PRINCIPALS = new Set(['serrat', 'font_ferro', 'planes_bones', 'cementiri'])
+
+// Estacions que no es mostren al mapa: 'escola' no té joc ni fita associada;
+// 'caixa_almoines' comparteix ubicació amb 'rectoria' (només s'hi mostra ⛪);
+// 'campanar' i 'bells-sometent' són el mateix punt duplicat (es descarten tots
+// dos fins que hi hagi un marcador propi per a la Plaça de l'Església).
+const HIDDEN_STATION_IDS = new Set(['escola', 'caixa_almoines', 'campanar', 'bells-sometent'])
+
 export function StaticMap({ stations, teamId }: StaticMapProps) {
-  const allStations = getAllStations()
+  const allStations = getAllStations().filter((station) => !HIDDEN_STATION_IDS.has(station.id))
   const [selectedStationId, setSelectedStationId] = useState<string | null>(null)
   const [zoom, setZoom] = useState(1)
   const [panX, setPanX] = useState(0)
@@ -180,19 +189,18 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
             const visited = !!teamStation
             const solved = teamStation?.solved ?? false
 
-            // Determine marker color (not used in this version, but kept for status)
-            let markerColor = '#f59e0b' // amber (not visited)
-            let borderColor = '#b45309'
+            // Color del marcador (sense contorn): principals vs secundaris,
+            // i pendents vs visitats (desaturat un cop ja no cal atenció).
+            const isPrincipal = FITES_PRINCIPALS.has(station.id)
+            const markerColor = solved
+              ? isPrincipal
+                ? '#9CA3AF' // principal visitat: gris mitjà desaturat
+                : '#E5E7EB' // secundari visitat: gris molt clar
+              : isPrincipal
+                ? '#1E3A5F' // principal pendent: blau marí intens
+                : '#93C5FD' // secundari pendent: blau cel suau
 
-            if (visited && solved) {
-              markerColor = '#22c55e' // green (solved)
-              borderColor = '#15803d'
-            } else if (visited) {
-              markerColor = '#eab308' // yellow (in progress)
-              borderColor = '#b8860b'
-            }
-
-            const markerRadius = 20
+            const markerRadius = 14
             const fontSize = 24
 
             return (
@@ -201,24 +209,23 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
                 onClick={() => setSelectedStationId(station.id)}
                 style={{ cursor: 'pointer' }}
               >
-                {/* Marker circle background */}
+                {/* Marker circle background (sense vora) */}
                 <circle
                   cx={x}
                   cy={y}
                   r={markerRadius}
                   fill={markerColor}
-                  stroke={borderColor}
-                  strokeWidth="2"
                   style={{ pointerEvents: 'all' }}
                 />
 
-                {/* Marker icon - scales with zoom */}
+                {/* Marker icon - scales with zoom; check un cop completada */}
                 <text
                   x={x}
                   y={y}
                   textAnchor="middle"
                   dominantBaseline="central"
                   fontSize={fontSize}
+                  fill="white"
                   style={{
                     pointerEvents: 'none',
                     fontWeight: 'bold',
@@ -226,7 +233,7 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
                     transformOrigin: `${x}px ${y}px`,
                   }}
                 >
-                  {station.icon}
+                  {solved ? '✓' : station.icon}
                 </text>
               </g>
             )
@@ -244,7 +251,7 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
       </div>
 
       {/* Legend */}
-      <div className="px-6 py-4 border-t border-amber-200 bg-amber-50 flex-shrink-0">
+      <div className="px-6 pt-4 pb-24 border-t border-amber-200 bg-amber-50 flex-shrink-0">
         <div className="mb-3">
           <p className="text-xs font-bold text-amber-900 mb-2">📍 Estacions del joc:</p>
           <div className="grid grid-cols-2 gap-3 text-sm">
@@ -258,19 +265,23 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
         </div>
 
         <div className="border-t border-amber-200 pt-3 mt-3">
-          <p className="text-xs font-bold text-amber-900 mb-2">Estat de les estacions:</p>
-          <div className="grid grid-cols-3 gap-4 text-xs text-amber-700">
+          <p className="text-xs font-bold text-amber-900 mb-2">Llegenda:</p>
+          <div className="grid grid-cols-2 gap-3 text-xs text-amber-700">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-amber-500 border-2 border-amber-700"></div>
-              <span>No visitada</span>
+              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#1E3A5F' }}></div>
+              <span>Fita principal pendent</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-yellow-400 border-2 border-yellow-700"></div>
-              <span>En progres</span>
+              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#93C5FD' }}></div>
+              <span>Altres punts pendents</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-green-500 border-2 border-green-700"></div>
-              <span>Completada</span>
+              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#9CA3AF' }}></div>
+              <span>Fita principal visitada</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#E5E7EB' }}></div>
+              <span>Altres punts visitats</span>
             </div>
           </div>
         </div>

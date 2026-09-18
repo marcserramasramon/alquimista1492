@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -170,6 +170,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      game_config: {
+        Row: {
+          duration_minutes: number | null
+          expires_at: string | null
+          id: number
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          duration_minutes?: number | null
+          expires_at?: string | null
+          id?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          duration_minutes?: number | null
+          expires_at?: string | null
+          id?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       hints_used: {
         Row: {
@@ -491,6 +518,57 @@ export type Database = {
           variant?: Database["public"]["Enums"]["session_variant"]
         }
         Relationships: []
+      }
+      team_bells_sequences: {
+        Row: {
+          attempts: number
+          completed_at: string | null
+          created_at: string
+          id: number
+          moral_choice: string | null
+          player_sequence: number[]
+          session_id: string
+          station_id: string
+          team_id: string
+        }
+        Insert: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: number
+          moral_choice?: string | null
+          player_sequence?: number[]
+          session_id: string
+          station_id?: string
+          team_id: string
+        }
+        Update: {
+          attempts?: number
+          completed_at?: string | null
+          created_at?: string
+          id?: number
+          moral_choice?: string | null
+          player_sequence?: number[]
+          session_id?: string
+          station_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_bells_sequences_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_bells_sequences_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_coartadas: {
         Row: {

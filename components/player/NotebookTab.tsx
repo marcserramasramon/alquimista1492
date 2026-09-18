@@ -1,34 +1,59 @@
 'use client'
 
 import { useState } from 'react'
-import { getAllSuspects, getSuspect } from '@/content/public/suspects'
-import { getAllEvidence, getEvidence } from '@/content/public/evidence'
-import type { TeamEvidenceRow } from '@/lib/realtime/useTeamState'
+import { getAllSuspects } from '@/content/public/suspects'
+import { getAllEvidence } from '@/content/public/evidence'
+import { getAllStations } from '@/content/public/stations'
+import type { TeamEvidenceRow, TeamStationRow } from '@/lib/realtime/useTeamState'
+import { getTeamStation } from '@/lib/realtime/useTeamState'
 
 interface NotebookTabProps {
   evidences: TeamEvidenceRow[]
+  stations?: TeamStationRow[]
   coartadaFrase?: string | null
 }
 
-type NotebookView = 'suspects' | 'evidence' | 'clues'
+type NotebookView = 'fites' | 'suspects' | 'evidence'
 
-export function NotebookTab({ evidences, coartadaFrase }: NotebookTabProps) {
-  const [view, setView] = useState<NotebookView>('suspects')
+// Fites principals de l'Acte 1: les 4 estacions amb joc que fan avançar la trama.
+const FITES_IDS = ['serrat', 'font_ferro', 'planes_bones', 'cementiri']
+
+const SUSPICION_STYLES: Record<string, string> = {
+  alta: 'bg-cochineal/10 text-cochineal border-cochineal/40',
+  mitjana: 'bg-gold/10 text-[#7a5c10] border-gold/50',
+  baixa: 'bg-leather/10 text-leather border-leather/40',
+}
+
+export function NotebookTab({ evidences, stations = [], coartadaFrase }: NotebookTabProps) {
+  const [view, setView] = useState<NotebookView>('fites')
   const allSuspects = getAllSuspects()
   const allEvidence = getAllEvidence()
+  const fites = getAllStations().filter((s) => FITES_IDS.includes(s.id))
 
   const unlockedEvidenceIds = evidences.map((e) => e.evidence_id)
+  const solvedFitesCount = fites.filter((f) => getTeamStation(stations, f.id)?.solved).length
+
+  const tabs: { id: NotebookView; label: string; icon: string; badge?: number }[] = [
+    { id: 'fites', label: 'Fites', icon: '🚩', badge: solvedFitesCount },
+    { id: 'suspects', label: 'Sospitosos', icon: '🕵️' },
+    { id: 'evidence', label: 'Proves', icon: '📜', badge: unlockedEvidenceIds.length },
+  ]
 
   return (
-    <div className="w-full flex flex-col h-full">
-      {/* Title */}
-      <div className="px-6 py-4 border-b border-amber-200">
-        <h2 className="text-xl font-bold text-amber-900">Quadern d'Investigació</h2>
+    <div className="w-full flex flex-col h-full bg-parchment">
+      {/* Header — mateixa estètica que la capçalera del joc */}
+      <div className="border-b-2 border-leather px-4 py-4 sm:px-6 flex-shrink-0">
+        <span className="block text-xs font-sans font-bold uppercase tracking-widest text-leather">
+          Investigació
+        </span>
+        <h2 className="mt-1 font-serif text-xl sm:text-2xl font-bold text-ink">
+          Quadern de Camp
+        </h2>
       </div>
 
       {/* Avís de l'Emissari guardat si ja ha saltat l'alerta */}
       {coartadaFrase && (
-        <div className="mx-4 mt-3 p-4 bg-[#3d0a0a] border-2 border-red-700 rounded-xl text-amber-100 shadow-lg">
+        <div className="mx-4 mt-3 p-4 bg-[#3d0a0a] border-2 border-cochineal rounded-xl text-parchment shadow-lg flex-shrink-0">
           <div className="flex items-center justify-between mb-1.5">
             <div className="flex items-center gap-2">
               <span className="text-xl">⚠️</span>
@@ -36,15 +61,15 @@ export function NotebookTab({ evidences, coartadaFrase }: NotebookTabProps) {
                 AVÍS DE L'EMISSARI
               </h3>
             </div>
-            <span className="bg-red-900 text-red-200 border border-red-600 px-2 py-0.5 rounded text-[10px] font-sans font-bold uppercase">
+            <span className="bg-cochineal/80 text-parchment border border-cochineal px-2 py-0.5 rounded text-[10px] font-sans font-bold uppercase">
               La teva Coartada
             </span>
           </div>
-          <p className="text-xs text-yellow-300 italic mb-2 font-sans">
+          <p className="text-xs text-gold italic mb-2 font-sans">
             "L'Emissari és pel poble interrogant a la gent. Se sap que pregunta per:"
           </p>
-          <div className="bg-[#2a0606] border border-red-800 rounded-lg p-3 text-center shadow-inner">
-            <p className="font-serif italic text-amber-200 text-sm sm:text-base leading-relaxed">
+          <div className="bg-[#2a0606] border border-cochineal/70 rounded-lg p-3 text-center shadow-inner">
+            <p className="font-serif italic text-parchment text-sm sm:text-base leading-relaxed">
               «{coartadaFrase}»
             </p>
           </div>
@@ -54,54 +79,110 @@ export function NotebookTab({ evidences, coartadaFrase }: NotebookTabProps) {
         </div>
       )}
 
-      {/* Tab Buttons */}
-      <div className="px-4 py-3 border-b border-amber-200 flex gap-2 flex-shrink-0">
-        <button
-          onClick={() => setView('suspects')}
-          className={`flex-1 py-2 px-3 rounded-lg font-semibold text-sm transition-all ${
-            view === 'suspects'
-              ? 'bg-amber-700 text-white'
-              : 'bg-amber-100 text-amber-900 hover:bg-amber-200'
-          }`}
-        >
-          Sospitosos
-        </button>
-        <button
-          onClick={() => setView('evidence')}
-          className={`flex-1 py-2 px-3 rounded-lg font-semibold text-sm transition-all ${
-            view === 'evidence'
-              ? 'bg-amber-700 text-white'
-              : 'bg-amber-100 text-amber-900 hover:bg-amber-200'
-          }`}
-        >
-          Proves ({unlockedEvidenceIds.length})
-        </button>
-      </div>
+      {/* Contingut: mateix panell de pestanyes de documentació que fan servir els jocs d'estació
+          (p. ex. SerratBruixesGame "L'Alerta dels Vigies / Sospitosos / Taula / Senyals") */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="max-w-xl mx-auto bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden">
+          {/* Pestanyes */}
+          <div className="bg-[#D8CCAE] border-b border-[#8C6D53] flex">
+            {tabs.map((tab) => {
+              const isActive = view === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setView(tab.id)}
+                  data-testid={`quadern-tab-${tab.label}`}
+                  className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+                    isActive
+                      ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+                      : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+                  }`}
+                >
+                  <span>{tab.icon}</span>
+                  <span>
+                    {tab.label}
+                    {tab.badge !== undefined ? ` (${tab.badge})` : ''}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {/* Contingut de la pestanya activa */}
+          <div className="p-4 sm:p-5 space-y-3">
+        {view === 'fites' && (
+          <>
+            <p className="text-xs font-sans text-[#5C4533] mb-1">
+              {solvedFitesCount} de {fites.length} fites superades
+            </p>
+            {fites.map((station) => {
+              const teamStation = getTeamStation(stations, station.id)
+              const solved = teamStation?.solved ?? false
+              return (
+                <div
+                  key={station.id}
+                  className={`p-3.5 rounded-lg border bg-[#FAF5E9] shadow-sm ${
+                    solved ? 'border-[#1D3557]/40' : 'border-[#8C6D53]/30'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="text-3xl leading-none">{station.icon}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-serif font-bold text-ink">
+                          {station.catalan}
+                        </h3>
+                        <span
+                          className={`text-[10px] font-sans font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border flex-shrink-0 ${
+                            solved
+                              ? 'bg-prussian/10 text-prussian border-prussian/40'
+                              : 'bg-leather/10 text-leather border-leather/40'
+                          }`}
+                        >
+                          {solved ? '✓ Resolta' : 'Pendent'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-ink/80 font-sans mt-1">
+                        {station.narrativeHook}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </>
+        )}
+
         {view === 'suspects' && (
           <>
             {allSuspects.map((suspect) => (
               <div
                 key={suspect.id}
-                className="p-4 rounded-lg border-2 border-amber-200 bg-white"
+                className="p-3.5 rounded-lg border border-[#8C6D53]/30 bg-[#FAF5E9] shadow-sm"
               >
                 <div className="flex items-start gap-3 mb-2">
                   <div className="text-3xl">{suspect.profileIcon}</div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-amber-900">
-                      {suspect.catalan}
-                    </h3>
-                    <p className="text-xs text-amber-700">
-                      {suspect.role} — {suspect.age} anys
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-serif font-bold text-ink">
+                        {suspect.catalan}
+                      </h3>
+                      <span
+                        className={`text-[10px] font-sans font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border flex-shrink-0 ${SUSPICION_STYLES[suspect.suspicionFactor]}`}
+                      >
+                        {suspect.suspicionFactor}
+                      </span>
+                    </div>
+                    <p className="text-xs text-leather font-sans">
+                      {suspect.roleDescription} — {suspect.age} anys
                     </p>
                   </div>
                 </div>
-                <p className="text-sm text-amber-800 mb-2">
+                <p className="text-sm text-ink/80 font-sans mb-2">
                   {suspect.narrative}
                 </p>
-                <div className="text-xs text-amber-600">
+                <div className="text-xs text-leather font-sans">
                   📍 {suspect.clueLocation}
                 </div>
               </div>
@@ -114,32 +195,35 @@ export function NotebookTab({ evidences, coartadaFrase }: NotebookTabProps) {
             {unlockedEvidenceIds.length === 0 ? (
               <div className="p-8 text-center">
                 <div className="text-4xl mb-2">🔍</div>
-                <p className="text-amber-700">
-                  Ninguna prova descoberta aún
+                <p className="text-ink font-sans">
+                  Encara no heu trobat cap prova
                 </p>
-                <p className="text-xs text-amber-600 mt-2">
-                  Resol estacions per trobar proves
+                <p className="text-xs text-leather mt-2 font-sans">
+                  Resoleu fites per la Guixa per anar-les desbloquejant aquí
                 </p>
               </div>
             ) : (
               <>
+                <p className="text-xs font-sans text-leather mb-1">
+                  {unlockedEvidenceIds.length} de {allEvidence.length} proves trobades
+                </p>
                 {allEvidence
                   .filter((e) => unlockedEvidenceIds.includes(e.id))
                   .map((evidence) => (
                     <div
                       key={evidence.id}
-                      className="p-4 rounded-lg border-2 border-green-300 bg-green-50"
+                      className="p-3.5 rounded-lg border border-[#1D3557]/25 bg-[#FAF5E9] shadow-sm"
                     >
                       <div className="flex items-start gap-3">
                         <div className="text-2xl">{evidence.icon}</div>
                         <div className="flex-1">
-                          <h4 className="font-bold text-green-900">
+                          <h4 className="font-serif font-bold text-ink">
                             {evidence.catalan}
                           </h4>
-                          <p className="text-sm text-green-800 my-1">
+                          <p className="text-sm text-ink/80 font-sans my-1">
                             {evidence.description}
                           </p>
-                          <div className="text-xs text-green-700">
+                          <div className="text-xs text-leather font-sans">
                             📌 {evidence.discoveredAt}
                           </div>
                         </div>
@@ -150,6 +234,8 @@ export function NotebookTab({ evidences, coartadaFrase }: NotebookTabProps) {
             )}
           </>
         )}
+          </div>
+        </div>
       </div>
     </div>
   )

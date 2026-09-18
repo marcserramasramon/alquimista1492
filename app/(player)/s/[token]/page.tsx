@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { getGameComponent } from '@/components/games/registry'
 import { GameProps, SubmitResult } from '@/components/gameTypes'
 import { useGameNavigation } from '@/lib/context/GameNavigationContext'
+import { useGameClockAlerts } from '@/lib/realtime/useGameClockAlerts'
+import { BellRungModal } from '@/components/player/BellRungModal'
 
 interface StationData {
   stationId: string
@@ -23,6 +25,7 @@ export default function StationQRPage() {
   const params = useParams()
   const router = useRouter()
   const { setActiveGame, clearActiveGame } = useGameNavigation()
+  const gameClock = useGameClockAlerts()
   const token = params.token as string
 
   const [stationData, setStationData] = useState<StationData | null>(null)
@@ -125,6 +128,19 @@ export default function StationQRPage() {
     }
   }
 
+  // Game over: no station can be attempted or resumed anymore
+  if (gameClock.showBellPopup) {
+    return (
+      <BellRungModal
+        show
+        onViewResults={() => {
+          clearActiveGame()
+          router.push('/results')
+        }}
+      />
+    )
+  }
+
   // Loading state
   if (isLoading) {
     return (
@@ -140,22 +156,26 @@ export default function StationQRPage() {
   // Error state
   if (error || !stationData) {
     const errorMessage =
-      error?.code === 'TOKEN_EXPIRED'
-        ? "El token d'estació ha expirat"
-        : error?.code === 'ALREADY_SOLVED'
-          ? "Aquesta estació ja l'heu resoltes"
-          : error?.code === 'INVALID_TOKEN'
-            ? "Token d'estació no vàlid"
-            : error?.message || "Error carregant l'estació"
+      error?.code === 'GAME_OVER'
+        ? 'S\'ha acabat la partida. Ja no es poden superar més proves.'
+        : error?.code === 'TOKEN_EXPIRED'
+          ? "El token d'estació ha expirat"
+          : error?.code === 'ALREADY_SOLVED'
+            ? "Aquesta estació ja l'heu resoltes"
+            : error?.code === 'INVALID_TOKEN'
+              ? "Token d'estació no vàlid"
+              : error?.message || "Error carregant l'estació"
 
     const errorTitle =
-      error?.code === 'TOKEN_EXPIRED'
-        ? 'Token Expirat'
-        : error?.code === 'ALREADY_SOLVED'
-          ? 'Estació Ja Resolta'
-          : error?.code === 'INVALID_TOKEN'
-            ? 'Token No Vàlid'
-            : 'Error'
+      error?.code === 'GAME_OVER'
+        ? 'Partida Acabada'
+        : error?.code === 'TOKEN_EXPIRED'
+          ? 'Token Expirat'
+          : error?.code === 'ALREADY_SOLVED'
+            ? 'Estació Ja Resolta'
+            : error?.code === 'INVALID_TOKEN'
+              ? 'Token No Vàlid'
+              : 'Error'
 
     return (
       <div className="flex min-h-screen items-center justify-center bg-red-50 p-4">

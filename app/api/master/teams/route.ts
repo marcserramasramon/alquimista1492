@@ -136,22 +136,27 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Compute global start/end times if any team is started
-    const firstStartedTeam = enriched.find((t) => t.started_at)
-    const sessionStartTime = firstStartedTeam?.started_at ? new Date(firstStartedTeam.started_at) : null
-    
-    // Check if session has a defined expires_at
-    const firstSessionWithExpiry = Array.from(sessionsMap.values()).find((s) => s.expires_at)
-    const sessionEndTime = firstSessionWithExpiry?.expires_at
-      ? new Date(firstSessionWithExpiry.expires_at)
-      : sessionStartTime
-        ? new Date(sessionStartTime.getTime() + 90 * 60 * 1000)
-        : null
+    // The countdown is only ever driven by game_config, never by per-team
+    // timestamps (those default to "row creation time", not "master pressed
+    // start", which is exactly what used to make the bell ring prematurely).
+    const { data: gameConfig } = await serviceClient
+      .from('game_config')
+      .select('status, duration_minutes, started_at, expires_at')
+      .eq('id', 1)
+      .maybeSingle()
+
+    const sessionStartTime = gameConfig?.status !== 'pending' && gameConfig?.started_at
+      ? new Date(gameConfig.started_at)
+      : null
+    const sessionEndTime = gameConfig?.status !== 'pending' && gameConfig?.expires_at
+      ? new Date(gameConfig.expires_at)
+      : null
 
     return NextResponse.json({
       teams: enriched,
       sessionStartTime,
       sessionEndTime,
+      gameStatus: gameConfig?.status ?? 'pending',
       totalTeams: enriched.length,
     })
   } catch (error) {

@@ -13,6 +13,7 @@ interface GameState {
   solved: boolean
   currentSignalIndex: number
   isPlayingSequence: boolean
+  sequenceStarted: boolean
   lastFeedback: { type: 'success' | 'error'; message: string } | null
 }
 
@@ -34,6 +35,44 @@ const FIRE_SIGNALS = [
   { id: 11, left: 1, right: 1, letter: 'A', word: 3 },
 ]
 
+// Estels del cel nocturn (posicions fixes per evitar diferències entre servidor i client)
+const NIGHT_STARS = [
+  { x: 6, y: 12, size: 2, o: 0.9 },
+  { x: 14, y: 28, size: 1.5, o: 0.6 },
+  { x: 22, y: 8, size: 2, o: 0.8 },
+  { x: 30, y: 20, size: 1.5, o: 0.5 },
+  { x: 38, y: 10, size: 2.5, o: 0.9 },
+  { x: 46, y: 24, size: 1.5, o: 0.6 },
+  { x: 53, y: 6, size: 2, o: 0.7 },
+  { x: 60, y: 16, size: 1.5, o: 0.5 },
+  { x: 67, y: 28, size: 2, o: 0.8 },
+  { x: 74, y: 10, size: 1.5, o: 0.6 },
+  { x: 10, y: 40, size: 1.5, o: 0.4 },
+  { x: 25, y: 36, size: 1.5, o: 0.5 },
+  { x: 42, y: 38, size: 1.5, o: 0.4 },
+  { x: 56, y: 34, size: 1.5, o: 0.5 },
+  { x: 88, y: 14, size: 2, o: 0.7 },
+  { x: 94, y: 26, size: 1.5, o: 0.5 },
+  { x: 3, y: 22, size: 1.5, o: 0.5 },
+  { x: 80, y: 30, size: 1.5, o: 0.4 },
+]
+
+// Distribueix les flames al llarg de la corba el·líptica del turó (tangents al pendent, no en línia recta)
+const FLAME_SPREAD = 0.5
+function getFlameOffsets(count: number): number[] {
+  if (count <= 0) return []
+  if (count === 1) return [0]
+  return Array.from(
+    { length: count },
+    (_, i) => -FLAME_SPREAD + (2 * FLAME_SPREAD) * (i / (count - 1))
+  )
+}
+function flamePosition(t: number): { left: string; top: string } {
+  const topPct = 100 * (1 - Math.sqrt(1 - t * t))
+  const leftPct = 50 + t * 50
+  return { left: `${leftPct}%`, top: `${topPct}%` }
+}
+
 // Taula de Polibi 5x5
 const POLIBIUS_GRID = [
   { row: 1, letters: ['A', 'B', 'C', 'D', 'E'] },
@@ -44,7 +83,7 @@ const POLIBIUS_GRID = [
 ]
 
 export function SerratBruixesGame(props: GameProps) {
-  const { play } = useAudio()
+  const { play, stop } = useAudio()
   const [state, setState] = useState<GameState>(() => {
     const saved =
       props.sharedState && typeof props.sharedState === 'object'
@@ -64,6 +103,7 @@ export function SerratBruixesGame(props: GameProps) {
       solved: props.solved || saved.solved || false,
       currentSignalIndex: initialIndex,
       isPlayingSequence: false,
+      sequenceStarted: saved.sequenceStarted || false,
       lastFeedback: null,
     }
   })
@@ -89,6 +129,19 @@ export function SerratBruixesGame(props: GameProps) {
     return () => clearTimeout(timer)
   }, [state.isPlayingSequence, state.currentSignalIndex])
 
+  // So de nit: sona mentre es reprodueix la seqüència, es para en pausar-la o en acabar-se
+  useEffect(() => {
+    if (state.isPlayingSequence) {
+      play('night-signals')
+    } else {
+      stop('night-signals')
+    }
+  }, [state.isPlayingSequence, play, stop])
+
+  useEffect(() => {
+    return () => stop('night-signals')
+  }, [stop])
+
   const safeIndex =
     typeof state.currentSignalIndex === 'number' &&
     state.currentSignalIndex >= 0 &&
@@ -102,6 +155,7 @@ export function SerratBruixesGame(props: GameProps) {
       ...prev,
       currentSignalIndex: 0,
       isPlayingSequence: true,
+      sequenceStarted: true,
     }))
   }
 
@@ -109,21 +163,12 @@ export function SerratBruixesGame(props: GameProps) {
     setState(prev => ({ ...prev, isPlayingSequence: false }))
   }
 
-  const handleNextSignal = () => {
-    setState(prev => ({
-      ...prev,
-      isPlayingSequence: false,
-      currentSignalIndex: (prev.currentSignalIndex + 1) % FIRE_SIGNALS.length,
-    }))
-  }
-
-  const handlePrevSignal = () => {
-    setState(prev => ({
-      ...prev,
-      isPlayingSequence: false,
-      currentSignalIndex:
-        prev.currentSignalIndex === 0 ? FIRE_SIGNALS.length - 1 : prev.currentSignalIndex - 1,
-    }))
+  const handleToggleSequence = () => {
+    if (state.isPlayingSequence) {
+      handlePauseSequence()
+    } else {
+      handleStartSequence()
+    }
   }
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -250,7 +295,7 @@ export function SerratBruixesGame(props: GameProps) {
             }`}
           >
             <span>📜</span>
-            <span>L'Alerta dels Vigies</span>
+            <span>La Història</span>
           </button>
 
           <button
@@ -383,6 +428,9 @@ export function SerratBruixesGame(props: GameProps) {
                 exit={{ opacity: 0 }}
                 className="bg-[#F8F3E6] border-2 border-dashed border-[#8C6D53] p-4 rounded-lg shadow-inner space-y-2 text-xs sm:text-sm leading-relaxed"
               >
+                  <h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif mb-1">
+			  L'Alerta dels Vigies
+			  </h3>
                 <div className="text-[11px] font-sans uppercase font-bold text-[#8C6D53] tracking-wider">
                   Informe confidencial dels Vigatans
                 </div>
@@ -437,110 +485,115 @@ export function SerratBruixesGame(props: GameProps) {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="bg-[#121E2B] text-[#F4EBD9] border-2 border-[#8C6D53] rounded-xl p-4 sm:p-5 shadow-xl relative overflow-hidden"
+                className="-mx-4 sm:-mx-5 -mb-4 sm:-mb-5"
               >
-                {/* Cel nocturn i turons decoratius de fons */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#0B131D] via-[#16273A] to-[#1D1711] opacity-90 pointer-events-none" />
-
-                <div className="relative z-10">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-[#8C6D53]/50 mb-3">
-                    <div>
-                      <h2 className="text-base sm:text-lg font-bold font-serif text-amber-200 flex items-center gap-2">
-                        <span>🔥</span>
-                        <span>Visualitzador de Senyals de Nit</span>
-                      </h2>
-                      <p className="text-xs text-amber-300/80 font-sans">
-                        Senyal actual: {state.currentSignalIndex + 1} de {FIRE_SIGNALS.length}
-                      </p>
-                    </div>
-
-                    {/* Controls de reproducció */}
-                    <div className="flex items-center gap-1.5 mt-2 sm:mt-0 font-sans">
-                      <button
-                        type="button"
-                        onClick={handlePrevSignal}
-                        className="p-1.5 px-2 bg-[#233549] hover:bg-[#314863] text-amber-200 rounded text-xs transition-colors"
-                        title="Senyal anterior"
-                      >
-                        ◀
-                      </button>
-
-                      {state.isPlayingSequence ? (
-                        <button
-                          type="button"
-                          onClick={handlePauseSequence}
-                          className="p-1.5 px-3 bg-amber-600 hover:bg-amber-500 text-black font-bold rounded text-xs transition-colors flex items-center gap-1"
-                        >
-                          <span>⏸</span> Pausar
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleStartSequence}
-                          className="p-1.5 px-3 bg-[#C99E32] hover:bg-amber-400 text-[#121E2B] font-bold rounded text-xs transition-colors flex items-center gap-1 shadow"
-                        >
-                          <span>▶</span> Reprodueix Seqüència
-                        </button>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={handleNextSignal}
-                        className="p-1.5 px-2 bg-[#233549] hover:bg-[#314863] text-amber-200 rounded text-xs transition-colors"
-                        title="Següent senyal"
-                      >
-                        ▶
-                      </button>
-                    </div>
-                  </div>
-
                   {/* L'ESCENA DELS DOS TURONS AMB LES FOGUERES */}
-                  <div className="grid grid-cols-2 gap-4 py-6 px-2 my-2 bg-black/40 rounded-lg border border-amber-900/40 relative">
-                    {/* Turó Esquerre: Fila */}
-                    <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-[#182330]/80 border border-amber-500/20">
-                      <span className="text-[11px] font-sans uppercase font-bold text-amber-400 tracking-wider mb-2">
-                        Turó Esquerre · Fila ({activeSignal.left})
+                  <div className="relative h-72 sm:h-[28rem] overflow-hidden rounded-b-xl bg-gradient-to-b from-[#060B14] via-[#101E30] to-[#1B2A1F]">
+                    {/* Número de senyal, sobre el cel a l'esquerra */}
+                    {state.sequenceStarted && (
+                      <span className="absolute top-3 left-4 z-10 text-sm sm:text-base font-mono font-bold text-amber-200/90">
+                        {state.currentSignalIndex + 1}
                       </span>
-                      <div className="flex items-center justify-center gap-2 min-h-[48px] flex-wrap">
-                        {Array.from({ length: activeSignal.left }).map((_, i) => (
-                          <motion.div
-                            key={`left-${i}`}
-                            animate={{ scale: [1, 1.15, 0.95, 1.1, 1] }}
-                            transition={{ repeat: Infinity, duration: 1.2 + i * 0.2 }}
-                            className="text-2xl filter drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]"
-                          >
-                            🔥
-                          </motion.div>
-                        ))}
-                      </div>
-                      <span className="text-xs font-mono font-bold text-amber-300 mt-2 bg-black/50 px-2 py-0.5 rounded">
-                        {activeSignal.left} foc{activeSignal.left > 1 ? 's' : ''}
-                      </span>
+                    )}
+
+                    {/* Estels */}
+                    {NIGHT_STARS.map((s, i) => (
+                      <div
+                        key={i}
+                        className="absolute rounded-full bg-white"
+                        style={{
+                          left: `${s.x}%`,
+                          top: `${s.y}%`,
+                          width: `${s.size}px`,
+                          height: `${s.size}px`,
+                          opacity: s.o,
+                        }}
+                      />
+                    ))}
+
+                    {/* Lluna */}
+                    <div
+                      className="absolute top-3 right-6 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-[#F4ECD8]"
+                      style={{ boxShadow: '0 0 20px 7px rgba(244,236,216,0.28)' }}
+                    />
+
+                    {/* Turó Dret (al fons) · Columna */}
+                    <div
+                      className="absolute bottom-0 right-[-8%] w-[62%] h-28 sm:h-36 bg-gradient-to-b from-[#26301F] to-[#0D110A]"
+                      style={{ borderRadius: '50% 50% 0 0 / 100% 100% 0 0' }}
+                    >
+                      {state.sequenceStarted && (
+                        <>
+                          {/* Resplendor sobre la carena */}
+                          <div className="absolute left-1/2 top-0 -translate-x-1/2 w-24 h-14 bg-amber-500/25 blur-xl rounded-full pointer-events-none" />
+
+                          {/* Flames tangents a la corba del turó */}
+                          {getFlameOffsets(activeSignal.right).map((t, i) => (
+                            <div
+                              key={`right-${i}`}
+                              className="absolute"
+                              style={{ ...flamePosition(t), transform: 'translate(-50%, -65%)' }}
+                            >
+                              <motion.div
+                                animate={{ scale: [1, 1.1, 0.9, 1.15, 1] }}
+                                transition={{ repeat: Infinity, duration: 1.1 + i * 0.25 }}
+                                className="text-xl sm:text-2xl filter drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]"
+                              >
+                                🔥
+                              </motion.div>
+                            </div>
+                          ))}
+                        </>
+                      )}
                     </div>
 
-                    {/* Turó Dret: Columna */}
-                    <div className="flex flex-col items-center justify-center p-3 rounded-lg bg-[#182330]/80 border border-amber-500/20">
-                      <span className="text-[11px] font-sans uppercase font-bold text-amber-400 tracking-wider mb-2">
-                        Turó Dret · Columna ({activeSignal.right})
-                      </span>
-                      <div className="flex items-center justify-center gap-2 min-h-[48px] flex-wrap">
-                        {Array.from({ length: activeSignal.right }).map((_, i) => (
-                          <motion.div
-                            key={`right-${i}`}
-                            animate={{ scale: [1, 1.1, 0.9, 1.15, 1] }}
-                            transition={{ repeat: Infinity, duration: 1.1 + i * 0.25 }}
-                            className="text-2xl filter drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]"
-                          >
-                            🔥
-                          </motion.div>
-                        ))}
-                      </div>
-                      <span className="text-xs font-mono font-bold text-amber-300 mt-2 bg-black/50 px-2 py-0.5 rounded">
-                        {activeSignal.right} foc{activeSignal.right > 1 ? 's' : ''}
-                      </span>
+                    {/* Turó Esquerre (davant) · Fila */}
+                    <div
+                      className="absolute bottom-0 left-[-8%] w-[66%] h-32 sm:h-40 bg-gradient-to-b from-[#1E2B1A] to-[#0A0D07] z-10"
+                      style={{ borderRadius: '50% 50% 0 0 / 100% 100% 0 0' }}
+                    >
+                      {state.sequenceStarted && (
+                        <>
+                          {/* Resplendor sobre la carena */}
+                          <div className="absolute left-1/2 top-0 -translate-x-1/2 w-24 h-14 bg-amber-500/25 blur-xl rounded-full pointer-events-none" />
+
+                          {/* Flames tangents a la corba del turó */}
+                          {getFlameOffsets(activeSignal.left).map((t, i) => (
+                            <div
+                              key={`left-${i}`}
+                              className="absolute"
+                              style={{ ...flamePosition(t), transform: 'translate(-50%, -65%)' }}
+                            >
+                              <motion.div
+                                animate={{ scale: [1, 1.15, 0.95, 1.1, 1] }}
+                                transition={{ repeat: Infinity, duration: 1.2 + i * 0.2 }}
+                                className="text-xl sm:text-2xl filter drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]"
+                              >
+                                🔥
+                              </motion.div>
+                            </div>
+                          ))}
+                        </>
+                      )}
                     </div>
+
+                    {/* Boira a l'horitzó */}
+                    <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-black/40 to-transparent pointer-events-none z-20" />
+
+                    {/* Botó de reproducció: cercle centrat entre els dos turons */}
+                    <motion.button
+                      type="button"
+                      onClick={handleToggleSequence}
+                      className="absolute bottom-2 left-1/2 -translate-x-1/2 z-30 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#C99E32] hover:bg-amber-400 text-[#121E2B] flex items-center justify-center shadow-lg border-2 border-amber-200/60 font-sans"
+                      whileHover={{ scale: 1.08 }}
+                      whileTap={{ scale: 0.95 }}
+                      title={state.isPlayingSequence ? 'Pausar seqüència' : 'Reprodueix seqüència'}
+                    >
+                      <span className="text-lg sm:text-xl">
+                        {state.isPlayingSequence ? '⏸' : '▶'}
+                      </span>
+                    </motion.button>
                   </div>
-                </div>
               </motion.div>
             )}
           </AnimatePresence>

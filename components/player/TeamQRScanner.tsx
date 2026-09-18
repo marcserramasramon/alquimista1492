@@ -4,42 +4,45 @@ import { useCallback, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Scanner, IDetectedBarcode } from '@yudiel/react-qr-scanner'
 
-interface QRScannerProps {
+interface TeamQRScannerProps {
   onClose: () => void
 }
 
-export function QRScanner({ onClose }: QRScannerProps) {
+/**
+ * Escàner del QR d'equip que dona el màster (pantalla d'inici de l'app).
+ * A diferència de QRScanner (estacions, /s/[token]), aquest busca el
+ * codi de 6 caràcters de /e/[code].
+ */
+export function TeamQRScanner({ onClose }: TeamQRScannerProps) {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [manualEntry, setManualEntry] = useState(false)
   const [manualValue, setManualValue] = useState('')
-  const processedTokens = useRef<Set<string>>(new Set())
+  const processedCodes = useRef<Set<string>>(new Set())
 
-  const processToken = useCallback(
+  const processCode = useCallback(
     (raw: string) => {
       const text = raw.trim()
-      if (!text || processedTokens.current.has(text)) return
+      if (!text || processedCodes.current.has(text)) return
 
-      // Extract token from URL if it's a full URL
-      let token = text
-      const match = text.match(/\/s\/([A-Za-z0-9_-]+)/)
+      // El QR pot codificar la URL completa (/e/[code]) o només el codi
+      let code = text
+      const match = text.match(/\/e\/([A-Za-z0-9]{6})/)
       if (match) {
-        token = match[1]
+        code = match[1]
       }
+      code = code.toUpperCase()
 
-      // Validate token format (basic check)
-      if (!token || token.length < 6) {
+      if (!/^[A-Z0-9]{6}$/.test(code)) {
         setError('Codi no vàlid')
         return
       }
 
-      processedTokens.current.add(text)
+      processedCodes.current.add(text)
       setIsProcessing(true)
       setError(null)
-
-      // Navigate to station
-      router.push(`/s/${token}`)
+      router.push(`/e/${code}`)
     },
     [router]
   )
@@ -47,32 +50,26 @@ export function QRScanner({ onClose }: QRScannerProps) {
   const handleScan = useCallback(
     (detectedCodes: IDetectedBarcode[]) => {
       if (isProcessing || !detectedCodes || detectedCodes.length === 0) return
-
-      try {
-        const text = detectedCodes[0]?.rawValue
-        if (!text) return
-        processToken(text)
-      } catch (err) {
-        console.error('Error processing QR:', err)
-        setError('Error escanejant codi')
-      }
+      const text = detectedCodes[0]?.rawValue
+      if (!text) return
+      processCode(text)
     },
-    [isProcessing, processToken]
+    [isProcessing, processCode]
   )
 
   const handleManualSubmit = () => {
     if (!manualValue.trim()) return
-    processToken(manualValue)
+    processCode(manualValue)
   }
 
   return (
-    <div className="fixed inset-0 bg-black/90 z-50 flex flex-col">
-      {/* Header */}
-      <div className="bg-amber-900 text-white p-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold">Escaneja QR</h2>
+    <div className="fixed inset-0 bg-ink/95 z-50 flex flex-col">
+      <div className="bg-prussian text-parchment p-4 flex items-center justify-between">
+        <h2 className="text-lg font-accent">Escanejar codi d&apos;equip</h2>
         <button
           onClick={onClose}
-          className="text-2xl font-bold leading-none hover:bg-amber-800 p-2 rounded"
+          className="text-2xl font-bold leading-none hover:bg-white/10 rounded"
+          aria-label="Tancar"
         >
           ✕
         </button>
@@ -80,28 +77,29 @@ export function QRScanner({ onClose }: QRScannerProps) {
 
       {manualEntry ? (
         /* Manual code entry */
-        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-amber-50">
-          <label htmlFor="station-code" className="text-amber-900 font-semibold mb-3 text-center">
-            Introdueix el codi de l&apos;estació (cartell)
+        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-parchment">
+          <label htmlFor="team-code" className="text-ink font-semibold mb-3 text-center">
+            Introdueix el codi d&apos;equip
           </label>
           <input
-            id="station-code"
+            id="team-code"
             type="text"
             inputMode="text"
             autoCapitalize="characters"
             autoCorrect="off"
+            maxLength={6}
             value={manualValue}
             onChange={(e) => setManualValue(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleManualSubmit()
             }}
-            className="w-full max-w-xs text-center text-2xl tracking-widest font-mono border-2 border-amber-700 rounded-lg py-3 mb-4 bg-white text-amber-900"
+            className="w-full max-w-xs text-center text-2xl tracking-widest font-mono uppercase border-2 border-prussian rounded-lg py-3 mb-4 bg-white text-ink"
             placeholder="CODI"
           />
           <button
             onClick={handleManualSubmit}
             disabled={isProcessing || !manualValue.trim()}
-            className="w-full max-w-xs bg-amber-900 text-white font-semibold rounded-lg py-3 disabled:opacity-50"
+            className="w-full max-w-xs bg-prussian text-parchment font-accent uppercase tracking-wide rounded-lg py-3 disabled:opacity-50"
           >
             Confirmar
           </button>
@@ -110,14 +108,13 @@ export function QRScanner({ onClose }: QRScannerProps) {
               setManualEntry(false)
               setError(null)
             }}
-            className="mt-4 text-sm text-amber-800 underline underline-offset-2"
+            className="mt-4 text-sm text-leather underline underline-offset-2"
           >
             Torna a la càmera
           </button>
         </div>
       ) : (
-        /* Scanner */
-        <div className="flex-1 overflow-hidden relative">
+        <div className="flex-1 overflow-hidden">
           <Scanner
             onScan={handleScan}
             onError={(err) => {
@@ -134,9 +131,8 @@ export function QRScanner({ onClose }: QRScannerProps) {
         </div>
       )}
 
-      {/* Error message */}
       {error && (
-        <div className="bg-red-900 text-white p-4 text-center">
+        <div className="bg-cochineal text-parchment p-4 text-center">
           <p className="font-semibold">{error}</p>
           {!manualEntry && (
             <p className="text-sm mt-1">Assegura&apos;t que la càmera està habilitada</p>
@@ -144,10 +140,9 @@ export function QRScanner({ onClose }: QRScannerProps) {
         </div>
       )}
 
-      {/* Instructions + manual entry toggle */}
       {!manualEntry && (
-        <div className="bg-amber-100 text-amber-900 p-4 text-center text-sm">
-          <p className="mb-2">Apunta la càmera cap al codi QR de l&apos;estació</p>
+        <div className="bg-vellum text-ink p-4 text-center text-sm">
+          <p className="mb-2">Apunta la càmera cap al codi QR que et dona l&apos;Emissari</p>
           <button
             onClick={() => {
               setError(null)

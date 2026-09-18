@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyMasterToken } from '@/lib/auth/master'
 import { getServiceRoleClient } from '@/lib/db'
-import { DEFAULT_TEAMS } from '@/lib/master/config'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,38 +23,36 @@ export async function POST(request: NextRequest) {
 
     const { addMinutes, triggerNow, setExpiresAt, setDurationMinutes } = body
 
-    // 1. Get current sessions of official teams
-    const officialCodes = DEFAULT_TEAMS.map((d) => d.code)
-    const { data: teams } = await serviceClient
-      .from('teams')
-      .select('id, code, session_id, started_at')
-      .in('code', officialCodes)
+    const { data: config } = await serviceClient
+      .from('game_config')
+      .select('status, started_at, expires_at')
+      .eq('id', 1)
+      .maybeSingle()
 
-    const sessionIds = (teams || []).map((t) => t.session_id).filter(Boolean) as string[]
-    if (sessionIds.length === 0) {
-      return NextResponse.json({ error: 'No hi ha sessions actives dels equips' }, { status: 404 })
+    if (!config || config.status === 'pending') {
+      return NextResponse.json(
+        { error: 'La partida encara no ha començat' },
+        { status: 409 }
+      )
     }
-
-    const { data: currentSessions } = await serviceClient
-      .from('sessions')
-      .select('id, started_at, expires_at')
-      .in('id', sessionIds)
 
     const now = new Date()
     let newExpiresAtIso: string
+    let newStatus = config.status
 
     if (triggerNow) {
-      // Sound bell immediately!
+      // Sound the bell immediately and lock the game — this cannot be
+      // undone by simply adding minutes back.
       newExpiresAtIso = now.toISOString()
+      newStatus = 'finished'
     } else if (setExpiresAt) {
       newExpiresAtIso = new Date(setExpiresAt).toISOString()
     } else if (setDurationMinutes) {
-      const baseTime = teams?.[0]?.started_at ? new Date(teams[0].started_at) : now
+      const baseTime = config.started_at ? new Date(config.started_at) : now
       newExpiresAtIso = new Date(baseTime.getTime() + Number(setDurationMinutes) * 60 * 1000).toISOString()
     } else if (addMinutes) {
-      // Add or subtract minutes from current expiry
-      const currentExpiry = currentSessions?.[0]?.expires_at
-        ? new Date(currentSessions[0].expires_at)
+      const currentExpiry = config.expires_at
+        ? new Date(config.expires_at)
         : new Date(now.getTime() + 90 * 60 * 1000)
 
       newExpiresAtIso = new Date(currentExpiry.getTime() + Number(addMinutes) * 60 * 1000).toISOString()
@@ -63,11 +60,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Paràmetres invàlids' }, { status: 400 })
     }
 
-    // Update all sessions
     await serviceClient
-      .from('sessions')
-      .update({ expires_at: newExpiresAtIso })
-      .in('id', sessionIds)
+      .from('game_config')
+      .update({
+        status: newStatus,
+        expires_at: newExpiresAtIso,
+        updated_at: now.toISOString(),
+      })
+      .eq('id', 1)
 
     return NextResponse.json({
       success: true,

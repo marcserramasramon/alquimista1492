@@ -64,7 +64,7 @@ export const STATIONS: Record<string, Station> = {
     narrativeHook: 'Find the name copied from the death registry',
     latitude: 41.912515,
     longitude: 2.227446,
-    icon: '⚰️',
+    icon: '🪦',
     difficulty: 'dificil',
   },
   rectoria: {
@@ -88,7 +88,7 @@ export const STATIONS: Record<string, Station> = {
     narrativeHook: 'Stand interrogation and prove your alibi',
     latitude: 41.913090,
     longitude: 2.229841,
-    icon: '👤',
+    icon: '🦹‍♂️',
     difficulty: 'facil',
   },
   escola: {
@@ -112,7 +112,7 @@ export const STATIONS: Record<string, Station> = {
     narrativeHook: 'Find and open the locked alms box',
     latitude: 41.913109,
     longitude: 2.228130,
-    icon: '🔐',
+    icon: '🪎',
     difficulty: 'dificil',
   },
   campanar: {
@@ -124,7 +124,7 @@ export const STATIONS: Record<string, Station> = {
     narrativeHook: 'Ring the bell to signal the escape route',
     latitude: 41.913500,
     longitude: 2.228500,
-    icon: '🔔',
+    icon: '⛪',
     difficulty: 'dificil',
   },
   'bells_sometent': {
@@ -136,7 +136,7 @@ export const STATIONS: Record<string, Station> = {
     narrativeHook: 'Ring the bell to signal the escape route',
     latitude: 41.913500,
     longitude: 2.228500,
-    icon: '🔔',
+    icon: '⛪',
     difficulty: 'dificil',
   },
 } as const

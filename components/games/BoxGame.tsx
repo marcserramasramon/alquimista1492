@@ -413,7 +413,7 @@ function Part1WithMenu({
   return (
     <div className="flex flex-col flex-1 gap-4">
       {/* Header */}
-      <header className="border-b-2 border-[#8C6D53] pb-3 text-center">
+      <header className="border-b-2 border-[#8C6D53] pb-3 mb-4 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
           Estació 7 · Rectoria
         </span>
@@ -620,7 +620,7 @@ function Part1WithMenu({
                             />
                             <div className="mt-2 text-center">
                               <p className="text-xs text-[#5C4533] font-sans font-bold">{['FOC', 'AIGUA', 'TERRA', 'PEDRA'][idx]}</p>
-                              <p className="text-2xs text-[#8C6D53] font-bold">{[4, 2, 3, 1][idx]}</p>
+                             
                             </div>
                           </div>
                         ))}
@@ -770,10 +770,10 @@ function Part2CardsScreen({
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
           Estació 7 · Rectoria
         </span>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
-          La Carta Segellada
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
+          LA CARTA SEGELLADA
         </h1>
-        <p className="text-xs text-[#5C4533] mt-1 font-sans italic max-w-md mx-auto">
+        <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">
           "Examina el contingut de la caixa i substitueix la carta correcta"
         </p>
       </header>
@@ -1001,14 +1001,14 @@ function Part3SealScreen({
 }) {
   return (
     <div className="flex flex-col flex-1 gap-4">
-      <header className="border-b-2 border-[#8C6D53] pb-3 text-center">
+      <header className="border-b-2 border-[#8C6D53] pb-3 mb-4 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
           Estació 7 · Rectoria
         </span>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#2B2118] mt-1">
-          Segellar la Carta
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
+          EL SEGELL DE TRAÏDOR
         </h1>
-        <p className="text-xs text-[#5C4533] mt-1 font-sans italic">
+        <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">
           Tria el segell correcte de Bernat
         </p>
       </header>
