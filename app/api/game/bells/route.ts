@@ -235,7 +235,14 @@ export async function POST(request: NextRequest) {
     let isCorrect = false
     let message = ''
 
-    if (bellSequence && bellSequence.length === 8) {
+    if (bellSequence && bellSequence.length === 4) {
+      // Validate against the first 4 bells of the sequence
+      isCorrect = bellSequence.every((bell, idx) => bell === bellSequenceData[idx])
+      message = isCorrect
+        ? 'Campanades correctes! Sometent sonat.'
+        : 'Campanades incorrectes. Reprova.'
+    } else if (bellSequence && bellSequence.length === 8) {
+      // Also support full 8-bell validation for backwards compatibility
       isCorrect = validateBellSequence(bellSequence, bellSequenceData)
       message = isCorrect
         ? 'Campanades correctes! Sometent sonat.'
