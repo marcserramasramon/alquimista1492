@@ -13,13 +13,11 @@ const GAME_TABS = [
   { id: 'font-ferro', name: '2. Font del Ferro', tag: 'Tinta / Dates' },
   { id: 'planes-bones', name: '3. Planes Bones', tag: 'Ruta 4x4' },
   { id: 'cementiri', name: '4. Cementiri', tag: 'Làpides' },
-  { id: 'pla-masset-control', name: '5. Control Masset', tag: 'Interrogatori' },
   { id: 'salconduit-view', name: '🎖️ Salvos (Jugador)', tag: '2 Permisos + QR' },
   { id: 'emissari-alert-view', name: '⚠️ Avís 5 min', tag: 'Pop-up Coartada' },
   { id: 'pla-masset-accusation', name: '6. Acusació', tag: 'Traïdor' },
   { id: 'caixa-almoines', name: '7. Caixa Almoines', tag: '3 Fases' },
-  { id: 'sometent-campanar', name: '8. Campanar', tag: 'Sometent' },
-  { id: 'decisio-moral', name: '9. Decisió Moral', tag: 'Final' },
+  { id: 'sometent-campanar', name: '8. Campanar', tag: 'Sometent · Decisió · Final' },
 ]
 
 const PREVIEW_COARTADES = [
@@ -121,6 +119,35 @@ export default function PreviewPage() {
 
   const mockSubmit = async (answer: unknown): Promise<SubmitResult> => {
     const isCorrect = forceCorrect
+
+    // Handle bells game - generate a sequence if requested
+    const answerObj = answer as any
+    if (answerObj?.moralChoice && !answerObj?.bellSequence) {
+      // First call - return generated sequence
+      const bellSequence = Array.from({ length: 8 }, () => Math.floor(Math.random() * 4))
+      const result: any = {
+        correct: false,
+        message: 'Seqüència de campanades generada.',
+        score: 0,
+        sequence: bellSequence,
+        epilogue: answerObj.moralChoice === 'A'
+          ? 'Bernat i Jaume es reuniren a l\'estiu.\nNo tornaren mai més a la Guixa.\n\nPerò els conjurats van salvos.'
+          : 'Jaume surt de presó tardor.\nBusca el seu pare a l\'escola.\nNo el troba.\n\nEls conjurats es salvaren.\nPerò al preu de la familia de Bernat.',
+        decisionPercentage: { optionA: 55, optionB: 45 }
+      }
+
+      setSubmissionLog(prev => [
+        {
+          time: new Date().toLocaleTimeString('ca-ES'),
+          data: answer,
+          result,
+        },
+        ...prev.slice(0, 4),
+      ])
+
+      return result
+    }
+
     const result: SubmitResult = {
       correct: isCorrect,
       message: isCorrect ? 'Enigma resolt correctament!' : 'Resposta incorrecta. Torna-ho a provar.',
