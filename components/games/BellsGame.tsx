@@ -100,8 +100,8 @@ export function BellsGame(props: GameProps) {
         moralChoice: state.moralChoice,
       })
 
-      if (result.bellSequence && Array.isArray(result.bellSequence)) {
-        setState(prev => ({ ...prev, bellSequence: result.bellSequence }))
+      if ((result.bellSequence || result.sequence) && Array.isArray(result.bellSequence || result.sequence)) {
+        setState(prev => ({ ...prev, bellSequence: result.bellSequence || result.sequence }))
         // Play the sequence after it's stored
         // Use setTimeout to ensure state is updated before playing
         setTimeout(async () => {
