@@ -100,6 +100,8 @@ export function BellsGame(props: GameProps) {
         moralChoice: state.moralChoice,
       })
 
+      console.log('Bell sequence API response:', result)
+
       if ((result.bellSequence || result.sequence) && Array.isArray(result.bellSequence || result.sequence)) {
         setState(prev => ({ ...prev, bellSequence: result.bellSequence || result.sequence }))
         // Play the sequence after it's stored
@@ -109,6 +111,7 @@ export function BellsGame(props: GameProps) {
           setLoading(false)
         }, 100)
       } else {
+        console.error('No sequence in API response:', { bellSequence: result.bellSequence, sequence: result.sequence, isArray: Array.isArray(result.bellSequence || result.sequence) })
         setError('No es pot obtenir la seqüència de campanades')
         setLoading(false)
       }
