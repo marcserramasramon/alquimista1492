@@ -239,6 +239,31 @@ export function getSolvedStationsCount(stations: TeamStationRow[]): number {
   return stations.filter((s) => s.solved).length
 }
 
+const STATION_CANONICAL_MAP: Record<string, string> = {
+  serrat: 'serrat-bruixes',
+  serrat_bruixes: 'serrat-bruixes',
+  'serrat-bruixes': 'serrat-bruixes',
+  font_ferro: 'font-ferro',
+  'font-ferro': 'font-ferro',
+  planes_bones: 'planes-bones',
+  'planes-bones': 'planes-bones',
+  cementiri: 'cementiri',
+  pla_masset: 'pla-masset',
+  'pla-masset': 'pla-masset',
+  'pla-masset-control': 'pla-masset',
+  'pla-masset-accusation': 'pla-masset',
+  acusacio: 'pla-masset',
+  caixa_almoines: 'caixa-almoines',
+  'caixa-almoines': 'caixa-almoines',
+  'rectoria-caixa': 'caixa-almoines',
+  rectoria: 'caixa-almoines',
+  campanar: 'sometent-campanar',
+  'bells-sometent': 'sometent-campanar',
+  bells_sometent: 'sometent-campanar',
+  'campanar-sometent': 'sometent-campanar',
+  'sometent-campanar': 'sometent-campanar',
+}
+
 /**
  * Check if station is solved
  */
@@ -246,15 +271,22 @@ export function isStationSolved(
   stations: TeamStationRow[],
   stationId: string
 ): boolean {
-  return stations.some((s) => s.station_id === stationId && s.solved)
+  return getTeamStation(stations, stationId)?.solved === true
 }
 
 /**
- * Get team station
+ * Get team station (amb suport per a IDs canònics i àlies)
  */
 export function getTeamStation(
   stations: TeamStationRow[],
   stationId: string
 ): TeamStationRow | undefined {
-  return stations.find((s) => s.station_id === stationId)
+  const direct = stations.find((s) => s.station_id === stationId)
+  if (direct) return direct
+
+  const canonicalTarget = STATION_CANONICAL_MAP[stationId] || stationId
+  return stations.find((s) => {
+    const canonicalCurrent = STATION_CANONICAL_MAP[s.station_id] || s.station_id
+    return canonicalCurrent === canonicalTarget
+  })
 }

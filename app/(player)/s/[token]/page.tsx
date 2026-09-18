@@ -105,10 +105,11 @@ export default function StationQRPage() {
 
       const result = await response.json()
 
-      // On successful answer, redirect after a delay
-      if (result.success) {
+      // On successful answer (and not a narrative giro), redirect to hub
+      if (result.success && !result.isGiro) {
+        clearActiveGame()
         setTimeout(() => {
-          router.push(`/joc/hub?sessionId=${stationData.sessionId}`)
+          router.push('/joc')
         }, 1500)
       }
 
@@ -116,6 +117,8 @@ export default function StationQRPage() {
         correct: result.success,
         message: result.message,
         score: result.reward,
+        giro: result.isGiro,
+        isGiro: result.isGiro,
       }
     } catch (err) {
       console.error('Error submitting answer:', err)

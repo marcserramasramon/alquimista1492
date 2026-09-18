@@ -210,6 +210,19 @@ export function FontFerroGame(props: GameProps) {
         </p>
       </header>
 
+      {/* Imatge d'ambientació de l'estació */}
+      <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
+        <img
+          src="/images/scenes/font-ferro.jpg"
+          alt="Font del Ferro - Brollador ferruginós i roures"
+          className="w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
+        <div className="absolute bottom-2 left-3 right-3 text-white/90 text-[11px] sm:text-xs font-sans italic drop-shadow">
+          💧 Font del Ferro · El brollador d'aigua ferruginosa i els roures
+        </div>
+      </div>
+
       {/* PESTANYES DE CONSULTA I INVESTIGACIÓ */}
       <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden">
         {/* Barra superior de pestanyes */}

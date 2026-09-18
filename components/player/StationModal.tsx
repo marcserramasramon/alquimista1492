@@ -80,6 +80,21 @@ export function StationModal({
           </button>
         </div>
 
+        {/* Station Image if available */}
+        {station.image && (
+          <div className="relative w-full h-44 sm:h-52 bg-stone-900 overflow-hidden border-b border-amber-300/40">
+            <img
+              src={station.image}
+              alt={station.catalan}
+              className="w-full h-full object-cover object-center transform hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute bottom-2 left-3 right-3 text-white/90 text-xs italic drop-shadow-md">
+              "{station.narrativeHook}"
+            </div>
+          </div>
+        )}
+
         {/* Modal Body */}
         <div className="p-6 space-y-4">
           {/* Difficulty Badge */}

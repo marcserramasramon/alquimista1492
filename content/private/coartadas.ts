@@ -21,9 +21,9 @@ export const COARTADAS: Record<string, Coartada> = {
   B: {
     type: 'medicament',
     frases: [
-      'La Josepa estava malalta de calentura alta, i en Josep va correcar fins al Pare Miquel que guarda les herbes medicinals del rectoria.',
-      'En Tomàs va ser vist per quatre persones distintes carregant una bossa amb tònica de sàvia i mel comprada a la casa de l\'Esteve.',
-      'A la finestra de la casa hi havia una carteta clavada amb la recepta escrita pel Pare Miquel per curar la malaltia.',
+      'La Josepa estava malalta de calentura alta, i en Josep va córrer fins a mossèn Ramon que guarda les herbes medicinals de la rectoria.',
+      'En Tomàs va ser vist per quatre persones distintes carregant una bossa amb tònica de sàlvia i mel comprada a la casa de l\'Esteve.',
+      'A la finestra de la casa hi havia una carteta clavada amb la recepta escrita per mossèn Ramon per curar la malaltia.',
       'L\'home del molí pot jurar que en Miquel va passar per la riera portant una ampoleta de líquid vermellós lligada a la cinta.',
     ],
   },
@@ -31,8 +31,8 @@ export const COARTADAS: Record<string, Coartada> = {
   C: {
     type: 'rector',
     frases: [
-      'El Pare Miquel va cridar en Joan pel sacrament per anar a visitar un moribund al mas de Sots que estava morint de la peste.',
-      'En Valentí pot certificar-ho: era ell qui portava la vela blanca, l\'agua beneïda i el crucifís del rector pel camí de serena.',
+      'Mossèn Ramon va cridar en Joan pel sacrament per anar a visitar un moribund al mas de Sots que estava morint de febres.',
+      'En Valentí pot certificar-ho: era ell qui portava la vela blanca, l\'aigua beneïda i el crucifix del rector pel camí de serena.',
       'Els infants del poble van veure el sacerdot i el seu ajudant pujant cap a la capella de Sant Jaume amb les vestidures.',
       'El rector escriu al llibre de defuncions que va administrar els olis sants aquella nit a tres cases del terme.',
     ],
@@ -51,10 +51,10 @@ export const COARTADAS: Record<string, Coartada> = {
   E: {
     type: 'mestre',
     frases: [
-      'El mestre havia deixat tancat l\'estudi per pujar al rectoria portant els comptes de les escoles que el Pare Miquel li demanava urgentment.',
-      'Els nens que aprenen lletres van declarar que en Jaume el mestre va arribar molt tard aquell dia, tot suant i essorellegat de la pujada.',
+      'El mestre havia deixat tancat l\'estudi per pujar a la rectoria portant els comptes de les escoles que mossèn Ramon li demanava urgentment.',
+      'Els nens que aprenen lletres van declarar que en Bernat el mestre va arribar molt tard aquell dia, tot suant i assedegat de la pujada.',
       'En Josep, el fill del carnisser, va veure el mestre baixant ràpidament del camí de la rectoria amb papers a la mà i cara de preocupació.',
-      'L\'ajud de mestre, una noia del poble, va haver de tancar ella mateixa els portals de l\'estudi perquè el mestre no tornava aquella tarda.',
+      'L\'ajuda de mestre, una noia del poble, va haver de tancar ella mateixa els portals de l\'estudi perquè el mestre no tornava aquella tarda.',
     ],
   },
 };

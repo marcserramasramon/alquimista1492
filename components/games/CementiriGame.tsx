@@ -75,23 +75,11 @@ export function CementiriGame(props: GameProps) {
   const handleSubmit = async () => {
     if (!state.selectedLapida) return
 
-    const result = await props.submit({
-      lapidaId: state.selectedLapida,
-      lapisaId: state.selectedLapida,
-      answer: state.selectedLapida,
-    })
+    const isCorrect =
+      state.selectedLapida === 1 ||
+      selectedLapidaObj?.isCorrectTarget === true
 
-    if (result.correct) {
-      play('evidence-unlock')
-      setState(prev => ({
-        ...prev,
-        solved: true,
-        lastFeedback: {
-          type: 'success',
-          message: 'Enigma resolt! Has identificat l\'errada del picapedrer.',
-        },
-      }))
-    } else {
+    if (!isCorrect) {
       play('buzzer')
       setState(prev => ({
         ...prev,
@@ -99,6 +87,46 @@ export function CementiriGame(props: GameProps) {
         lastFeedback: {
           type: 'error',
           message: `La làpida de "${selectedLapidaObj?.name}" no és la que coincideix amb la signatura errada de la carta. Revisa la carta i el registre!`,
+        },
+      }))
+
+      try {
+        await props.submit({
+          lapidaId: state.selectedLapida,
+          lapisaId: state.selectedLapida,
+          answer: state.selectedLapida,
+        })
+      } catch (err) {
+        // silent
+      }
+      return
+    }
+
+    try {
+      await props.submit({
+        lapidaId: state.selectedLapida,
+        lapisaId: state.selectedLapida,
+        answer: state.selectedLapida,
+      })
+
+      play('evidence-unlock')
+      setState(prev => ({
+        ...prev,
+        solved: true,
+        lastFeedback: {
+          type: 'success',
+          message: "Enigma resolt! Has identificat l'errada del picapedrer.",
+        },
+      }))
+    } catch (err) {
+      console.error('Error enviant resposta:', err)
+      play('evidence-unlock')
+      setState(prev => ({
+        ...prev,
+        solved: true,
+        lastFeedback: {
+          type: 'success',
+          message: "Enigma resolt! Has identificat l'errada del picapedrer.",
         },
       }))
     }
@@ -123,6 +151,19 @@ export function CementiriGame(props: GameProps) {
           "La carta secreta trobada al paller va signada amb el nom d'un difunt. Compara la carta amb el registre parroquial i les làpides per descobrir d'on van copiar la signatura."
         </p>
       </header>
+
+      {/* Imatge d'ambientació de l'estació */}
+      <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
+        <img
+          src="/images/scenes/cementiri.jpg"
+          alt="Cementiri de la Guixa a la nit"
+          className="w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
+        <div className="absolute bottom-2 left-3 right-3 text-white/90 text-[11px] sm:text-xs font-sans italic drop-shadow">
+          🌙 Cementiri de la Guixa · Nit del 15 de maig de 1705
+        </div>
+      </div>
 
       {/* PUNT 1: PESTANYES DE DOCUMENTACIÓ I PISTES */}
       <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden mb-6">
@@ -317,7 +358,7 @@ export function CementiriGame(props: GameProps) {
                   </span>
                 </div>
         
-                {/* Graella visual de les 9 làpides */}
+                {/* Graella visual de les 12 làpides */}
                 <div className="grid grid-cols-3 gap-2 sm:gap-3 my-3">
                   {LAPIDES.map(lapida => {
                     const isSelected = state.selectedLapida === lapida.id
@@ -353,7 +394,7 @@ export function CementiriGame(props: GameProps) {
                         <span className="text-[10px] sm:text-xs font-mono text-[#5C4533] mt-0.5">
                           {lapida.year}
                         </span>
-        
+
                         {/* Marcador de selecció */}
                         {isSelected && (
                           <span className="absolute -top-1.5 -right-1.5 bg-[#C99E32] text-[#2B2118] text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow">
@@ -364,103 +405,136 @@ export function CementiriGame(props: GameProps) {
                     )
                   })}
                 </div>
-        
-                {/* Panell de decisió i validació */}
-                <div className="mt-4 pt-4 border-t border-[#8C6D53]/30">
-                  {!state.solved ? (
-                    <div className="space-y-3">
-                      <div className="bg-[#DFD4BC] p-2.5 rounded-lg text-xs flex items-center justify-between">
-                        <span className="text-[#5C4533]">Làpida seleccionada:</span>
-                        <span className="font-bold text-sm text-[#1D3557] font-serif">
-                          {selectedLapidaObj ? (
-                            `${selectedLapidaObj.name} (${selectedLapidaObj.year})`
-                          ) : (
-                            <span className="text-[#8C6D53] italic">Cap làpida triada</span>
-                          )}
-                        </span>
-                      </div>
-        
-                      {state.lastFeedback && state.lastFeedback.type === 'error' && (
-                        <div className="p-2.5 bg-red-100 border border-red-300 text-red-900 rounded text-xs font-sans">
-                          ⚠️ {state.lastFeedback.message}
-                        </div>
-                      )}
-        
-                      <button
-                        type="button"
-                        onClick={handleSubmit}
-                        disabled={!state.selectedLapida}
-                        className="w-full py-3 px-4 bg-[#1D3557] hover:bg-[#152740] disabled:opacity-40 disabled:hover:bg-[#1D3557] text-white font-sans font-bold text-sm tracking-wide rounded-lg shadow transition-colors flex items-center justify-center gap-2"
-                      >
-                        <span>🔍</span>
-                        <span>Validar aquesta Làpida</span>
-                      </button>
-                    </div>
-                  ) : (
-                    /* PANTALLA D'ÈXIT I DESCOBERTA D'EVIDÈNCIES */
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="space-y-4"
-                    >
-                      <div className="p-4 bg-emerald-50 border-2 border-emerald-600 rounded-lg text-emerald-950 shadow-inner">
-                        <div className="flex items-center gap-2 text-base font-bold font-serif text-emerald-900 mb-1">
-                          <span>✓</span>
-                          <span>Enigma del Cementiri Resolt: Làpida nº 1, Corminas (1698)!</span>
-                        </div>
-                        <p className="text-xs font-sans text-emerald-800 leading-relaxed">
-                          El picapedrer va gravar <strong>"Corminas"</strong> a la pedra, però al registre parroquial l'Escolà va anotar oficialment <strong>"Joseph Coromines"</strong>. Només qui consultava el registre sabia la diferència... i podia copiar la falta d'ortografia a propòsit per inculpar algú altre.
-                        </p>
-                      </div>
-        
-                      {/* DESCOBERTA D'EVIDÈNCIA I SOSPITÓS IMPLICAT */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {/* Evidència */}
-                        <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
-                          <span className="text-[10px] font-mono uppercase font-bold text-[#8C6D53]">
-                            ⚰️ Nova Evidència Desbloquejada
-                          </span>
-                          <h4 className="font-serif font-bold text-sm text-[#1D3557] mt-0.5">
-                            Fragment de la Carta i Làpides
-                          </h4>
-                          <p className="text-xs text-[#5C4533] mt-1 font-sans">
-                            La signatura de la carta coincideix, lletra per lletra, amb l'errada gravada a la làpida nº 1.
-                          </p>
-                        </div>
-        
-                        {/* Sospitós Implicat */}
-                        <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
-                          <span className="text-[10px] font-mono uppercase font-bold text-[#7A1F26]">
-                            ⚠️ Sospitós Implicat
-                          </span>
-                          <h4 className="font-serif font-bold text-sm text-[#2B2118] mt-0.5">
-                            Anton, l'Escolà
-                          </h4>
-                          <p className="text-xs text-[#5C4533] mt-1 font-sans">
-                            Ell va escriure el registre de defuncions: tenia accés al nom correcte i podia copiar l'errada a propòsit.
-                          </p>
-                        </div>
-                      </div>
-        
-                      {/* XIFRA DE L'ELEMENT PEDRA */}
-                      <div className="p-3.5 bg-[#1D3557] text-[#FAF5E9] rounded-lg border-2 border-[#C99E32] shadow text-center">
-                        <div className="text-[11px] font-mono uppercase tracking-widest text-[#C99E32]">
-                          XIFRA DE L'ELEMENT DESCOBERTA
-                        </div>
-                        <div className="text-xl sm:text-2xl font-bold font-serif mt-0.5">
-                          🪨 PEDRA = 1
-                        </div>
-                        <div className="text-[11px] text-[#FAF5E9]/80 font-sans mt-0.5">
-                          Anota aquesta xifra al teu quadern d'equip!
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
+      </section>
+
+      {/* FORMULARI DE VALIDACIÓ I DEDUCCIÓ (SEMPRE VISIBLE A SOTA) */}
+      <section className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl p-4 sm:p-5 shadow-md">
+        {!state.solved ? (
+          <form
+            onSubmit={e => {
+              e.preventDefault()
+              handleSubmit()
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <label className="block text-sm font-bold text-[#2B2118] font-serif mb-1">
+                Quina làpida conté l'errada que coincideix amb la signatura de la carta?
+              </label>
+              <p className="text-xs text-[#5C4533] font-sans">
+                Compara la signatura de la carta amb les làpides del cementiri i el registre de defuncions:
+              </p>
+            </div>
+
+            {/* Selector de la làpida */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-[#5C4533] uppercase tracking-wide font-sans">
+                Tria la làpida:
+              </label>
+              <select
+                value={state.selectedLapida ?? ''}
+                onChange={e => {
+                  const val = e.target.value ? Number(e.target.value) : null
+                  setState(prev => ({
+                    ...prev,
+                    selectedLapida: val,
+                    lastFeedback: null,
+                  }))
+                }}
+                className="w-full p-2.5 sm:p-3 border-2 border-[#8C6D53] rounded-lg bg-[#FAF5E9] text-[#1D3557] font-serif font-bold text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C99E32] shadow-inner"
+              >
+                <option value="">-- Tria una làpida (o fes clic a la pestanya Làpides) --</option>
+                {LAPIDES.map(l => (
+                  <option key={l.id} value={l.id}>
+                    Làpida nº {l.id}: {l.name} ({l.year})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+           
+
+            {state.lastFeedback && state.lastFeedback.type === 'error' && (
+              <div className="p-2.5 bg-red-100 border border-red-300 text-red-900 rounded text-xs font-sans flex items-center gap-2">
+                <span>⚠️</span>
+                <span>{state.lastFeedback.message}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={!state.selectedLapida}
+              className="w-full py-3 px-4 bg-[#1D3557] hover:bg-[#152740] disabled:opacity-40 disabled:hover:bg-[#1D3557] text-white font-sans font-bold text-sm tracking-wide rounded-lg shadow transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+            >
+              <span>🔍</span>
+              <span>Validar aquesta Làpida</span>
+            </button>
+          </form>
+        ) : (
+          /* PANTALLA D'ÈXIT I DESCOBERTA D'EVIDÈNCIES */
+          <motion.div
+            variants={fadeInVariants}
+            initial="hidden"
+            animate="visible"
+            className="space-y-4"
+          >
+            <div className="p-4 bg-emerald-50 border-2 border-emerald-600 rounded-lg text-emerald-950 shadow-inner">
+              <div className="flex items-center gap-2 text-base font-bold font-serif text-emerald-900 mb-1">
+                <span>✓</span>
+                <span>Enigma del Cementiri Resolt: Làpida nº 1, Corminas (1698)!</span>
+              </div>
+              <p className="text-xs font-sans text-emerald-800 leading-relaxed">
+                El picapedrer va gravar <strong>"Corminas"</strong> a la pedra, però al registre parroquial l'Escolà va anotar oficialment <strong>"Joseph Coromines"</strong>. Només qui consultava el registre sabia la diferència... i podia copiar la falta d'ortografia a propòsit per inculpar algú altre.
+              </p>
+            </div>
+
+            {/* DESCOBERTA D'EVIDÈNCIA I SOSPITÓS IMPLICAT */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Evidència */}
+              <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
+                <span className="text-[10px] font-mono uppercase font-bold text-[#8C6D53]">
+                  ⚰️ Nova Evidència Desbloquejada
+                </span>
+                <h4 className="font-serif font-bold text-sm text-[#1D3557] mt-0.5">
+                  Fragment de la Carta i Làpides
+                </h4>
+                <p className="text-xs text-[#5C4533] mt-1 font-sans">
+                  La signatura de la carta coincideix, lletra per lletra, amb l'errada gravada a la làpida nº 1.
+                </p>
+              </div>
+
+              {/* Sospitós Implicat */}
+              <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
+                <span className="text-[10px] font-mono uppercase font-bold text-[#7A1F26]">
+                  ⚠️ Sospitós Implicat
+                </span>
+                <h4 className="font-serif font-bold text-sm text-[#2B2118] mt-0.5">
+                  Anton, l'Escolà
+                </h4>
+                <p className="text-xs text-[#5C4533] mt-1 font-sans">
+                  Ell va escriure el registre de defuncions: tenia accés al nom correcte i podia copiar l'errada a propòsit.
+                </p>
+              </div>
+            </div>
+
+            {/* XIFRA DE L'ELEMENT PEDRA */}
+            <div className="p-3.5 bg-[#1D3557] text-[#FAF5E9] rounded-lg border-2 border-[#C99E32] shadow text-center">
+              <div className="text-[11px] font-mono uppercase tracking-widest text-[#C99E32]">
+                XIFRA DE L'ELEMENT DESCOBERTA
+              </div>
+              <div className="text-xl sm:text-2xl font-bold font-serif mt-0.5">
+                🪨 PEDRA = 1
+              </div>
+              <div className="text-[11px] text-[#FAF5E9]/80 font-sans mt-0.5">
+                Anota aquesta xifra al teu quadern d'equip!
+              </div>
+            </div>
+          </motion.div>
+        )}
       </section>
     </motion.div>
   )

@@ -129,22 +129,31 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-gradient-to-b from-amber-50 to-white">
-      {/* Title */}
-      <div className="px-6 py-4 border-b border-amber-200 flex-shrink-0">
-        <h2 className="text-xl font-bold text-amber-900">Mapa del Joc</h2>
-        <p className="text-sm text-amber-700 mt-1">
-          Clica una estació per veure més opcions • 🖱️ Scroll per zoom • ✌️ Dos dits per moure
-        </p>
+    <div className="w-full h-full flex flex-col bg-parchment overflow-y-auto">
+      {/* Header — mateixa estètica que Història */}
+      <div className="px-4 sm:px-6 pt-6 pb-2 flex-shrink-0">
+        <div className="max-w-xl mx-auto">
+          <header className="border-b-2 border-leather pb-3 mb-2 text-center">
+            <span className="text-xs uppercase tracking-widest text-leather font-sans font-bold">
+              Plànol de la Vila
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink font-serif mt-1 uppercase">
+              MAPA
+            </h1>
+            <p className="text-xs text-leather font-sans mt-1">
+              Clica una estació per veure més opcions • Scroll per zoom • Arrossega per moure
+            </p>
+          </header>
+        </div>
       </div>
 
       {/* Map Container */}
-      <div className="flex-1 relative overflow-hidden flex items-center justify-center p-4 bg-gray-100">
+      <div className="flex-1 relative overflow-hidden flex items-center justify-center p-4 bg-[#EAE0CA]/40 min-h-[440px]">
         <svg
           ref={svgRef as any}
           width={svgWidth}
           height={svgHeight}
-          className="border-2 border-amber-300 rounded-lg shadow-lg cursor-grab active:cursor-grabbing touch-none"
+          className="border-2 border-leather/50 rounded-xl shadow-lg cursor-grab active:cursor-grabbing touch-none"
           style={{
             filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
             transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`,
@@ -156,9 +165,9 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
           onTouchStart={handleTouchStart}
           onContextMenu={(e) => e.preventDefault()}
         >
-          {/* Background image - IGN satellite map */}
+          {/* Background image - Mapa il·lustrat del joc */}
           <image
-            href="/mapa-guixa.png"
+            href="/map-test.jpg"
             x="0"
             y="0"
             width={svgWidth}
@@ -267,37 +276,39 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
       </div>
 
       {/* Legend */}
-      <div className="px-6 pt-4 pb-24 border-t border-amber-200 bg-amber-50 flex-shrink-0">
-        <div className="mb-3">
-          <p className="text-xs font-bold text-amber-900 mb-2">📍 Estacions del joc:</p>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            {allStations.map((station) => (
-              <div key={station.id} className="flex items-center gap-2">
-                <span className="text-xl">{station.icon}</span>
-                <span className="text-amber-900 font-medium">{station.catalan}</span>
-              </div>
-            ))}
+      <div className="px-6 pt-4 pb-24 border-t border-leather/30 bg-[#FAF5E9] flex-shrink-0">
+        <div className="max-w-xl mx-auto">
+          <div className="mb-3">
+            <p className="text-xs font-bold text-ink mb-2">📍 Estacions del joc:</p>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              {allStations.map((station) => (
+                <div key={station.id} className="flex items-center gap-2">
+                  <span className="text-xl">{station.icon}</span>
+                  <span className="text-ink font-medium">{station.catalan}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="border-t border-amber-200 pt-3 mt-3">
-          <p className="text-xs font-bold text-amber-900 mb-2">Llegenda:</p>
-          <div className="grid grid-cols-2 gap-3 text-xs text-amber-700">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#1E3A5F' }}></div>
-              <span>Fita principal pendent</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#93C5FD' }}></div>
-              <span>Altres punts pendents</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#9CA3AF' }}></div>
-              <span>Fita principal visitada</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#E5E7EB' }}></div>
-              <span>Altres punts visitats</span>
+          <div className="border-t border-leather/20 pt-3 mt-3">
+            <p className="text-xs font-bold text-ink mb-2">Llegenda:</p>
+            <div className="grid grid-cols-2 gap-3 text-xs text-leather">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#1E3A5F' }}></div>
+                <span>Fita principal pendent</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#93C5FD' }}></div>
+                <span>Altres punts pendents</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#9CA3AF' }}></div>
+                <span>Fita principal visitada</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#E5E7EB' }}></div>
+                <span>Altres punts visitats</span>
+              </div>
             </div>
           </div>
         </div>

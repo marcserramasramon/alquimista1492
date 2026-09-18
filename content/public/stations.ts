@@ -16,6 +16,7 @@ export interface Station {
   longitude: number
   icon: string
   difficulty: 'facil' | 'mig' | 'dificil'
+  image?: string
 }
 
 export const STATIONS: Record<string, Station> = {
@@ -30,6 +31,7 @@ export const STATIONS: Record<string, Station> = {
     longitude: 2.224452,
     icon: '🔥',
     difficulty: 'facil',
+    image: '/images/scenes/serrat-bruixes.jpg',
   },
   'font-ferro': {
     id: 'font-ferro',
@@ -42,6 +44,7 @@ export const STATIONS: Record<string, Station> = {
     longitude: 2.227690,
     icon: '💧',
     difficulty: 'mig',
+    image: '/images/scenes/font-ferro.jpg',
   },
   'planes-bones': {
     id: 'planes-bones',
@@ -54,6 +57,7 @@ export const STATIONS: Record<string, Station> = {
     longitude: 2.232733,
     icon: '🗺️',
     difficulty: 'mig',
+    image: '/images/scenes/planes-bones.jpg',
   },
   'cementiri': {
     id: 'cementiri',
@@ -66,6 +70,7 @@ export const STATIONS: Record<string, Station> = {
     longitude: 2.227446,
     icon: '🪦',
     difficulty: 'dificil',
+    image: '/images/scenes/cementiri.jpg',
   },
   'rectoria': {
     id: 'rectoria',
@@ -78,6 +83,7 @@ export const STATIONS: Record<string, Station> = {
     longitude: 2.228130,
     icon: '⛪',
     difficulty: 'mig',
+    image: '/images/scenes/rectoria.jpg',
   },
   'pla-masset': {
     id: 'pla-masset',
@@ -90,6 +96,7 @@ export const STATIONS: Record<string, Station> = {
     longitude: 2.229841,
     icon: '🦹‍♂️',
     difficulty: 'facil',
+    image: '/images/scenes/acusacio.jpg',
   },
   'escola': {
     id: 'escola',
@@ -114,6 +121,7 @@ export const STATIONS: Record<string, Station> = {
     longitude: 2.228130,
     icon: '🪎',
     difficulty: 'dificil',
+    image: '/images/scenes/caixa-almoines.jpg',
   },
   'sometent-campanar': {
     id: 'sometent-campanar',
@@ -126,6 +134,7 @@ export const STATIONS: Record<string, Station> = {
     longitude: 2.228500,
     icon: '🔔',
     difficulty: 'dificil',
+    image: '/images/scenes/sometent.jpg',
   },
 } as const
 

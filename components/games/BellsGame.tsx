@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
 import { useAudio } from '@/lib/audio/useAudio'
@@ -32,6 +33,7 @@ interface BellsGameState {
  * 5. Result — Epíleg + ranking
  */
 export function BellsGame(props: GameProps) {
+  const router = useRouter()
   const { play } = useAudio()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -96,23 +98,27 @@ export function BellsGame(props: GameProps) {
     setError('')
 
     try {
-      const result = await props.submit({
-        moralChoice: state.moralChoice,
+      const res = await fetch('/api/game/bells', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          moralChoice: state.moralChoice,
+        }),
       })
 
+      const result = await res.json()
       console.log('Bell sequence API response:', result)
 
       const seq = (result.bellSequence || result.sequence)
       if (Array.isArray(seq)) {
         setState(prev => ({ ...prev, bellSequence: seq }))
         // Play the sequence after it's stored
-        // Use setTimeout to ensure state is updated before playing
         setTimeout(async () => {
           await playFullSequence()
           setLoading(false)
         }, 100)
       } else {
-        console.error('No sequence in API response:', { bellSequence: result.bellSequence, sequence: result.sequence, isArray: Array.isArray(result.bellSequence || result.sequence) })
+        console.error('No sequence in API response:', result)
         setError('No es pot obtenir la seqüència de campanades')
         setLoading(false)
       }
@@ -180,13 +186,18 @@ export function BellsGame(props: GameProps) {
     setError('')
 
     try {
-      const result = await props.submit({
-        moralChoice: state.moralChoice,
-        bellSequence: sequence,
-        attempts: state.attempts,
+      const res = await fetch('/api/game/bells', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          moralChoice: state.moralChoice,
+          bellSequence: sequence,
+        }),
       })
 
-      if (result.correct) {
+      const result = await res.json()
+
+      if (result.success || result.correct) {
         play('evidence-unlock')
         const dp = result.decisionPercentage
         const stats = dp
@@ -253,6 +264,19 @@ export function BellsGame(props: GameProps) {
           "Les campanades de l'alba alertaran els conjurats"
         </p>
       </header>
+
+      {/* Imatge d'ambientació de l'estació */}
+      <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
+        <img
+          src="/images/scenes/sometent.jpg"
+          alt="Campanar de Sant Sebastià - El Sometent"
+          className="w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
+        <div className="absolute bottom-2 left-3 right-3 text-white/90 text-[11px] sm:text-xs font-sans italic drop-shadow">
+          🔔 Campanar de Sant Sebastià · El toc de sometent a l'alba
+        </div>
+      </div>
 
       {/* Tabs Menu */}
       <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden mb-6">
@@ -523,6 +547,17 @@ export function BellsGame(props: GameProps) {
               <p className="text-2xl mb-2">⏱️ + 100 PUNTS</p>
               <p className="text-xs text-[#8C6D53] font-sans">Compartida per tots l'equip</p>
             </div>
+
+            <motion.button
+              type="button"
+              onClick={() => router.push('/results')}
+              className="w-full py-3.5 px-4 bg-[#1D3557] hover:bg-[#15273f] text-[#FAF5E9] font-bold border-2 border-[#C99E32] rounded-lg transition font-sans shadow-md flex items-center justify-center gap-2 text-sm sm:text-base cursor-pointer mt-1"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span>Veure Resultats de l'Equip</span>
+              <span>➔</span>
+            </motion.button>
           </div>
         )}
         </div>

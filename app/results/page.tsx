@@ -19,7 +19,7 @@ export default function PlayerResultsPage() {
         // 1. Get current authenticated player
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) {
-          router.push('/login')
+          router.push('/')
           return
         }
 

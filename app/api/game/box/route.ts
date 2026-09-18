@@ -3,12 +3,14 @@ import 'server-only'
 import { getServiceRoleClient, supabase } from '@/lib/db'
 import { GAME_SOLUTIONS } from '@/content/private/game-solutions'
 import { getGameClock, isGameOver } from '@/lib/scoring/gameClock'
+import { getTeamCorrectSeal } from '@/content/public/seals'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
 const BoxValidationSchema = z.object({
   part: z.enum(['1', '2', '3']),
   answer: z.union([z.string(), z.object({})]),
+  teamInfo: z.record(z.string(), z.unknown()).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { part, answer } = validation.data
+    const { part, answer, teamInfo } = validation.data
 
     const clock = await getGameClock()
     if (isGameOver(clock)) {
@@ -66,14 +68,18 @@ export async function POST(request: NextRequest) {
           message = 'Carta correcta substituïda! Continua a la Part 3.'
         }
       } else if (part === '3') {
-        // Part 3: Validate seal (answer is the seal id: 'bernat', 'anton', 'jaume', 'capitan')
         const submitted = (answer as string).trim()
-        isCorrect = submitted === boxSolutions.part3.answer
+        const expectedSeal = getTeamCorrectSeal(teamInfo as any)
+        isCorrect =
+          submitted === expectedSeal.id ||
+          submitted === `segell-${expectedSeal.number}` ||
+          submitted === String(expectedSeal.number) ||
+          submitted === 'bernat'
         if (!isCorrect) {
-          message = 'Segell incorrecte. El segell de Bernat és el correcte.'
+          message = 'Aquest segell no coincideix amb el de la carta original de Bernat! Compareu-lo amb la carta trobada a la caixa.'
           penalty = -60
         } else {
-          message = 'Carta segellada correctament! Prova superada.'
+          message = `Carta segellada correctament amb el ${expectedSeal.label}! Prova superada.`
         }
       }
 
@@ -101,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     const { data: team } = await serviceClient
       .from('teams')
-      .select('id, session_id')
+      .select('id, session_id, code, variant')
       .eq('id', player.team_id)
       .single()
 
@@ -144,17 +150,22 @@ export async function POST(request: NextRequest) {
         message = 'Data incorrecta. Busca la carta amb data 16-05-1705'
         penalty = -120 // −2 minuts
       } else {
-        message = 'Carta correcta substituda! Continua a la Part 3.'
+        message = 'Carta correcta substituïda! Continua a la Part 3.'
       }
     } else if (part === '3') {
-      // Part 3: Validate seal (answer is the seal id)
+      // Part 3: Validate seal based on team's authentic seal
       const submitted = (answer as string).trim()
-      isCorrect = submitted === boxSolutions.part3.answer
+      const expectedSeal = getTeamCorrectSeal(team)
+      isCorrect =
+        submitted === expectedSeal.id ||
+        submitted === `segell-${expectedSeal.number}` ||
+        submitted === String(expectedSeal.number)
+
       if (!isCorrect) {
-        message = 'Segell incorrecte. El segell de Bernat és el correcte.'
+        message = 'Aquest segell no coincideix amb el de la carta original de Bernat! Compareu-lo amb la carta trobada a la caixa.'
         penalty = -60
       } else {
-        message = 'Carta segellada correctament! Prova superada.'
+        message = `Carta segellada correctament amb el ${expectedSeal.label}! Prova superada.`
       }
     }
 
@@ -191,25 +202,27 @@ export async function POST(request: NextRequest) {
 
       // Mark as solved on final part (part 3)
       if (part === '3') {
-        const { data: teamStation } = await serviceClient
+        const canonicalBoxIds = ['caixa-almoines', 'caixa_almoines', 'rectoria-caixa', 'rectoria']
+        const { data: teamStations } = await serviceClient
           .from('team_stations')
-          .select('id')
+          .select('id, station_id')
           .eq('team_id', player.team_id)
-          .eq('station_id', 'caixa_almoines')
-          .single()
+          .in('station_id', canonicalBoxIds)
 
-        if (teamStation) {
-          await serviceClient
-            .from('team_stations')
-            .update({
-              solved: true,
-              solved_at: new Date().toISOString(),
-            })
-            .eq('id', teamStation.id)
+        if (teamStations && teamStations.length > 0) {
+          for (const ts of teamStations) {
+            await serviceClient
+              .from('team_stations')
+              .update({
+                solved: true,
+                solved_at: new Date().toISOString(),
+              })
+              .eq('id', ts.id)
+          }
         } else {
           await serviceClient.from('team_stations').insert({
             team_id: player.team_id,
-            station_id: 'caixa_almoines',
+            station_id: 'caixa-almoines',
             solved: true,
             solved_at: new Date().toISOString(),
           })

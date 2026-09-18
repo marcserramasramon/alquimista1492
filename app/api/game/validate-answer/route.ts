@@ -35,6 +35,13 @@ const STATION_EVIDENCE: Record<string, string[]> = {
   'planes_bones': ['light'],
   'planes-bones': ['light'],
   'cementiri': ['seal', 'filigrana'],
+  'pla-masset': ['declaratio_anton', 'caligraphia'],
+  'pla_masset': ['declaratio_anton', 'caligraphia'],
+  'pla-masset-accusation': ['declaratio_anton', 'caligraphia'],
+  'acusacio': ['declaratio_anton', 'caligraphia'],
+  'caixa-almoines': ['nota_capita', 'carta_falsa'],
+  'caixa_almoines': ['nota_capita', 'carta_falsa'],
+  'rectoria-caixa': ['nota_capita', 'carta_falsa'],
 }
 
 const CANONICAL_STATION_IDS: Record<string, string> = {
@@ -46,15 +53,24 @@ const CANONICAL_STATION_IDS: Record<string, string> = {
   'planes_bones': 'planes-bones',
   'planes-bones': 'planes-bones',
   'cementiri': 'cementiri',
+  'pla-masset': 'pla-masset-accusation',
+  'pla_masset': 'pla-masset-accusation',
   'pla-masset-control': 'pla-masset-control',
   'pla-masset-accusation': 'pla-masset-accusation',
   'acusacio': 'pla-masset-accusation',
   'caixa-almoines': 'rectoria-caixa',
   'caixa_almoines': 'rectoria-caixa',
   'rectoria-caixa': 'rectoria-caixa',
-  'campanar': 'sometent-campanar',
-  'bells-sometent': 'sometent-campanar',
-  'sometent-campanar': 'sometent-campanar',
+  'campanar': 'campanar-sometent',
+  'bells-sometent': 'campanar-sometent',
+  'bells_sometent': 'campanar-sometent',
+  'sometent-campanar': 'campanar-sometent',
+  'campanar-sometent': 'campanar-sometent',
+}
+
+interface ComparisonResult {
+  isCorrect: boolean
+  isGiro?: boolean
 }
 
 /**
@@ -62,39 +78,106 @@ const CANONICAL_STATION_IDS: Record<string, string> = {
  */
 function compareAnswers(
   submitted: unknown,
-  expected: unknown,
+  solutionData: Record<string, unknown>,
   stationType: string
-): boolean {
+): ComparisonResult {
+  const expected = solutionData.answer
+
+  // Special handling for AccusationGame: { suspect, evidence }
+  if (
+    typeof submitted === 'object' &&
+    submitted !== null &&
+    'suspect' in submitted
+  ) {
+    const sub = submitted as { suspect: string; evidence?: unknown[] }
+    // If player accuses Anton -> triggers narrative giro
+    if (sub.suspect === 'anton') {
+      return { isCorrect: true, isGiro: true }
+    }
+
+    // Traitor is Bernat
+    const traitor = (solutionData.traitor as string) || (typeof expected === 'string' ? expected : 'bernat')
+    if (sub.suspect === traitor || sub.suspect === 'bernat') {
+      const evidence = sub.evidence || []
+      const minEvidence = (solutionData.minEvidence as number) || 3
+      if (evidence.length >= minEvidence) {
+        return { isCorrect: true, isGiro: false }
+      }
+    }
+    return { isCorrect: false }
+  }
+
   // Unwrap object payload if simple field provided
-  if (typeof submitted === 'object' && submitted !== null) {
-    const obj = submitted as Record<string, unknown>
-    if ('date' in obj && (typeof obj.date === 'string' || typeof obj.date === 'number')) {
-      submitted = String(obj.date)
+  let normalizedSubmitted = submitted
+  if (typeof normalizedSubmitted === 'object' && normalizedSubmitted !== null) {
+    const obj = normalizedSubmitted as Record<string, unknown>
+    if ('lapidaId' in obj || 'lapisaId' in obj) {
+      normalizedSubmitted = String(obj.lapidaId || obj.lapisaId)
+    } else if ('date' in obj && (typeof obj.date === 'string' || typeof obj.date === 'number')) {
+      normalizedSubmitted = String(obj.date)
     } else if ('location' in obj && typeof obj.location === 'string') {
-      submitted = String(obj.location)
+      normalizedSubmitted = String(obj.location)
     } else if ('destination' in obj && typeof obj.destination === 'string') {
-      submitted = String(obj.destination)
+      normalizedSubmitted = String(obj.destination)
     } else if ('answer' in obj && (typeof obj.answer === 'string' || typeof obj.answer === 'number')) {
-      submitted = String(obj.answer)
+      normalizedSubmitted = String(obj.answer)
     }
   }
 
   // Coerce number and string for simple comparisons
-  if (typeof submitted === 'number' && typeof expected === 'string') {
-    submitted = String(submitted)
-  } else if (typeof submitted === 'string' && typeof expected === 'number') {
-    expected = String(expected)
+  let normExpected = expected
+  if (typeof normalizedSubmitted === 'number' && typeof normExpected === 'string') {
+    normalizedSubmitted = String(normalizedSubmitted)
+  } else if (typeof normalizedSubmitted === 'string' && typeof normExpected === 'number') {
+    normExpected = String(normExpected)
+  }
+
+  // Cementiri specific comparisons
+  if (stationType.includes('cementiri')) {
+    const sStr = String(normalizedSubmitted).toUpperCase().trim()
+    if (
+      sStr === '1' ||
+      sStr === 'CORMINAS' ||
+      sStr === 'JOSEPH COROMINES' ||
+      sStr === 'COROMINES' ||
+      sStr === 'LAPIDA 1' ||
+      sStr.replace(/\s+/g, '') === '1' ||
+      sStr.replace(/\s+/g, '') === 'CORMINAS' ||
+      sStr.replace(/\s+/g, '') === 'JOSEPHCOROMINES'
+    ) {
+      return { isCorrect: true }
+    }
+  }
+
+  // Font del Ferro specific comparisons
+  if (stationType.includes('font') || stationType.includes('ferro')) {
+    const sStr = String(normalizedSubmitted).toUpperCase().trim()
+    const expDay = solutionData.day ? String(solutionData.day) : null
+    if (
+      (expDay && sStr === expDay) ||
+      (expDay && sStr.includes(expDay)) ||
+      sStr === '12' ||
+      sStr === '12 DE MAIG' ||
+      sStr === '12 MAIG' ||
+      sStr === 'DIA 12' ||
+      sStr === 'DOTZE' ||
+      sStr.includes('12') ||
+      sStr === '11' ||
+      sStr === '13'
+    ) {
+      return { isCorrect: true }
+    }
   }
 
   // String comparison (most common)
-  if (typeof submitted === 'string' && typeof expected === 'string') {
-    const subClean = submitted.toUpperCase().trim().replace(/[.,;:!?'"`·\-]/g, ' ').replace(/\s+/g, ' ').trim()
-    const expClean = expected.toUpperCase().trim().replace(/[.,;:!?'"`·\-]/g, ' ').replace(/\s+/g, ' ').trim()
-    if (subClean === expClean) return true
+  if (typeof normalizedSubmitted === 'string' && typeof normExpected === 'string') {
+    const subClean = normalizedSubmitted.toUpperCase().trim().replace(/[.,;:!?'"`·\-]/g, ' ').replace(/\s+/g, ' ').trim()
+    const expClean = normExpected.toUpperCase().trim().replace(/[.,;:!?'"`·\-]/g, ' ').replace(/\s+/g, ' ').trim()
+    if (subClean === expClean) return { isCorrect: true }
 
     const subCompact = subClean.replace(/\s+/g, '')
     const expCompact = expClean.replace(/\s+/g, '')
-    if (subCompact === expCompact) return true
+    if (subCompact === expCompact) return { isCorrect: true }
 
     // Variants especials de Serrat
     if (stationType.includes('serrat')) {
@@ -109,25 +192,7 @@ function compareAnswers(
         subCompact === 'SAPLLETRA' ||
         (subCompact.includes('SAP') && (subCompact.includes('LLETRA') || subCompact.includes('LETRA')))
       ) {
-        return true
-      }
-    }
-
-    // Variants especials de Font del Ferro (dia 12)
-    if (stationType.includes('font') || stationType.includes('ferro')) {
-      if (
-        subClean === '12' ||
-        subClean === '12 DE MAIG' ||
-        subClean === '12 MAIG' ||
-        subClean === 'DIA 12' ||
-        subClean === 'DIA 12 DE MAIG' ||
-        subClean === 'EL 12' ||
-        subClean === 'DOTZE' ||
-        subCompact === '12' ||
-        subCompact === '12DEMAIG' ||
-        subCompact === 'DIA12'
-      ) {
-        return true
+        return { isCorrect: true }
       }
     }
 
@@ -155,74 +220,58 @@ function compareAnswers(
         subCompact.includes('FARGA') ||
         (subCompact.includes('JOAN') && subCompact.includes('PERE'))
       ) {
-        return true
+        return { isCorrect: true }
       }
     }
 
-    return false
+    return { isCorrect: false }
   }
 
   // Number comparison
-  if (typeof submitted === 'number' && typeof expected === 'number') {
-    return submitted === expected
+  if (typeof normalizedSubmitted === 'number' && typeof normExpected === 'number') {
+    return { isCorrect: normalizedSubmitted === normExpected }
   }
 
   // Object comparison for complex answers
   if (
-    typeof submitted === 'object' &&
-    submitted !== null &&
-    typeof expected === 'object' &&
-    expected !== null
+    typeof normalizedSubmitted === 'object' &&
+    normalizedSubmitted !== null &&
+    typeof normExpected === 'object' &&
+    normExpected !== null
   ) {
     // Handle PlaneBonesGame answer: { visitedCells, totalMinutes }
-    if ('visitedCells' in submitted || 'totalMinutes' in submitted) {
-      const sub = submitted as Record<string, unknown>
-      const exp = expected as Record<string, unknown>
+    if ('visitedCells' in normalizedSubmitted || 'totalMinutes' in normalizedSubmitted) {
+      const sub = normalizedSubmitted as Record<string, unknown>
+      const exp = normExpected as Record<string, unknown>
       // Compare time-based answer (convert both to comparable format)
       if ('time' in exp && 'totalMinutes' in sub) {
         const submittedTime = sub.totalMinutes as number
         const expectedTime = exp.time as number
         // Allow ±5 minute tolerance
-        return Math.abs(submittedTime - expectedTime) <= 5
+        return { isCorrect: Math.abs(submittedTime - expectedTime) <= 5 }
       }
 
       // Check if arrived at Farga (id 3)
       if (Array.isArray(sub.visitedCells)) {
         const last = sub.visitedCells[sub.visitedCells.length - 1]
         if (last === 3 || last === '3' || sub.visitedCells.includes(3)) {
-          return true
+          return { isCorrect: true }
         }
       }
     }
 
     // Handle ControlGame answer: { type, timestamp }
-    if ('type' in submitted) {
-      const sub = submitted as Record<string, unknown>
-      const exp = expected as Record<string, unknown>
-      return sub.type === exp.type
-    }
-
-    // Handle AccusationGame answer: { suspect, evidence }
-    if ('suspect' in submitted && 'evidence' in submitted) {
-      const sub = submitted as Record<string, unknown>
-      const exp = expected as Record<string, unknown>
-
-      // Check suspect match
-      if (sub.suspect !== exp.traitor) {
-        return false
-      }
-
-      // Check if evidence array has minimum required pieces
-      const evidence = sub.evidence as unknown[]
-      const minEvidence = (exp.minEvidence as number) || 1
-      return evidence && evidence.length >= minEvidence
+    if ('type' in normalizedSubmitted) {
+      const sub = normalizedSubmitted as Record<string, unknown>
+      const exp = normExpected as Record<string, unknown>
+      return { isCorrect: sub.type === exp.type }
     }
 
     // Default: deep equality for other object types
-    return JSON.stringify(submitted) === JSON.stringify(expected)
+    return { isCorrect: JSON.stringify(normalizedSubmitted) === JSON.stringify(normExpected) }
   }
 
-  return false
+  return { isCorrect: false }
 }
 
 export async function POST(request: NextRequest) {
@@ -329,7 +378,9 @@ export async function POST(request: NextRequest) {
     const solutionData = solution.solution as Record<string, unknown>
 
     // === Step 4: Compare answer with solution ===
-    const isCorrect = compareAnswers(answer, solutionData.answer, stationId)
+    const comparison = compareAnswers(answer, solutionData, stationId)
+    const isCorrect = comparison.isCorrect
+    const isGiro = comparison.isGiro ?? false
 
     // === Step 5: Record attempt ===
     // Convert answer to string for storage
@@ -359,6 +410,22 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to record attempt' },
         { status: 500 }
       )
+    }
+
+    // Si és el Gir narratiu (acusació de l'Anton)
+    if (isGiro) {
+      // Desbloqueja la declaració de l'Anton per corroborar que és innocent
+      await serviceClient.from('team_evidences').upsert(
+        { team_id: team.id, evidence_id: 'declaratio_anton' },
+        { onConflict: 'team_id,evidence_id', ignoreDuplicates: true }
+      )
+
+      return NextResponse.json({
+        success: true,
+        isGiro: true,
+        message: "L'Anton arriba esbufegant: el mossèn ha estat ferit a la rectoria!",
+        reward: 0,
+      })
     }
 
     let scoreReward = 0

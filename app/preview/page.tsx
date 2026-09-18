@@ -218,6 +218,25 @@ export default function PreviewPage() {
       return result
     }
 
+    if (answerObj?.lapidaId !== undefined || answerObj?.lapisaId !== undefined) {
+      const lid = answerObj.lapidaId ?? answerObj.lapisaId
+      const isLapida1 = String(lid) === '1' || String(answerObj.answer).toUpperCase() === 'CORMINAS'
+      const result: SubmitResult = {
+        correct: isLapida1,
+        message: isLapida1 ? 'Enigma resolt correctament!' : 'Làpida incorrecta. Revisa la carta!',
+        score: isLapida1 ? 100 : -10,
+      }
+      setSubmissionLog(prev => [
+        {
+          time: new Date().toLocaleTimeString('ca-ES'),
+          data: answer,
+          result,
+        },
+        ...prev.slice(0, 4),
+      ])
+      return result
+    }
+
     const result: SubmitResult = {
       correct: isCorrect,
       message: isCorrect ? 'Enigma resolt correctament!' : 'Resposta incorrecta. Torna-ho a provar.',

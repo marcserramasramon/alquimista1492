@@ -19,6 +19,7 @@ export interface SubmitResult {
     optionB?: number
   }
   giro?: boolean
+  isGiro?: boolean
 }
 
 export interface GameProps {

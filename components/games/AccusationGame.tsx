@@ -135,7 +135,7 @@ export function AccusationGame(props: GameProps) {
       })
 
       if (result.correct) {
-        if (state.selectedSuspect === 'anton' && !state.hasSeenGiro) {
+        if ((state.selectedSuspect === 'anton' || (result as any)?.isGiro) && !state.hasSeenGiro) {
           play('bell-ring')
           setState(prev => ({
             ...prev,
@@ -195,6 +195,19 @@ export function AccusationGame(props: GameProps) {
           "Assenyala el traïdor de la Guixa i aporta les 3 proves concloents"
         </p>
       </header>
+
+      {/* Imatge d'ambientació de l'estació */}
+      <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
+        <img
+          src="/images/scenes/acusacio.jpg"
+          alt="L'Acusació - Pla de Masset"
+          className="w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
+        <div className="absolute bottom-2 left-3 right-3 text-white/90 text-[11px] sm:text-xs font-sans italic drop-shadow">
+          ⚖️ Pla de Masset · La Nit de la Veritat i l'Acusació Final
+        </div>
+      </div>
 
       {/* CONTINGUT PRINCIPAL DEL JOC */}
       <main className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl p-4 sm:p-6 shadow-md">

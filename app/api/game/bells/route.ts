@@ -19,7 +19,7 @@ import { z } from 'zod'
 
 const BellsValidationSchema = z.object({
   moralChoice: z.enum(['A', 'B']),
-  bellSequence: z.array(z.number().int().min(0).max(3)).length(8).optional(),
+  bellSequence: z.array(z.number().int().min(0).max(3)).min(4).max(8).optional(),
 })
 
 interface BellsGameState {
@@ -30,11 +30,11 @@ interface BellsGameState {
 }
 
 /**
- * Generate a random sequence of 8 bells (0-3)
+ * Generate a sequence of 4 bells (0-3)
  */
 function generateBellSequence(): number[] {
   const sequence: number[] = []
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 4; i++) {
     sequence.push(Math.floor(Math.random() * 4))
   }
   return sequence
@@ -47,11 +47,11 @@ function validateBellSequence(
   userSequence: number[],
   expectedSequence: number[]
 ): boolean {
-  if (userSequence.length !== expectedSequence.length) {
+  if (userSequence.length < 4) {
     return false
   }
 
-  return userSequence.every((bell, index) => bell === expectedSequence[index])
+  return userSequence.slice(0, 4).every((bell, index) => bell === expectedSequence[index])
 }
 
 /**
@@ -281,22 +281,31 @@ export async function POST(request: NextRequest) {
     if (isCorrect) {
       scoreReward = 100
 
-      // Mark as solved
-      const { data: existingStation } = await serviceClient
+      // Mark as solved in team_stations
+      const canonicalBellsIds = ['sometent-campanar', 'bells_sometent', 'campanar', 'bells-sometent']
+      const { data: existingStations } = await serviceClient
         .from('team_stations')
-        .select('id')
+        .select('id, station_id')
         .eq('team_id', player.team_id)
-        .eq('station_id', 'bells_sometent')
-        .single()
+        .in('station_id', canonicalBellsIds)
 
-      if (existingStation) {
-        await serviceClient
-          .from('team_stations')
-          .update({
-            solved: true,
-            solved_at: new Date().toISOString(),
-          })
-          .eq('id', existingStation.id)
+      if (existingStations && existingStations.length > 0) {
+        for (const es of existingStations) {
+          await serviceClient
+            .from('team_stations')
+            .update({
+              solved: true,
+              solved_at: new Date().toISOString(),
+            })
+            .eq('id', es.id)
+        }
+      } else {
+        await serviceClient.from('team_stations').insert({
+          team_id: player.team_id,
+          station_id: 'sometent-campanar',
+          solved: true,
+          solved_at: new Date().toISOString(),
+        })
       }
 
       // Insert score event for bells completion

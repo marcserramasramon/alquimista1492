@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     // === Step 5: Get team and session info ===
     const { data: team, error: teamError } = await serviceClient
       .from('teams')
-      .select('id, session_id, variant')
+      .select('id, session_id, variant, code')
       .eq('id', pass.team_id)
       .single()
 
@@ -132,9 +132,12 @@ export async function POST(request: NextRequest) {
     }
 
     // === Step 7: Load public station content ===
-    // For MVP, return empty content object
-    // Content should be loaded from content/public/ files
-    const content: Record<string, unknown> = {}
+    // Safe team metadata passed to games
+    const content: Record<string, unknown> = {
+      teamCode: team.code,
+      variant: team.variant,
+      teamId: pass.team_id,
+    }
 
     // TODO: Load station content from content/public/stations.json or database
 

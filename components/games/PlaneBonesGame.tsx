@@ -180,6 +180,19 @@ export function PlaneBonesGame(props: GameProps) {
         </p>
       </header>
 
+      {/* Imatge d'ambientació de l'estació */}
+      <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
+        <img
+          src="/images/scenes/planes-bones.jpg"
+          alt="Planes Bones - La patrulla nocturna a la cruïlla de camins"
+          className="w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
+        <div className="absolute bottom-2 left-3 right-3 text-white/90 text-[11px] sm:text-xs font-sans italic drop-shadow">
+          🌲 Planes Bones · La patrulla amb fanals a la cruïlla de Vic i La Guixa
+        </div>
+      </div>
+
       {/* PESTANYES D'INVESTIGACIÓ */}
       <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden">
         {/* Barra superior de pestanyes */}

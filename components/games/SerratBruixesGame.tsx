@@ -282,6 +282,19 @@ export function SerratBruixesGame(props: GameProps) {
         </p>
       </header>
 
+      {/* Imatge d'ambientació de l'estació */}
+      <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
+        <img
+          src="/images/scenes/serrat-bruixes.jpg"
+          alt="Serrat de les Bruixes - Creu de terme i fogueres de nit"
+          className="w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
+        <div className="absolute bottom-2 left-3 right-3 text-white/90 text-[11px] sm:text-xs font-sans italic drop-shadow">
+          🔥 Serrat de les Bruixes · Creu de ferro i fogueres a l'horitzó
+        </div>
+      </div>
+
       {/* PUNT 1: PESTANYES DE DOCUMENTACIÓ I PISTES */}
       <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden mb-6">
         <div className="bg-[#D8CCAE] border-b border-[#8C6D53] flex">

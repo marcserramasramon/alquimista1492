@@ -16,7 +16,15 @@ interface NotebookTabProps {
 type NotebookView = 'fites' | 'suspects' | 'evidence'
 
 // Fites principals de l'Acte 1: les 4 estacions amb joc que fan avançar la trama.
-const FITES_IDS = ['serrat', 'font_ferro', 'planes_bones', 'cementiri']
+const FITES_IDS = new Set([
+  'serrat-bruixes',
+  'serrat',
+  'font-ferro',
+  'font_ferro',
+  'planes-bones',
+  'planes_bones',
+  'cementiri',
+])
 
 const SUSPICION_STYLES: Record<string, string> = {
   alta: 'bg-cochineal/10 text-cochineal border-cochineal/40',
@@ -28,7 +36,7 @@ export function NotebookTab({ evidences, stations = [], coartadaFrase }: Noteboo
   const [view, setView] = useState<NotebookView>('fites')
   const allSuspects = getAllSuspects()
   const allEvidence = getAllEvidence()
-  const fites = getAllStations().filter((s) => FITES_IDS.includes(s.id))
+  const fites = getAllStations().filter((s) => FITES_IDS.has(s.id))
 
   const unlockedEvidenceIds = evidences.map((e) => e.evidence_id)
   const solvedFitesCount = fites.filter((f) => getTeamStation(stations, f.id)?.solved).length
@@ -40,49 +48,23 @@ export function NotebookTab({ evidences, stations = [], coartadaFrase }: Noteboo
   ]
 
   return (
-    <div className="w-full flex flex-col h-full bg-parchment">
-      {/* Header — mateixa estètica que la capçalera del joc */}
-      <div className="border-b-2 border-leather px-4 py-4 sm:px-6 flex-shrink-0">
-        <span className="block text-xs font-sans font-bold uppercase tracking-widest text-leather">
-          Investigació
-        </span>
-        <h2 className="mt-1 font-serif text-xl sm:text-2xl font-bold text-ink">
-          Quadern de Camp
-        </h2>
-      </div>
-
-      {/* Avís de l'Emissari guardat si ja ha saltat l'alerta */}
-      {coartadaFrase && (
-        <div className="mx-4 mt-3 p-4 bg-[#3d0a0a] border-2 border-cochineal rounded-xl text-parchment shadow-lg flex-shrink-0">
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">⚠️</span>
-              <h3 className="font-serif font-bold text-red-300 text-sm tracking-wide">
-                AVÍS DE L'EMISSARI
-              </h3>
-            </div>
-            <span className="bg-cochineal/80 text-parchment border border-cochineal px-2 py-0.5 rounded text-[10px] font-sans font-bold uppercase">
-              La teva Coartada
-            </span>
-          </div>
-          <p className="text-xs text-gold italic mb-2 font-sans">
-            "L'Emissari és pel poble interrogant a la gent. Se sap que pregunta per:"
+    <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 bg-parchment">
+      <div className="max-w-xl mx-auto space-y-4">
+        {/* Header — mateixa estètica que Història */}
+        <header className="border-b-2 border-leather pb-3 mb-5 text-center">
+          <span className="text-xs uppercase tracking-widest text-leather font-sans font-bold">
+            Investigació
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink font-serif mt-1">
+            Quadern
+          </h1>
+          <p className="text-xs text-leather font-sans mt-1">
+            {solvedFitesCount} de {fites.length} fites superades • {unlockedEvidenceIds.length} proves recollides
           </p>
-          <div className="bg-[#2a0606] border border-cochineal/70 rounded-lg p-3 text-center shadow-inner">
-            <p className="font-serif italic text-parchment text-sm sm:text-base leading-relaxed">
-              «{coartadaFrase}»
-            </p>
-          </div>
-          <p className="text-[11px] text-red-200/80 text-center mt-2 font-sans">
-            Muntar-vos una coartada no és mentir, fills. És salvar-vos. Cadascun de vosaltres porta un retall de la historia. Junts, heu de saber on éreu, amb qui, i per quant temps. La historia la compartiu tots. I serà la mateixa, sempre, sense relliscades. Que no doni una volta. Clar?
-          </p>
-        </div>
-      )}
+        </header>
 
-      {/* Contingut: mateix panell de pestanyes de documentació que fan servir els jocs d'estació
-          (p. ex. SerratBruixesGame "L'Alerta dels Vigies / Sospitosos / Taula / Senyals") */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-xl mx-auto bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden">
+        {/* Contingut: panell de pestanyes de documentació */}
+        <div className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden">
           {/* Pestanyes */}
           <div className="bg-[#D8CCAE] border-b border-[#8C6D53] flex">
             {tabs.map((tab) => {
@@ -236,6 +218,34 @@ export function NotebookTab({ evidences, stations = [], coartadaFrase }: Noteboo
         )}
           </div>
         </div>
+
+        {/* Avís de l'Emissari guardat si ja ha saltat l'alerta */}
+        {coartadaFrase && (
+          <div className="max-w-xl mx-auto p-4 bg-[#3d0a0a] border-2 border-cochineal rounded-xl text-parchment shadow-lg">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⚠️</span>
+                <h3 className="font-serif font-bold text-red-300 text-sm tracking-wide">
+                  AVÍS DE L'EMISSARI
+                </h3>
+              </div>
+              <span className="bg-cochineal/80 text-parchment border border-cochineal px-2 py-0.5 rounded text-[10px] font-sans font-bold uppercase">
+                La teva Coartada
+              </span>
+            </div>
+            <p className="text-xs text-gold italic mb-2 font-sans">
+              "L'Emissari és pel poble interrogant a la gent. Se sap que pregunta per:"
+            </p>
+            <div className="bg-[#2a0606] border border-cochineal/70 rounded-lg p-3 text-center shadow-inner">
+              <p className="font-serif italic text-parchment text-sm sm:text-base leading-relaxed">
+                «{coartadaFrase}»
+              </p>
+            </div>
+            <p className="text-[11px] text-red-200/80 text-center mt-2 font-sans">
+              Muntar-vos una coartada no és mentir, fills. És salvar-vos. Cadascun de vosaltres porta un retall de la historia. Junts, heu de saber on éreu, amb qui, i per quant temps. La historia la compartiu tots. I serà la mateixa, sempre, sense relliscades. Que no doni una volta. Clar?
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

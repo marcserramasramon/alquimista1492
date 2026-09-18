@@ -36,10 +36,16 @@ function renderParagraph(text: string) {
 export function IntroTab({ stations = [], onOpenMap }: IntroTabProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
-  const isUnlocked = (stationId?: string) =>
-    !stationId || getTeamStation(stations, stationId)?.solved === true
+  const isUnlocked = (entry: (typeof STORY_ENTRIES)[number]) => {
+    if (!entry.stationId) return true
+    if (getTeamStation(stations, entry.stationId)?.solved) return true
+    if (entry.stationAliases?.some((alias) => getTeamStation(stations, alias)?.solved)) {
+      return true
+    }
+    return false
+  }
 
-  const unlockedCount = STORY_ENTRIES.filter((e) => isUnlocked(e.stationId)).length
+  const unlockedCount = STORY_ENTRIES.filter((e) => isUnlocked(e)).length
   const selectedEntry = STORY_ENTRIES.find((e) => e.id === selectedId)
 
   if (selectedEntry) {
@@ -100,7 +106,7 @@ export function IntroTab({ stations = [], onOpenMap }: IntroTabProps) {
 
         <div className="space-y-3">
           {STORY_ENTRIES.map((entry) => {
-            const unlocked = isUnlocked(entry.stationId)
+            const unlocked = isUnlocked(entry)
             return (
               <button
                 key={entry.id}
