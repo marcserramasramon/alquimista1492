@@ -129,13 +129,33 @@ export function BellsGame(props: GameProps) {
   }
 
   const handleBellPress = (bellNumber: number) => {
+    if (state.bellSequence.length === 0) {
+      setError('Cal escoltar la pista sonora primer')
+      return
+    }
+
     playBellSound(bellNumber)
     const newSequence = [...state.playerSequence, bellNumber]
     setState(prev => ({ ...prev, playerSequence: newSequence }))
 
-    // Aquí el servidor validarà la seqüència completa
-    if (newSequence.length === 8) {
-      handleSubmitBells(newSequence)
+    // Local validation: compare first 4 bells
+    if (newSequence.length === 4) {
+      // Check if the 4 bells match the first 4 of the bell sequence
+      const matches = newSequence.every((bell, idx) => bell === state.bellSequence[idx])
+
+      if (matches) {
+        // Validation passed, submit to server
+        handleSubmitBells(newSequence)
+      } else {
+        // Validation failed
+        play('buzzer')
+        setError('Campanades incorrectes. Reprova.')
+        setState(prev => ({
+          ...prev,
+          playerSequence: [],
+          attempts: prev.attempts + 1,
+        }))
+      }
     }
   }
 
@@ -353,7 +373,7 @@ export function BellsGame(props: GameProps) {
           <div className="flex flex-col justify-center flex-1 gap-4">
             <div className="text-center">
               <p className="text-lg font-bold text-[#2B2118] mb-2">TOCA LES 4 CAMPANADES</p>
-              <p className="text-sm text-[#5C4533] mb-4">Sequència ({state.playerSequence.length}/8)</p>
+              <p className="text-sm text-[#5C4533] mb-4">Sequència ({state.playerSequence.length}/4)</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
