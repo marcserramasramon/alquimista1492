@@ -210,10 +210,9 @@ export function BellsGame(props: GameProps) {
             </motion.button>
           ))}
         </div>
-      </section>
 
-      {/* Content */}
-      <div className="flex-1 flex flex-col gap-4">
+        {/* Content */}
+        <div className="p-4 sm:p-5 flex flex-col gap-4">
         {/* La Porta */}
         {state.currentTab === 'porta' && (
           <div className="flex flex-col justify-center flex-1 gap-4">
@@ -451,7 +450,8 @@ export function BellsGame(props: GameProps) {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </section>
     </motion.div>
   )
 }
