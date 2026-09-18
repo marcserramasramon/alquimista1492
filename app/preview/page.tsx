@@ -7,6 +7,7 @@ import { SalconduitTab } from '@/components/player/SalconduitTab'
 import { EmissariAlertModal } from '@/components/game/EmissariAlertModal'
 import { NotebookTab } from '@/components/player/NotebookTab'
 import { InstalledHomeScreen } from '@/components/player/InstalledHomeScreen'
+import { PlayerNameInput } from '@/components/player/PlayerNameInput'
 import { MapTab } from '@/components/player/MapTab'
 import { IntroTab } from '@/components/player/IntroTab'
 import { ResultsView } from '@/components/player/ResultsView'
@@ -141,6 +142,11 @@ export default function PreviewPage() {
 
   // Estat de pestanya activa dins la simulació del Hub del Joc
   const [hubTab, setHubTab] = useState<NavTabId>('historia')
+
+  // Estats per al flux interactiu de la Pantalla d'Inici (Home -> Escanejar QR -> Demanar Nom -> Hub)
+  const [homeStep, setHomeStep] = useState<'home' | 'scan' | 'name'>('home')
+  const [previewTeamCode, setPreviewTeamCode] = useState('EQUIP1')
+  const [previewPlayerName, setPreviewPlayerName] = useState('Bernat')
 
   const SPECIAL_VIEWS = ['home-view', 'hub-view', 'mapa-fites-view', 'salconduit-view', 'emissari-alert-view', 'results-view']
   const isSpecialView = SPECIAL_VIEWS.includes(selectedGame)
@@ -306,25 +312,141 @@ export default function PreviewPage() {
       {/* Main Container */}
       <main className="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6">
         <div className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl shadow-lg overflow-hidden min-h-[600px] flex flex-col">
-          {/* PANTALLA ESPECIAL: HOME (PANTALLA D'INICI) */}
+          {/* PANTALLA ESPECIAL: HOME (PANTALLA D'INICI I ACCÉS) */}
           {selectedGame === 'home-view' && (
             <div className="flex-1 flex flex-col">
               <div className="bg-[#DFD4BC] border-b border-[#8C6D53] p-3 text-xs font-sans flex items-center justify-between">
                 <div>
                   <span className="font-bold text-[#1D3557]">
-                    🏠 Pantalla d&apos;inici de l&apos;app instal·lada
+                    🏠 Pantalla d&apos;inici i accés de l&apos;equip
                   </span>
                   <span className="text-gray-600 block sm:inline sm:ml-2">
-                    — Primera pantalla en obrir l&apos;app, punt de partida per escanejar el QR d&apos;equip
+                    — Flux d&apos;entrada: Home → Escanejar QR d&apos;equip → Demanar nom → Hub del Joc
                   </span>
                 </div>
-                <span className="bg-[#C99E32] text-[#2B2118] font-bold px-2 py-0.5 rounded text-[11px]">
-                  Vista Jugador
-                </span>
+                <div className="flex items-center gap-2">
+                  {homeStep !== 'home' && (
+                    <button
+                      onClick={() => setHomeStep('home')}
+                      className="bg-stone-200 hover:bg-stone-300 text-stone-700 px-2 py-0.5 rounded text-[11px] font-sans font-medium"
+                    >
+                      ↺ Tornar a l&apos;inici
+                    </button>
+                  )}
+                  <span className="bg-[#C99E32] text-[#2B2118] font-bold px-2 py-0.5 rounded text-[11px]">
+                    Vista Jugador
+                  </span>
+                </div>
               </div>
 
-              <div className="flex-1">
-                <InstalledHomeScreen onScan={() => handleSelectGame('mapa-fites-view')} />
+              <div className="flex-1 flex flex-col">
+                {homeStep === 'home' && (
+                  <InstalledHomeScreen onScan={() => setHomeStep('scan')} />
+                )}
+
+                {homeStep === 'scan' && (
+                  <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#2B2118] text-[#F4EBD9]">
+                    <div className="w-full max-w-md bg-[#382C22] border border-[#8C6D53] rounded-xl p-6 shadow-2xl text-center">
+                      <div className="w-16 h-16 bg-[#1D3557] text-[#F4EBD9] rounded-full flex items-center justify-center text-3xl mx-auto mb-4 border border-[#C99E32]">
+                        📷
+                      </div>
+                      <h2 className="text-xl font-bold font-serif mb-2 text-[#EAE0CA]">
+                        Escanejar codi QR d&apos;equip
+                      </h2>
+                      <p className="text-sm text-stone-300 mb-6 font-sans">
+                        Apunta la càmera cap al codi QR que et proporciona el màster de joc, o introdueix el codi de 6 caràcters.
+                      </p>
+
+                      <div className="space-y-4 font-sans">
+                        <button
+                          onClick={() => {
+                            setPreviewTeamCode('EQUIP1')
+                            setHomeStep('name')
+                          }}
+                          className="w-full bg-[#1D3557] hover:bg-[#152740] text-[#F4EBD9] py-3 px-4 rounded-lg font-bold tracking-wide uppercase shadow flex items-center justify-center gap-2 transition-colors"
+                        >
+                          <span>⚡</span> Simular escaneig QR equip: [EQUIP1]
+                        </button>
+
+                        <div className="relative flex py-2 items-center">
+                          <div className="flex-grow border-t border-stone-600"></div>
+                          <span className="flex-shrink mx-4 text-xs text-stone-400 uppercase">o codi manual</span>
+                          <div className="flex-grow border-t border-stone-600"></div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            maxLength={6}
+                            value={previewTeamCode}
+                            onChange={(e) => setPreviewTeamCode(e.target.value.toUpperCase())}
+                            placeholder="CODI"
+                            className="flex-1 text-center font-mono tracking-widest text-lg uppercase bg-white text-[#2B2118] rounded-lg px-3 py-2 border border-stone-400 focus:outline-none focus:border-[#C99E32]"
+                          />
+                          <button
+                            onClick={() => {
+                              if (previewTeamCode.trim().length === 6) {
+                                setHomeStep('name')
+                              }
+                            }}
+                            disabled={previewTeamCode.trim().length !== 6}
+                            className="bg-[#C99E32] hover:bg-[#b08826] disabled:opacity-50 text-[#2B2118] font-bold px-4 py-2 rounded-lg uppercase text-sm transition-colors"
+                          >
+                            Continuar
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setHomeStep('home')}
+                        className="mt-6 text-xs text-stone-400 underline hover:text-stone-200 font-sans"
+                      >
+                        Cancel·lar i tornar a l&apos;inici
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {homeStep === 'name' && (
+                  <div className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-amber-50 to-white">
+                    <div className="w-full max-w-md">
+                      <div className="text-center mb-8">
+                        <h1 className="text-3xl font-bold text-amber-900 mb-1 font-serif">
+                          El Traïdor de la Guixa
+                        </h1>
+                        <p className="text-base text-amber-700 mb-2 font-sans">
+                          Entrada de Jugador
+                        </p>
+                        <p className="text-xs text-amber-800 font-mono tracking-widest bg-amber-100 px-3 py-1 rounded-full border border-amber-300 inline-block">
+                          Equip: <strong>{previewTeamCode}</strong>
+                        </p>
+                      </div>
+
+                      <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 border-2 border-amber-200">
+                        <div className="mb-4 text-center">
+                          <p className="text-sm text-amber-700 font-sans">
+                            Introdueix el teu nom per entrar al joc
+                          </p>
+                        </div>
+
+                        <PlayerNameInput
+                          value={previewPlayerName}
+                          onChange={setPreviewPlayerName}
+                          onSubmit={() => {
+                            // En trametre el nom, va directament al hub del joc!
+                            handleSelectGame('hub-view')
+                          }}
+                        />
+
+                        <div className="mt-6 pt-4 border-t border-amber-100 text-center font-sans">
+                          <p className="text-xs text-amber-600">
+                            En prémer «Entrar al Joc» accediràs directament al Hub
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -347,21 +469,20 @@ export default function PreviewPage() {
               </div>
 
               <div className="flex-1 flex flex-col bg-parchment text-ink min-h-[600px]">
-                <header className="bg-parchment border-b-2 border-leather shadow-sm">
-                  <div className="max-w-4xl mx-auto px-4 py-4">
-                    <div className="flex items-start justify-between mb-3 gap-2">
-                      <div>
-                        <span className="text-xs uppercase tracking-widest text-leather font-sans font-bold block">
-                          Equip: {mockTeam.name}
-                        </span>
-                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink font-serif mt-1">
-                          El Traïdor de la Guixa
-                        </h1>
-                      </div>
+                <header className="bg-parchment border-b-2 border-[#8C6D53] shadow-sm text-center">
+                  <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">
+                    <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold block">
+                      Equip: {mockTeam.name} {previewPlayerName ? `· Jugador: ${previewPlayerName}` : ''}
+                    </span>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] font-serif mt-1 uppercase">
+                      El Traïdor de la Guixa
+                    </h1>
+
+                    <div className="mt-2.5 flex justify-center">
                       <PlayerTimer status="active" expiresAt={mockSession.expires_at} />
                     </div>
 
-                    <div className="flex gap-4 text-xs sm:text-sm font-sans font-bold text-ink">
+                    <div className="mt-3 flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-xs sm:text-sm font-sans font-bold text-[#2B2118]">
                       <div className="flex items-center gap-1">
                         <span>📍</span>
                         <span>{PREVIEW_STATIONS.length}/8 Estacions</span>

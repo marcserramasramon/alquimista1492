@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@600;700;800;900&display=swap');
 @import "tailwindcss";
 
 /* Historical theme palette (Section 16 PRD) */
@@ -32,6 +33,7 @@
   --font-serif: var(--font-libre-caslon);
   --font-accent: var(--font-cinzel);
   --font-signature: var(--font-lavishly-yours);
+  --font-franklin: "Franklin Gothic Medium", "Franklin Gothic", "Libre Franklin", sans-serif;
 }
 
 body {

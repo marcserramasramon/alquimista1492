@@ -12,13 +12,29 @@ interface StaticMapProps {
 }
 
 // Fites principals de l'Acte 1 (elements): sempre en verd clar
-const FITES_PRINCIPALS = new Set(['serrat', 'font_ferro', 'planes_bones', 'cementiri'])
+const FITES_PRINCIPALS = new Set([
+  'serrat',
+  'serrat-bruixes',
+  'font_ferro',
+  'font-ferro',
+  'planes_bones',
+  'planes-bones',
+  'cementiri',
+])
 
 // Estacions que no es mostren al mapa: 'escola' no té joc ni fita associada;
 // 'caixa_almoines' comparteix ubicació amb 'rectoria' (només s'hi mostra ⛪);
-// 'campanar' i 'bells-sometent' són el mateix punt duplicat (es descarten tots
-// dos fins que hi hagi un marcador propi per a la Plaça de l'Església).
-const HIDDEN_STATION_IDS = new Set(['escola', 'caixa_almoines', 'campanar', 'bells-sometent'])
+// 'sometent-campanar' (Campanar de Sant Sebastià) es treu del mapa i de la llegenda.
+const HIDDEN_STATION_IDS = new Set([
+  'escola',
+  'caixa_almoines',
+  'caixa-almoines',
+  'campanar',
+  'bells-sometent',
+  'bells_sometent',
+  'sometent-campanar',
+  'sometent_campanar',
+])
 
 export function StaticMap({ stations, teamId }: StaticMapProps) {
   const allStations = getAllStations().filter((station) => !HIDDEN_STATION_IDS.has(station.id))
@@ -93,10 +109,10 @@ export function StaticMap({ stations, teamId }: StaticMapProps) {
     ? getTeamStation(stations, selectedStationId) || null
     : null
 
-  // Map bounds (from IGN WMS BBOX: 2.2212,41.9068,2.2380,41.9166)
-  const boundMinLon = 2.2212
-  const boundMinLat = 41.9068
-  const boundMaxLon = 2.2380
+  // Map bounds (retallat: -10% esquerra, -20% dreta, -30% baix)
+  const boundMinLon = 2.22288
+  const boundMinLat = 41.90974
+  const boundMaxLon = 2.23464
   const boundMaxLat = 41.9166
 
   // SVG dimensions

@@ -467,11 +467,11 @@ export function SerratBruixesGame(props: GameProps) {
                     <span><strong>Anton</strong> (Escolà)</span>
                     <span className="text-emerald-700 font-bold">Sap escriure</span>
                   </div>
-                  <div className="p-2 bg-amber-100/80 rounded border border-amber-300 flex justify-between items-center">
+                  <div className="p-2 bg-white/80 rounded border border-[#8C6D53]/30 flex justify-between items-center">
                     <span><strong>Pere del Molí</strong></span>
                     <span className="text-amber-800 font-bold">Signa amb una creu (Analfabet)</span>
                   </div>
-                  <div className="p-2 bg-amber-100/80 rounded border border-amber-300 flex justify-between items-center">
+                  <div className="p-2 bg-white/80 rounded border border-[#8C6D53]/30 flex justify-between items-center">
                     <span><strong>Joan el traginer</strong></span>
                     <span className="text-amber-800 font-bold">Signa amb una creu (Analfabet)</span>
                   </div>

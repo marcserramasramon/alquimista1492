@@ -710,27 +710,64 @@ function DialWheel({
   value: number
   onChange: (val: number) => void
 }) {
+  const [direction, setDirection] = useState<1 | -1>(1)
+
+  const handleNext = () => {
+    setDirection(1)
+    onChange((value + 1) % 10)
+  }
+
+  const handlePrev = () => {
+    setDirection(-1)
+    onChange((value - 1 + 10) % 10)
+  }
+
   return (
     <div className="flex flex-col items-center gap-1">
       <motion.button
-        onClick={() => onChange((value + 1) % 10)}
-        className="w-12 h-8 bg-[#8C6D53] text-[#EAE0CA] font-bold text-lg rounded hover:bg-[#6B5244] transition"
+        type="button"
+        onClick={handleNext}
+        className="w-12 h-8 bg-[#8C6D53] text-[#EAE0CA] font-bold text-lg rounded hover:bg-[#6B5244] transition flex items-center justify-center cursor-pointer shadow-sm"
         whileTap={{ scale: 0.9 }}
       >
         ▲
       </motion.button>
 
-      <motion.div
-        className="w-14 h-16 bg-[#D8CCAE] border-4 border-[#8C6D53] rounded flex items-center justify-center text-3xl font-bold text-[#2B2118] shadow-lg"
-        animate={{ rotateX: value * 36 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      >
-        {value}
-      </motion.div>
+      <div className="w-14 h-16 bg-[#D8CCAE] border-4 border-[#8C6D53] rounded flex items-center justify-center text-3xl font-bold text-[#2B2118] shadow-lg relative overflow-hidden">
+        <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+          <motion.span
+            key={value}
+            custom={direction}
+            variants={{
+              enter: (dir: number) => ({
+                y: dir > 0 ? 30 : -30,
+                opacity: 0,
+              }),
+              center: {
+                y: 0,
+                opacity: 1,
+              },
+              exit: (dir: number) => ({
+                y: dir > 0 ? -30 : 30,
+                opacity: 0,
+              }),
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.16, ease: 'easeOut' }}
+            className="select-none font-franklin font-extrabold tracking-tight"
+            style={{ fontFamily: '"Franklin Gothic Medium", "Franklin Gothic", "Libre Franklin", sans-serif' }}
+          >
+            {value}
+          </motion.span>
+        </AnimatePresence>
+      </div>
 
       <motion.button
-        onClick={() => onChange((value - 1 + 10) % 10)}
-        className="w-12 h-8 bg-[#8C6D53] text-[#EAE0CA] font-bold text-lg rounded hover:bg-[#6B5244] transition"
+        type="button"
+        onClick={handlePrev}
+        className="w-12 h-8 bg-[#8C6D53] text-[#EAE0CA] font-bold text-lg rounded hover:bg-[#6B5244] transition flex items-center justify-center cursor-pointer shadow-sm"
         whileTap={{ scale: 0.9 }}
       >
         ▼

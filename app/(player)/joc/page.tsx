@@ -163,24 +163,22 @@ export default function JocHubPage() {
   return (
     <div className="min-h-screen bg-parchment text-ink flex flex-col">
       {/* Header */}
-      <header className="bg-parchment border-b-2 border-leather shadow-sm sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          {/* Title & Countdown Timer */}
-          <div className="flex items-start justify-between mb-3 gap-2">
-            <div>
-              <span className="text-xs uppercase tracking-widest text-leather font-sans font-bold block">
-                Equip: {playerSession.teamName}
-              </span>
-				<h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
-                El Traïdor de la Guixa
-              </h1>
-            </div>
+      <header className="bg-parchment border-b-2 border-[#8C6D53] shadow-sm sticky top-0 z-40 text-center">
+        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">
+          <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold block">
+            Equip: {playerSession.teamName}
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] font-serif mt-1 uppercase">
+            El Traïdor de la Guixa
+          </h1>
+
+          <div className="mt-2.5 flex justify-center">
             <PlayerTimer status={gameClock.status} expiresAt={gameClock.expiresAt} />
           </div>
 
           {/* Stats Row */}
           {teamState.team && teamState.session && (
-            <div className="flex gap-4 text-xs sm:text-sm font-sans font-bold text-ink">
+            <div className="mt-3 flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-xs sm:text-sm font-sans font-bold text-[#2B2118]">
               <div className="flex items-center gap-1">
                 <span>📍</span>
                 <span>
