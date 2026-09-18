@@ -18,6 +18,7 @@ interface BellsGameState {
   isCorrect: boolean
   epilogue: string
   decisionStats: { optionA: number; optionB: number } | null
+  bellSequence: number[]
 }
 
 /**
@@ -49,6 +50,7 @@ export function BellsGame(props: GameProps) {
       isCorrect: false,
       epilogue: '',
       decisionStats: null,
+      bellSequence: [],
     }
   })
 
@@ -81,6 +83,42 @@ export function BellsGame(props: GameProps) {
     }, 300)
   }
 
+  const fetchBellSequence = async () => {
+    if (state.bellSequence.length > 0) {
+      // Already fetched, just play it
+      setLoading(true)
+      await playFullSequence()
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const result = await props.submit({
+        moralChoice: state.moralChoice,
+      })
+
+      if (result.bellSequence && Array.isArray(result.bellSequence)) {
+        setState(prev => ({ ...prev, bellSequence: result.bellSequence }))
+        // Play the sequence after it's stored
+        // Use setTimeout to ensure state is updated before playing
+        setTimeout(async () => {
+          await playFullSequence()
+          setLoading(false)
+        }, 100)
+      } else {
+        setError('No es pot obtenir la seqüència de campanades')
+        setLoading(false)
+      }
+    } catch (err) {
+      play('buzzer')
+      setError('Error en obtenir la seqüència')
+      setLoading(false)
+    }
+  }
+
   const handlePlayPista = async () => {
     setState(prev => ({ ...prev, currentTab: 'senyal' }))
   }
@@ -102,11 +140,10 @@ export function BellsGame(props: GameProps) {
   }
 
   const playFullSequence = async () => {
-    const bellNames = ['do', 're', 'mi', 'fa']
-    const mockSequence = [1, 2, 1, 2, 3, 1, 3, 2] // Placeholder, will get from server
+    if (!state.bellSequence || state.bellSequence.length === 0) return
 
-    for (const bellNum of mockSequence) {
-      play(`bell-${bellNames[bellNum]}`)
+    for (const bellNum of state.bellSequence) {
+      playBellSound(bellNum)
       await new Promise(resolve => setTimeout(resolve, 1200))
     }
   }
@@ -290,7 +327,7 @@ export function BellsGame(props: GameProps) {
             <div className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl p-6 text-center">
               <p className="text-sm text-[#5C4533] mb-4">Escolta la seqüència de campanades...</p>
               <motion.button
-                onClick={playFullSequence}
+                onClick={fetchBellSequence}
                 disabled={loading}
                 className="mx-auto block text-6xl mb-4 hover:scale-110 transition disabled:opacity-50"
                 whileHover={{ scale: 1.15 }}
@@ -298,7 +335,7 @@ export function BellsGame(props: GameProps) {
               >
                 🔔
               </motion.button>
-              <p className="text-xs text-[#8C6D53] mb-4">Presiona per sentir les campanades</p>
+              <p className="text-xs text-[#8C6D53] mb-4">{loading ? 'Carregant...' : 'Presiona per sentir les campanades'}</p>
             </div>
             <motion.button
               onClick={() => setState(prev => ({ ...prev, currentTab: 'senyal' }))}
