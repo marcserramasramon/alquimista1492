@@ -39,8 +39,12 @@ class AudioManager {
       const clipKey = key as AudioClip;
       this.sounds.set(clipKey, new Howl({
         src: [src],
+        format: ['mp3'],
         volume: this.getVolumeForClip(clipKey),
         preload: true,
+        onload: () => {
+          console.debug(`Loaded audio clip "${clipKey}"`);
+        },
         onloaderror: (id, error) => {
           this.failedLoads.add(clipKey);
           console.warn(`Failed to load audio clip "${clipKey}": ${error}`);
