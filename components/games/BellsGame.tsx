@@ -169,26 +169,21 @@ export function BellsGame(props: GameProps) {
         )}
       </AnimatePresence>
 
-      {/* Timer */}
-      <div className="text-right text-xs font-mono text-[#8C6D53] mb-2 font-sans">
-        12:34:56
-      </div>
-
       {/* Header */}
       <header className="border-b-2 border-[#8C6D53] pb-3 mb-4 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
           Estació 8 · Campanar
         </span>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
           EL SOMETENT
         </h1>
-        <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic">
+        <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">
           "Les campanades de l'alba alertaran els conjurats"
         </p>
       </header>
 
       {/* Tabs Menu */}
-      <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden">
+      <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden mb-6">
         <div className="bg-[#D8CCAE] border-b border-[#8C6D53] flex">
           {[
             { key: 'porta', label: 'La porta', emoji: '🚪' },
