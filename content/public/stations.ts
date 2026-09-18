@@ -19,8 +19,8 @@ export interface Station {
 }
 
 export const STATIONS: Record<string, Station> = {
-  serrat: {
-    id: 'serrat',
+  'serrat-bruixes': {
+    id: 'serrat-bruixes',
     order: 1,
     name: 'Serrat de les Bruixes',
     catalan: 'Serrat de les Bruixes',
@@ -31,8 +31,8 @@ export const STATIONS: Record<string, Station> = {
     icon: '🔥',
     difficulty: 'facil',
   },
-  font_ferro: {
-    id: 'font_ferro',
+  'font-ferro': {
+    id: 'font-ferro',
     order: 2,
     name: 'Font del Ferro',
     catalan: 'Font del Ferro',
@@ -43,8 +43,8 @@ export const STATIONS: Record<string, Station> = {
     icon: '💧',
     difficulty: 'mig',
   },
-  planes_bones: {
-    id: 'planes_bones',
+  'planes-bones': {
+    id: 'planes-bones',
     order: 3,
     name: 'Planes Bones',
     catalan: 'Planes Bones',
@@ -55,7 +55,7 @@ export const STATIONS: Record<string, Station> = {
     icon: '🗺️',
     difficulty: 'mig',
   },
-  cementiri: {
+  'cementiri': {
     id: 'cementiri',
     order: 4,
     name: 'Cementiri de la Guixa',
@@ -67,7 +67,7 @@ export const STATIONS: Record<string, Station> = {
     icon: '🪦',
     difficulty: 'dificil',
   },
-  rectoria: {
+  'rectoria': {
     id: 'rectoria',
     order: 5,
     name: 'Rectoria de la Guixa',
@@ -79,8 +79,8 @@ export const STATIONS: Record<string, Station> = {
     icon: '⛪',
     difficulty: 'mig',
   },
-  pla_masset: {
-    id: 'pla_masset',
+  'pla-masset': {
+    id: 'pla-masset',
     order: 6,
     name: 'Pla de Masset',
     catalan: 'Pla de Masset',
@@ -91,7 +91,7 @@ export const STATIONS: Record<string, Station> = {
     icon: '🦹‍♂️',
     difficulty: 'facil',
   },
-  escola: {
+  'escola': {
     id: 'escola',
     order: 7,
     name: 'Escola de la Guixa',
@@ -103,8 +103,8 @@ export const STATIONS: Record<string, Station> = {
     icon: '📚',
     difficulty: 'dificil',
   },
-  caixa_almoines: {
-    id: 'caixa_almoines',
+  'caixa-almoines': {
+    id: 'caixa-almoines',
     order: 8,
     name: 'Caixa de les Almoines',
     catalan: 'Caixa de les Almoines',
@@ -115,8 +115,8 @@ export const STATIONS: Record<string, Station> = {
     icon: '🪎',
     difficulty: 'dificil',
   },
-  campanar: {
-    id: 'campanar',
+  'sometent-campanar': {
+    id: 'sometent-campanar',
     order: 9,
     name: 'Campanar de Sant Sebastià',
     catalan: 'Campanar de Sant Sebastià',
@@ -124,32 +124,36 @@ export const STATIONS: Record<string, Station> = {
     narrativeHook: 'Ring the bell to signal the escape route',
     latitude: 41.913500,
     longitude: 2.228500,
-    icon: '⛪',
-    difficulty: 'dificil',
-  },
-  'bells_sometent': {
-    id: 'bells-sometent',
-    order: 9,
-    name: 'Campanar de Sant Sebastià',
-    catalan: 'Campanar de Sant Sebastià',
-    description: 'Bell tower where the tocsin signals the conjurates',
-    narrativeHook: 'Ring the bell to signal the escape route',
-    latitude: 41.913500,
-    longitude: 2.228500,
-    icon: '⛪',
+    icon: '🔔',
     difficulty: 'dificil',
   },
 } as const
 
-/**
- * Get station by ID
- */
-export function getStation(id: string): Station | undefined {
-  return STATIONS[id as keyof typeof STATIONS]
+const STATION_ALIASES: Record<string, string> = {
+  'serrat': 'serrat-bruixes',
+  'serrat_bruixes': 'serrat-bruixes',
+  'font_ferro': 'font-ferro',
+  'planes_bones': 'planes-bones',
+  'pla_masset': 'pla-masset',
+  'pla-masset-control': 'pla-masset',
+  'pla-masset-accusation': 'pla-masset',
+  'caixa_almoines': 'caixa-almoines',
+  'rectoria-caixa': 'caixa-almoines',
+  'campanar': 'sometent-campanar',
+  'bells-sometent': 'sometent-campanar',
+  'bells_sometent': 'sometent-campanar',
 }
 
 /**
- * Get all stations ordered by visit sequence
+ * Get station by ID (supports canonical IDs and aliases)
+ */
+export function getStation(id: string): Station | undefined {
+  const canonicalId = STATION_ALIASES[id] || id
+  return STATIONS[canonicalId as keyof typeof STATIONS]
+}
+
+/**
+ * Get all stations ordered by visit sequence (exact 9 stations)
  */
 export function getAllStations(): Station[] {
   return Object.values(STATIONS).sort((a, b) => a.order - b.order)
@@ -162,3 +166,4 @@ export function getStationName(id: string): string {
   const station = getStation(id)
   return station?.catalan || id
 }
+

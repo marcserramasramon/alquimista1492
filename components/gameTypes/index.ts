@@ -9,6 +9,16 @@ export interface SubmitResult {
   score?: number
   xifra?: number
   evidence?: string
+  bellSequence?: number[]
+  sequence?: number[]
+  epilogue?: string
+  decisionPercentage?: {
+    accept?: number
+    reject?: number
+    optionA?: number
+    optionB?: number
+  }
+  giro?: boolean
 }
 
 export interface GameProps {

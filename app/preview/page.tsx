@@ -411,7 +411,7 @@ export default function PreviewPage() {
                   activeTab={hubTab}
                   onTabChange={setHubTab}
                   evidencesCount={PREVIEW_EVIDENCES.length}
-                  salconduitsRemaining={mockSession.salconduits_remaining}
+                  salconduitsRemaining={mockSession.salconduits_remaining ?? 0}
                   isGameActive={false}
                   onCenterAction={() => handleSelectGame('serrat-bruixes')}
                 />

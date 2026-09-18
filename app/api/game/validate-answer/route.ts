@@ -27,10 +27,34 @@ interface ValidateAnswerResponse {
  * per a l'origen narratiu de cada prova).
  */
 const STATION_EVIDENCE: Record<string, string[]> = {
-  serrat: ['literacy'],
-  font_ferro: ['cantirs', 'ink'],
-  planes_bones: ['light'],
-  cementiri: ['seal', 'filigrana'],
+  'serrat': ['literacy'],
+  'serrat-bruixes': ['literacy'],
+  'serrat_bruixes': ['literacy'],
+  'font_ferro': ['cantirs', 'ink'],
+  'font-ferro': ['cantirs', 'ink'],
+  'planes_bones': ['light'],
+  'planes-bones': ['light'],
+  'cementiri': ['seal', 'filigrana'],
+}
+
+const CANONICAL_STATION_IDS: Record<string, string> = {
+  'serrat': 'serrat-bruixes',
+  'serrat_bruixes': 'serrat-bruixes',
+  'serrat-bruixes': 'serrat-bruixes',
+  'font_ferro': 'font-ferro',
+  'font-ferro': 'font-ferro',
+  'planes_bones': 'planes-bones',
+  'planes-bones': 'planes-bones',
+  'cementiri': 'cementiri',
+  'pla-masset-control': 'pla-masset-control',
+  'pla-masset-accusation': 'pla-masset-accusation',
+  'acusacio': 'pla-masset-accusation',
+  'caixa-almoines': 'rectoria-caixa',
+  'caixa_almoines': 'rectoria-caixa',
+  'rectoria-caixa': 'rectoria-caixa',
+  'campanar': 'sometent-campanar',
+  'bells-sometent': 'sometent-campanar',
+  'sometent-campanar': 'sometent-campanar',
 }
 
 /**
@@ -276,12 +300,24 @@ export async function POST(request: NextRequest) {
     }
 
     // === Step 3: Fetch solution from database (server-only access) ===
-    const { data: solution, error: solutionError } = await serviceClient
+    const canonicalStationId = CANONICAL_STATION_IDS[stationId] || stationId
+    let { data: solution, error: solutionError } = await serviceClient
       .from('solutions_private')
       .select('solution')
       .eq('station_id', stationId)
       .eq('variant', team.variant)
-      .single()
+      .maybeSingle()
+
+    if (!solution && canonicalStationId !== stationId) {
+      const retry = await serviceClient
+        .from('solutions_private')
+        .select('solution')
+        .eq('station_id', canonicalStationId)
+        .eq('variant', team.variant)
+        .maybeSingle()
+      solution = retry.data
+      solutionError = retry.error
+    }
 
     if (solutionError || !solution) {
       return NextResponse.json(
@@ -380,7 +416,7 @@ export async function POST(request: NextRequest) {
         .eq('id', sessionId)
 
       // Desbloqueja les proves associades a la fita, perquè apareguin al Quadern
-      const evidenceIds = STATION_EVIDENCE[stationId]
+      const evidenceIds = STATION_EVIDENCE[stationId] || STATION_EVIDENCE[canonicalStationId]
       if (evidenceIds) {
         await serviceClient.from('team_evidences').upsert(
           evidenceIds.map((evidenceId) => ({

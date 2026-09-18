@@ -102,8 +102,9 @@ export function BellsGame(props: GameProps) {
 
       console.log('Bell sequence API response:', result)
 
-      if ((result.bellSequence || result.sequence) && Array.isArray(result.bellSequence || result.sequence)) {
-        setState(prev => ({ ...prev, bellSequence: result.bellSequence || result.sequence }))
+      const seq = (result.bellSequence || result.sequence)
+      if (Array.isArray(seq)) {
+        setState(prev => ({ ...prev, bellSequence: seq }))
         // Play the sequence after it's stored
         // Use setTimeout to ensure state is updated before playing
         setTimeout(async () => {
@@ -127,8 +128,11 @@ export function BellsGame(props: GameProps) {
   }
 
   const playBellSound = (bellNumber: number) => {
-    const bellNames = ['do', 're', 'mi', 'fa']
-    play(`bell-${bellNames[bellNumber]}`)
+    const bellClips = ['bell-do', 'bell-re', 'bell-mi', 'bell-fa'] as const
+    const clip = bellClips[bellNumber]
+    if (clip) {
+      play(clip)
+    }
   }
 
   const handleBellPress = (bellNumber: number) => {
@@ -184,12 +188,20 @@ export function BellsGame(props: GameProps) {
 
       if (result.correct) {
         play('evidence-unlock')
+        const dp = result.decisionPercentage
+        const stats = dp
+          ? {
+              optionA: dp.accept ?? dp.optionA ?? 50,
+              optionB: dp.reject ?? dp.optionB ?? 50,
+            }
+          : null
+
         setState(prev => ({
           ...prev,
           currentTab: 'result',
           isCorrect: true,
           epilogue: result.epilogue || '',
-          decisionStats: result.decisionPercentage || null,
+          decisionStats: stats,
         }))
       } else {
         play('buzzer')
