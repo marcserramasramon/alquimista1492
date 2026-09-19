@@ -383,7 +383,7 @@ export function PlaneBonesGame(props: GameProps) {
           }`}
         >
           <span>🗺️</span>
-          <span>Mapa del Camí ({state.pathProgress.length}/9)</span>
+          <span>Mapa del Camí</span>
         </button>
 
         <button
