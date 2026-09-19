@@ -25,28 +25,29 @@ Isidre el ferrer tornava al capvespre del poble de **Malla** en direcció a **La
 La seqüència real del trajecte és:
 1. **Sortida de Malla:** Deixa el poble amb les eines i la clau penjada.
 2. **Cruïlla Direcció a Vic:** Ignora el trencall principal cap a Vic i segueix pel camí rural.
-3. **Pas de la Riera:** Travessa el gual d'aigua passant per sobre les pedres seques.
-4. **Masia El Blanc:** Saluda els masovers mentre comprova la càrrega.
+3. **Masia El Blanc:** Saluda els masovers mentre comprova la càrrega.
+4. **Pas de la Riera:** Travessa el gual d'aigua passant per sobre les pedres seques.
 5. **Masia de Planes Bones:** Passa pel davant a pas viu quan comença a fer-se fosc.
-6. **Entrecreuament de Can Vinyals (Les Nogueres i la Pedra Gran):**
-   - Vora la bifurcació cap a Can Vinyals, sota l'ombra de les nogueres que flanquegen el camí, recolza el sac a la gran pedra fita per recuperar l'alè.
-   - En moure's, se sent un soroll metàl·lic: la clau de la forja rellisca i queda entre les pedres.
-7. **Pou d'Aigua:** S'atura a beure i s'adona esverat que ja no porta la clau.
-8. **Arribada a La Guixa:** Arriba a la forja sense poder entrar fins l'endemà.
+6. **Camí de les Nogueres:** Passa pel tram de camí on les nogueres fan una ombra espessa.
+7. **Entrecreuament de Can Vinyals (La Pedra Gran):**
+   - Vora la bifurcació cap a Can Vinyals, sota les nogueres que flanquegen el camí, recolza el sac a la gran pedra fita per recuperar l'alè.
+   - En moure's, se sent un soroll metàl·lic: la clau de la forja rellisca i queda amagada a la pedra gran.
+8. **Pou d'Aigua:** S'atura a beure i s'adona esverat que ja no porta la clau.
+9. **Arribada a La Guixa:** Arriba a la forja sense poder entrar fins l'endemà.
 
 ---
 
 ## 3. Mecànica 1: Cooperació dels Testimonis (Pistes Repartides)
 ### Assignació de Pistes per Mòbil
 - Cada jugador de l'equip veu a la seva pantalla exclusivament la pista que li correspon, segons la seva posició a l'equip (`player_index`), distribuïdes cíclicament per a equips de qualsevol mida:
-  - **Jugador 1 (Testimoni de Malla i Vic):**
-    > *«Vaig veure sortir el ferrer de Malla al capvespre. Va deixar a mà dreta el trencall que mena cap a Vic i va enfilar decidit cap al pas de la riera.»*
-  - **Jugador 2 (Testimoni de la Riera i Masia El Blanc):**
-    > *«Va travessar la riera saltant per les pedres i va fer una breu aturada a la Masia El Blanc per comprovar la càrrega abans d'arribar a la Masia de Planes Bones.»*
-  - **Jugador 3 (Testimoni de Planes Bones i Can Vinyals):**
-    > *«Després de passar la Masia de Planes Bones, va arribar a l'entrecreuament cap a Can Vinyals. Allà, sota les nogueres, el vaig veure recolzar el sac a la gran pedra del camí i es va sentir un cop sec de ferro contra la roca!»*
+  - **Jugador 1 (Testimoni de Malla, Vic i Masia El Blanc):**
+    > *«Vaig veure sortir el ferrer de Malla al capvespre. Va deixar a mà dreta el trencall de Vic i va enfilar cap a la Masia El Blanc per comprovar la càrrega abans d'anar cap a l'aigua.»*
+  - **Jugador 2 (Testimoni del Pas de la Riera i Masia de Planes Bones):**
+    > *«Va travessar la riera saltant per les pedres seques i va passar ràpid per davant de la Masia de Planes Bones abans que fos fosc del tot.»*
+  - **Jugador 3 (Testimoni del Camí de les Nogueres i Can Vinyals):**
+    > *«Va agafar el camí on les nogueres fan ombra fins a l'entrecreuament de Can Vinyals. Allà el vaig veure recolzar el sac a la gran pedra del camí i es va sentir un cop sec de ferro contra la roca!»*
   - **Jugador 4 (Testimoni del Pou i La Guixa):**
-    > *«Va arribar esbufegant al pou d'aigua per beure abans d'entrar a la Guixa. Es tocava el cinturó desesperat: deia que en algun punt entre Planes Bones i el pou havia perdut la clau mestra de la seva forja!»*
+    > *«Va arribar esbufegant al pou d'aigua per beure abans d'entrar a la Guixa. Es tocava el cinturó desesperat: deia que entre les nogueres i el pou havia perdut la clau mestra de la seva forja!»*
 - Els jugadors no han d'intercanviar mòbils: han de comunicar-se en veu alta per ordenar el camí.
 
 ---
@@ -60,6 +61,7 @@ S'amplia el mapa hexagonal en SVG a una graella de 24 caselles (6 columnes × 4 
    - Pas de la Riera
    - Masia El Blanc
    - Masia de Planes Bones
+   - Camí Nogueres
    - Entrecreuament Can Vinyals (Nogueres & Pedra Gran) ⭐
    - Pou d'Aigua
    - La Guixa (Arribada)
