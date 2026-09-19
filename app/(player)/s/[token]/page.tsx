@@ -7,6 +7,8 @@ import { GameProps, SubmitResult } from '@/components/gameTypes'
 import { useGameNavigation } from '@/lib/context/GameNavigationContext'
 import { useGameClockAlerts } from '@/lib/realtime/useGameClockAlerts'
 import { BellRungModal } from '@/components/player/BellRungModal'
+import { BottomNav, type NavTabId } from '@/components/player/BottomNav'
+import { useTeamState } from '@/lib/realtime/useTeamState'
 import { supabase } from '@/lib/db'
 
 interface StationData {
@@ -34,6 +36,7 @@ export default function StationQRPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [sharedState, setSharedState] = useState<unknown>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const teamState = useTeamState(stationData?.teamId)
 
   // Validate token and fetch station data
   useEffect(() => {
@@ -249,26 +252,8 @@ export default function StationQRPage() {
 
   // Render game
   return (
-    <div className="bg-amber-50 relative">
-      {/* Game Header with Exit Button */}
-      <div className="sticky top-0 z-10 bg-white border-b-2 border-amber-700 p-3">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <h2 className="font-bold text-amber-900">
-            {stationData.stationId}
-          </h2>
-          <button
-            onClick={() => {
-              clearActiveGame()
-              router.push('/joc')
-            }}
-            className="px-4 py-2 bg-amber-700 text-white rounded font-semibold hover:bg-amber-800 text-sm"
-          >
-            Menú
-          </button>
-        </div>
-      </div>
-
-      <main className="w-full max-w-4xl mx-auto p-2 sm:p-4">
+    <div className="bg-amber-50 relative min-h-screen flex flex-col justify-between">
+      <main className="w-full max-w-4xl mx-auto p-2 sm:p-4 pb-24 flex-1">
         <GameComponent
           stationId={stationData.stationId}
           content={stationData.content}
@@ -278,6 +263,30 @@ export default function StationQRPage() {
           solved={false}
         />
       </main>
+
+      {/* Bell alert modal */}
+      <BellRungModal
+        show={gameClock.showBellPopup}
+        onViewResults={() => {
+          clearActiveGame()
+          router.push('/results')
+        }}
+      />
+
+      {/* Bottom Navigation Menu */}
+      <BottomNav
+        activeTab="game"
+        onTabChange={(tab: NavTabId) => {
+          // Navigate to hub without clearing active game!
+          router.push(`/joc?tab=${tab}`)
+        }}
+        evidencesCount={teamState.evidences.length}
+        salconduitsRemaining={teamState.session?.salconduits_remaining ?? 2}
+        isGameActive={true}
+        onCenterAction={() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }}
+      />
     </div>
   )
 }

@@ -3,7 +3,7 @@
 export type NavTabId = 'map' | 'notebook' | 'historia' | 'salconduit'
 
 interface BottomNavProps {
-  activeTab: NavTabId
+  activeTab: NavTabId | null | 'game'
   onTabChange: (tab: NavTabId) => void
   evidencesCount: number
   salconduitsRemaining: number
@@ -46,7 +46,9 @@ export function BottomNav({
         <div className="relative flex items-start justify-center">
           <button
             onClick={onCenterAction}
-            className="absolute -top-6 w-16 h-16 rounded-full hover:scale-105 active:scale-95 transition-transform flex items-center justify-center text-3xl shadow-xl border-4"
+            className={`absolute -top-6 w-16 h-16 rounded-full hover:scale-105 active:scale-95 transition-transform flex items-center justify-center text-3xl shadow-xl border-4 ${
+              isGameActive && activeTab !== 'game' ? 'ring-4 ring-amber-400/60' : ''
+            } ${activeTab === 'game' ? 'scale-105 ring-2 ring-amber-600' : ''}`}
             style={{ backgroundColor: '#D4AF37', borderColor: '#B8860B' }}
             title={isGameActive ? 'Torna al joc' : 'Escaneja QR'}
           >

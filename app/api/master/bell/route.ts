@@ -69,12 +69,31 @@ export async function POST(request: NextRequest) {
       })
       .eq('id', 1)
 
+    if (triggerNow) {
+      // Freeze all active teams that don't have finished_at yet
+      await serviceClient
+        .from('teams')
+        .update({ finished_at: newExpiresAtIso })
+        .is('finished_at', null)
+
+      // Also set all sessions to expire now
+      await serviceClient
+        .from('sessions')
+        .update({ expires_at: newExpiresAtIso })
+    } else {
+      // If time was adjusted (+5m, -5m, etc.), keep sessions expires_at in sync
+      await serviceClient
+        .from('sessions')
+        .update({ expires_at: newExpiresAtIso })
+    }
+
     return NextResponse.json({
       success: true,
       message: triggerNow
         ? 'Campana activada immediatament!'
         : 'Hora de la campana actualitzada',
       expiresAt: newExpiresAtIso,
+      gameStatus: newStatus,
     })
   } catch (error) {
     console.error('Error a /api/master/bell:', error)

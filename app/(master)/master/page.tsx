@@ -15,12 +15,16 @@ export default function MasterDashboard() {
     teams,
     sessionStartTime,
     sessionEndTime,
+    gameStatus,
+    durationMinutes,
     isLoading,
     error,
     refetch,
     resetGame,
+    startGame,
     adjustBell,
     isResetting,
+    isStarting,
   } = useMasterDashboard()
 
   const [isQRModalOpen, setIsQRModalOpen] = useState(false)
@@ -53,6 +57,8 @@ export default function MasterDashboard() {
     try {
       await resetGame(selectedDuration)
       setShowResetConfirm(false)
+      // Automatically open the QR modal so the master can immediately show QR codes to players
+      setIsQRModalOpen(true)
     } catch (err) {
       alert('Error reiniciant la partida. Revisa la consola.')
     }
@@ -144,11 +150,67 @@ export default function MasterDashboard() {
           </div>
         )}
 
+        {/* Preparation Banner when game is in 'pending' status */}
+        {gameStatus === 'pending' && (
+          <div className="mb-6 p-5 bg-gradient-to-r from-amber-100 via-orange-100 to-amber-100 border-2 border-amber-400 rounded-2xl shadow-lg">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex-1 text-center md:text-left">
+                <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
+                  <span className="text-2xl">📢</span>
+                  <h2 className="text-lg sm:text-xl font-bold text-amber-950">
+                    Fase 1: Creació de Grups i Preparació
+                  </h2>
+                </div>
+                <p className="text-sm text-amber-900 leading-relaxed">
+                  Ensenya els <strong>codis QR</strong> als participants perquè entrin i formin els grups. Veuràs els jugadors connectats a la taula inferior en temps real.
+                </p>
+                <p className="text-sm text-amber-950 font-semibold mt-1">
+                  Quan tothom estigui a punt, prem el botó verd per <strong>iniciar el compte enrere</strong>!
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-3 shrink-0">
+                <button
+                  onClick={() => setIsQRModalOpen(true)}
+                  className="px-4 py-3 text-sm font-bold text-amber-950 bg-white hover:bg-amber-50 border-2 border-amber-300 rounded-xl shadow transition flex items-center gap-2"
+                >
+                  <span>📱</span> Ensenyar QR als Participants
+                </button>
+
+                <button
+                  onClick={async () => {
+                    try {
+                      await startGame(durationMinutes)
+                    } catch (e) {
+                      alert('Error iniciant el temps.')
+                    }
+                  }}
+                  disabled={isStarting}
+                  className="px-6 py-3 text-base font-extrabold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl shadow-lg transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isStarting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Iniciant...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>▶️</span> Iniciar el Temps ({durationMinutes} min)
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Timer Section */}
         <div className="mb-8">
           <GameTimer
             startTime={sessionStartTime}
             endTime={sessionEndTime}
+            totalMinutes={durationMinutes}
+            gameStatus={gameStatus}
             onAdjustBell={adjustBell}
           />
         </div>

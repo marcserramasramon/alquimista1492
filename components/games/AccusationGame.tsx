@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
 import { useAudio } from '@/lib/audio/useAudio'
+import { useGameNavigation } from '@/lib/context/GameNavigationContext'
 import {
   fadeInVariants,
   containerVariants,
@@ -57,6 +58,7 @@ const ALL_EVIDENCE = [
 export function AccusationGame(props: GameProps) {
   const router = useRouter()
   const { play } = useAudio()
+  const { clearActiveGame } = useGameNavigation()
 
   const [state, setState] = useState<AccusationGameState>(() => {
     const saved =
@@ -695,7 +697,10 @@ export function AccusationGame(props: GameProps) {
               <div className="pt-3 space-y-2">
                 <button
                   type="button"
-                  onClick={() => router.push('/joc')}
+                  onClick={() => {
+                    clearActiveGame()
+                    router.push('/joc')
+                  }}
                   className="w-full py-3.5 px-4 bg-[#1D3557] hover:bg-[#2B4C7E] text-white font-bold font-sans rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-sm"
                 >
                   <span>✕</span>

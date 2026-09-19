@@ -6,6 +6,7 @@ interface GameTimerProps {
   startTime?: Date | null
   endTime?: Date | null
   totalMinutes?: number
+  gameStatus?: 'pending' | 'active' | 'finished'
   onAdjustBell?: (params: { addMinutes?: number; triggerNow?: boolean; setDurationMinutes?: number }) => Promise<unknown>
 }
 
@@ -13,24 +14,39 @@ export function GameTimer({
   startTime,
   endTime,
   totalMinutes = 90,
+  gameStatus = 'pending',
   onAdjustBell,
 }: GameTimerProps) {
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null)
-  const [status, setStatus] = useState<'active' | 'warning' | 'critical' | 'ended'>('active')
+  const [status, setStatus] = useState<'pending' | 'active' | 'warning' | 'critical' | 'ended'>('pending')
   const [isAdjusting, setIsAdjusting] = useState(false)
   const [confirmBell, setConfirmBell] = useState(false)
 
   useEffect(() => {
+    if (gameStatus === 'pending' || !startTime || !endTime) {
+      if (gameStatus === 'finished') {
+        setTimeRemaining(0)
+        setStatus('ended')
+      } else {
+        setTimeRemaining(null)
+        setStatus('pending')
+      }
+      return
+    }
+
+    if (gameStatus === 'finished') {
+      setTimeRemaining(0)
+      setStatus('ended')
+      return
+    }
+
     const calculateRemaining = () => {
       const now = new Date()
       const targetTime = endTime
-        ? endTime
-        : startTime
-          ? new Date(startTime.getTime() + totalMinutes * 60 * 1000)
-          : null
 
       if (!targetTime) {
         setTimeRemaining(null)
+        setStatus('pending')
         return
       }
 
@@ -55,12 +71,33 @@ export function GameTimer({
     calculateRemaining()
     const timer = setInterval(calculateRemaining, 1000)
     return () => clearInterval(timer)
-  }, [startTime, endTime, totalMinutes])
+  }, [startTime, endTime, totalMinutes, gameStatus])
 
-  if (timeRemaining === null) {
+  if (gameStatus === 'pending' || timeRemaining === null) {
+    const pendingHours = Math.floor(totalMinutes / 60)
+    const pendingMins = totalMinutes % 60
     return (
-      <div className="rounded-xl p-6 border-2 border-stone-200 bg-stone-50 text-center text-stone-500">
-        <p className="text-sm">Cronòmetre no iniciat. Inicia una partida per activar el compte enrere.</p>
+      <div className="rounded-2xl p-6 border-2 border-amber-300 bg-amber-50/80 shadow-md text-amber-950">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
+              <span className="text-xl">⏳</span>
+              <p className="text-xs uppercase font-bold tracking-widest text-amber-800">
+                Compte Enrere · Preparat
+              </p>
+            </div>
+            <div className="text-5xl md:text-6xl font-extrabold font-mono tracking-wider text-amber-950">
+              {pendingHours > 0 && <span>{String(pendingHours).padStart(2, '0')}:</span>}
+              {String(pendingMins).padStart(2, '0')}:00
+            </div>
+            <p className="text-xs font-semibold mt-2 text-amber-800">
+              🟡 EN ESPERA D&apos;INICI · Mostra els codis QR als equips i prem «Iniciar el Temps» per donar el tret de sortida.
+            </p>
+          </div>
+          <div className="px-4 py-2 bg-amber-100/80 rounded-xl border border-amber-300 text-xs text-amber-900 font-medium max-w-xs text-center md:text-right">
+            <span>⏱️ Durada configurada: <strong>{totalMinutes} minuts</strong></span>
+          </div>
+        </div>
       </div>
     )
   }
@@ -70,6 +107,7 @@ export function GameTimer({
   const seconds = timeRemaining % 60
 
   const statusStyles = {
+    pending: 'bg-amber-50 text-amber-950 border-amber-300',
     active: 'bg-emerald-50 text-emerald-950 border-emerald-300',
     warning: 'bg-amber-50 text-amber-950 border-amber-300',
     critical: 'bg-red-50 text-red-950 border-red-400 animate-pulse',
@@ -135,24 +173,24 @@ export function GameTimer({
           <div className="flex flex-wrap items-center justify-center gap-2">
             <button
               onClick={() => handleAddMinutes(5)}
-              disabled={isAdjusting}
-              className="px-3 py-2 text-xs font-bold bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 rounded-lg shadow-sm transition"
+              disabled={isAdjusting || status === 'ended'}
+              className="px-3 py-2 text-xs font-bold bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 rounded-lg shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
               title="Afegir 5 minuts al temps de la partida"
             >
               +5 min
             </button>
             <button
               onClick={() => handleAddMinutes(10)}
-              disabled={isAdjusting}
-              className="px-3 py-2 text-xs font-bold bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 rounded-lg shadow-sm transition"
+              disabled={isAdjusting || status === 'ended'}
+              className="px-3 py-2 text-xs font-bold bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 rounded-lg shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
               title="Afegir 10 minuts al temps de la partida"
             >
               +10 min
             </button>
             <button
               onClick={() => handleAddMinutes(-5)}
-              disabled={isAdjusting || timeRemaining <= 300}
-              className="px-3 py-2 text-xs font-bold bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 rounded-lg shadow-sm transition"
+              disabled={isAdjusting || status === 'ended' || timeRemaining <= 300}
+              className="px-3 py-2 text-xs font-bold bg-white hover:bg-stone-100 text-stone-800 border border-stone-300 rounded-lg shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
               title="Restar 5 minuts al temps de la partida"
             >
               -5 min

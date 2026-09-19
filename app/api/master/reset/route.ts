@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
             suspects_dismissed: [],
             salconduits_remaining: 3,
             salconduits_used: [],
-            started_at: nowIso,
-            expires_at: expiresAtIso,
+            started_at: null,
+            expires_at: null,
           })
           .select('id')
           .single()
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
             color: defTeam.color,
             variant: defTeam.variant,
             is_active: true,
-            started_at: nowIso,
+            started_at: null,
             finished_at: null,
             session_id: newSession.id,
           })
@@ -75,9 +75,11 @@ export async function POST(request: NextRequest) {
         // B. Remove previous results
         await serviceClient.from('results').delete().eq('team_id', team.id)
 
-        // C. Clean team_stations if exists
+        // C. Clean team_stations, team_evidences, and passes if exist
         try {
           await serviceClient.from('team_stations').delete().eq('team_id', team.id)
+          await serviceClient.from('team_evidences').delete().eq('team_id', team.id)
+          await serviceClient.from('passes').delete().eq('team_id', team.id)
         } catch {
           // Ignore if table does not exist or empty
         }
@@ -95,8 +97,8 @@ export async function POST(request: NextRequest) {
               suspects_dismissed: [],
               salconduits_remaining: 3,
               salconduits_used: [],
-              started_at: nowIso,
-              expires_at: expiresAtIso,
+              started_at: null,
+              expires_at: null,
             })
             .eq('id', team.session_id)
         } else {
@@ -111,8 +113,8 @@ export async function POST(request: NextRequest) {
               suspects_dismissed: [],
               salconduits_remaining: 3,
               salconduits_used: [],
-              started_at: nowIso,
-              expires_at: expiresAtIso,
+              started_at: null,
+              expires_at: null,
             })
             .select('id')
             .single()
@@ -133,32 +135,31 @@ export async function POST(request: NextRequest) {
             color: defTeam.color,
             variant: defTeam.variant,
             is_active: true,
-            started_at: nowIso,
+            started_at: null,
             finished_at: null,
           })
           .eq('id', team.id)
       }
     }
 
-    // 3. Start the shared game clock — this is the only place the countdown
-    // is allowed to start. Players see it flip from "pending" to "active"
-    // and get notified the moment this write lands.
+    // 3. Reset the shared game clock to 'pending' — countdown does NOT start yet!
+    // The master can now show QR codes to participants to form teams.
+    // Countdown will only start when the master clicks "Iniciar el Temps".
     await serviceClient
       .from('game_config')
       .upsert({
         id: 1,
-        status: 'active',
+        status: 'pending',
         duration_minutes: durationMinutes,
-        started_at: nowIso,
-        expires_at: expiresAtIso,
+        started_at: null,
+        expires_at: null,
         updated_at: nowIso,
       })
 
     return NextResponse.json({
       success: true,
-      message: 'Partida reiniciada amb èxit per als 8 equips',
-      startedAt: nowIso,
-      expiresAt: expiresAtIso,
+      message: 'Partida preparada amb èxit. Rellotge en espera de començar.',
+      gameStatus: 'pending',
       durationMinutes,
     })
   } catch (error) {

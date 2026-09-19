@@ -43,7 +43,7 @@ export function PlayerTimer({ status, expiresAt }: PlayerTimerProps) {
     )
   }
 
-  if (status === 'finished' || secondsRemaining === null) {
+  if (status === 'finished' || secondsRemaining === null || secondsRemaining <= 0) {
     return (
       <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-serif font-bold tracking-wide shadow-sm bg-cochineal text-parchment">
         <span>🔔</span>

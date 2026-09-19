@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
 
     const serviceClient = getServiceRoleClient()
 
-    const [teamsRes, resultsRes, sessionsRes, playersRes] = await Promise.all([
+    const [{ data: gameConfig }, teamsRes, resultsRes, sessionsRes, playersRes] = await Promise.all([
+      serviceClient.from('game_config').select('status, started_at, expires_at').eq('id', 1).maybeSingle(),
       serviceClient.from('teams').select('*').order('created_at', { ascending: true }),
       serviceClient.from('results').select('*'),
       serviceClient.from('sessions').select('*'),
@@ -48,11 +49,25 @@ export async function GET(request: NextRequest) {
       .map((team) => {
         const result = resultsMap.get(team.id)
         const session = team.session_id ? sessionsMap.get(team.session_id) : null
-        const startTime = team.started_at ? new Date(team.started_at) : new Date()
-        const endTime = team.finished_at ? new Date(team.finished_at) : new Date()
-        const timeElapsed = Math.round(
-          (endTime.getTime() - startTime.getTime()) / 1000
-        )
+
+        let timeElapsed = 0
+        if (gameConfig?.status === 'pending') {
+          timeElapsed = 0
+        } else {
+          const startTime = team.started_at
+            ? new Date(team.started_at)
+            : gameConfig?.started_at
+              ? new Date(gameConfig.started_at)
+              : new Date()
+
+          const endTime = team.finished_at
+            ? new Date(team.finished_at)
+            : gameConfig?.status === 'finished' && gameConfig?.expires_at
+              ? new Date(gameConfig.expires_at)
+              : new Date()
+
+          timeElapsed = Math.max(0, Math.round((endTime.getTime() - startTime.getTime()) / 1000))
+        }
 
         return {
           ...team,

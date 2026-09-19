@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 export interface TeamData {
   id: string
@@ -24,6 +24,8 @@ interface DashboardData {
   teams: TeamData[]
   sessionStartTime: Date | null
   sessionEndTime: Date | null
+  gameStatus: 'pending' | 'active' | 'finished'
+  durationMinutes: number
   isLoading: boolean
   error: Error | null
   lastUpdated: Date
@@ -36,12 +38,15 @@ export function useMasterDashboard() {
     teams: [],
     sessionStartTime: null,
     sessionEndTime: null,
+    gameStatus: 'pending',
+    durationMinutes: 90,
     isLoading: true,
     error: null,
     lastUpdated: new Date(),
   })
 
   const [isResetting, setIsResetting] = useState(false)
+  const [isStarting, setIsStarting] = useState(false)
 
   // Fetch teams data from dedicated server route
   const fetchTeams = useCallback(async () => {
@@ -71,6 +76,8 @@ export function useMasterDashboard() {
         teams: json.teams || [],
         sessionStartTime: json.sessionStartTime ? new Date(json.sessionStartTime) : null,
         sessionEndTime: json.sessionEndTime ? new Date(json.sessionEndTime) : null,
+        gameStatus: json.gameStatus || 'pending',
+        durationMinutes: json.durationMinutes || 90,
         isLoading: false,
         error: null,
         lastUpdated: new Date(),
@@ -115,6 +122,39 @@ export function useMasterDashboard() {
       throw err
     } finally {
       setIsResetting(false)
+    }
+  }, [fetchTeams])
+
+  // Action to explicitly start the game and countdown
+  const startGame = useCallback(async (durationMinutes?: number) => {
+    setIsStarting(true)
+    try {
+      const token = localStorage.getItem('master_token')
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+
+      const res = await fetch('/api/master/start', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ durationMinutes }),
+      })
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Error iniciant la partida')
+      }
+
+      await fetchTeams()
+      return true
+    } catch (err) {
+      console.error('Error starting game:', err)
+      throw err
+    } finally {
+      setIsStarting(false)
     }
   }, [fetchTeams])
 
@@ -167,7 +207,9 @@ export function useMasterDashboard() {
     ...data,
     refetch: fetchTeams,
     resetGame,
+    startGame,
     adjustBell,
     isResetting,
+    isStarting,
   }
 }

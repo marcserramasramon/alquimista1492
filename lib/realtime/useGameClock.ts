@@ -68,7 +68,13 @@ export function useGameClock(): GameClockState {
       )
       .subscribe()
 
+    // Add fallback polling every 3s to guarantee sync on mobile/sleeping tabs
+    const pollInterval = setInterval(() => {
+      fetchClock()
+    }, 3000)
+
     return () => {
+      clearInterval(pollInterval)
       supabase.removeChannel(channel)
     }
   }, [fetchClock])

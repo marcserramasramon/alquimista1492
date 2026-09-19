@@ -116,13 +116,45 @@ export async function GET(request: NextRequest) {
       playersNamesMap.set(p.team_id, names)
     }
 
+    // Fetch game config to drive single source of truth for countdown and status
+    const { data: gameConfig } = await serviceClient
+      .from('game_config')
+      .select('status, duration_minutes, started_at, expires_at')
+      .eq('id', 1)
+      .maybeSingle()
+
+    const currentStatus = gameConfig?.status ?? 'pending'
+    const sessionStartTime = currentStatus !== 'pending' && gameConfig?.started_at
+      ? new Date(gameConfig.started_at)
+      : null
+    const sessionEndTime = currentStatus !== 'pending' && gameConfig?.expires_at
+      ? new Date(gameConfig.expires_at)
+      : null
+
     // 4. Enrich team data
+    const now = new Date()
     const enriched = activeTeams.map((team) => {
       const session = team.session_id ? sessionsMap.get(team.session_id) : undefined
       const result = resultsMap.get(team.id)
-      const startTime = team.started_at ? new Date(team.started_at) : new Date()
-      const now = new Date()
-      const timeElapsed = Math.round((now.getTime() - startTime.getTime()) / 1000)
+
+      let timeElapsed = 0
+      if (currentStatus === 'pending') {
+        timeElapsed = 0
+      } else {
+        const teamStart = team.started_at
+          ? new Date(team.started_at)
+          : sessionStartTime || now
+
+        if (team.finished_at) {
+          const finish = new Date(team.finished_at)
+          timeElapsed = Math.max(0, Math.round((finish.getTime() - teamStart.getTime()) / 1000))
+        } else if (currentStatus === 'finished') {
+          const finish = sessionEndTime || now
+          timeElapsed = Math.max(0, Math.round((finish.getTime() - teamStart.getTime()) / 1000))
+        } else {
+          timeElapsed = Math.max(0, Math.round((now.getTime() - teamStart.getTime()) / 1000))
+        }
+      }
 
       return {
         ...team,
@@ -136,27 +168,12 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // The countdown is only ever driven by game_config, never by per-team
-    // timestamps (those default to "row creation time", not "master pressed
-    // start", which is exactly what used to make the bell ring prematurely).
-    const { data: gameConfig } = await serviceClient
-      .from('game_config')
-      .select('status, duration_minutes, started_at, expires_at')
-      .eq('id', 1)
-      .maybeSingle()
-
-    const sessionStartTime = gameConfig?.status !== 'pending' && gameConfig?.started_at
-      ? new Date(gameConfig.started_at)
-      : null
-    const sessionEndTime = gameConfig?.status !== 'pending' && gameConfig?.expires_at
-      ? new Date(gameConfig.expires_at)
-      : null
-
     return NextResponse.json({
       teams: enriched,
       sessionStartTime,
       sessionEndTime,
-      gameStatus: gameConfig?.status ?? 'pending',
+      gameStatus: currentStatus,
+      durationMinutes: gameConfig?.duration_minutes ?? 90,
       totalTeams: enriched.length,
     })
   } catch (error) {

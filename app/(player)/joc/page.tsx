@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/db'
 import { useTeamState } from '@/lib/realtime/useTeamState'
 import { useGameClockAlerts } from '@/lib/realtime/useGameClockAlerts'
@@ -29,10 +29,23 @@ interface PlayerSession {
   teamColor?: string
 }
 
-export default function JocHubPage() {
+function JocHubContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get('tab') as Tab | null
   const { gameState, clearActiveGame, isGameActive } = useGameNavigation()
-  const [activeTab, setActiveTab] = useState<Tab>('historia')
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (tabParam && ['map', 'notebook', 'historia', 'salconduit', 'accuse'].includes(tabParam)) {
+      return tabParam
+    }
+    return 'historia'
+  })
+
+  useEffect(() => {
+    if (tabParam && ['map', 'notebook', 'historia', 'salconduit', 'accuse'].includes(tabParam)) {
+      setActiveTab(tabParam)
+    }
+  }, [tabParam])
   const [playerSession, setPlayerSession] = useState<PlayerSession | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -292,5 +305,22 @@ export default function JocHubPage() {
         }}
       />
     </div>
+  )
+}
+
+export default function JocHubPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-amber-50">
+          <div className="text-center">
+            <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-amber-900 border-t-amber-300"></div>
+            <p className="text-lg font-semibold text-amber-900">Carregant el Hub...</p>
+          </div>
+        </div>
+      }
+    >
+      <JocHubContent />
+    </Suspense>
   )
 }
