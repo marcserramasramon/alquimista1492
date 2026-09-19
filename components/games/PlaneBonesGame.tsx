@@ -1,56 +1,31 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
 import { useAudio } from '@/lib/audio/useAudio'
 import { fadeInVariants, shakeVariants } from '@/lib/animations/useAnimations'
+import {
+  HEX_MAP_NODES,
+  CORRECT_PATH_SEQUENCE,
+  WITNESS_CLUES,
+  isValidClauKey,
+  HexNodeData,
+} from '@/content/public/planesBonesData'
+import { Scanner, IDetectedBarcode } from '@yudiel/react-qr-scanner'
+import { supabase } from '@/lib/db'
 
 interface GameState {
-  activeTab: 'coartada' | 'pistes' | 'personatges' | 'mapa'
-  selectedSuspects: string[] // Ex: ['joan', 'pere']
-  textAnswer: string
+  activeTab: 'mapa' | 'interrogatori' | 'troballa'
+  selectedWitnessId: number // 1 a 4
+  pathProgress: string[] // IDs de nodes connectats en ordre
+  manualCode: string
   attempts: number
   solved: boolean
-  lastFeedback: { type: 'success' | 'error'; message: string } | null
+  lastFeedback: { type: 'success' | 'error' | 'hint'; message: string } | null
 }
 
-interface HexNode {
-  id: number
-  cx: number
-  cy: number
-  name: string
-  subtitle: string
-  icon: string
-  character?: { id: string; name: string; role: string; time?: string }
-  type: 'cami' | 'edifici' | 'farga' | 'lloc' | 'prohibit'
-}
-
-const HEX_RADIUS = 42
-
-// Xarxa hexagonal 4x4 en rusc d'abelles real: files alternes desplaçades mig pas
-// perquè cada hexàgon encaixi a la cavitat dels dos veïns de la fila adjacent.
-const HEX_GRID: Record<number, HexNode> = {
-  1: { id: 1, cx: 44.4, cy: 50, name: 'Camí de Vic', subtitle: 'Nord', icon: '🛤️', type: 'cami' },
-  2: { id: 2, cx: 118.2, cy: 50, name: 'Molí Fariner', subtitle: 'Pere del Molí', icon: '⚙️', type: 'edifici', character: { id: 'pere', name: 'Pere del Molí', role: 'Moliner', time: '22:40' } },
-  3: { id: 3, cx: 191.9, cy: 50, name: 'La Farga', subtitle: 'Destí 23:00', icon: '⚒️', type: 'farga', character: { id: 'isidre', name: 'Isidre (Forja)', role: 'Ferrer', time: '23:00' } },
-  4: { id: 4, cx: 265.7, cy: 50, name: 'Bosc Espès', subtitle: 'Vedat', icon: '🌲', type: 'prohibit' },
-
-  5: { id: 5, cx: 81.3, cy: 114, name: 'Hostal del Sol', subtitle: 'Marianna', icon: '🏠', type: 'edifici', character: { id: 'marianna', name: 'Marianna', role: 'Hostalera' } },
-  6: { id: 6, cx: 155.0, cy: 114, name: 'Pou Comunal', subtitle: 'Carrer Gran', icon: '🪣', type: 'lloc' },
-  7: { id: 7, cx: 228.8, cy: 114, name: "L'Era", subtitle: 'Espai obert', icon: '🌾', type: 'lloc' },
-  8: { id: 8, cx: 302.5, cy: 114, name: 'Bosc Fosc', subtitle: 'Vedat', icon: '🌲', type: 'prohibit' },
-
-  9: { id: 9, cx: 44.4, cy: 178, name: "L'Escola", subtitle: 'Aula de Bernat', icon: '📚', type: 'edifici' },
-  10: { id: 10, cx: 118.2, cy: 178, name: 'La Rectoria', subtitle: 'Església', icon: '⛪', type: 'edifici' },
-  11: { id: 11, cx: 191.9, cy: 178, name: 'Hort de Feixes', subtitle: 'Conreus', icon: '🥬', type: 'lloc' },
-  12: { id: 12, cx: 265.7, cy: 178, name: 'Font del Torrent', subtitle: 'Aigua', icon: '💧', type: 'lloc' },
-
-  13: { id: 13, cx: 81.3, cy: 242, name: 'Cementiri Vell', subtitle: 'Prohibit', icon: '🪦', type: 'prohibit' },
-  14: { id: 14, cx: 155.0, cy: 242, name: 'Plaça Major', subtitle: 'Sortida 22:00', icon: '🏛️', type: 'lloc' },
-  15: { id: 15, cx: 228.8, cy: 242, name: 'El Paller', subtitle: 'Joan el traginer', icon: '🛖', type: 'lloc', character: { id: 'joan', name: 'Joan el traginer', role: 'Traginer', time: '22:20' } },
-  16: { id: 16, cx: 302.5, cy: 242, name: 'Riera Brava', subtitle: 'Gual d’aigua', icon: '🌊', type: 'prohibit' },
-}
+const HEX_RADIUS = 36
 
 function getHexPolygon(cx: number, cy: number, r: number = HEX_RADIUS): string {
   const points = []
@@ -63,6 +38,7 @@ function getHexPolygon(cx: number, cy: number, r: number = HEX_RADIUS): string {
 
 export function PlaneBonesGame(props: GameProps) {
   const { play } = useAudio()
+
   const [state, setState] = useState<GameState>(() => {
     const saved =
       props.sharedState && typeof props.sharedState === 'object'
@@ -70,649 +46,870 @@ export function PlaneBonesGame(props: GameProps) {
         : {}
 
     return {
-      activeTab: saved.activeTab || 'coartada',
-      selectedSuspects: Array.isArray(saved.selectedSuspects) ? saved.selectedSuspects : [],
-      textAnswer: saved.textAnswer || '',
+      activeTab: saved.activeTab || 'mapa',
+      selectedWitnessId: saved.selectedWitnessId || 1,
+      pathProgress: Array.isArray(saved.pathProgress) ? saved.pathProgress : ['malla'],
+      manualCode: saved.manualCode || '',
       attempts: saved.attempts || 0,
       solved: props.solved || saved.solved || false,
       lastFeedback: null,
     }
   })
 
+  const [showScannerModal, setShowScannerModal] = useState(false)
+  const [scannerError, setScannerError] = useState<string | null>(null)
+  const [shakeNodeId, setShakeNodeId] = useState<string | null>(null)
+
+  // Intentar assignar automàticament el testimoni segons el jugador connectat
+  useEffect(() => {
+    async function detectPlayerIndex() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        // Cercar la posició del jugador al seu equip
+        const { data: player } = await supabase
+          .from('players')
+          .select('id, team_id, created_at')
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        if (player?.team_id) {
+          const { data: teamPlayers } = await supabase
+            .from('players')
+            .select('id, created_at')
+            .eq('team_id', player.team_id)
+            .order('created_at', { ascending: true })
+
+          if (teamPlayers && teamPlayers.length > 0) {
+            const myIndex = teamPlayers.findIndex((p) => p.id === player.id)
+            if (myIndex >= 0) {
+              const assignedWitness = (myIndex % 4) + 1
+              setState((prev) => ({ ...prev, selectedWitnessId: assignedWitness }))
+            }
+          }
+        }
+      } catch {
+        // En cas de manca de connexió, manté el testimoni per defecte
+      }
+    }
+
+    detectPlayerIndex()
+  }, [])
+
+  // Sincronització d'estat amb els companys d'equip
   useEffect(() => {
     props.setSharedState(state)
   }, [state, props])
 
-  const toggleSuspect = (suspectId: string) => {
-    setState(prev => {
-      const exists = prev.selectedSuspects.includes(suspectId)
-      let updated: string[]
-      if (exists) {
-        updated = prev.selectedSuspects.filter(s => s !== suspectId)
-      } else {
-        if (prev.selectedSuspects.length >= 2) {
-          updated = [prev.selectedSuspects[1], suspectId]
-        } else {
-          updated = [...prev.selectedSuspects, suspectId]
-        }
-      }
+  // Comprovar si el camí complet s'ha traçat
+  const isPathComplete = useMemo(() => {
+    if (state.pathProgress.length !== CORRECT_PATH_SEQUENCE.length) return false
+    return CORRECT_PATH_SEQUENCE.every((id, idx) => state.pathProgress[idx] === id)
+  }, [state.pathProgress])
 
-      const namesMap: Record<string, string> = {
-        joan: 'Joan el traginer',
-        pere: 'Pere del Molí',
-        marianna: "Marianna de l'Hostal",
-      }
-      const newText = updated.map(id => namesMap[id] || id).join(' i ')
+  // Comprovar si ja han arribat a Can Vinyals al camí
+  const hasReachedCanVinyals = useMemo(() => {
+    return state.pathProgress.includes('can-vinyals')
+  }, [state.pathProgress])
 
-      return {
+  // Seleccionar un node al mapa per traçar la ruta
+  const handleNodeClick = (node: HexNodeData) => {
+    if (state.solved) return
+
+    const currentIndex = state.pathProgress.length
+
+    // Si el mapa ja està complet, permet seleccionar el node de Can Vinyals per anar a validar
+    if (isPathComplete) {
+      if (node.id === 'can-vinyals') {
+        setState((prev) => ({ ...prev, activeTab: 'troballa' }))
+      }
+      return
+    }
+
+    const expectedNextId = CORRECT_PATH_SEQUENCE[currentIndex]
+
+    // Si toquen el node esperat
+    if (node.id === expectedNextId) {
+      play('bell-ding')
+      const updated = [...state.pathProgress, node.id]
+      const justCompleted = updated.length === CORRECT_PATH_SEQUENCE.length
+
+      setState((prev) => ({
         ...prev,
-        selectedSuspects: updated,
-        textAnswer: newText,
-        lastFeedback: null,
+        pathProgress: updated,
+        lastFeedback: justCompleted
+          ? {
+              type: 'success',
+              message:
+                '🎉 Camí reproduït amb èxit! Tots els testimonis coincideixen: Isidre va perdre la clau a l’entrecreuament de Can Vinyals vora les nogueres!',
+            }
+          : {
+              type: 'hint',
+              message: `Molt bé! Pas ${updated.length} de ${CORRECT_PATH_SEQUENCE.length}: ${node.name}. Quin és el següent punt segons els testimonis?`,
+            },
+      }))
+
+      if (justCompleted) {
+        play('evidence-unlock')
       }
-    })
-  }
+      return
+    }
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
-    const raw = state.textAnswer.toUpperCase().trim()
-    const clean = raw.replace(/[.,;:!?'"`·\-]/g, ' ').replace(/\s+/g, ' ').trim()
-    const compact = clean.replace(/\s+/g, '')
-
-    // La solució correcta és visitar en Joan i en Pere
-    const hasJoan = clean.includes('JOAN') || state.selectedSuspects.includes('joan')
-    const hasPere = clean.includes('PERE') || state.selectedSuspects.includes('pere')
-    const hasMarianna = clean.includes('MARIANNA') || clean.includes('HOSTAL') || state.selectedSuspects.includes('marianna')
-
-    const isCorrect = (hasJoan && hasPere && !hasMarianna) || clean.includes('FARGA')
-
-    if (!isCorrect) {
-      play('buzzer')
-      let hintMsg = "Resposta incorrecta. Revisa bé les 5 pistes per determinar quins 2 personatges va visitar abans de les 23:00."
-      if (hasMarianna) {
-        hintMsg = "Recorda la Pista 2: La patrulla era davant de l'Hostal abans de les 22:30, per tant el ferrer no va poder parlar amb Marianna."
-      }
-      setState(prev => ({
+    // Si toquen un node que ja formava part del camí (volen recular fins aquí)
+    if (state.pathProgress.includes(node.id)) {
+      const idx = state.pathProgress.indexOf(node.id)
+      const pruned = state.pathProgress.slice(0, idx + 1)
+      play('bell-ding')
+      setState((prev) => ({
         ...prev,
-        attempts: prev.attempts + 1,
+        pathProgress: pruned,
         lastFeedback: {
-          type: 'error',
-          message: hintMsg,
+          type: 'hint',
+          message: `Has reculat fins a ${node.name}. Continua la ruta des d'aquest punt.`,
         },
       }))
       return
     }
 
+    // Si toquen un node erroni que no toca
+    play('buzzer')
+    setShakeNodeId(node.id)
+    setTimeout(() => setShakeNodeId(null), 600)
+
+    setState((prev) => ({
+      ...prev,
+      lastFeedback: {
+        type: 'error',
+        message: `El ferrer no va passar per «${node.name}». Parla amb els companys d'equip per seguir les indicacions exactes dels testimonis!`,
+      },
+    }))
+  }
+
+  // Desfer l'últim pas
+  const handleUndo = () => {
+    if (state.pathProgress.length <= 1) return
+    play('bell-ding')
+    setState((prev) => ({
+      ...prev,
+      pathProgress: prev.pathProgress.slice(0, -1),
+      lastFeedback: null,
+    }))
+  }
+
+  // Reiniciar camí a Malla
+  const handleReset = () => {
+    play('bell-ding')
+    setState((prev) => ({
+      ...prev,
+      pathProgress: ['malla'],
+      lastFeedback: null,
+    }))
+  }
+
+  // Validació de la Clau de la Forja (Manual o QR)
+  const handleValidateCode = async (submittedText: string) => {
+    const raw = submittedText.trim()
+    if (!raw) return
+
+    const isValid = isValidClauKey(raw)
+
+    if (!isValid) {
+      play('buzzer')
+      setState((prev) => ({
+        ...prev,
+        attempts: prev.attempts + 1,
+        lastFeedback: {
+          type: 'error',
+          message:
+            'Codi incorrecte. Assegura’t que estàs a la pedra gran de Can Vinyals i revisa el codi de reserva imprès sota el QR.',
+        },
+      }))
+      return
+    }
+
+    // Èxit en trobar la clau
     play('evidence-unlock')
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       solved: true,
+      activeTab: 'troballa',
       lastFeedback: {
         type: 'success',
-        message: 'Coartada corroborada! Isidre va visitar en Joan al paller i en Pere al molí abans d’arribar a la Farga a les 23:00.',
+        message: 'Clau mestra recuperada amb èxit! La coartada d’Isidre queda plenament confirmada.',
       },
     }))
 
     try {
       await props.submit({
-        suspects: ['joan', 'pere'],
-        answer: 'JOAN I PERE',
-        destination: 'FARGA',
-        time: '23:00',
+        key: 'CLAU-FORJA',
+        code: 'CLAU-FORJA',
+        answer: 'CLAU-FORJA',
+        destination: 'CAN-VINYALS',
+        pedra: 'PEDRA-GRAN',
       })
     } catch (err) {
-      console.error('Error enviant resolució:', err)
+      console.error('Error enviant resolució de Planes Bones:', err)
     }
   }
 
+  // Escaneig de Codi QR amb la càmera
+  const handleQRScan = useCallback(
+    (detected: IDetectedBarcode[]) => {
+      if (!detected || detected.length === 0) return
+      const text = detected[0]?.rawValue
+      if (!text) return
+
+      setShowScannerModal(false)
+      handleValidateCode(text)
+    },
+    []
+  )
+
+  // Generació de línia daurada del camí
+  const pathPointsString = useMemo(() => {
+    return state.pathProgress
+      .map((id) => {
+        const node = HEX_MAP_NODES[id]
+        return node ? `${node.cx},${node.cy}` : ''
+      })
+      .filter(Boolean)
+      .join(' ')
+  }, [state.pathProgress])
+
+  const myWitness = useMemo(() => {
+    return (
+      WITNESS_CLUES.find((w) => w.id === state.selectedWitnessId) ||
+      WITNESS_CLUES[0]
+    )
+  }, [state.selectedWitnessId])
+
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-5 pb-8 font-serif">
+    <div className="w-full max-w-4xl mx-auto space-y-4 pb-8 font-serif">
       {/* CAPÇALERA HISTÒRICA */}
-      <header className="border-b-2 border-[#8C6D53] pb-3 mb-4 text-center">
+      <header className="border-b-2 border-[#8C6D53] pb-3 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
-          Estació 3 · PLANES BONES
+          Estació 3 · TERME DE PLANES BONES
         </span>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
-          PLANES BONES
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-0.5 font-serif">
+          LA RUTA DEL FERRER I LA CLAU PERDUDA
         </h1>
-        <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">
-          "La Coartada del Ferrer i els Testimonis de la Nit"
+        <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-lg mx-auto">
+          «Reconstruïu el camí d'Isidre des de Malla fins a La Guixa per trobar l'objecte que va perdre.»
         </p>
       </header>
 
-      {/* Imatge d'ambientació de l'estació */}
-      <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
-        <img
-          src="/images/scenes/planes-bones.jpg"
-          alt="Planes Bones - La patrulla nocturna a la cruïlla de camins"
-          className="w-full h-full object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
-        <div className="absolute bottom-2 left-3 right-3 text-white/90 text-[11px] sm:text-xs font-sans italic drop-shadow">
-          🌲 Planes Bones · La patrulla amb fanals a la cruïlla de Vic i La Guixa
+      {/* TARGETA D'INTERROGATORI EXCLUSIU (PER AQUEST JUGADOR) */}
+      <section className="bg-[#FAF5E9] border-2 border-[#8C6D53] rounded-xl p-3.5 sm:p-4 shadow-sm relative overflow-hidden">
+        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#8C6D53]/30 pb-2 mb-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">{myWitness.icon}</span>
+            <div>
+              <span className="text-[10px] uppercase font-mono tracking-wider font-bold bg-[#D8CCAE] text-[#1D3557] px-2 py-0.5 rounded">
+                El teu testimoni assignat
+              </span>
+              <h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif">
+                {myWitness.title}
+              </h3>
+            </div>
+          </div>
+
+          {/* Selector de testimoni de socors per si són menys jugadors */}
+          <div className="flex items-center gap-1 text-xs font-sans text-[#5C4533]">
+            <span className="text-[11px] hidden sm:inline">Canviar testimoni:</span>
+            {WITNESS_CLUES.map((w) => (
+              <button
+                key={w.id}
+                type="button"
+                onClick={() => setState((prev) => ({ ...prev, selectedWitnessId: w.id }))}
+                className={`w-6 h-6 rounded-full text-xs font-bold transition-all flex items-center justify-center ${
+                  state.selectedWitnessId === w.id
+                    ? 'bg-[#1D3557] text-white ring-2 ring-[#C99E32]'
+                    : 'bg-[#E2D6B8] text-[#5C4533] hover:bg-[#D8CCAE]'
+                }`}
+                title={w.title}
+              >
+                {w.id}
+              </button>
+            ))}
+          </div>
         </div>
+
+        <p className="text-xs sm:text-sm text-[#2B2118] leading-relaxed italic bg-white/60 p-3 rounded-lg border border-[#8C6D53]/20 shadow-inner">
+          {myWitness.text}
+        </p>
+
+        <div className="mt-2 text-[11px] text-[#8C6D53] font-sans flex items-center justify-between flex-wrap gap-2">
+          <span>📍 Informant: <strong>{myWitness.witness}</strong> ({myWitness.location})</span>
+          <span className="font-bold text-[#1D3557]">🗣️ No mostris la pantalla: explica-ho als teus companys!</span>
+        </div>
+      </section>
+
+      {/* PESTANYES DE NAVEGACIÓ */}
+      <div className="bg-[#D8CCAE] border border-[#8C6D53] rounded-t-xl flex flex-wrap overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setState((prev) => ({ ...prev, activeTab: 'mapa' }))}
+          className={`flex-1 min-w-[120px] py-2.5 px-3 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+            state.activeTab === 'mapa'
+              ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+              : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+          }`}
+        >
+          <span>🗺️</span>
+          <span>Mapa del Camí ({state.pathProgress.length}/9)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setState((prev) => ({ ...prev, activeTab: 'interrogatori' }))}
+          className={`flex-1 min-w-[120px] py-2.5 px-3 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+            state.activeTab === 'interrogatori'
+              ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+              : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+          }`}
+        >
+          <span>📜</span>
+          <span>Tots els Testimonis (4)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setState((prev) => ({ ...prev, activeTab: 'troballa' }))}
+          className={`flex-1 min-w-[120px] py-2.5 px-3 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+            state.activeTab === 'troballa'
+              ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+              : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+          } ${hasReachedCanVinyals && !state.solved ? 'animate-pulse text-amber-900 font-extrabold' : ''}`}
+        >
+          <span>{state.solved ? '✓' : '🔍'}</span>
+          <span>Troballa de la Clau</span>
+        </button>
       </div>
 
-      {/* PESTANYES D'INVESTIGACIÓ */}
-      <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden">
-        {/* Barra superior de pestanyes */}
-        <div className="bg-[#D8CCAE] border-b border-[#8C6D53] flex flex-wrap">
-          <button
-            type="button"
-            onClick={() => setState(prev => ({ ...prev, activeTab: 'coartada' }))}
-            className={`flex-1 min-w-[110px] py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
-              state.activeTab === 'coartada'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
-            }`}
-          >
-            <span>📜</span>
-            <span>La Història</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setState(prev => ({ ...prev, activeTab: 'pistes' }))}
-            className={`flex-1 min-w-[110px] py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
-              state.activeTab === 'pistes'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
-            }`}
-          >
-            <span>🔍</span>
-            <span>Les 5 Pistes</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setState(prev => ({ ...prev, activeTab: 'personatges' }))}
-            className={`flex-1 min-w-[110px] py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
-              state.activeTab === 'personatges'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
-            }`}
-          >
-            <span>👥</span>
-            <span>Els 3 Veïns</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setState(prev => ({ ...prev, activeTab: 'mapa' }))}
-            className={`flex-1 min-w-[110px] py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
-              state.activeTab === 'mapa'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
-            }`}
-          >
-            <span>🗺️</span>
-            <span>Mapa Hexagonal</span>
-          </button>
-        </div>
-
-        {/* Contingut de les pestanyes */}
-        <div className="p-4 sm:p-5">
-          <AnimatePresence mode="wait">
-            {/* PESTANYA 1: LA COARTADA */}
-            {state.activeTab === 'coartada' && (
-              <motion.div
-                key="coartada"
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="space-y-4 text-xs sm:text-sm leading-relaxed text-[#2B2118]"
-              >
-                <div className="p-3.5 bg-[#F4EBD9] border-l-4 border-[#8C6D53] rounded-r shadow-inner">
-                  <h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif mb-1">
-                    La Declaració d'Isidre el Ferrer
-                  </h3>
-                  <p>
-                    «La nit del 15 de maig no vaig escriure cap carta ni vaig trair ningú. Vaig sortir de la <strong>Plaça a les 22:00</strong> per anar cap a <strong>La Farga</strong> a treballar. Pel camí em vaig aturar a parlar i recollir encàrrecs amb <strong>dos veïns del poble</strong>, i vaig arribar a la farga a les <strong>23:00 en punt</strong>, on un pagès i la patrulla armada em van veure forjant eines.»
-                  </p>
-                </div>
-
-                <div className="space-y-2 text-[#4A3728]">
-                  <p>
-                    Hi ha <strong>tres veïns</strong> que eren als seus llocs aquella nit: en <strong>Pere del Molí</strong>, en <strong>Joan el traginer</strong> i la <strong>Marianna de l'Hostal</strong>.
-                  </p>
-                  <p>
-                    Però Isidre només va tenir temps de passar per <strong>dos d'ells</strong> abans de les 23:00. Si descobrim exactament quins dos personatges va visitar gràcies a les 5 pistes, la seva coartada quedarà demostrada... o desmuntada per sempre!
-                  </p>
-                </div>
-
-                <div className="bg-[#DFD4BC]/70 p-3 rounded border border-[#8C6D53]/40 flex items-start gap-2.5 text-xs text-[#5C4533] font-sans">
-                  <span className="text-lg">💡</span>
-                  <div>
-                    <strong>Objectiu:</strong> Consulta la pestanya <em>Les 5 Pistes</em> per deduir quins 2 personatges va visitar i descartar el tercer.
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* PESTANYA 2: LES 5 PISTES */}
-            {state.activeTab === 'pistes' && (
-              <motion.div
-                key="pistes"
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="space-y-3"
-              >
-                <div className="border-b border-[#8C6D53]/40 pb-2 flex justify-between items-center">
-                  <h3 className="text-sm sm:text-base font-bold text-[#1D3557] font-serif">
-                    Els 5 Testimonis i Deduccions Lògiques
-                  </h3>
-                  <span className="text-xs text-[#8C6D53] font-mono">Nit del 15 de Maig</span>
-                </div>
-
-                <div className="space-y-2.5 text-xs sm:text-sm font-sans">
-                  {/* Pista 1 */}
-                  <div className="p-3 bg-[#FAF5E9] rounded-lg border border-[#8C6D53]/40">
-                    <div className="font-bold text-[#1D3557] flex items-center gap-1.5 mb-0.5">
-                      <span className="w-5 h-5 rounded-full bg-[#D8CCAE] text-[#1D3557] flex items-center justify-center text-xs font-mono">1</span>
-                      <span>Cadència del Camí (Horaris)</span>
-                    </div>
-                    <p className="text-[#4A3728] pl-6.5">
-                      El ferrer va sortir de la Plaça Major a les <strong>22:00 en punt</strong>. Cada tram de camí pel poble d'un punt al següent li costa exactament <strong>20 minuts</strong> (22:00 ➔ 22:20 ➔ 22:40 ➔ 23:00 a La Farga).
-                    </p>
-                  </div>
-
-                  {/* Pista 2 */}
-                  <div className="p-3 bg-[#FAF5E9] rounded-lg border border-[#8C6D53]/40">
-                    <div className="font-bold text-[#1D3557] flex items-center gap-1.5 mb-0.5">
-                      <span className="w-5 h-5 rounded-full bg-[#D8CCAE] text-[#1D3557] flex items-center justify-center text-xs font-mono">2</span>
-                      <span>La Ronda davant de l'Hostal</span>
-                    </div>
-                    <p className="text-[#4A3728] pl-6.5">
-                      La patrulla armada va vigilar la porta de l'Hostal entre les 22:15 i les 22:30. Si el ferrer hagués anat a l'Hostal amb la Marianna, l'haurien interceptat allà mateix, cosa que mai va passar.
-                    </p>
-                  </div>
-
-                  {/* Pista 3 */}
-                  <div className="p-3 bg-[#FAF5E9] rounded-lg border border-[#8C6D53]/40">
-                    <div className="font-bold text-[#1D3557] flex items-center gap-1.5 mb-0.5">
-                      <span className="w-5 h-5 rounded-full bg-[#D8CCAE] text-[#1D3557] flex items-center justify-center text-xs font-mono">3</span>
-                      <span>Testimoni del Traginer</span>
-                    </div>
-                    <p className="text-[#4A3728] pl-6.5">
-                      En <strong>Joan el traginer</strong> confirma que va rebre el ferrer al Paller just en sentir sonar el primer quart d'onze (<strong>22:20</strong>), quan enllestia les selles de les mules.
-                    </p>
-                  </div>
-
-                  {/* Pista 4 */}
-                  <div className="p-3 bg-[#FAF5E9] rounded-lg border border-[#8C6D53]/40">
-                    <div className="font-bold text-[#1D3557] flex items-center gap-1.5 mb-0.5">
-                      <span className="w-5 h-5 rounded-full bg-[#D8CCAE] text-[#1D3557] flex items-center justify-center text-xs font-mono">4</span>
-                      <span>Ordre de les Visites</span>
-                    </div>
-                    <p className="text-[#4A3728] pl-6.5">
-                      El ferrer va passar pel Molí <strong>després</strong> de visitar el Paller (mai abans), ja que necessitava el comprovant que en Joan li havia lliurat al paller.
-                    </p>
-                  </div>
-
-                  {/* Pista 5 */}
-                  <div className="p-3 bg-[#FAF5E9] rounded-lg border border-[#8C6D53]/40">
-                    <div className="font-bold text-[#1D3557] flex items-center gap-1.5 mb-0.5">
-                      <span className="w-5 h-5 rounded-full bg-[#D8CCAE] text-[#1D3557] flex items-center justify-center text-xs font-mono">5</span>
-                      <span>La Confirmació del Moliner</span>
-                    </div>
-                    <p className="text-[#4A3728] pl-6.5">
-                      A les <strong>22:40</strong> en <strong>Pere del Molí</strong> va acomiadar el ferrer després de donar-li les peces de ferro esmolades, i el va veure marxar directe cap a La Farga, on va arribar just a les <strong>23:00</strong>.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* PESTANYA 3: ELS 3 VEÏNS */}
-            {state.activeTab === 'personatges' && (
-              <motion.div
-                key="personatges"
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="space-y-3"
-              >
-                <div className="border-b border-[#8C6D53]/40 pb-2">
-                  <h3 className="text-sm sm:text-base font-bold text-[#1D3557] font-serif">
-                    Els 3 Personatges de la Ruta
-                  </h3>
-                  <p className="text-xs text-[#5C4533] font-sans">
-                    Fes clic sobre un personatge per seleccionar-lo com a part de la coartada:
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Joan */}
-                  <div
-                    onClick={() => toggleSuspect('joan')}
-                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
-                      state.selectedSuspects.includes('joan')
-                        ? 'bg-emerald-50 border-emerald-600 shadow-md ring-2 ring-emerald-400'
-                        : 'bg-[#FAF5E9] border-[#8C6D53]/40 hover:bg-[#EAE0CA]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl">🛖</span>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded font-sans font-bold ${
-                          state.selectedSuspects.includes('joan')
-                            ? 'bg-emerald-700 text-white'
-                            : 'bg-[#D8CCAE] text-[#1D3557]'
-                        }`}
-                      >
-                        {state.selectedSuspects.includes('joan') ? '✓ Seleccionat' : '+ Triar'}
-                      </span>
-                    </div>
-                    <div className="font-bold text-[#2B2118] font-serif mt-2">Joan el traginer</div>
-                    <div className="text-[11px] text-[#5C4533] font-sans">Lloc: El Paller</div>
-                    <p className="text-xs text-[#4A3728] mt-2 font-sans">
-                      Afirma haver vist el ferrer a les <strong>22:20</strong> amb el sac de claus.
-                    </p>
-                  </div>
-
-                  {/* Pere */}
-                  <div
-                    onClick={() => toggleSuspect('pere')}
-                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
-                      state.selectedSuspects.includes('pere')
-                        ? 'bg-emerald-50 border-emerald-600 shadow-md ring-2 ring-emerald-400'
-                        : 'bg-[#FAF5E9] border-[#8C6D53]/40 hover:bg-[#EAE0CA]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl">⚙️</span>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded font-sans font-bold ${
-                          state.selectedSuspects.includes('pere')
-                            ? 'bg-emerald-700 text-white'
-                            : 'bg-[#D8CCAE] text-[#1D3557]'
-                        }`}
-                      >
-                        {state.selectedSuspects.includes('pere') ? '✓ Seleccionat' : '+ Triar'}
-                      </span>
-                    </div>
-                    <div className="font-bold text-[#2B2118] font-serif mt-2">Pere del Molí</div>
-                    <div className="text-[11px] text-[#5C4533] font-sans">Lloc: Molí Fariner</div>
-                    <p className="text-xs text-[#4A3728] mt-2 font-sans">
-                      Treballava de nit al molí. Va atendre el ferrer a les <strong>22:40</strong>.
-                    </p>
-                  </div>
-
-                  {/* Marianna */}
-                  <div
-                    onClick={() => toggleSuspect('marianna')}
-                    className={`p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
-                      state.selectedSuspects.includes('marianna')
-                        ? 'bg-red-50 border-red-500 shadow-md ring-2 ring-red-300'
-                        : 'bg-[#FAF5E9] border-[#8C6D53]/40 hover:bg-[#EAE0CA]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl">🏠</span>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded font-sans font-bold ${
-                          state.selectedSuspects.includes('marianna')
-                            ? 'bg-red-700 text-white'
-                            : 'bg-[#D8CCAE] text-[#1D3557]'
-                        }`}
-                      >
-                        {state.selectedSuspects.includes('marianna') ? 'Triat' : '+ Triar'}
-                      </span>
-                    </div>
-                    <div className="font-bold text-[#2B2118] font-serif mt-2">Marianna de l'Hostal</div>
-                    <div className="text-[11px] text-[#5C4533] font-sans">Lloc: Hostal del Sol</div>
-                    <p className="text-xs text-[#4A3728] mt-2 font-sans">
-                      Tancava la taverna. La patrulla armada va vigilar la seva porta fins a les 22:30.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* PESTANYA 4: MAPA HEXAGONAL */}
-            {state.activeTab === 'mapa' && (
-              <motion.div
-                key="mapa"
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="space-y-3"
-              >
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm sm:text-base font-bold text-[#1D3557] font-serif">
-                    Plànol Hexagonal de la Ruta
-                  </h3>
-                  <span className="text-xs text-[#5C4533] font-sans">Terme de la Guixa (1705)</span>
-                </div>
-
-                <div className="w-full overflow-x-auto flex justify-center bg-[#5D4E37] p-3 rounded-xl border-2 border-[#8C6D53] shadow-inner relative">
-                  <div className="absolute inset-0 bg-gradient-to-b from-[#4A3728] to-[#5D4E37] opacity-90 pointer-events-none rounded-xl" />
-
-                  <svg viewBox="0 0 350 300" className="w-full max-w-[420px] h-auto relative z-10 select-none">
-                    {Object.values(HEX_GRID).map(node => {
-                      const isFarga = node.id === 3
-                      const isPlaca = node.id === 14
-                      const isPaller = node.id === 15
-                      const isMoli = node.id === 2
-                      const isHostal = node.id === 5
-                      const isForbidden = node.type === 'prohibit'
-
-                      let fillColor = '#6B5842'
-                      let strokeColor = '#D8CCAE'
-                      let strokeWidth = 1.5
-
-                      if (isForbidden) {
-                        fillColor = '#5C2A22'
-                        strokeColor = '#A0522D'
-                      } else if (isFarga) {
-                        fillColor = '#854D0E'
-                        strokeColor = '#F59E0B'
-                        strokeWidth = 3
-                      } else if (isPlaca) {
-                        fillColor = '#1D3557'
-                        strokeColor = '#93C5FD'
-                        strokeWidth = 2.5
-                      } else if (isPaller || isMoli) {
-                        fillColor = '#166534'
-                        strokeColor = '#4ADE80'
-                        strokeWidth = 2.5
-                      } else if (isHostal) {
-                        fillColor = '#7A6A57'
-                        strokeColor = '#D8CCAE'
-                      }
-
-                      return (
-                        <g key={node.id} className="transition-all">
-                          <polygon
-                            points={getHexPolygon(node.cx, node.cy)}
-                            fill={fillColor}
-                            stroke={strokeColor}
-                            strokeWidth={strokeWidth}
-                            className="filter drop-shadow-sm"
-                          />
-
-                          <text x={node.cx} y={node.cy - 9} textAnchor="middle" fontSize="20">
-                            {node.icon}
-                          </text>
-
-                          <text x={node.cx} y={node.cy + 13} textAnchor="middle" fontSize="10" fontWeight="bold" fill="#F4EBD9" fontFamily="sans-serif">
-                            {node.name}
-                          </text>
-
-                          {node.character?.time && (
-                            <text x={node.cx} y={node.cy + 26} textAnchor="middle" fontSize="9.5" fontWeight="bold" fill="#FBBF24" fontFamily="monospace">
-                              {node.character.time}
-                            </text>
-                          )}
-                        </g>
-                      )
-                    })}
-                  </svg>
-                </div>
-
-                {/* Llegenda */}
-                <div className="flex flex-wrap items-center justify-between text-[11px] text-[#4A3728] font-sans bg-[#FAF5E9] p-2.5 rounded-lg border border-[#8C6D53]/40 gap-2">
-                  <span>🏛️ <strong>22:00:</strong> Plaça Major (Inici)</span>
-                  <span>🛖 <strong>22:20:</strong> El Paller (Joan)</span>
-                  <span>⚙️ <strong>22:40:</strong> Molí Fariner (Pere)</span>
-                  <span>⚒️ <strong>23:00:</strong> La Farga (Isidre)</span>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </section>
-
-      {/* FORMULARI DE VALIDACIÓ I DEDUCCIÓ */}
-      <section className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl p-4 sm:p-5 shadow-md">
-        {!state.solved ? (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-[#2B2118] font-serif mb-1">
-                Quins dos personatges va visitar Isidre el ferrer abans d'arribar a La Farga a les 23:00?
-              </label>
-              <p className="text-xs text-[#5C4533] font-sans">
-                Tria els dos veïns a la pestanya o escriu els seus noms per verificar la coartada:
-              </p>
-            </div>
-
-            {/* Selectors ràpids dels 3 veïns */}
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => toggleSuspect('joan')}
-                className={`py-2 px-1 rounded-lg text-xs font-sans font-bold border transition-all ${
-                  state.selectedSuspects.includes('joan')
-                    ? 'bg-emerald-700 text-white border-emerald-800 shadow ring-2 ring-emerald-400'
-                    : 'bg-[#FAF5E9] text-[#2B2118] border-[#8C6D53]/40 hover:bg-[#EAE0CA]'
-                }`}
-              >
-                🛖 Joan el traginer
-              </button>
-
-              <button
-                type="button"
-                onClick={() => toggleSuspect('pere')}
-                className={`py-2 px-1 rounded-lg text-xs font-sans font-bold border transition-all ${
-                  state.selectedSuspects.includes('pere')
-                    ? 'bg-emerald-700 text-white border-emerald-800 shadow ring-2 ring-emerald-400'
-                    : 'bg-[#FAF5E9] text-[#2B2118] border-[#8C6D53]/40 hover:bg-[#EAE0CA]'
-                }`}
-              >
-                ⚙️ Pere del Molí
-              </button>
-
-              <button
-                type="button"
-                onClick={() => toggleSuspect('marianna')}
-                className={`py-2 px-1 rounded-lg text-xs font-sans font-bold border transition-all ${
-                  state.selectedSuspects.includes('marianna')
-                    ? 'bg-red-700 text-white border-red-800 shadow ring-2 ring-red-400'
-                    : 'bg-[#FAF5E9] text-[#2B2118] border-[#8C6D53]/40 hover:bg-[#EAE0CA]'
-                }`}
-              >
-                🏠 Marianna de l'Hostal
-              </button>
-            </div>
-
+      {/* CONTINGUT DE LES PESTANYES */}
+      <div className="bg-[#EAE0CA] border-x border-b border-[#8C6D53] rounded-b-xl p-3.5 sm:p-5 shadow-sm">
+        <AnimatePresence mode="wait">
+          {/* PESTANYA 1: MAPA HEXAGONAL INTERACTIU */}
+          {state.activeTab === 'mapa' && (
             <motion.div
-              animate={state.lastFeedback?.type === 'error' ? 'shake' : 'initial'}
-              variants={shakeVariants}
-              className="flex flex-col sm:flex-row gap-2"
+              key="tab-mapa"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="space-y-3.5"
             >
-              <input
-                type="text"
-                value={state.textAnswer}
-                onChange={e =>
-                  setState(prev => ({
-                    ...prev,
-                    textAnswer: e.target.value,
-                    lastFeedback: null,
-                  }))
-                }
-                className="flex-1 p-3 border-2 border-[#8C6D53] rounded-lg bg-[#FAF5E9] text-[#1D3557] font-mono font-bold text-base tracking-wider focus:outline-none focus:ring-2 focus:ring-[#C99E32] shadow-inner"
-              />
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#8C6D53]/40 pb-2">
+                <div>
+                  <h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif">
+                    Plànol Cartogràfic de Planes Bones (1705)
+                  </h3>
+                  <p className="text-[11px] sm:text-xs text-[#5C4533] font-sans">
+                    Toca les caselles en ordre per connectar el camí que va fer el ferrer.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={handleUndo}
+                    disabled={state.pathProgress.length <= 1 || state.solved}
+                    className="py-1 px-2.5 bg-[#FAF5E9] hover:bg-white text-stone-700 disabled:opacity-40 border border-[#8C6D53]/40 rounded text-xs font-sans font-bold flex items-center gap-1 transition"
+                  >
+                    <span>↩</span> Desfer pas
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    disabled={state.pathProgress.length <= 1 || state.solved}
+                    className="py-1 px-2.5 bg-[#FAF5E9] hover:bg-white text-stone-700 disabled:opacity-40 border border-[#8C6D53]/40 rounded text-xs font-sans font-bold transition"
+                  >
+                    Reiniciar
+                  </button>
+                </div>
+              </div>
+
+              {/* CONTENIDOR DEL MAPA SVG */}
+              <div className="w-full overflow-x-auto flex justify-center bg-[#4A3B2C] p-2 sm:p-4 rounded-xl border-2 border-[#8C6D53] shadow-inner relative">
+                <div className="absolute inset-0 bg-gradient-to-b from-[#382B1E] via-[#4A3B2C] to-[#2E2217] opacity-95 pointer-events-none rounded-xl" />
+
+                <svg
+                  viewBox="0 0 495 285"
+                  className="w-full max-w-[650px] h-auto relative z-10 select-none drop-shadow-md"
+                >
+                  <defs>
+                    <filter id="hexGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                  </defs>
+
+                  {/* Línia daurada del camí connectat */}
+                  {pathPointsString && (
+                    <polyline
+                      points={pathPointsString}
+                      fill="none"
+                      stroke="#F59E0B"
+                      strokeWidth="4"
+                      strokeDasharray="6 3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="transition-all duration-300 filter drop-shadow"
+                    />
+                  )}
+
+                  {/* Renderització de les 24 caselles hexagonals */}
+                  {Object.values(HEX_MAP_NODES).map((node) => {
+                    const isSelected = state.pathProgress.includes(node.id)
+                    const selectedIndex = state.pathProgress.indexOf(node.id)
+                    const isShaking = shakeNodeId === node.id
+                    const isCanVinyals = node.id === 'can-vinyals'
+                    const isMalla = node.id === 'malla'
+                    const isGuixa = node.id === 'la-guixa'
+
+                    let fillColor = '#604F3D'
+                    let strokeColor = '#8C6D53'
+                    let strokeWidth = 1.2
+
+                    // Colors segons tipologia de terreny
+                    if (node.type === 'camp') {
+                      fillColor = '#524332'
+                      strokeColor = '#7A644D'
+                    } else if (node.type === 'bosc') {
+                      fillColor = '#2F3E2B'
+                      strokeColor = '#4B5E45'
+                    } else if (node.type === 'aigua') {
+                      fillColor = '#284454'
+                      strokeColor = '#48718A'
+                    } else if (node.type === 'perill') {
+                      fillColor = '#4A2A28'
+                      strokeColor = '#7A3F3B'
+                    } else if (node.type === 'masia') {
+                      fillColor = '#6E583F'
+                      strokeColor = '#A38460'
+                    }
+
+                    // Destacat si està seleccionat en el camí
+                    if (isSelected) {
+                      fillColor = '#1D3557'
+                      strokeColor = '#38BDF8'
+                      strokeWidth = 2.5
+                    }
+
+                    // Destacat especial si és Can Vinyals i s'ha arribat o resolt
+                    if (isCanVinyals && hasReachedCanVinyals) {
+                      fillColor = '#854D0E'
+                      strokeColor = '#F59E0B'
+                      strokeWidth = 3.5
+                    }
+
+                    // Punts d'inici i final
+                    if (isMalla && !isSelected) {
+                      strokeColor = '#10B981'
+                      strokeWidth = 2
+                    }
+
+                    return (
+                      <g
+                        key={node.id}
+                        onClick={() => handleNodeClick(node)}
+                        className={`cursor-pointer transition-all duration-200 ${
+                          isShaking ? 'animate-bounce' : ''
+                        }`}
+                        filter={isSelected ? 'url(#hexGlow)' : undefined}
+                      >
+                        <polygon
+                          points={getHexPolygon(node.cx, node.cy, HEX_RADIUS)}
+                          fill={fillColor}
+                          stroke={strokeColor}
+                          strokeWidth={strokeWidth}
+                          className="hover:brightness-125 transition-all"
+                        />
+
+                        {/* Indicador numèric de pas traçat */}
+                        {isSelected && (
+                          <circle
+                            cx={node.cx - 20}
+                            cy={node.cy - 18}
+                            r="8"
+                            fill="#F59E0B"
+                            stroke="#78350F"
+                            strokeWidth="1"
+                          />
+                        )}
+                        {isSelected && (
+                          <text
+                            x={node.cx - 20}
+                            y={node.cy - 15}
+                            textAnchor="middle"
+                            fontSize="8"
+                            fontWeight="bold"
+                            fill="#1E293B"
+                            fontFamily="monospace"
+                          >
+                            {selectedIndex + 1}
+                          </text>
+                        )}
+
+                        {/* Icona */}
+                        <text
+                          x={node.cx}
+                          y={node.cy - 7}
+                          textAnchor="middle"
+                          fontSize="17"
+                          className="pointer-events-none"
+                        >
+                          {node.icon}
+                        </text>
+
+                        {/* Nom de la casella */}
+                        <text
+                          x={node.cx}
+                          y={node.cy + 12}
+                          textAnchor="middle"
+                          fontSize="8.5"
+                          fontWeight="bold"
+                          fill={isSelected ? '#F8FAFC' : '#E2D6B8'}
+                          fontFamily="sans-serif"
+                          className="pointer-events-none tracking-tight"
+                        >
+                          {node.name}
+                        </text>
+
+                        {/* Subtítol abreujat */}
+                        <text
+                          x={node.cx}
+                          y={node.cy + 22}
+                          textAnchor="middle"
+                          fontSize="6.5"
+                          fill={isSelected ? '#BAE6FD' : '#A89278'}
+                          fontFamily="sans-serif"
+                          className="pointer-events-none"
+                        >
+                          {node.subtitle}
+                        </text>
+
+                        {/* Halo radiant a Can Vinyals si s'ha deduït la pèrdua */}
+                        {isCanVinyals && hasReachedCanVinyals && (
+                          <circle
+                            cx={node.cx}
+                            cy={node.cy}
+                            r={HEX_RADIUS + 4}
+                            fill="none"
+                            stroke="#FBBF24"
+                            strokeWidth="2"
+                            strokeDasharray="4 2"
+                            className="animate-spin pointer-events-none"
+                            style={{ transformOrigin: `${node.cx}px ${node.cy}px` }}
+                          />
+                        )}
+                      </g>
+                    )
+                  })}
+                </svg>
+              </div>
+
+              {/* Feedback dinàmic */}
+              {state.lastFeedback && (
+                <div
+                  className={`p-3 rounded-lg border text-xs sm:text-sm font-sans flex items-start gap-2 ${
+                    state.lastFeedback.type === 'error'
+                      ? 'bg-red-100 border-red-300 text-red-900'
+                      : state.lastFeedback.type === 'success'
+                      ? 'bg-emerald-100 border-emerald-400 text-emerald-900'
+                      : 'bg-[#F4EBD9] border-[#8C6D53]/40 text-[#4A3728]'
+                  }`}
+                >
+                  <span className="text-base">
+                    {state.lastFeedback.type === 'error'
+                      ? '⚠️'
+                      : state.lastFeedback.type === 'success'
+                      ? '✓'
+                      : '💡'}
+                  </span>
+                  <div className="flex-1">{state.lastFeedback.message}</div>
+                </div>
+              )}
+
+              {/* ALERTA DE LOCALITZACIÓ DE LA PEDRA GRAN */}
+              {hasReachedCanVinyals && !state.solved && (
+                <div className="p-3.5 bg-gradient-to-r from-amber-100 to-amber-50 border-2 border-amber-500 rounded-xl shadow-md flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">🪨</span>
+                    <div>
+                      <h4 className="font-serif font-bold text-sm text-amber-950">
+                        Objectiu localitzat: Pedra Gran de Can Vinyals!
+                      </h4>
+                      <p className="text-xs text-amber-900 font-sans mt-0.5">
+                        La clau de la forja va caure vora les nogueres. Aneu físicament a la pedra gran a buscar el QR o el codi!
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setState((prev) => ({ ...prev, activeTab: 'troballa' }))}
+                    className="py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white font-sans font-bold text-xs rounded-lg shadow transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+                  >
+                    <span>🔍 Validar Troballa</span>
+                    <span>➔</span>
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* PESTANYA 2: TOTS ELS TESTIMONIS */}
+          {state.activeTab === 'interrogatori' && (
+            <motion.div
+              key="tab-testimonis"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="space-y-3.5"
+            >
+              <div className="border-b border-[#8C6D53]/40 pb-2">
+                <h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif">
+                  Les 4 Declaracions dels Veïns Interrogats
+                </h3>
+                <p className="text-xs text-[#5C4533] font-sans">
+                  Cada membre de l'equip hauria d'haver rebut un testimoni diferent per telèfon. Aquí podeu consultar la visió general:
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {WITNESS_CLUES.map((witness) => (
+                  <div
+                    key={witness.id}
+                    className={`p-3.5 rounded-xl border transition-all ${
+                      state.selectedWitnessId === witness.id
+                        ? 'bg-[#FAF5E9] border-[#1D3557] shadow ring-2 ring-[#C99E32]'
+                        : 'bg-[#F4EBD9] border-[#8C6D53]/30'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1 mb-1.5">
+                      <span className="text-lg">{witness.icon}</span>
+                      <span className="text-[10px] font-mono font-bold uppercase bg-[#D8CCAE] text-[#1D3557] px-2 py-0.5 rounded">
+                        {witness.location}
+                      </span>
+                    </div>
+
+                    <h4 className="font-serif font-bold text-sm text-[#2B2118]">
+                      {witness.title}
+                    </h4>
+                    <p className="text-[11px] text-[#8C6D53] font-sans mt-0.5">
+                      Informant: <strong>{witness.witness}</strong>
+                    </p>
+
+                    <p className="text-xs text-[#4A3728] mt-2 font-serif italic bg-white/70 p-2.5 rounded border border-[#8C6D53]/20">
+                      {witness.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* PESTANYA 3: TROBALLA DE LA CLAU I VALIDACIÓ */}
+          {state.activeTab === 'troballa' && (
+            <motion.div
+              key="tab-troballa"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="space-y-4"
+            >
+              {!state.solved ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-[#FAF5E9] border-2 border-[#8C6D53] rounded-xl shadow-sm">
+                    <h3 className="font-bold text-[#1D3557] text-base font-serif flex items-center gap-2 mb-1">
+                      <span>🪨</span>
+                      <span>La Pedra Gran de Can Vinyals</span>
+                    </h3>
+                    <p className="text-xs sm:text-sm text-[#4A3728] leading-relaxed font-sans">
+                      A l'entrecreuament cap al camí de Can Vinyals, sota l'ombra de les nogueres, hi ha una gran pedra que marca el camí.
+                      Busqueu-hi l'objecte d'Isidre o el codi QR enganxat per validar la vostra deducció:
+                    </p>
+
+                    {/* BOTÓ GRAN PER OBRIR CÀMERA */}
+                    <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setScannerError(null)
+                          setShowScannerModal(true)
+                        }}
+                        className="flex-1 py-3 px-4 bg-[#1D3557] hover:bg-[#152740] text-white font-sans font-bold text-sm rounded-lg shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <span className="text-lg">📷</span>
+                        <span>Obrir Càmera per Escanejar el QR</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* FORMULARI ALTERNATIU AMB CODI MANUAL DE RESERVA */}
+                  <div className="p-4 bg-[#FAF5E9] border border-[#8C6D53] rounded-xl">
+                    <h4 className="font-serif font-bold text-sm text-[#2B2118] mb-1">
+                      O bé introdueix el codi de seguretat manual:
+                    </h4>
+                    <p className="text-xs text-[#5C4533] font-sans mb-3">
+                      Si la càmera té dificultats o hi ha reflexos de llum, escriu el codi de reserva imprès sota el QR:
+                    </p>
+
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        handleValidateCode(state.manualCode)
+                      }}
+                      className="flex flex-col sm:flex-row gap-2"
+                    >
+                      <input
+                        type="text"
+                        value={state.manualCode}
+                        onChange={(e) =>
+                          setState((prev) => ({
+                            ...prev,
+                            manualCode: e.target.value,
+                            lastFeedback: null,
+                          }))
+                        }
+                        placeholder="Ex: CLAU-FORJA"
+                        className="flex-1 p-3 border-2 border-[#8C6D53] rounded-lg bg-white text-[#1D3557] font-mono font-bold text-base tracking-wider focus:outline-none focus:ring-2 focus:ring-[#C99E32] shadow-inner uppercase"
+                      />
+
+                      <button
+                        type="submit"
+                        disabled={!state.manualCode.trim()}
+                        className="py-3 px-6 bg-[#C99E32] hover:bg-amber-500 disabled:opacity-50 text-[#121E2B] font-bold font-sans rounded-lg shadow transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <span>Validar Codi</span>
+                        <span>➔</span>
+                      </button>
+                    </form>
+                  </div>
+
+                  {state.lastFeedback && state.lastFeedback.type === 'error' && (
+                    <div className="p-2.5 bg-red-100 border border-red-300 text-red-900 rounded text-xs font-sans flex items-center gap-2">
+                      <span>⚠️</span>
+                      <span>{state.lastFeedback.message}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* PANTALLA D'ÈXIT I DESCOBERTA D'EVIDÈNCIA */
+                <motion.div
+                  variants={fadeInVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="space-y-4"
+                >
+                  <div className="p-4 bg-emerald-50 border-2 border-emerald-600 rounded-xl text-emerald-950 shadow-inner">
+                    <div className="flex items-center gap-2 text-base font-bold font-serif text-emerald-900 mb-1">
+                      <span>✓</span>
+                      <span>Clau Mestra Recuperada a Can Vinyals!</span>
+                    </div>
+                    <p className="text-xs sm:text-sm font-sans text-emerald-800 leading-relaxed">
+                      Heu reproduït el camí exacte que va fer Isidre des de Malla fins a La Guixa i heu localitzat la clau que va perdre en descansar a la gran pedra sota les nogueres.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Evidència */}
+                    <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
+                      <span className="text-[10px] font-mono uppercase font-bold text-[#8C6D53]">
+                        📜 Nova Evidència Desbloquejada
+                      </span>
+                      <h4 className="font-serif font-bold text-sm text-[#1D3557] mt-0.5">
+                        La Clau Mestra de la Forja
+                      </h4>
+                      <p className="text-xs text-[#5C4533] mt-1 font-sans">
+                        La recuperació de la clau a Can Vinyals demostra que Isidre deia la veritat i tornava de treballar a Malla.
+                      </p>
+                    </div>
+
+                    {/* Sospitós Descartat */}
+                    <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
+                      <span className="text-[10px] font-mono uppercase font-bold text-emerald-700">
+                        🚫 Sospitós Descartat
+                      </span>
+                      <h4 className="font-serif font-bold text-sm text-[#2B2118] mt-0.5">
+                        Isidre el Ferrer
+                      </h4>
+                      <p className="text-xs text-[#5C4533] mt-1 font-sans">
+                        La seva coartada és indiscutible. Queda <strong>100% descartat</strong> com a traïdor.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* XIFRA DE L'ELEMENT TERRA */}
+                  <div className="p-4 bg-[#1D3557] text-[#FAF5E9] rounded-xl border-2 border-[#C99E32] shadow text-center">
+                    <div className="text-[11px] font-mono uppercase tracking-widest text-[#C99E32] font-bold">
+                      XIFRA DE L'ELEMENT DESCOBERTA
+                    </div>
+                    <div className="text-2xl sm:text-3xl font-bold font-serif mt-1">
+                      🌍 TERRA = 3
+                    </div>
+                    <div className="text-xs text-[#FAF5E9]/80 font-sans mt-1">
+                      Anota aquesta xifra al quadern del teu equip!
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* MODAL DE CÀMERA PER ESCANEJAR EL QR DE LA PEDRA */}
+      {showScannerModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex flex-col items-center justify-center p-4">
+          <div className="bg-[#FAF5E9] border-2 border-[#8C6D53] rounded-xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="bg-[#1D3557] text-white p-3 flex items-center justify-between">
+              <span className="font-serif font-bold text-sm">Escaneja el QR de la Pedra</span>
+              <button
+                type="button"
+                onClick={() => setShowScannerModal(false)}
+                className="w-7 h-7 flex items-center justify-center rounded bg-white/20 hover:bg-white/30 text-white font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3">
+              <div className="relative w-full aspect-square rounded-lg overflow-hidden border border-[#8C6D53] bg-black">
+                <Scanner
+                  onScan={handleQRScan}
+                  onError={(err) => {
+                    console.error('Camera scanner error:', err)
+                    setScannerError('No s’ha pogut accedir a la càmera. Utilitza el codi manual de reserva.')
+                  }}
+                  styles={{
+                    container: { width: '100%', height: '100%' },
+                  }}
+                />
+              </div>
+
+              {scannerError ? (
+                <div className="p-2 bg-amber-100 border border-amber-300 text-amber-900 rounded text-xs font-sans">
+                  ⚠️ {scannerError}
+                </div>
+              ) : (
+                <p className="text-xs text-center text-[#5C4533] font-sans">
+                  Apunta la càmera directament al codi QR de la pedra gran.
+                </p>
+              )}
 
               <button
-                type="submit"
-                disabled={!state.textAnswer.trim()}
-                className="py-3 px-6 bg-[#C99E32] hover:bg-amber-500 disabled:opacity-50 text-[#121E2B] font-bold font-sans rounded-lg shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                type="button"
+                onClick={() => setShowScannerModal(false)}
+                className="w-full py-2 bg-[#D8CCAE] hover:bg-[#C99E32] text-[#2B2118] font-bold text-xs rounded transition font-sans"
               >
-                <span>Validar Coartada</span>
-                <span>➔</span>
+                Tancar Càmera i Escriure Codi Manual
               </button>
-            </motion.div>
-
-            {state.lastFeedback && state.lastFeedback.type === 'error' && (
-              <div className="p-2.5 bg-red-100 border border-red-300 text-red-900 rounded text-xs font-sans flex items-center gap-2">
-                <span>⚠️</span>
-                <span>{state.lastFeedback.message}</span>
-              </div>
-            )}
-          </form>
-        ) : (
-          /* PANTALLA D'ÈXIT I DESCOBERTA D'EVIDÈNCIES */
-          <motion.div
-            variants={fadeInVariants}
-            initial="hidden"
-            animate="visible"
-            className="space-y-4"
-          >
-            <div className="p-4 bg-emerald-50 border-2 border-emerald-600 rounded-lg text-emerald-950 shadow-inner">
-              <div className="flex items-center gap-2 text-base font-bold font-serif text-emerald-900 mb-1">
-                <span>✓</span>
-                <span>Coartada Verificada: En Joan i en Pere confirmen el pas d'Isidre!</span>
-              </div>
-              <p className="text-xs font-sans text-emerald-800 leading-relaxed">
-                La línia temporal quadra al mil·límetre: Plaça Major (22:00) ➔ Joan al Paller (22:20) ➔ Pere al Molí (22:40) ➔ Arribada a La Farga a les 23:00 hores.
-              </p>
             </div>
-
-            {/* DESCOBERTA D'EVIDÈNCIA I DESCART */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Evidència */}
-              <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
-                <span className="text-[10px] font-mono uppercase font-bold text-[#8C6D53]">
-                  📜 Nova Evidència Desbloquejada
-                </span>
-                <h4 className="font-serif font-bold text-sm text-[#1D3557] mt-0.5">
-                  Ruta de la Coartada del Ferrer
-                </h4>
-                <p className="text-xs text-[#5C4533] mt-1 font-sans">
-                  Els dos veïns corroboren que Isidre feia camí cap al seu taller. La patrulla el va veure a la forja a les 23:00.
-                </p>
-              </div>
-
-              {/* Sospitós Descartat */}
-              <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
-                <span className="text-[10px] font-mono uppercase font-bold text-emerald-700">
-                  🚫 Sospitós Descartat
-                </span>
-                <h4 className="font-serif font-bold text-sm text-[#2B2118] mt-0.5">
-                  Isidre el Ferrer
-                </h4>
-                <p className="text-xs text-[#5C4533] mt-1 font-sans">
-                  Té coartada irrefutable i verificada. Queda <strong>100% descartat</strong> com a traïdor.
-                </p>
-              </div>
-            </div>
-
-            {/* XIFRA DE L'ELEMENT TERRA */}
-            <div className="p-3.5 bg-[#1D3557] text-[#FAF5E9] rounded-lg border-2 border-[#C99E32] shadow text-center">
-              <div className="text-[11px] font-mono uppercase tracking-widest text-[#C99E32]">
-                XIFRA DE L'ELEMENT DESCOBERTA
-              </div>
-              <div className="text-xl sm:text-2xl font-bold font-serif mt-0.5">
-                🌍 TERRA = 3
-              </div>
-              <div className="text-[11px] text-[#FAF5E9]/80 font-sans mt-0.5">
-                Anota aquesta xifra al teu quadern d'equip!
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </section>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
