@@ -28,6 +28,10 @@ export function QRScanner({ onClose }: QRScannerProps) {
         token = match[1]
       }
 
+      // Els codis d'estació són sempre en minúscules; l'entrada manual
+      // no ha de dependre de com el teclat mòbil hagi capitalitzat el text
+      token = token.toLowerCase()
+
       // Validate token format (basic check)
       if (!token || token.length < 6) {
         setError('Codi no vàlid')
@@ -88,15 +92,17 @@ export function QRScanner({ onClose }: QRScannerProps) {
             id="station-code"
             type="text"
             inputMode="text"
-            autoCapitalize="characters"
+            autoCapitalize="none"
             autoCorrect="off"
+            autoComplete="off"
+            spellCheck={false}
             value={manualValue}
             onChange={(e) => setManualValue(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleManualSubmit()
             }}
             className="w-full max-w-xs text-center text-2xl tracking-widest font-mono border-2 border-amber-700 rounded-lg py-3 mb-4 bg-white text-amber-900"
-            placeholder="CODI"
+            placeholder="codi"
           />
           <button
             onClick={handleManualSubmit}

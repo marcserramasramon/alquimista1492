@@ -162,7 +162,8 @@ const STATION_ALIASES: Record<string, string> = {
  * Get station by ID (supports canonical IDs and aliases)
  */
 export function getStation(id: string): Station | undefined {
-  const canonicalId = STATION_ALIASES[id] || id
+  const normalizedId = id.trim().toLowerCase()
+  const canonicalId = STATION_ALIASES[normalizedId] || normalizedId
   return STATIONS[canonicalId as keyof typeof STATIONS]
 }
 

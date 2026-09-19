@@ -176,29 +176,6 @@ export default function MasterDashboard() {
                 >
                   <span>📱</span> Ensenyar QR als Participants
                 </button>
-
-                <button
-                  onClick={async () => {
-                    try {
-                      await startGame(durationMinutes)
-                    } catch (e) {
-                      alert('Error iniciant el temps.')
-                    }
-                  }}
-                  disabled={isStarting}
-                  className="px-6 py-3 text-base font-extrabold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl shadow-lg transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 disabled:opacity-50"
-                >
-                  {isStarting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Iniciant...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>▶️</span> Iniciar el Temps ({durationMinutes} min)
-                    </>
-                  )}
-                </button>
               </div>
             </div>
           </div>
@@ -212,6 +189,14 @@ export default function MasterDashboard() {
             totalMinutes={durationMinutes}
             gameStatus={gameStatus}
             onAdjustBell={adjustBell}
+            onStart={async () => {
+              try {
+                await startGame(durationMinutes)
+              } catch (e) {
+                alert('Error iniciant el temps.')
+              }
+            }}
+            isStarting={isStarting}
           />
         </div>
 

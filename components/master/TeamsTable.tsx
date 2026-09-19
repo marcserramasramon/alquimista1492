@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { TeamData } from '@/lib/master/useDashboard'
 
 interface TeamsTableProps {
@@ -11,6 +12,8 @@ interface TeamsTableProps {
 const TOTAL_STATIONS = 9
 
 export function TeamsTable({ teams, isLoading, onOpenQR }: TeamsTableProps) {
+  const [selectedTeam, setSelectedTeam] = useState<TeamData | null>(null)
+
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
@@ -131,21 +134,19 @@ export function TeamsTable({ teams, isLoading, onOpenQR }: TeamsTableProps) {
 
                   {/* Jugadors connectats */}
                   <td className="py-3 px-3 text-center">
-                    <div
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTeam(team)}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
                         team.playersCount > 0
-                          ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                          : 'bg-stone-100 text-stone-500'
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200'
+                          : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                       }`}
-                      title={
-                        team.playerNames && team.playerNames.length > 0
-                          ? `Membres: ${team.playerNames.join(', ')}`
-                          : 'Cap jugador connectat encara'
-                      }
+                      title="Veure membres de l'equip"
                     >
                       <span>👥</span>
                       <span>{team.playersCount}</span>
-                    </div>
+                    </button>
                   </td>
 
                   {/* Estacions */}
@@ -215,6 +216,52 @@ export function TeamsTable({ teams, isLoading, onOpenQR }: TeamsTableProps) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Modal de membres de l'equip */}
+      {selectedTeam && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setSelectedTeam(null)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border-2 border-amber-300 text-stone-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="w-5 h-5 rounded-full border-2 border-amber-900 shrink-0"
+                style={{ backgroundColor: selectedTeam.color || '#d97706' }}
+              />
+              <h3 className="text-lg font-bold text-amber-950">
+                {selectedTeam.name || 'Equip'}
+              </h3>
+            </div>
+
+            {selectedTeam.playerNames && selectedTeam.playerNames.length > 0 ? (
+              <ul className="space-y-2 mb-4">
+                {selectedTeam.playerNames.map((nom, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 text-amber-900 font-medium"
+                  >
+                    <span>🙋</span>
+                    <span>{nom}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-stone-500 mb-4">Cap jugador connectat encara.</p>
+            )}
+
+            <button
+              onClick={() => setSelectedTeam(null)}
+              className="w-full min-h-[48px] text-sm font-bold text-amber-950 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg transition-colors"
+            >
+              Tancar
+            </button>
+          </div>
         </div>
       )}
     </div>

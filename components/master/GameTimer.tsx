@@ -8,6 +8,8 @@ interface GameTimerProps {
   totalMinutes?: number
   gameStatus?: 'pending' | 'active' | 'finished'
   onAdjustBell?: (params: { addMinutes?: number; triggerNow?: boolean; setDurationMinutes?: number }) => Promise<unknown>
+  onStart?: () => Promise<unknown>
+  isStarting?: boolean
 }
 
 export function GameTimer({
@@ -16,6 +18,8 @@ export function GameTimer({
   totalMinutes = 90,
   gameStatus = 'pending',
   onAdjustBell,
+  onStart,
+  isStarting = false,
 }: GameTimerProps) {
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null)
   const [status, setStatus] = useState<'pending' | 'active' | 'warning' | 'critical' | 'ended'>('pending')
@@ -94,8 +98,28 @@ export function GameTimer({
               🟡 EN ESPERA D&apos;INICI · Mostra els codis QR als equips i prem «Iniciar el Temps» per donar el tret de sortida.
             </p>
           </div>
-          <div className="px-4 py-2 bg-amber-100/80 rounded-xl border border-amber-300 text-xs text-amber-900 font-medium max-w-xs text-center md:text-right">
-            <span>⏱️ Durada configurada: <strong>{totalMinutes} minuts</strong></span>
+          <div className="flex flex-col items-center md:items-end gap-3">
+            <div className="px-4 py-2 bg-amber-100/80 rounded-xl border border-amber-300 text-xs text-amber-900 font-medium max-w-xs text-center md:text-right">
+              <span>⏱️ Durada configurada: <strong>{totalMinutes} minuts</strong></span>
+            </div>
+            {onStart && (
+              <button
+                onClick={onStart}
+                disabled={isStarting}
+                className="min-h-[48px] px-6 py-3 text-base font-extrabold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl shadow-lg transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
+              >
+                {isStarting ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Iniciant...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>▶️</span> Iniciar el Temps
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
