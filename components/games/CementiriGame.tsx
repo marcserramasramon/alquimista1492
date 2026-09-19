@@ -191,26 +191,26 @@ export function CementiriGame(props: GameProps) {
 
   return (
     <motion.div
-      className="w-full max-w-4xl mx-auto pb-12 flex flex-col font-serif text-[#2B2118]"
+      className="w-full max-w-4xl mx-auto pb-12 flex flex-col font-serif text-[#2B2118] dark:text-[#f3ebd8]"
       initial="hidden"
       animate="visible"
       variants={fadeInVariants}
     >
       {/* Capçalera històrica */}
-      <header className="border-b-2 border-[#8C6D53] pb-3 mb-4 text-center">
-        <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
+      <header className="border-b-2 border-[#8C6D53] dark:border-[#8C6D53]/40 pb-3 mb-4 text-center">
+        <span className="text-xs uppercase tracking-widest text-[#8C6D53] dark:text-[#c2a68e] font-sans font-bold">
           Estació 4 · Cementiri
         </span>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] dark:text-[#f3ebd8] mt-1 font-serif">
           LA SIGNATURA DEL DIFUNT
         </h1>
-        <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">
+        <p className="text-xs sm:text-sm text-[#5C4533] dark:text-[#c2a68e] mt-1 italic max-w-md mx-auto">
           "La carta secreta trobada al paller va signada amb el nom d'un difunt. Compara la carta amb el registre parroquial i les làpides per descobrir d'on van copiar la signatura."
         </p>
       </header>
 
       {/* Imatge d'ambientació de l'estació */}
-      <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
+      <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border-2 border-[#8C6D53] dark:border-[#8C6D53]/40 shadow-md mb-4 bg-stone-950">
         <img
           src="/images/scenes/cementiri.webp"
           alt="Cementiri de la Guixa a la nit"
@@ -223,15 +223,15 @@ export function CementiriGame(props: GameProps) {
       </div>
 
       {/* PUNT 1: PESTANYES DE DOCUMENTACIÓ I PISTES */}
-      <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden mb-6">
-        <div className="bg-[#D8CCAE] border-b border-[#8C6D53] flex">
+      <section className="bg-[#EAE0CA] dark:bg-[#1a130e] border border-[#8C6D53] dark:border-[#8C6D53]/40 rounded-xl shadow-sm overflow-hidden mb-6">
+        <div className="bg-[#D8CCAE] dark:bg-[#221a14] border-b border-[#8C6D53] dark:border-[#8C6D53]/40 flex">
           <button
             type="button"
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'historia' }))}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               activeDocTab === 'historia'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+                ? 'bg-[#EAE0CA] dark:bg-[#14100c] text-[#1D3557] dark:text-[#e5a93c] border-b-2 border-[#1D3557] dark:border-[#e5a93c] shadow-inner'
+                : 'text-[#5C4533] dark:text-[#c2a68e] hover:text-[#1D3557] dark:hover:text-[#f3ebd8] hover:bg-[#E2D6B8] dark:hover:bg-[#2c221a]'
             }`}
           >
             <span>📜</span>
@@ -243,8 +243,8 @@ export function CementiriGame(props: GameProps) {
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'carta' }))}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               activeDocTab === 'carta'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+                ? 'bg-[#EAE0CA] dark:bg-[#14100c] text-[#1D3557] dark:text-[#e5a93c] border-b-2 border-[#1D3557] dark:border-[#e5a93c] shadow-inner'
+                : 'text-[#5C4533] dark:text-[#c2a68e] hover:text-[#1D3557] dark:hover:text-[#f3ebd8] hover:bg-[#E2D6B8] dark:hover:bg-[#2c221a]'
             }`}
           >
             <span>🧩</span>
@@ -256,8 +256,8 @@ export function CementiriGame(props: GameProps) {
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'registre' }))}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               activeDocTab === 'registre'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+                ? 'bg-[#EAE0CA] dark:bg-[#14100c] text-[#1D3557] dark:text-[#e5a93c] border-b-2 border-[#1D3557] dark:border-[#e5a93c] shadow-inner'
+                : 'text-[#5C4533] dark:text-[#c2a68e] hover:text-[#1D3557] dark:hover:text-[#f3ebd8] hover:bg-[#E2D6B8] dark:hover:bg-[#2c221a]'
             }`}
           >
             <span>📖</span>
@@ -269,8 +269,8 @@ export function CementiriGame(props: GameProps) {
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'secret' }))}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               activeDocTab === 'secret'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+                ? 'bg-[#EAE0CA] dark:bg-[#14100c] text-[#1D3557] dark:text-[#e5a93c] border-b-2 border-[#1D3557] dark:border-[#e5a93c] shadow-inner'
+                : 'text-[#5C4533] dark:text-[#c2a68e] hover:text-[#1D3557] dark:hover:text-[#f3ebd8] hover:bg-[#E2D6B8] dark:hover:bg-[#2c221a]'
             }`}
           >
             <span>🔍</span>
@@ -282,8 +282,8 @@ export function CementiriGame(props: GameProps) {
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'lapides' }))}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               activeDocTab === 'lapides'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+                ? 'bg-[#EAE0CA] dark:bg-[#14100c] text-[#1D3557] dark:text-[#e5a93c] border-b-2 border-[#1D3557] dark:border-[#e5a93c] shadow-inner'
+                : 'text-[#5C4533] dark:text-[#c2a68e] hover:text-[#1D3557] dark:hover:text-[#f3ebd8] hover:bg-[#E2D6B8] dark:hover:bg-[#2c221a]'
             }`}
           >
             <span>⚰️</span>
@@ -300,9 +300,9 @@ export function CementiriGame(props: GameProps) {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="bg-[#F4EBD9] border border-[#8C6D53] p-3.5 rounded-lg text-xs sm:text-sm text-[#2B2118] space-y-2 leading-relaxed"
+                className="bg-[#F4EBD9] dark:bg-[#221a14] border border-[#8C6D53] dark:border-[#8C6D53]/40 p-3.5 rounded-lg text-xs sm:text-sm text-[#2B2118] dark:text-[#f3ebd8] space-y-2 leading-relaxed"
               >
-			<h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif mb-1">
+			<h3 className="font-bold text-[#1D3557] dark:text-[#8bb2e8] text-sm sm:text-base font-serif mb-1">
             La Signatura falsificada
 			</h3>
                 <p className="italic">
@@ -323,28 +323,28 @@ export function CementiriGame(props: GameProps) {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="bg-[#F8F3E6] border-2 border-dashed border-[#8C6D53] p-4 rounded-lg shadow-inner relative"
+                className="bg-[#F8F3E6] dark:bg-[#1f1711] border-2 border-dashed border-[#8C6D53] dark:border-[#8C6D53]/40 p-4 rounded-lg shadow-inner relative"
               >
-                <div className="absolute top-2 right-3 text-[10px] font-sans uppercase font-bold text-[#8C6D53] tracking-widest">
+                <div className="absolute top-2 right-3 text-[10px] font-sans uppercase font-bold text-[#8C6D53] dark:text-[#c2a68e] tracking-widest">
                   Fragment Trobat
                 </div>
-				
-				 <h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif mb-1">
+
+				 <h3 className="font-bold text-[#1D3557] dark:text-[#8bb2e8] text-sm sm:text-base font-serif mb-1">
 			  L'Esborrany del Traïdor
 			  </h3>
-                <div className="text-xs text-[#5C4533] font-bold mb-2">
+                <div className="text-xs text-[#5C4533] dark:text-[#c2a68e] font-bold mb-2">
                   15 de maig de 1705 — Esborrany trobat al paller
                 </div>
-                <p className="italic text-sm sm:text-base leading-relaxed text-[#2B2118] border-l-2 border-[#8C6D53] pl-3 my-2">
+                <p className="italic text-sm sm:text-base leading-relaxed text-[#2B2118] dark:text-[#f3ebd8] border-l-2 border-[#8C6D53] dark:border-[#8C6D53]/40 pl-3 my-2">
                   "...en testimoni del tracte secret amb la guarnició de Vic, per a la seguretat dels homes de Sentfores... Qui busqui la veritat trobarà la fi del Pacte dels Vigatans abans de l'alba..."
                 </p>
-                <div className="mt-4 pt-3 border-t border-[#8C6D53]/40 flex items-baseline justify-between">
-                  <span className="text-xs text-[#5C4533]">Signat:</span>
-                  <span className="text-xl sm:text-2xl font-bold font-signature text-[#7A1F26]">
+                <div className="mt-4 pt-3 border-t border-[#8C6D53]/40 dark:border-[#8C6D53]/30 flex items-baseline justify-between">
+                  <span className="text-xs text-[#5C4533] dark:text-[#c2a68e]">Signat:</span>
+                  <span className="text-xl sm:text-2xl font-bold font-signature text-[#7A1F26] dark:text-[#f87171]">
                     {signatureError}
                   </span>
                 </div>
-                
+
               </motion.div>
             )}
 
@@ -354,10 +354,10 @@ export function CementiriGame(props: GameProps) {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="bg-[#FAF5E9] border border-[#8C6D53] p-3 rounded-lg"
+                className="bg-[#FAF5E9] dark:bg-[#1f1711] border border-[#8C6D53] dark:border-[#8C6D53]/40 p-3 rounded-lg"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-[#1D3557] font-sans uppercase tracking-wide">
+                  <span className="text-xs font-bold text-[#1D3557] dark:text-[#8bb2e8] font-sans uppercase tracking-wide">
                     Llibre Parroquial de Defuncions (Sentfores)
                   </span>
                 </div>
@@ -365,14 +365,14 @@ export function CementiriGame(props: GameProps) {
                   {REGISTRY.map(r => (
                     <div
                       key={r.year}
-                      className="p-2 rounded border flex justify-between items-center bg-white/70 border-[#D8CCAE]"
+                      className="p-2 rounded border flex justify-between items-center bg-white/70 dark:bg-[#2c221a] border-[#D8CCAE] dark:border-[#8C6D53]/30"
                     >
-                      <span className="font-mono text-xs text-[#8C6D53]">{r.year}</span>
-                      <span className="font-serif">{r.name}</span>
+                      <span className="font-mono text-xs text-[#8C6D53] dark:text-[#c2a68e]">{r.year}</span>
+                      <span className="font-serif dark:text-[#f3ebd8]">{r.name}</span>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-[#5C4533] mt-2 italic text-center">
+                <p className="text-xs text-[#5C4533] dark:text-[#c2a68e] mt-2 italic text-center">
                   El registre parroquial té els noms canònics ben transcrits per l'Escolà.
                 </p>
               </motion.div>
@@ -384,15 +384,15 @@ export function CementiriGame(props: GameProps) {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="bg-[#F4EBD9] border border-[#8C6D53] p-3.5 rounded-lg text-xs sm:text-sm text-[#2B2118] space-y-2 leading-relaxed"
+                className="bg-[#F4EBD9] dark:bg-[#221a14] border border-[#8C6D53] dark:border-[#8C6D53]/40 p-3.5 rounded-lg text-xs sm:text-sm text-[#2B2118] dark:text-[#f3ebd8] space-y-2 leading-relaxed"
               >
-                <div className="font-bold text-[#1D3557] font-sans text-xs uppercase tracking-wide">
+                <div className="font-bold text-[#1D3557] dark:text-[#8bb2e8] font-sans text-xs uppercase tracking-wide">
                   Pista de l'Emissari sobre el Cementiri:
                 </div>
                 <p>
                   Els picapedrers locals del segle XVIII sovint no sabien gaire de lletra i <strong>cometien faltes d'ortografia greus</strong> en cisellar les làpides de pedra.
                 </p>
-                <p className="italic text-[#5C4533]">
+                <p className="italic text-[#5C4533] dark:text-[#c2a68e]">
                   "Qui va signar la carta secreta va copiar literalment el nom d'una d'aquestes làpides del cementiri, sense saber que al llibre oficial de l'església s'escrivia d'una altra manera..."
                 </p>
               </motion.div>
@@ -406,15 +406,15 @@ export function CementiriGame(props: GameProps) {
                 exit={{ opacity: 0 }}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
-                  <h2 className="text-base sm:text-lg font-bold text-[#2B2118] font-serif flex items-center gap-1.5">
+                  <h2 className="text-base sm:text-lg font-bold text-[#2B2118] dark:text-[#f3ebd8] font-serif flex items-center gap-1.5">
                     <span>⚰️</span>
                     <span>Les {LAPIDES.length} Làpides del Cementiri</span>
                   </h2>
-                  <span className="text-xs text-[#5C4533] font-sans">
+                  <span className="text-xs text-[#5C4533] dark:text-[#c2a68e] font-sans">
                     Tria quina tomba té la signatura copiada
                   </span>
                 </div>
-        
+
                 {/* Graella visual de les 12 làpides */}
                 <div className="grid grid-cols-3 gap-2 sm:gap-3 my-3">
                   {LAPIDES.map(lapida => {
@@ -435,20 +435,20 @@ export function CementiriGame(props: GameProps) {
                         }}
                         className={`relative flex flex-col items-center justify-center p-3 rounded-t-2xl rounded-b-md border-2 transition-all shadow-sm ${
                           isSelected
-                            ? 'bg-[#F4EBD9] border-[#C99E32] ring-2 ring-[#C99E32] shadow-md -translate-y-1'
-                            : 'bg-[#DCD5C6] border-[#8C6D53] hover:bg-[#E8E2D5] hover:border-[#735A42]'
-                        } ${state.solved && lapida.isCorrectTarget ? 'bg-emerald-100 border-emerald-600 ring-2 ring-emerald-500' : ''}`}
+                            ? 'bg-[#F4EBD9] dark:bg-[#281e16] border-[#C99E32] dark:border-[#e5a93c] ring-2 ring-[#C99E32] dark:ring-[#e5a93c] shadow-md -translate-y-1'
+                            : 'bg-[#DCD5C6] dark:bg-[#1f1711] border-[#8C6D53] dark:border-[#8C6D53]/40 hover:bg-[#E8E2D5] dark:hover:bg-[#2c221a] hover:border-[#735A42] dark:hover:border-[#8C6D53]/60'
+                        } ${state.solved && lapida.isCorrectTarget ? 'bg-emerald-100 dark:bg-emerald-950/40 border-emerald-600 dark:border-emerald-500 ring-2 ring-emerald-500' : ''}`}
                       >
                         {/* Icona funerària en relleu */}
                         <span className="text-xs opacity-50 mb-1">✝</span>
                         <span
                           className={`font-bold font-serif text-xs sm:text-sm tracking-wide ${
-                            isSelected ? 'text-[#1D3557]' : 'text-[#2B2118]'
+                            isSelected ? 'text-[#1D3557] dark:text-[#e5a93c]' : 'text-[#2B2118] dark:text-[#f3ebd8]'
                           }`}
                         >
                           {lapida.name}
                         </span>
-                        <span className="text-[10px] sm:text-xs font-mono text-[#5C4533] mt-0.5">
+                        <span className="text-[10px] sm:text-xs font-mono text-[#5C4533] dark:text-[#c2a68e] mt-0.5">
                           {lapida.year}
                         </span>
 
@@ -469,7 +469,7 @@ export function CementiriGame(props: GameProps) {
       </section>
 
       {/* FORMULARI DE VALIDACIÓ I DEDUCCIÓ (SEMPRE VISIBLE A SOTA) */}
-      <section className="bg-[#EAE0CA] border-2 border-[#8C6D53] rounded-xl p-4 sm:p-5 shadow-md">
+      <section className="bg-[#EAE0CA] dark:bg-[#1a130e] border-2 border-[#8C6D53] dark:border-[#8C6D53]/40 rounded-xl p-4 sm:p-5 shadow-md">
         {!state.solved ? (
           <form
             onSubmit={e => {
@@ -479,17 +479,17 @@ export function CementiriGame(props: GameProps) {
             className="space-y-4"
           >
             <div>
-              <label className="block text-sm font-bold text-[#2B2118] font-serif mb-1">
+              <label className="block text-sm font-bold text-[#2B2118] dark:text-[#f3ebd8] font-serif mb-1">
                 Quina làpida conté l'errada que coincideix amb la signatura de la carta?
               </label>
-              <p className="text-xs text-[#5C4533] font-sans">
+              <p className="text-xs text-[#5C4533] dark:text-[#c2a68e] font-sans">
                 Compara la signatura de la carta amb les làpides del cementiri i el registre de defuncions:
               </p>
             </div>
 
             {/* Selector de la làpida */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-[#5C4533] uppercase tracking-wide font-sans">
+              <label className="block text-xs font-bold text-[#5C4533] dark:text-[#c2a68e] uppercase tracking-wide font-sans">
                 Tria la làpida:
               </label>
               <select
@@ -502,7 +502,7 @@ export function CementiriGame(props: GameProps) {
                     lastFeedback: null,
                   }))
                 }}
-                className="w-full p-2.5 sm:p-3 border-2 border-[#8C6D53] rounded-lg bg-[#FAF5E9] text-[#1D3557] font-serif font-bold text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C99E32] shadow-inner"
+                className="w-full p-2.5 sm:p-3 border-2 border-[#8C6D53] dark:border-[#8C6D53]/60 rounded-lg bg-[#FAF5E9] dark:bg-[#14100c] text-[#1D3557] dark:text-[#8bb2e8] font-serif font-bold text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#C99E32] shadow-inner"
               >
                 <option value="">-- Tria una làpida (o fes clic a la pestanya Làpides) --</option>
                 {LAPIDES.map(l => (
@@ -516,7 +516,7 @@ export function CementiriGame(props: GameProps) {
            
 
             {state.lastFeedback && state.lastFeedback.type === 'error' && (
-              <div className="p-2.5 bg-red-100 border border-red-300 text-red-900 rounded text-xs font-sans flex items-center gap-2">
+              <div className="p-2.5 bg-red-100 dark:bg-[#2c1515] border border-red-300 dark:border-red-700/60 text-red-900 dark:text-red-200 rounded text-xs font-sans flex items-center gap-2">
                 <span>⚠️</span>
                 <span>{state.lastFeedback.message}</span>
               </div>
@@ -525,7 +525,7 @@ export function CementiriGame(props: GameProps) {
             <button
               type="submit"
               disabled={!state.selectedLapida}
-              className="w-full py-3 px-4 bg-[#1D3557] hover:bg-[#152740] disabled:opacity-40 disabled:hover:bg-[#1D3557] text-white font-sans font-bold text-sm tracking-wide rounded-lg shadow transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-[#1D3557] hover:bg-[#152740] dark:bg-[#c99e32] dark:hover:bg-[#e5a93c] disabled:opacity-40 disabled:hover:bg-[#1D3557] dark:disabled:hover:bg-[#c99e32] text-white dark:text-[#14100c] font-sans font-bold text-sm tracking-wide rounded-lg shadow transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
             >
               <span>🔍</span>
               <span>Validar aquesta Làpida</span>
@@ -539,12 +539,12 @@ export function CementiriGame(props: GameProps) {
             animate="visible"
             className="space-y-4"
           >
-            <div className="p-4 bg-emerald-50 border-2 border-emerald-600 rounded-lg text-emerald-950 shadow-inner">
-              <div className="flex items-center gap-2 text-base font-bold font-serif text-emerald-900 mb-1">
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-600 dark:border-emerald-500 rounded-lg text-emerald-950 dark:text-emerald-100 shadow-inner">
+              <div className="flex items-center gap-2 text-base font-bold font-serif text-emerald-900 dark:text-emerald-300 mb-1">
                 <span>✓</span>
                 <span>Enigma del Cementiri Resolt: Làpida nº 1, {signatureError} ({correctYear})!</span>
               </div>
-              <p className="text-xs font-sans text-emerald-800 leading-relaxed">
+              <p className="text-xs font-sans text-emerald-800 dark:text-emerald-200 leading-relaxed">
                 El picapedrer va gravar <strong>"{signatureError}"</strong> a la pedra, però al registre parroquial l'Escolà va anotar oficialment <strong>"{correctName}"</strong>. Només qui consultava el registre sabia la diferència... i podia copiar la falta d'ortografia a propòsit per inculpar algú altre.
               </p>
             </div>
@@ -552,35 +552,35 @@ export function CementiriGame(props: GameProps) {
             {/* DESCOBERTA D'EVIDÈNCIA I SOSPITÓS IMPLICAT */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Evidència */}
-              <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
-                <span className="text-[10px] font-mono uppercase font-bold text-[#8C6D53]">
+              <div className="p-3.5 bg-[#FAF5E9] dark:bg-[#1a130e] border border-[#8C6D53] dark:border-[#8C6D53]/40 rounded-lg shadow-sm">
+                <span className="text-[10px] font-mono uppercase font-bold text-[#8C6D53] dark:text-[#c2a68e]">
                   ⚰️ Nova Evidència Desbloquejada
                 </span>
-                <h4 className="font-serif font-bold text-sm text-[#1D3557] mt-0.5">
+                <h4 className="font-serif font-bold text-sm text-[#1D3557] dark:text-[#8bb2e8] mt-0.5">
                   Fragment de la Carta i Làpides
                 </h4>
-                <p className="text-xs text-[#5C4533] mt-1 font-sans">
+                <p className="text-xs text-[#5C4533] dark:text-[#c2a68e] mt-1 font-sans">
                   La signatura de la carta coincideix, lletra per lletra, amb l'errada gravada a la làpida nº 1.
                 </p>
               </div>
 
               {/* Sospitós Implicat */}
-              <div className="p-3.5 bg-[#FAF5E9] border border-[#8C6D53] rounded-lg shadow-sm">
-                <span className="text-[10px] font-mono uppercase font-bold text-[#7A1F26]">
+              <div className="p-3.5 bg-[#FAF5E9] dark:bg-[#1a130e] border border-[#8C6D53] dark:border-[#8C6D53]/40 rounded-lg shadow-sm">
+                <span className="text-[10px] font-mono uppercase font-bold text-[#7A1F26] dark:text-[#f87171]">
                   ⚠️ Sospitós Implicat
                 </span>
-                <h4 className="font-serif font-bold text-sm text-[#2B2118] mt-0.5">
+                <h4 className="font-serif font-bold text-sm text-[#2B2118] dark:text-[#f3ebd8] mt-0.5">
                   Anton, l'Escolà
                 </h4>
-                <p className="text-xs text-[#5C4533] mt-1 font-sans">
+                <p className="text-xs text-[#5C4533] dark:text-[#c2a68e] mt-1 font-sans">
                   Ell va escriure el registre de defuncions: tenia accés al nom correcte i podia copiar l'errada a propòsit.
                 </p>
               </div>
             </div>
 
             {/* XIFRA DE L'ELEMENT AIRE */}
-            <div className="p-3.5 bg-[#1D3557] text-[#FAF5E9] rounded-lg border-2 border-[#C99E32] shadow text-center">
-              <div className="text-[11px] font-mono uppercase tracking-widest text-[#C99E32]">
+            <div className="p-3.5 bg-[#1D3557] dark:bg-[#1a2332] text-[#FAF5E9] rounded-lg border-2 border-[#C99E32] dark:border-[#e5a93c] shadow text-center">
+              <div className="text-[11px] font-mono uppercase tracking-widest text-[#C99E32] dark:text-[#e5a93c]">
                 XIFRA DE L'ELEMENT DESCOBERTA
               </div>
               <div className="text-xl sm:text-2xl font-bold font-serif mt-1 flex items-center justify-center gap-2.5">

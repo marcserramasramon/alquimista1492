@@ -178,42 +178,36 @@ function JocHubContent() {
     <div className="min-h-screen bg-parchment text-ink flex flex-col">
       {/* Header */}
       <header className="bg-parchment border-b-2 border-[#8C6D53] shadow-sm sticky top-0 z-40 text-center">
-        <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">
+        <div className="max-w-4xl mx-auto px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
               Equip: {playerSession.teamName}
             </span>
             <NightModeToggle compact />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] font-serif mt-1 uppercase">
-            El Traïdor de la Guixa
-          </h1>
 
-          <div className="mt-2.5 flex justify-center">
+          <div className="mt-2 flex flex-nowrap justify-center items-center gap-1.5 sm:gap-4 text-[10px] sm:text-sm font-sans font-bold text-[#2B2118]">
             <PlayerTimer status={gameClock.status} expiresAt={gameClock.expiresAt} />
-          </div>
 
-          {/* Stats Row */}
-          {teamState.team && teamState.session && (
-            <div className="mt-3 flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-xs sm:text-sm font-sans font-bold text-[#2B2118]">
-              <div className="flex items-center gap-1">
-                <span>📍</span>
-                <span>
-                  {teamState.stations.filter((s) => s.solved).length}/{teamState.stations.length} Estacions
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span>📋</span>
-                <span>{teamState.evidences.length} Proves</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span>🎫</span>
-                <span>
-                  {teamState.session?.salconduits_remaining ?? 2} Salvos
-                </span>
-              </div>
-            </div>
-          )}
+            {teamState.team && teamState.session && (
+              <>
+                <div className="flex items-center gap-1">
+                  <span>📍</span>
+                  <span>
+                    {teamState.stations.filter((s) => s.solved).length}/{teamState.stations.length} Fites
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>📋</span>
+                  <span>{teamState.evidences.length} Proves</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>🎫</span>
+                  <span>{teamState.session?.salconduits_remaining ?? 2} Salvos</span>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </header>
 

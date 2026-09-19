@@ -75,7 +75,7 @@ export default function PlayerResultsPage() {
           moralChoice: result?.moral_choice || null,
           isCorrect,
           solvedStations: solvedStationIds.length,
-          salconduitsRemaining: session?.salconduits_remaining ?? 3,
+          salconduitsRemaining: session?.salconduits_remaining ?? 2,
         })
 
         // 3. Fetch public ranking of teams

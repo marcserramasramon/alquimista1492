@@ -151,7 +151,7 @@ export async function signInAsPlayer(
           code_digits: ['', '', '', ''],
           evidence_unlocked: [],
           suspects_dismissed: [],
-          salconduits_remaining: 3,
+          salconduits_remaining: 2,
           salconduits_used: [],
         })
         .select()

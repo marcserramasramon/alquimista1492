@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
             code_digits: ['', '', '', ''],
             evidence_unlocked: [],
             suspects_dismissed: [],
-            salconduits_remaining: 3,
+            salconduits_remaining: 2,
             salconduits_used: [],
           })
           .select('id')
@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
         solvedStationsCount: session?.solved_stations?.length || 0,
         timeElapsed,
         moralChoice: result?.moral_choice || null,
-        salconduits: session?.salconduits_remaining ?? 3,
+        salconduits: session?.salconduits_remaining ?? 2,
         playersCount: playersCountMap.get(team.id) || 0,
         playerNames: playersNamesMap.get(team.id) || [],
       }

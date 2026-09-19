@@ -61,16 +61,16 @@ export function NightModeToggle({
       onClick={toggleTheme}
       title={isDark ? 'Canviar a Mode Pergamí (Dia)' : 'Canviar a Mode Nit / Clandestí (Fosc)'}
       aria-label={isDark ? 'Canviar a Mode Pergamí' : 'Canviar a Mode Nit'}
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full transition-all border shadow-sm font-sans ${
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full transition-all border shadow-sm font-sans ${
         isDark
           ? 'bg-[#2B2118] text-[#E5A93C] border-[#E5A93C]/40 hover:bg-[#3D2E22]'
           : 'bg-[#EAE0CA] text-[#5C4533] border-[#8C6D53]/40 hover:bg-[#DFD4BC]'
-      } ${compact ? 'text-xs min-h-[32px]' : 'text-xs sm:text-sm min-h-[36px]'} ${className}`}
+      } ${compact ? 'text-xs min-h-[24px]' : 'text-xs sm:text-sm min-h-[28px]'} ${className}`}
     >
-      <span className="text-base leading-none">{isDark ? '🕯️' : '☀️'}</span>
+      <span className="text-base leading-none">{isDark ? '🌘' : '☀️'}</span>
       {showLabel && (
         <span className="font-medium tracking-wide">
-          {isDark ? 'Mode Nit' : 'Mode Dia'}
+          Mode
         </span>
       )}
     </button>

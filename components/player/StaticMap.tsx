@@ -55,7 +55,7 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
   const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
     e.preventDefault()
     const delta = e.deltaY > 0 ? 0.9 : 1.1
-    setZoom((prev) => Math.min(Math.max(prev * delta, 0.8), 4))
+    setZoom((prev) => Math.min(Math.max(prev * delta, 1), 4))
   }
 
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -124,7 +124,7 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
         e.touches[0].clientY - e.touches[1].clientY
       )
       if (touchStateRef.startDistance > 0) {
-        const nextZoom = Math.min(Math.max(touchStateRef.startZoom * (distance / touchStateRef.startDistance), 0.8), 4)
+        const nextZoom = Math.min(Math.max(touchStateRef.startZoom * (distance / touchStateRef.startDistance), 1), 4)
         setZoom(nextZoom)
       }
       const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2
@@ -209,33 +209,12 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
                 <span>Altres punts visitats</span>
               </div>
             </div>
-
-            {/* Fites dels 4 Elements */}
-            <div className="mt-2.5 pt-2 border-t border-leather/20 flex flex-wrap items-center gap-2.5 text-xs font-sans text-[#5C4533] dark:text-[#C2A68E]">
-              <span className="font-bold text-leather dark:text-[#E5A93C] uppercase text-[11px] tracking-wider">Fites Elementals:</span>
-              <div className="flex items-center gap-1.5 bg-white/80 dark:bg-[#261E17] px-2 py-0.5 rounded-md border border-[#8C6D53]/25 shadow-2xs">
-                <img src="/images/elements/foc.webp" alt="Foc" className="w-4 h-4 object-contain" />
-                <span className="font-medium text-ink dark:text-[#F3EBD8]">Serrat (Foc)</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-white/80 dark:bg-[#261E17] px-2 py-0.5 rounded-md border border-[#8C6D53]/25 shadow-2xs">
-                <img src="/images/elements/aigua.webp" alt="Aigua" className="w-4 h-4 object-contain" />
-                <span className="font-medium text-ink dark:text-[#F3EBD8]">Font (Aigua)</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-white/80 dark:bg-[#261E17] px-2 py-0.5 rounded-md border border-[#8C6D53]/25 shadow-2xs">
-                <img src="/images/elements/terra.webp" alt="Terra" className="w-4 h-4 object-contain" />
-                <span className="font-medium text-ink dark:text-[#F3EBD8]">Planes (Terra)</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-white/80 dark:bg-[#261E17] px-2 py-0.5 rounded-md border border-[#8C6D53]/25 shadow-2xs">
-                <img src="/images/elements/aire.webp" alt="Aire" className="w-4 h-4 object-contain" />
-                <span className="font-medium text-ink dark:text-[#F3EBD8]">Cementiri (Aire)</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
       {/* Map Container */}
-      <div className="flex-1 relative overflow-hidden flex items-center justify-center p-4 bg-[#EAE0CA]/40 min-h-[440px]">
+      <div className="relative overflow-hidden flex items-center justify-center p-4 bg-[#EAE0CA]/40 aspect-[4/3] flex-shrink-0">
         <svg
           ref={svgRef as any}
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
@@ -328,11 +307,7 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
               <g
                 key={station.id}
                 onClick={() => setSelectedStationId(station.id)}
-                style={{
-                  cursor: 'pointer',
-                  transform: `scale(${1 / zoom})`,
-                  transformOrigin: `${x}px ${y}px`,
-                }}
+                style={{ cursor: 'pointer' }}
               >
                 {/* Marker circle background */}
                 <circle
@@ -416,29 +391,19 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
         <div className="w-full max-w-4xl mx-auto">
           <div>
             <p className="text-xs uppercase tracking-wider font-bold text-leather dark:text-[#C2A68E] mb-2.5 font-sans">📍 Estacions del joc:</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-sm">
               {allStations.map((station) => (
                 <div
                   key={station.id}
                   onClick={() => setSelectedStationId(station.id)}
-                  className="flex items-center gap-2.5 p-2 rounded-lg bg-white/80 dark:bg-[#261E17] hover:bg-white dark:hover:bg-[#33281F] border border-[#8C6D53]/20 dark:border-[#8C6D53]/40 shadow-xs cursor-pointer transition"
+                  className="flex items-center gap-2 px-2 py-1 rounded-lg bg-white/80 dark:bg-[#261E17] hover:bg-white dark:hover:bg-[#33281F] border border-[#8C6D53]/20 dark:border-[#8C6D53]/40 shadow-xs cursor-pointer transition"
                 >
                   {station.elementImage ? (
-                    <img src={station.elementImage} alt={station.catalan} className="w-7 h-7 object-contain flex-shrink-0 drop-shadow-xs" />
+                    <img src={station.elementImage} alt={station.catalan} className="w-5 h-5 object-contain flex-shrink-0 drop-shadow-xs" />
                   ) : (
-                    <span className="text-2xl flex-shrink-0">{station.icon}</span>
+                    <span className="text-lg flex-shrink-0">{station.icon}</span>
                   )}
-                  <div className="min-w-0 flex-1">
-                    <span className="text-ink dark:text-[#F3EBD8] font-bold block truncate text-xs sm:text-sm">{station.catalan}</span>
-                    {station.elementImage && (
-                      <span className="text-[10px] text-leather dark:text-[#E5A93C] font-sans uppercase font-semibold">
-                        {station.id.includes('serrat') ? 'Element Foc' :
-                         station.id.includes('font') ? 'Element Aigua' :
-                         station.id.includes('plane') ? 'Element Terra' :
-                         station.id.includes('cementiri') ? 'Element Aire' : 'Fita'}
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-ink dark:text-[#F3EBD8] font-bold truncate text-xs sm:text-sm min-w-0 flex-1">{station.catalan}</span>
                 </div>
               ))}
             </div>
