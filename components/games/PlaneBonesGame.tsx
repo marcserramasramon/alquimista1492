@@ -16,7 +16,7 @@ import { Scanner, IDetectedBarcode } from '@yudiel/react-qr-scanner'
 import { supabase } from '@/lib/db'
 
 interface GameState {
-  activeTab: 'mapa' | 'interrogatori' | 'troballa'
+  activeTab: 'historia' | 'mapa' | 'interrogatori' | 'troballa'
   selectedWitnessId: number // 1 a 4
   pathProgress: string[] // IDs de nodes connectats en ordre
   manualCode: string
@@ -46,7 +46,7 @@ export function PlaneBonesGame(props: GameProps) {
         : {}
 
     return {
-      activeTab: saved.activeTab || 'mapa',
+      activeTab: saved.activeTab || 'historia',
       selectedWitnessId: saved.selectedWitnessId || 1,
       pathProgress: Array.isArray(saved.pathProgress) ? saved.pathProgress : ['malla'],
       manualCode: saved.manualCode || '',
@@ -299,6 +299,19 @@ export function PlaneBonesGame(props: GameProps) {
         </p>
       </header>
 
+      {/* Imatge d'ambientació de l'estació */}
+      <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md bg-stone-950">
+        <img
+          src="/images/scenes/planes-bones.jpg"
+          alt="Planes Bones - La cruïlla nocturna"
+          className="w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
+        <div className="absolute bottom-2 left-3 right-3 text-white/90 text-[11px] sm:text-xs font-sans italic drop-shadow">
+          🌲 Planes Bones · El camí vell de Malla a La Guixa en la foscor
+        </div>
+      </div>
+
       {/* TARGETA D'INTERROGATORI EXCLUSIU (PER AQUEST JUGADOR) */}
       <section className="bg-[#FAF5E9] border-2 border-[#8C6D53] rounded-xl p-3.5 sm:p-4 shadow-sm relative overflow-hidden">
         <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#8C6D53]/30 pb-2 mb-2.5">
@@ -349,8 +362,21 @@ export function PlaneBonesGame(props: GameProps) {
       <div className="bg-[#D8CCAE] border border-[#8C6D53] rounded-t-xl flex flex-wrap overflow-hidden">
         <button
           type="button"
+          onClick={() => setState((prev) => ({ ...prev, activeTab: 'historia' }))}
+          className={`flex-1 min-w-[110px] py-2.5 px-3 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+            state.activeTab === 'historia'
+              ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+              : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+          }`}
+        >
+          <span>📜</span>
+          <span>La Història</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setState((prev) => ({ ...prev, activeTab: 'mapa' }))}
-          className={`flex-1 min-w-[120px] py-2.5 px-3 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+          className={`flex-1 min-w-[110px] py-2.5 px-3 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
             state.activeTab === 'mapa'
               ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
               : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
@@ -363,20 +389,20 @@ export function PlaneBonesGame(props: GameProps) {
         <button
           type="button"
           onClick={() => setState((prev) => ({ ...prev, activeTab: 'interrogatori' }))}
-          className={`flex-1 min-w-[120px] py-2.5 px-3 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+          className={`flex-1 min-w-[110px] py-2.5 px-3 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
             state.activeTab === 'interrogatori'
               ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
               : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
           }`}
         >
-          <span>📜</span>
-          <span>Tots els Testimonis (4)</span>
+          <span>👥</span>
+          <span>Tots els Testimonis</span>
         </button>
 
         <button
           type="button"
           onClick={() => setState((prev) => ({ ...prev, activeTab: 'troballa' }))}
-          className={`flex-1 min-w-[120px] py-2.5 px-3 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
+          className={`flex-1 min-w-[110px] py-2.5 px-3 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
             state.activeTab === 'troballa'
               ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
               : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
@@ -390,6 +416,64 @@ export function PlaneBonesGame(props: GameProps) {
       {/* CONTINGUT DE LES PESTANYES */}
       <div className="bg-[#EAE0CA] border-x border-b border-[#8C6D53] rounded-b-xl p-3.5 sm:p-5 shadow-sm">
         <AnimatePresence mode="wait">
+          {/* PESTANYA 0: LA HISTÒRIA */}
+          {state.activeTab === 'historia' && (
+            <motion.div
+              key="tab-historia"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="space-y-4 text-xs sm:text-sm leading-relaxed text-[#2B2118]"
+            >
+              <div className="p-4 bg-[#FAF5E9] border-l-4 border-[#8C6D53] rounded-r-xl shadow-inner space-y-2">
+                <span className="text-[10px] uppercase font-mono tracking-wider font-bold text-[#8C6D53] block">
+                  La Declaració d'Isidre el Ferrer
+                </span>
+                <h3 className="font-bold text-[#1D3557] text-base sm:text-lg font-serif">
+                  «No vaig participar en cap conspiració: tornava cansat de Malla i vaig perdre la clau»
+                </h3>
+                <p className="text-[#3A2A1D] italic">
+                  «La gent de la Guixa em mira amb recel perquè aquella nit em van veure caminant sol de nit pels camins de Planes Bones. Diuen que em vaig trobar amb traïdors a l'Hostal o al bosc, però és fals! Vaig sortir de Malla al capvespre carregat amb peces de ferro i eines per a la forja. Pel camí vaig passar per davant de masies, vaig travessar la riera i vaig aturar-me a beure aigua.»
+                </p>
+                <p className="text-[#3A2A1D] italic">
+                  «En arribar a La Guixa vaig voler obrir el taller i em vaig adonar esverat que la clau mestra de la forja havia caigut pel camí! Si recupereu la clau que vaig perdre, tothom sabrà que deia la veritat i que la meva coartada és indiscutible.»
+                </p>
+              </div>
+
+              <div className="p-3.5 bg-[#DFD4BC]/60 border border-[#8C6D53]/40 rounded-xl space-y-2 font-sans">
+                <div className="font-bold text-[#1D3557] text-sm flex items-center gap-1.5">
+                  <span>🎯</span>
+                  <span>Com funciona aquesta estació cooperativa:</span>
+                </div>
+                <ul className="list-disc pl-5 space-y-1.5 text-xs text-[#4A3728]">
+                  <li>
+                    <strong>Informació fragmentada:</strong> Cada membre de l'equip té assignat al seu telèfon el testimoni d'un veí diferent del terme (Malla, la Riera, Can Vinyals, el Pou).
+                  </li>
+                  <li>
+                    <strong>Treball en equip:</strong> No us ensenyeu les pantalles. Expliqueu en veu alta què ha vist el vostre informant.
+                  </li>
+                  <li>
+                    <strong>Reproduir la ruta al mapa:</strong> Aneu a la pestanya <em>Mapa del Camí</em> i connecteu les caselles per on va passar Isidre seguint les declaracions.
+                  </li>
+                  <li>
+                    <strong>Cerca física al carrer:</strong> Un cop deduït on va caure la clau, aneu físicament a la <em>Pedra Gran de Can Vinyals</em> i escanegeu el codi QR (o introduïu el codi <code>CLAU-FORJA</code>).
+                  </li>
+                </ul>
+              </div>
+
+              <div className="flex justify-center pt-1">
+                <button
+                  type="button"
+                  onClick={() => setState((prev) => ({ ...prev, activeTab: 'mapa' }))}
+                  className="py-3 px-6 bg-[#1D3557] hover:bg-[#152740] text-white font-sans font-bold text-sm rounded-lg shadow-md transition flex items-center gap-2 cursor-pointer"
+                >
+                  <span>Anar al Mapa per Traçar el Camí</span>
+                  <span>➔</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+
           {/* PESTANYA 1: MAPA HEXAGONAL INTERACTIU */}
           {state.activeTab === 'mapa' && (
             <motion.div
