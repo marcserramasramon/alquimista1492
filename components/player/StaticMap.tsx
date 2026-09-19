@@ -238,10 +238,11 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
       <div className="flex-1 relative overflow-hidden flex items-center justify-center p-4 bg-[#EAE0CA]/40 min-h-[440px]">
         <svg
           ref={svgRef as any}
-          width={svgWidth}
-          height={svgHeight}
-          className="border-2 border-leather/50 rounded-xl shadow-lg cursor-grab active:cursor-grabbing touch-none"
+          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+          className="border-2 border-leather/50 rounded-xl shadow-lg cursor-grab active:cursor-grabbing touch-none w-full h-full"
           style={{
+            maxWidth: '100%',
+            maxHeight: '100%',
             filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
             transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`,
             transformOrigin: 'center',
