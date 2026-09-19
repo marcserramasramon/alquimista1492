@@ -81,7 +81,7 @@ export function AccuseTab({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 pb-24 space-y-4">
         {!canAccuse ? (
           // Not ready to accuse
           <div className="flex flex-col items-center justify-center py-12 text-center">

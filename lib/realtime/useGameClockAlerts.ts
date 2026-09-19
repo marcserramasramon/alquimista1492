@@ -9,7 +9,10 @@ export interface GameClockAlerts extends GameClockState {
   showStartedPopup: boolean
   showBellPopup: boolean
   dismissStartedPopup: () => void
+  dismissBellPopup: () => void
 }
+
+const BELL_DISMISSED_KEY = 'scaperoom_bell_dismissed_at'
 
 /**
  * Wraps useGameClock and detects the two transitions players must be told
@@ -65,12 +68,42 @@ export function useGameClockAlerts(): GameClockAlerts {
     }
   }, [isOver])
 
+  // Un cop l'usuari ha vist el pop-up de la campana i ha anat a Resultats,
+  // no ha de tornar a bloquejar el tauler en tornar-hi -- es recorda la
+  // fi de partida concreta (expiresAt) que s'ha reconegut, perquè una
+  // partida nova (nou expiresAt) torni a mostrar l'avís.
+  const [dismissedFor, setDismissedFor] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const stored = window.sessionStorage.getItem(BELL_DISMISSED_KEY)
+      if (stored) setDismissedFor(stored)
+    } catch {
+      // ignore storage errors
+    }
+  }, [])
+
+  const dismissBellPopup = () => {
+    const marker = clock.expiresAt || clock.startedAt || 'manual'
+    setDismissedFor(marker)
+    try {
+      window.sessionStorage.setItem(BELL_DISMISSED_KEY, marker)
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  const bellMarker = clock.expiresAt || clock.startedAt || 'manual'
+  const showBellPopup = isOver && dismissedFor !== bellMarker
+
   return {
     ...clock,
     isOver,
     showStartedPopup,
-    showBellPopup: isOver,
+    showBellPopup,
     dismissStartedPopup: () => setShowStartedPopup(false),
+    dismissBellPopup,
   }
 }
 

@@ -36,16 +36,31 @@ export default function PlayerResultsPage() {
 
         const team = Array.isArray(player.teams) ? player.teams[0] : player.teams
 
-        // 2. Fetch session and result for this team
-        const [sessionRes, resultRes] = await Promise.all([
+        // 2. Fetch session, result and solved stations for this team
+        const [sessionRes, resultRes, stationsRes] = await Promise.all([
           team.session_id
             ? supabase.from('sessions').select('*').eq('id', team.session_id).single()
             : { data: null },
-          supabase.from('results').select('*').eq('team_id', team.id).single(),
+          supabase.from('results').select('*').eq('team_id', team.id).maybeSingle(),
+          supabase.from('team_stations').select('station_id, solved').eq('team_id', team.id),
         ])
 
         const session = sessionRes.data
         const result = resultRes.data
+        const solvedStationIds = (stationsRes.data || [])
+          .filter((s) => s.solved)
+          .map((s) => s.station_id)
+
+        // El traïdor només es considera "descobert" si l'equip ha resolt
+        // l'estació d'acusació al Pla de Masset (on s'acusa en Bernat amb
+        // prou proves) -- mai per defecte.
+        const ACCUSATION_STATION_IDS = [
+          'pla-masset-accusation',
+          'pla-masset',
+          'pla_masset',
+          'acusacio',
+        ]
+        const isCorrect = solvedStationIds.some((id) => ACCUSATION_STATION_IDS.includes(id))
 
         const startTime = team.started_at ? new Date(team.started_at).getTime() : Date.now()
         const endTime = team.finished_at ? new Date(team.finished_at).getTime() : Date.now()
@@ -58,8 +73,8 @@ export default function PlayerResultsPage() {
           score: result?.total_score || session?.score || 0,
           timeElapsed,
           moralChoice: result?.moral_choice || null,
-          isCorrect: result ? true : true,
-          solvedStations: session?.solved_stations?.length || 0,
+          isCorrect,
+          solvedStations: solvedStationIds.length,
           salconduitsRemaining: session?.salconduits_remaining ?? 3,
         })
 

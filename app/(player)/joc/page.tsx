@@ -235,6 +235,8 @@ function JocHubContent() {
               stations={teamState.stations}
               coartadaFrase={coartadaFrase}
               teamCode={teamState.team?.code || 'EQUIP1'}
+              teamId={playerSession.teamId}
+              suspectsDismissed={teamState.session?.suspects_dismissed || []}
             />
           )}
 
@@ -286,7 +288,10 @@ function JocHubContent() {
       />
       <BellRungModal
         show={gameClock.showBellPopup}
-        onViewResults={() => router.push('/results')}
+        onViewResults={() => {
+          gameClock.dismissBellPopup()
+          router.push('/results')
+        }}
       />
 
       {/* Bottom Navigation Menu */}

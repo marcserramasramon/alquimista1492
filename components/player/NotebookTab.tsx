@@ -15,6 +15,8 @@ interface NotebookTabProps {
   stations?: TeamStationRow[]
   coartadaFrase?: string | null
   teamCode?: string
+  teamId?: string
+  suspectsDismissed?: string[]
 }
 
 type NotebookView = 'fites' | 'suspects' | 'evidence'
@@ -41,12 +43,38 @@ export function NotebookTab({
   stations = [],
   coartadaFrase,
   teamCode = 'EQUIP1',
+  teamId,
+  suspectsDismissed = [],
 }: NotebookTabProps) {
   const router = useRouter()
   const { play } = useAudio()
   const [view, setView] = useState<NotebookView>('fites')
   const [showLetterModal, setShowLetterModal] = useState(false)
   const qrCanvasRef = useRef<HTMLCanvasElement>(null)
+  const [pendingSuspectId, setPendingSuspectId] = useState<string | null>(null)
+
+  const dismissedIds = suspectsDismissed
+
+  const toggleSuspectDismissed = async (suspectId: string) => {
+    if (!teamId || pendingSuspectId) return
+    const isDismissed = dismissedIds.includes(suspectId)
+
+    setPendingSuspectId(suspectId)
+    try {
+      const res = await fetch('/api/game/dismiss-suspect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId, suspectId, dismissed: !isDismissed }),
+      })
+      if (!res.ok) {
+        console.error('Error marcant sospitós: resposta no vàlida del servidor')
+      }
+    } catch (err) {
+      console.error('Error marcant sospitós:', err)
+    } finally {
+      setPendingSuspectId(null)
+    }
+  }
 
   const allSuspects = getAllSuspects()
   const allEvidence = getAllEvidence()
@@ -159,7 +187,7 @@ export function NotebookTab({
   ]
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 bg-parchment">
+    <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 pb-24 bg-parchment">
       <div className="w-full max-w-4xl mx-auto space-y-4">
         {/* Header — mateixa estètica que Història */}
         <header className="border-b-2 border-leather pb-3 mb-4 text-center">
@@ -311,37 +339,68 @@ export function NotebookTab({
 
             {view === 'suspects' && (
               <>
-                {allSuspects.map((suspect) => (
-                  <div
-                    key={suspect.id}
-                    className="p-3.5 rounded-lg border border-[#8C6D53]/30 bg-[#FAF5E9] shadow-sm"
-                  >
-                    <div className="flex items-start gap-3 mb-2">
-                      <div className="text-3xl">{suspect.profileIcon}</div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <h3 className="font-serif font-bold text-ink">
-                            {suspect.catalan}
-                          </h3>
-                          <span
-                            className={`text-[10px] font-sans font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border flex-shrink-0 ${SUSPICION_STYLES[suspect.suspicionFactor]}`}
-                          >
-                            {suspect.suspicionFactor}
-                          </span>
+                <p className="text-xs font-sans text-[#5C4533] mb-1">
+                  {dismissedIds.length} de {allSuspects.length} sospitosos descartats
+                </p>
+                {allSuspects.map((suspect) => {
+                  const isDismissed = dismissedIds.includes(suspect.id)
+                  const isPending = pendingSuspectId === suspect.id
+                  return (
+                    <div
+                      key={suspect.id}
+                      className={`p-3.5 rounded-lg border shadow-sm transition-opacity ${
+                        isDismissed
+                          ? 'border-[#8C6D53]/20 bg-[#EAE0CA]/50 opacity-60'
+                          : 'border-[#8C6D53]/30 bg-[#FAF5E9]'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3 mb-2">
+                        <div className="text-3xl">{suspect.profileIcon}</div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className={`font-serif font-bold ${isDismissed ? 'text-ink/60 line-through' : 'text-ink'}`}>
+                              {suspect.catalan}
+                            </h3>
+                            {isDismissed ? (
+                              <span className="text-[10px] font-sans font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border flex-shrink-0 bg-emerald-100 text-emerald-800 border-emerald-300">
+                                Descartat
+                              </span>
+                            ) : (
+                              <span
+                                className={`text-[10px] font-sans font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border flex-shrink-0 ${SUSPICION_STYLES[suspect.suspicionFactor]}`}
+                              >
+                                {suspect.suspicionFactor}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-leather font-sans">
+                            {suspect.roleDescription} — {suspect.age} anys
+                          </p>
                         </div>
-                        <p className="text-xs text-leather font-sans">
-                          {suspect.roleDescription} — {suspect.age} anys
-                        </p>
+                      </div>
+                      <p className="text-sm text-ink/80 font-sans mb-2">
+                        {suspect.narrative}
+                      </p>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-xs text-leather font-sans">
+                          📍 {suspect.clueLocation}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => toggleSuspectDismissed(suspect.id)}
+                          disabled={!teamId || isPending}
+                          className={`text-[11px] font-sans font-bold px-2.5 py-1.5 rounded-lg border shadow-sm transition disabled:opacity-50 min-h-[36px] ${
+                            isDismissed
+                              ? 'bg-white text-[#5C4533] border-[#8C6D53]/40 hover:bg-[#F2E5C8]'
+                              : 'bg-[#1D3557] text-white border-[#1D3557] hover:bg-[#2B4C7E]'
+                          }`}
+                        >
+                          {isPending ? '...' : isDismissed ? 'Tornar a sospitar' : 'Ja no és sospitós'}
+                        </button>
                       </div>
                     </div>
-                    <p className="text-sm text-ink/80 font-sans mb-2">
-                      {suspect.narrative}
-                    </p>
-                    <div className="text-xs text-leather font-sans">
-                      📍 {suspect.clueLocation}
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </>
             )}
 

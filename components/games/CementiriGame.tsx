@@ -14,41 +14,112 @@ interface GameState {
   lastFeedback: { type: 'success' | 'error'; message: string } | null
 }
 
-const LAPIDES = [
-  { id: 1, name: 'Corminas', year: 1698, isCorrectTarget: true },
-  { id: 2, name: 'Corbella', year: 1705, isCorrectTarget: false },
-  { id: 3, name: 'Mas', year: 1700, isCorrectTarget: false },
-  { id: 4, name: 'Coromines', year: 1702, isCorrectTarget: false },
-  { id: 5, name: 'Corminelles', year: 1697, isCorrectTarget: false },
-  { id: 6, name: 'Carrió', year: 1704, isCorrectTarget: false },
-  { id: 7, name: 'Solà', year: 1699, isCorrectTarget: false },
-  { id: 8, name: 'Puig', year: 1703, isCorrectTarget: false },
-  { id: 9, name: 'Molí', year: 1701, isCorrectTarget: false },
-  { id: 10, name: 'Vila', year: 1696, isCorrectTarget: false },
-  { id: 11, name: 'Bosch', year: 1706, isCorrectTarget: false },
-  { id: 12, name: 'Ferrer', year: 1708, isCorrectTarget: false },
-]
+interface Lapida {
+  id: number
+  name: string
+  year: number
+  isCorrectTarget: boolean
+}
 
-const REGISTRY = [
-  { year: 1689, name: 'Anna Vilar', note: 'Difunta' },
-  { year: 1691, name: 'Ramon Puigdomènech', note: 'Difunt' },
-  { year: 1693, name: 'Isabel Font', note: 'Difunta' },
-  { year: 1696, name: 'Marià Vila', note: 'Difunt' },
-  { year: 1697, name: 'Joan Corminelles', note: 'Difunt' },
-  { year: 1698, name: 'Joseph Coromines', note: 'Nom canònic oficial' },
-  { year: 1699, name: 'Miquel Solà', note: 'Difunt' },
-  { year: 1700, name: 'Pere Mas', note: 'Difunt' },
-  { year: 1701, name: 'Gabriel Molí', note: 'Difunt' },
-  { year: 1702, name: 'Maria Coromines', note: 'Difunta' },
-  { year: 1703, name: 'Antoni Puig', note: 'Difunt' },
-  { year: 1704, name: 'Jaume Carrió', note: 'Difunt' },
-  { year: 1705, name: 'Jaume Corbella', note: 'Difunt' },
-  { year: 1706, name: 'Teresa Bosch', note: 'Difunta' },
-  { year: 1708, name: 'Narcís Ferrer', note: 'Difunt' },
-]
+interface RegistryEntry {
+  year: number
+  name: string
+  note: string
+}
+
+// Per variant (docs/joc-4-cementiri-dev.md § Solucions per Variant, i dades
+// addicionals de les 9 làpides/registre per B i C construïdes seguint el
+// mateix patró que la variant A: la làpida nº1 porta sempre l'errada del
+// picapedrer que coincideix amb la signatura de la carta; una altra làpida
+// (la "trampa") porta el cognom ben escrit però un any diferent).
+const LAPIDES_BY_VARIANT: Record<string, Lapida[]> = {
+  A: [
+    { id: 1, name: 'Corminas', year: 1698, isCorrectTarget: true },
+    { id: 2, name: 'Corbella', year: 1705, isCorrectTarget: false },
+    { id: 3, name: 'Mas', year: 1700, isCorrectTarget: false },
+    { id: 4, name: 'Coromines', year: 1702, isCorrectTarget: false },
+    { id: 5, name: 'Corminelles', year: 1697, isCorrectTarget: false },
+    { id: 6, name: 'Carrió', year: 1704, isCorrectTarget: false },
+    { id: 7, name: 'Solà', year: 1699, isCorrectTarget: false },
+    { id: 8, name: 'Puig', year: 1703, isCorrectTarget: false },
+    { id: 9, name: 'Molí', year: 1701, isCorrectTarget: false },
+  ],
+  B: [
+    { id: 1, name: 'Sarrat', year: 1701, isCorrectTarget: true },
+    { id: 2, name: 'Corbella', year: 1705, isCorrectTarget: false },
+    { id: 3, name: 'Mas', year: 1700, isCorrectTarget: false },
+    { id: 4, name: 'Serrat', year: 1704, isCorrectTarget: false },
+    { id: 5, name: 'Sarratell', year: 1697, isCorrectTarget: false },
+    { id: 6, name: 'Carrió', year: 1703, isCorrectTarget: false },
+    { id: 7, name: 'Solà', year: 1699, isCorrectTarget: false },
+    { id: 8, name: 'Puig', year: 1702, isCorrectTarget: false },
+    { id: 9, name: 'Molí', year: 1698, isCorrectTarget: false },
+  ],
+  C: [
+    { id: 1, name: 'Puch', year: 1695, isCorrectTarget: true },
+    { id: 2, name: 'Corbella', year: 1700, isCorrectTarget: false },
+    { id: 3, name: 'Mas', year: 1698, isCorrectTarget: false },
+    { id: 4, name: 'Puig', year: 1699, isCorrectTarget: false },
+    { id: 5, name: 'Puchell', year: 1693, isCorrectTarget: false },
+    { id: 6, name: 'Carrió', year: 1701, isCorrectTarget: false },
+    { id: 7, name: 'Solà', year: 1697, isCorrectTarget: false },
+    { id: 8, name: 'Molí', year: 1696, isCorrectTarget: false },
+    { id: 9, name: 'Ferrer', year: 1694, isCorrectTarget: false },
+  ],
+}
+
+const REGISTRY_BY_VARIANT: Record<string, RegistryEntry[]> = {
+  A: [
+    { year: 1697, name: 'Joan Corminelles', note: 'Difunt' },
+    { year: 1698, name: 'Joseph Coromines', note: 'Nom canònic oficial' },
+    { year: 1699, name: 'Miquel Solà', note: 'Difunt' },
+    { year: 1700, name: 'Pere Mas', note: 'Difunt' },
+    { year: 1701, name: 'Gabriel Molí', note: 'Difunt' },
+    { year: 1702, name: 'Maria Coromines', note: 'Difunta' },
+    { year: 1703, name: 'Antoni Puig', note: 'Difunt' },
+    { year: 1704, name: 'Jaume Carrió', note: 'Difunt' },
+    { year: 1705, name: 'Jaume Corbella', note: 'Difunt' },
+  ],
+  B: [
+    { year: 1697, name: 'Bartomeu Sarratell', note: 'Difunt' },
+    { year: 1698, name: 'Ignasi Molí', note: 'Difunt' },
+    { year: 1699, name: 'Miquel Solà', note: 'Difunt' },
+    { year: 1700, name: 'Pere Mas', note: 'Difunt' },
+    { year: 1701, name: 'Maria Serrat', note: 'Nom canònic oficial' },
+    { year: 1702, name: 'Antoni Puig', note: 'Difunt' },
+    { year: 1703, name: 'Jaume Carrió', note: 'Difunt' },
+    { year: 1704, name: 'Elisenda Serrat', note: 'Difunta' },
+    { year: 1705, name: 'Jaume Corbella', note: 'Difunt' },
+  ],
+  C: [
+    { year: 1693, name: 'Bernadeta Puchell', note: 'Difunta' },
+    { year: 1694, name: 'Narcís Ferrer', note: 'Difunt' },
+    { year: 1695, name: 'Antoni Puig', note: 'Nom canònic oficial' },
+    { year: 1696, name: 'Gabriel Molí', note: 'Difunt' },
+    { year: 1697, name: 'Miquel Solà', note: 'Difunt' },
+    { year: 1698, name: 'Pere Mas', note: 'Difunt' },
+    { year: 1699, name: 'Elisenda Puig', note: 'Difunta' },
+    { year: 1700, name: 'Jaume Corbella', note: 'Difunt' },
+    { year: 1701, name: 'Jaume Carrió', note: 'Difunt' },
+  ],
+}
+
+const SIGNATURE_BY_VARIANT: Record<string, string> = { A: 'Corminas', B: 'Sarrat', C: 'Puch' }
+const CORRECT_NAME_BY_VARIANT: Record<string, string> = {
+  A: 'Joseph Coromines',
+  B: 'Maria Serrat',
+  C: 'Antoni Puig',
+}
+const CORRECT_YEAR_BY_VARIANT: Record<string, number> = { A: 1698, B: 1701, C: 1695 }
 
 export function CementiriGame(props: GameProps) {
   const { play } = useAudio()
+  const variant = (props.content?.variant as string) || 'A'
+  const LAPIDES = LAPIDES_BY_VARIANT[variant] || LAPIDES_BY_VARIANT.A
+  const REGISTRY = REGISTRY_BY_VARIANT[variant] || REGISTRY_BY_VARIANT.A
+  const signatureError = SIGNATURE_BY_VARIANT[variant] || SIGNATURE_BY_VARIANT.A
+  const correctName = CORRECT_NAME_BY_VARIANT[variant] || CORRECT_NAME_BY_VARIANT.A
+  const correctYear = CORRECT_YEAR_BY_VARIANT[variant] || CORRECT_YEAR_BY_VARIANT.A
   const [state, setState] = useState<GameState>(() => {
     const saved =
       props.sharedState && typeof props.sharedState === 'object'
@@ -75,58 +146,44 @@ export function CementiriGame(props: GameProps) {
   const handleSubmit = async () => {
     if (!state.selectedLapida) return
 
-    const isCorrect =
-      state.selectedLapida === 1 ||
-      selectedLapidaObj?.isCorrectTarget === true
+    try {
+      const result = await props.submit({
+        lapidaId: state.selectedLapida,
+        lapisaId: state.selectedLapida,
+        answer: state.selectedLapida,
+      })
 
-    if (!isCorrect) {
+      // El servidor és l'única autoritat sobre la correcció de la resposta.
+      if (result.correct === true) {
+        play('evidence-unlock')
+        setState(prev => ({
+          ...prev,
+          solved: true,
+          lastFeedback: {
+            type: 'success',
+            message: "Enigma resolt! Has identificat l'errada del picapedrer.",
+          },
+        }))
+      } else {
+        play('buzzer')
+        setState(prev => ({
+          ...prev,
+          attempts: prev.attempts + 1,
+          lastFeedback: {
+            type: 'error',
+            message: `La làpida de "${selectedLapidaObj?.name}" no és la que coincideix amb la signatura errada de la carta. Revisa la carta i el registre!`,
+          },
+        }))
+      }
+    } catch (err) {
+      console.error('Error enviant resposta:', err)
       play('buzzer')
       setState(prev => ({
         ...prev,
         attempts: prev.attempts + 1,
         lastFeedback: {
           type: 'error',
-          message: `La làpida de "${selectedLapidaObj?.name}" no és la que coincideix amb la signatura errada de la carta. Revisa la carta i el registre!`,
-        },
-      }))
-
-      try {
-        await props.submit({
-          lapidaId: state.selectedLapida,
-          lapisaId: state.selectedLapida,
-          answer: state.selectedLapida,
-        })
-      } catch (err) {
-        // silent
-      }
-      return
-    }
-
-    try {
-      await props.submit({
-        lapidaId: state.selectedLapida,
-        lapisaId: state.selectedLapida,
-        answer: state.selectedLapida,
-      })
-
-      play('evidence-unlock')
-      setState(prev => ({
-        ...prev,
-        solved: true,
-        lastFeedback: {
-          type: 'success',
-          message: "Enigma resolt! Has identificat l'errada del picapedrer.",
-        },
-      }))
-    } catch (err) {
-      console.error('Error enviant resposta:', err)
-      play('evidence-unlock')
-      setState(prev => ({
-        ...prev,
-        solved: true,
-        lastFeedback: {
-          type: 'success',
-          message: "Enigma resolt! Has identificat l'errada del picapedrer.",
+          message: 'Error enviant la resposta. Torna-ho a intentar.',
         },
       }))
     }
@@ -284,7 +341,7 @@ export function CementiriGame(props: GameProps) {
                 <div className="mt-4 pt-3 border-t border-[#8C6D53]/40 flex items-baseline justify-between">
                   <span className="text-xs text-[#5C4533]">Signat:</span>
                   <span className="text-xl sm:text-2xl font-bold font-signature text-[#7A1F26]">
-                    Corminas
+                    {signatureError}
                   </span>
                 </div>
                 
@@ -351,7 +408,7 @@ export function CementiriGame(props: GameProps) {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-3">
                   <h2 className="text-base sm:text-lg font-bold text-[#2B2118] font-serif flex items-center gap-1.5">
                     <span>⚰️</span>
-                    <span>Les 12 Làpides del Cementiri</span>
+                    <span>Les {LAPIDES.length} Làpides del Cementiri</span>
                   </h2>
                   <span className="text-xs text-[#5C4533] font-sans">
                     Tria quina tomba té la signatura copiada
@@ -485,10 +542,10 @@ export function CementiriGame(props: GameProps) {
             <div className="p-4 bg-emerald-50 border-2 border-emerald-600 rounded-lg text-emerald-950 shadow-inner">
               <div className="flex items-center gap-2 text-base font-bold font-serif text-emerald-900 mb-1">
                 <span>✓</span>
-                <span>Enigma del Cementiri Resolt: Làpida nº 1, Corminas (1698)!</span>
+                <span>Enigma del Cementiri Resolt: Làpida nº 1, {signatureError} ({correctYear})!</span>
               </div>
               <p className="text-xs font-sans text-emerald-800 leading-relaxed">
-                El picapedrer va gravar <strong>"Corminas"</strong> a la pedra, però al registre parroquial l'Escolà va anotar oficialment <strong>"Joseph Coromines"</strong>. Només qui consultava el registre sabia la diferència... i podia copiar la falta d'ortografia a propòsit per inculpar algú altre.
+                El picapedrer va gravar <strong>"{signatureError}"</strong> a la pedra, però al registre parroquial l'Escolà va anotar oficialment <strong>"{correctName}"</strong>. Només qui consultava el registre sabia la diferència... i podia copiar la falta d'ortografia a propòsit per inculpar algú altre.
               </p>
             </div>
 

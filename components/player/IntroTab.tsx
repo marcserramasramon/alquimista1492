@@ -55,7 +55,7 @@ export function IntroTab({ stations = [], evidences = [], onOpenMap }: IntroTabP
 
   if (selectedEntry) {
     return (
-      <div className="flex-1 overflow-y-auto px-6 py-6">
+      <div className="flex-1 overflow-y-auto px-6 py-6 pb-24">
         <div className="w-full max-w-4xl mx-auto">
           <button
             onClick={() => setSelectedId(null)}
@@ -95,7 +95,7 @@ export function IntroTab({ stations = [], evidences = [], onOpenMap }: IntroTabP
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
+    <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 pb-24">
       <div className="w-full max-w-4xl mx-auto">
         <header className="border-b-2 border-leather pb-3 mb-5 text-center">
           <span className="text-xs uppercase tracking-widest text-leather font-sans font-bold">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { getAllStations, getStation } from '@/content/public/stations'
 import type { TeamStationRow, TeamEvidenceRow } from '@/lib/realtime/useTeamState'
 import { getTeamStation } from '@/lib/realtime/useTeamState'
@@ -59,7 +59,7 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
   }
 
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (e.button !== 2) return // right click only
+    // Botó esquerre (arrossegar) o dret: tots dos mouen el mapa a escriptori.
     let startX = e.clientX
     let startY = e.clientY
     let startPanX = panX
@@ -81,35 +81,70 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
     document.addEventListener('mouseup', handleMouseUp)
   }
 
+  const touchStateRef = useRef<{
+    mode: 'pan' | 'pinch' | null
+    startX: number
+    startY: number
+    startPanX: number
+    startPanY: number
+    startDistance: number
+    startZoom: number
+  }>({ mode: null, startX: 0, startY: 0, startPanX: 0, startPanY: 0, startDistance: 0, startZoom: 1 }).current
+
   const handleTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
-    if (e.touches.length !== 2) return // Two fingers only
-
-    let startDistance = Math.hypot(
-      e.touches[0].clientX - e.touches[1].clientX,
-      e.touches[0].clientY - e.touches[1].clientY
-    )
-    let startPanX = panX
-    let startPanY = panY
-    let startCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2
-    let startCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2
-
-    const handleTouchMove = (moveEvent: TouchEvent) => {
-      if (moveEvent.touches.length !== 2) return
-
-      const deltaX = moveEvent.touches[0].clientX - startCenterX
-      const deltaY = moveEvent.touches[0].clientY - startCenterY
-
-      setPanX(startPanX + deltaX)
-      setPanY(startPanY + deltaY)
+    if (e.touches.length === 1) {
+      touchStateRef.mode = 'pan'
+      touchStateRef.startX = e.touches[0].clientX
+      touchStateRef.startY = e.touches[0].clientY
+      touchStateRef.startPanX = panX
+      touchStateRef.startPanY = panY
+    } else if (e.touches.length === 2) {
+      touchStateRef.mode = 'pinch'
+      touchStateRef.startDistance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      )
+      touchStateRef.startZoom = zoom
+      touchStateRef.startX = (e.touches[0].clientX + e.touches[1].clientX) / 2
+      touchStateRef.startY = (e.touches[0].clientY + e.touches[1].clientY) / 2
+      touchStateRef.startPanX = panX
+      touchStateRef.startPanY = panY
     }
+  }
 
-    const handleTouchEnd = () => {
-      document.removeEventListener('touchmove', handleTouchMove)
-      document.removeEventListener('touchend', handleTouchEnd)
+  const handleTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
+    if (touchStateRef.mode === 'pan' && e.touches.length === 1) {
+      const deltaX = e.touches[0].clientX - touchStateRef.startX
+      const deltaY = e.touches[0].clientY - touchStateRef.startY
+      setPanX(touchStateRef.startPanX + deltaX / zoom)
+      setPanY(touchStateRef.startPanY + deltaY / zoom)
+    } else if (touchStateRef.mode === 'pinch' && e.touches.length === 2) {
+      const distance = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      )
+      if (touchStateRef.startDistance > 0) {
+        const nextZoom = Math.min(Math.max(touchStateRef.startZoom * (distance / touchStateRef.startDistance), 0.8), 4)
+        setZoom(nextZoom)
+      }
+      const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2
+      const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2
+      setPanX(touchStateRef.startPanX + (centerX - touchStateRef.startX) / zoom)
+      setPanY(touchStateRef.startPanY + (centerY - touchStateRef.startY) / zoom)
     }
+  }
 
-    document.addEventListener('touchmove', handleTouchMove)
-    document.addEventListener('touchend', handleTouchEnd)
+  const handleTouchEnd = (e: React.TouchEvent<SVGSVGElement>) => {
+    if (e.touches.length === 0) {
+      touchStateRef.mode = null
+    } else if (e.touches.length === 1) {
+      // Passem de pessic a arrossegar amb un dit sense saltar de posició.
+      touchStateRef.mode = 'pan'
+      touchStateRef.startX = e.touches[0].clientX
+      touchStateRef.startY = e.touches[0].clientY
+      touchStateRef.startPanX = panX
+      touchStateRef.startPanY = panY
+    }
   }
 
   const selectedStation = selectedStationId ? getStation(selectedStationId) || null : null
@@ -215,6 +250,9 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
           onWheel={handleWheel}
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
           onContextMenu={(e) => e.preventDefault()}
         >
           {/* Background image - Mapa il·lustrat del joc */}

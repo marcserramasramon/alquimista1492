@@ -28,7 +28,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { token } = validation.data
+    // Els codis d'estació (QR físic o entrada manual) són sempre en
+    // minúscules; no depenem de com el teclat mòbil hagi capitalitzat el text
+    const token = validation.data.token.trim().toLowerCase()
     let requestedTeamId = validation.data.teamId || null
 
     // === Step 0: The game clock is authoritative — no station is
@@ -173,7 +175,20 @@ export async function POST(request: NextRequest) {
       .select('solved, attempts, solved_at')
       .eq('team_id', team.id)
       .eq('station_id', stationId)
-      .single()
+      .maybeSingle()
+
+    // Si l'equip ja ha resolt aquesta estació, no la tornem a servir com a
+    // joc en blanc (evita "refer" una fita ja completada en re-escanejar
+    // el QR físic, que no passa mai per la taula `passes`).
+    if (teamStation?.solved) {
+      return NextResponse.json(
+        {
+          code: 'ALREADY_SOLVED',
+          message: 'Aquesta estació ja l\'heu resolta',
+        },
+        { status: 403 }
+      )
+    }
 
     // === Step 8: Return safe data to client ===
     return NextResponse.json(

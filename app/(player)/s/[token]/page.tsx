@@ -36,6 +36,7 @@ export default function StationQRPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [sharedState, setSharedState] = useState<unknown>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [pointsToast, setPointsToast] = useState<number | null>(null)
   const teamState = useTeamState(stationData?.teamId)
 
   // Validate token and fetch station data
@@ -135,10 +136,13 @@ export default function StationQRPage() {
 
       // On successful answer (and not a narrative giro or multi-screen station), redirect to hub
       if (result.success && !result.isGiro && !isMultiScreenStation) {
+        if (typeof result.reward === 'number' && result.reward !== 0) {
+          setPointsToast(result.reward)
+        }
         clearActiveGame()
         setTimeout(() => {
           router.push('/joc')
-        }, 1500)
+        }, 1800)
       }
 
       return {
@@ -165,6 +169,7 @@ export default function StationQRPage() {
       <BellRungModal
         show
         onViewResults={() => {
+          gameClock.dismissBellPopup()
           clearActiveGame()
           router.push('/results')
         }}
@@ -268,10 +273,23 @@ export default function StationQRPage() {
       <BellRungModal
         show={gameClock.showBellPopup}
         onViewResults={() => {
+          gameClock.dismissBellPopup()
           clearActiveGame()
           router.push('/results')
         }}
       />
+
+      {/* Toast de punts guanyats en resoldre la fita */}
+      {pointsToast !== null && (
+        <div className="fixed inset-0 z-[60] flex items-start justify-center pt-24 pointer-events-none px-4">
+          <div className="bg-emerald-700 text-white font-bold font-sans rounded-2xl px-6 py-4 shadow-2xl border-2 border-emerald-400 text-center animate-scaleUp">
+            <div className="text-3xl">🏆</div>
+            <div className="text-lg mt-1">
+              {pointsToast > 0 ? `+${pointsToast}` : pointsToast} punts d'equip!
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Navigation Menu */}
       <BottomNav

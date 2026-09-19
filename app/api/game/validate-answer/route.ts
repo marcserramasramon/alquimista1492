@@ -157,22 +157,12 @@ function compareAnswers(
     }
   }
 
-  // Font del Ferro specific comparisons
+  // Font del Ferro specific comparisons — el dia correcte depèn de la
+  // variant de l'equip (12/11/13), mai s'accepten els altres dies.
   if (stationType.includes('font') || stationType.includes('ferro')) {
     const sStr = String(normalizedSubmitted).toUpperCase().trim()
     const expDay = solutionData.day ? String(solutionData.day) : null
-    if (
-      (expDay && sStr === expDay) ||
-      (expDay && sStr.includes(expDay)) ||
-      sStr === '12' ||
-      sStr === '12 DE MAIG' ||
-      sStr === '12 MAIG' ||
-      sStr === 'DIA 12' ||
-      sStr === 'DOTZE' ||
-      sStr.includes('12') ||
-      sStr === '11' ||
-      sStr === '13'
-    ) {
+    if (expDay && (sStr === expDay || sStr.includes(`DIA ${expDay}`) || sStr === `${expDay} DE MAIG` || sStr === `${expDay} MAIG`)) {
       return { isCorrect: true }
     }
   }

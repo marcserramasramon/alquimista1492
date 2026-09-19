@@ -17,23 +17,49 @@ interface GameState {
   lastFeedback: { type: 'success' | 'error'; message: string } | null
 }
 
-// Seqüència de fogueres: Fila (Esquerra) - Columna (Dreta) per a "SAP DE LLETRA"
-const FIRE_SIGNALS = [
-  // S - A - P
-  { id: 1, left: 4, right: 3, letter: 'S', word: 1 },
-  { id: 2, left: 1, right: 1, letter: 'A', word: 1 },
-  { id: 3, left: 3, right: 5, letter: 'P', word: 1 },
-  // D - E
-  { id: 4, left: 1, right: 4, letter: 'D', word: 2 },
-  { id: 5, left: 1, right: 5, letter: 'E', word: 2 },
-  // L - L - E - T - R - A
-  { id: 6, left: 3, right: 1, letter: 'L', word: 3 },
-  { id: 7, left: 3, right: 1, letter: 'L', word: 3 },
-  { id: 8, left: 1, right: 5, letter: 'E', word: 3 },
-  { id: 9, left: 4, right: 4, letter: 'T', word: 3 },
-  { id: 10, left: 4, right: 2, letter: 'R', word: 3 },
-  { id: 11, left: 1, right: 1, letter: 'A', word: 3 },
-]
+// Seqüències de fogueres per variant (docs/joc-1-serrat-bruixes.md § Solucions per Variant).
+// Fila (Esquerra) - Columna (Dreta) al quadrat de Polibi.
+const FIRE_SIGNALS_BY_VARIANT: Record<string, { id: number; left: number; right: number; letter: string; word: number }[]> = {
+  // "SAP DE LLETRA"
+  A: [
+    { id: 1, left: 4, right: 3, letter: 'S', word: 1 },
+    { id: 2, left: 1, right: 1, letter: 'A', word: 1 },
+    { id: 3, left: 3, right: 5, letter: 'P', word: 1 },
+    { id: 4, left: 1, right: 4, letter: 'D', word: 2 },
+    { id: 5, left: 1, right: 5, letter: 'E', word: 2 },
+    { id: 6, left: 3, right: 1, letter: 'L', word: 3 },
+    { id: 7, left: 3, right: 1, letter: 'L', word: 3 },
+    { id: 8, left: 1, right: 5, letter: 'E', word: 3 },
+    { id: 9, left: 4, right: 4, letter: 'T', word: 3 },
+    { id: 10, left: 4, right: 2, letter: 'R', word: 3 },
+    { id: 11, left: 1, right: 1, letter: 'A', word: 3 },
+  ],
+  // "ESCRIU": 1-5 · 4-3 · 1-3 · 4-2 · 2-4 · 4-5
+  B: [
+    { id: 1, left: 1, right: 5, letter: 'E', word: 1 },
+    { id: 2, left: 4, right: 3, letter: 'S', word: 1 },
+    { id: 3, left: 1, right: 3, letter: 'C', word: 1 },
+    { id: 4, left: 4, right: 2, letter: 'R', word: 1 },
+    { id: 5, left: 2, right: 4, letter: 'I', word: 1 },
+    { id: 6, left: 4, right: 5, letter: 'U', word: 1 },
+  ],
+  // "LLEGEIX": 3-1 · 3-1 · 1-5 · 2-2 · 1-5 · 2-4 · 5-2
+  C: [
+    { id: 1, left: 3, right: 1, letter: 'L', word: 1 },
+    { id: 2, left: 3, right: 1, letter: 'L', word: 1 },
+    { id: 3, left: 1, right: 5, letter: 'E', word: 1 },
+    { id: 4, left: 2, right: 2, letter: 'G', word: 1 },
+    { id: 5, left: 1, right: 5, letter: 'E', word: 1 },
+    { id: 6, left: 2, right: 4, letter: 'I', word: 1 },
+    { id: 7, left: 5, right: 2, letter: 'X', word: 1 },
+  ],
+}
+
+const ANSWER_BY_VARIANT: Record<string, string> = {
+  A: 'SAP DE LLETRA',
+  B: 'ESCRIU',
+  C: 'LLEGEIX',
+}
 
 // Estels del cel nocturn (posicions fixes per evitar diferències entre servidor i client)
 const NIGHT_STARS = [
@@ -84,6 +110,9 @@ const POLIBIUS_GRID = [
 
 export function SerratBruixesGame(props: GameProps) {
   const { play, stop } = useAudio()
+  const variant = (props.content?.variant as string) || 'A'
+  const FIRE_SIGNALS = FIRE_SIGNALS_BY_VARIANT[variant] || FIRE_SIGNALS_BY_VARIANT.A
+  const expectedAnswer = ANSWER_BY_VARIANT[variant] || ANSWER_BY_VARIANT.A
   const [state, setState] = useState<GameState>(() => {
     const saved =
       props.sharedState && typeof props.sharedState === 'object'
@@ -177,33 +206,14 @@ export function SerratBruixesGame(props: GameProps) {
     const cleanAnswer = raw.replace(/[.,;:!?'"`·\-]/g, ' ').replace(/\s+/g, ' ').trim()
     if (!cleanAnswer) return
 
-    const compact = cleanAnswer.replace(/\s+/g, '')
-
-    // Permetem totes les variants legítimes de la frase
-    const isValidLocally =
-      cleanAnswer === 'SAP DE LLETRA' ||
-      cleanAnswer === 'SAP LLETRA' ||
-      cleanAnswer === 'SAP DE LETRA' ||
-      cleanAnswer === 'SAP LETRA' ||
-      cleanAnswer === 'SAB DE LLETRA' ||
-      cleanAnswer === 'SAB LLETRA' ||
-      cleanAnswer === 'SAP DE LLETRES' ||
-      cleanAnswer === 'SAP LLETRES' ||
-      cleanAnswer === 'ESCRIU' ||
-      cleanAnswer === 'LLEGEIX' ||
-      compact === 'SAPDELLETRA' ||
-      compact === 'SAPLLETRA' ||
-      compact === 'SAPLETRA' ||
-      compact === 'SAPDELETRA' ||
-      compact === 'SABDELLETRA' ||
-      compact === 'SABLLETRA' ||
-      (compact.includes('SAP') && (compact.includes('LLETRA') || compact.includes('LETRA')))
-
     const result = await props.submit({
       answer: cleanAnswer,
     })
 
-    const isCorrect = result?.correct || isValidLocally
+    // El servidor és l'única autoritat: mai marquem la fita com a resolta
+    // localment si el servidor no ho confirma (evita falsos "èxit" quan la
+    // resposta no coincideix amb la variant real de l'equip).
+    const isCorrect = result?.correct === true
 
     if (isCorrect) {
       play('evidence-unlock')
@@ -668,7 +678,7 @@ export function SerratBruixesGame(props: GameProps) {
             <div className="p-4 bg-emerald-50 border-2 border-emerald-600 rounded-lg text-emerald-950 shadow-inner">
               <div className="flex items-center gap-2 text-base font-bold font-serif text-emerald-900 mb-1">
                 <span>✓</span>
-                <span>Missatge Desxifrat: "SAP DE LLETRA"!</span>
+                <span>Missatge Desxifrat: "{expectedAnswer}"!</span>
               </div>
               <p className="text-xs font-sans text-emerald-800 leading-relaxed">
                 Les fogueres dels turons han revelat el codi delator: qui va escriure la carta <strong>sap llegir i escriure</strong> pergamins de mà pròpia.

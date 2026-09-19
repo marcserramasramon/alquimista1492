@@ -93,8 +93,41 @@ const TORNS_DATA: DayRecord[] = [
   },
 ]
 
+// Dia en què es va recollir l'aigua (resposta correcta) i dia en què es va
+// redactar la carta, per variant (docs/joc-2-font-ferro-dev.md § Solucions per Variant).
+const WATER_DAY_BY_VARIANT: Record<string, string> = { A: '12', B: '11', C: '13' }
+const REDACTION_DAY_BY_VARIANT: Record<string, string> = { A: '15', B: '14', C: '16' }
+
+function buildTornsForVariant(variant: string): DayRecord[] {
+  const waterDay = WATER_DAY_BY_VARIANT[variant] || WATER_DAY_BY_VARIANT.A
+  const redactionDay = REDACTION_DAY_BY_VARIANT[variant] || REDACTION_DAY_BY_VARIANT.A
+  return TORNS_DATA.map(record => {
+    if (record.day === waterDay) {
+      return {
+        ...record,
+        isMarketDay: true,
+        note: "⚠️ MERCAT SETMANAL A VIC: Marianna de l'Hostal va marxar a primera hora per vendre queviures a la ciutat. NO va anar a la font.",
+      }
+    }
+    if (record.day === redactionDay) {
+      return {
+        ...record,
+        isMarketDay: false,
+        note: `📌 DIA DE REDACCIÓ DE LA CARTA: La carta del delator porta data d'avui! Però recorda que la tinta ferrosa s'ha de macerar 3 dies abans.`,
+      }
+    }
+    return { ...record, isMarketDay: false, note: undefined }
+  })
+}
+
 export function FontFerroGame(props: GameProps) {
   const { play } = useAudio()
+  const variant = (props.content?.variant as string) || 'A'
+  const waterDay = WATER_DAY_BY_VARIANT[variant] || WATER_DAY_BY_VARIANT.A
+  const redactionDay = REDACTION_DAY_BY_VARIANT[variant] || REDACTION_DAY_BY_VARIANT.A
+  const TORNS_DATA_VARIANT = buildTornsForVariant(variant)
+  const waterDayVisitors = TORNS_DATA_VARIANT.find(d => d.day === waterDay)?.visitors || []
+  const waterDayVisitorNames = waterDayVisitors.map(v => v.name).join(', ')
   const [state, setState] = useState<GameState>(() => {
     const saved =
       props.sharedState && typeof props.sharedState === 'object'
@@ -138,29 +171,22 @@ export function FontFerroGame(props: GameProps) {
       return
     }
 
-    const isLocallyCorrect =
-      cleanAnswer === '12' ||
-      cleanAnswer === '12 DE MAIG' ||
-      cleanAnswer === '12 MAIG' ||
-      cleanAnswer === 'DIA 12' ||
-      cleanAnswer === 'DIA 12 DE MAIG' ||
-      cleanAnswer.includes('12')
-
     try {
       const result = await props.submit({
         date: cleanAnswer,
         answer: cleanAnswer,
       })
 
-      if (result.correct || isLocallyCorrect) {
+      // El servidor és l'única autoritat: no marquem l'enigma com a resolt
+      // si el servidor no ho confirma.
+      if (result.correct === true) {
         play('evidence-unlock')
         setState(prev => ({
           ...prev,
           solved: true,
           lastFeedback: {
             type: 'success',
-            message:
-              'Molt bé! El dia 12 de maig es va recollir l’aigua ferrosa. Marianna queda descartada!',
+            message: `Molt bé! El dia ${waterDay} de maig es va recollir l'aigua ferrosa. Marianna queda descartada!`,
           },
         }))
       } else {
@@ -172,28 +198,26 @@ export function FontFerroGame(props: GameProps) {
             type: 'error',
             message:
               result.message ||
-              "Data incorrecta. Tingues en compte que la carta es va redactar el dia 15 i la tinta necessita 3 dies sencers en remull.",
+              "Data incorrecta. Torna a revisar el llibre de torns i la recepta de la tinta.",
           },
         }))
       }
     } catch (err) {
       console.error('Error enviant resposta:', err)
-      if (isLocallyCorrect) {
-        play('evidence-unlock')
-        setState(prev => ({
-          ...prev,
-          solved: true,
-          lastFeedback: {
-            type: 'success',
-            message: 'Enigma resolt! El dia 12 es va agafar l’aigua per a la tinta.',
-          },
-        }))
-      }
+      play('buzzer')
+      setState(prev => ({
+        ...prev,
+        attempts: prev.attempts + 1,
+        lastFeedback: {
+          type: 'error',
+          message: 'Error enviant la resposta. Torna-ho a intentar.',
+        },
+      }))
     }
   }
 
   const activeDayRecord =
-    TORNS_DATA.find(d => d.day === state.inspectingDay) || TORNS_DATA[2]
+    TORNS_DATA_VARIANT.find(d => d.day === state.inspectingDay) || TORNS_DATA_VARIANT[2]
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-5 pb-8 font-serif">
@@ -347,7 +371,7 @@ export function FontFerroGame(props: GameProps) {
 
                   <div className="mt-4 pt-3 border-t border-[#8C6D53]/30 flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs text-[#5C4533] font-sans gap-2">
                     <span>
-                      📅 <strong>Data de la carta trobada:</strong> 15 de maig de 1705
+                      📅 <strong>Data de la carta trobada:</strong> {redactionDay} de maig de 1705
                     </span>
                     <span className="font-bold text-[#1D3557] bg-[#EAE0CA] px-2 py-1 rounded border border-[#8C6D53]/40">
                       Maceració: 3 dies complets
@@ -383,10 +407,10 @@ export function FontFerroGame(props: GameProps) {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#8C6D53]/30 text-[#4A3728]">
-                      {TORNS_DATA.map(record => (
+                      {TORNS_DATA_VARIANT.map(record => (
                         <tr
                           key={record.day}
-                          className={record.day === '12' ? 'bg-amber-100/60 font-medium' : ''}
+                          className={record.day === waterDay ? 'bg-amber-100/60 font-medium' : ''}
                         >
                           <td className="p-2 font-mono font-bold text-[#1D3557] border border-[#8C6D53]/30 whitespace-nowrap">
                             Dia {record.day}
@@ -413,7 +437,7 @@ export function FontFerroGame(props: GameProps) {
                 </div>
 
                 <div className="p-2.5 bg-amber-50 rounded border border-amber-300 text-xs text-amber-900 font-sans">
-                  <strong>⚠️ Nota marginal del Batlle:</strong> El dia 12 de maig hi havia mercat a Vic. Marianna de l'Hostal no va ser al poble ni va acudir a la font.
+                  <strong>⚠️ Nota marginal del Batlle:</strong> El dia {waterDay} de maig hi havia mercat a Vic. Marianna de l'Hostal no va ser al poble ni va acudir a la font.
                 </div>
               </motion.div>
             )}
@@ -438,7 +462,7 @@ export function FontFerroGame(props: GameProps) {
 
                 {/* Botons selectors de dia */}
                 <div className="grid grid-cols-7 gap-1 sm:gap-2">
-                  {TORNS_DATA.map(record => {
+                  {TORNS_DATA_VARIANT.map(record => {
                     const isInspecting = state.inspectingDay === record.day
                     const isSelected = state.selectedDate === record.day
 
@@ -586,10 +610,10 @@ export function FontFerroGame(props: GameProps) {
             <div className="p-4 bg-emerald-50 border-2 border-emerald-600 rounded-lg text-emerald-950 shadow-inner">
               <div className="flex items-center gap-2 text-base font-bold font-serif text-emerald-900 mb-1">
                 <span>✓</span>
-                <span>Dia 12 de Maig de 1705 Confirmat!</span>
+                <span>Dia {waterDay} de Maig de 1705 Confirmat!</span>
               </div>
               <p className="text-xs font-sans text-emerald-800 leading-relaxed">
-                Has deduït amb exactitud la data de la recollida: 15 de maig menys 3 dies de remull = <strong>12 de maig</strong>.
+                Has deduït amb exactitud la data de la recollida: {redactionDay} de maig menys 3 dies de remull = <strong>{waterDay} de maig</strong>.
               </p>
             </div>
 
@@ -604,7 +628,7 @@ export function FontFerroGame(props: GameProps) {
                   Dos Càntirs d'Aigua a l'Escola
                 </h4>
                 <p className="text-xs text-[#5C4533] mt-1 font-sans">
-                  El dia 12, Anton l'escolà i Bernat el mestre van carregar aigua cap a la casa de l'escola de la Guixa.
+                  El dia {waterDay}, {waterDayVisitorNames} van carregar aigua a la font.
                 </p>
               </div>
 
@@ -617,7 +641,7 @@ export function FontFerroGame(props: GameProps) {
                   Marianna de l'Hostal
                 </h4>
                 <p className="text-xs text-[#5C4533] mt-1 font-sans">
-                  El dia 12 era al mercat setmanal de Vic. Queda <strong>100% descartada</strong> de la recollida d'aigua per a la carta.
+                  El dia {waterDay} era al mercat setmanal de Vic. Queda <strong>100% descartada</strong> de la recollida d'aigua per a la carta.
                 </p>
               </div>
             </div>
