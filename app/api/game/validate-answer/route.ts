@@ -42,6 +42,7 @@ const STATION_EVIDENCE: Record<string, string[]> = {
   'caixa-almoines': ['nota_capita', 'carta_falsa'],
   'caixa_almoines': ['nota_capita', 'carta_falsa'],
   'rectoria-caixa': ['nota_capita', 'carta_falsa'],
+  'rectoria': ['nota_capita', 'carta_falsa'],
 }
 
 const CANONICAL_STATION_IDS: Record<string, string> = {
@@ -61,6 +62,7 @@ const CANONICAL_STATION_IDS: Record<string, string> = {
   'caixa-almoines': 'rectoria-caixa',
   'caixa_almoines': 'rectoria-caixa',
   'rectoria-caixa': 'rectoria-caixa',
+  'rectoria': 'rectoria-caixa',
   'campanar': 'campanar-sometent',
   'bells-sometent': 'campanar-sometent',
   'bells_sometent': 'campanar-sometent',
@@ -119,6 +121,12 @@ function compareAnswers(
       normalizedSubmitted = String(obj.location)
     } else if ('destination' in obj && typeof obj.destination === 'string') {
       normalizedSubmitted = String(obj.destination)
+    } else if ('code' in obj && (typeof obj.code === 'string' || typeof obj.code === 'number')) {
+      normalizedSubmitted = String(obj.code)
+    } else if ('key' in obj && (typeof obj.key === 'string' || typeof obj.key === 'number')) {
+      normalizedSubmitted = String(obj.key)
+    } else if ('qr' in obj && typeof obj.qr === 'string') {
+      normalizedSubmitted = String(obj.qr)
     } else if ('answer' in obj && (typeof obj.answer === 'string' || typeof obj.answer === 'number')) {
       normalizedSubmitted = String(obj.answer)
     }
@@ -196,9 +204,21 @@ function compareAnswers(
       }
     }
 
-    // Variants especials de Planes Bones (Joan i Pere / Farga / 23:00 / Casella 3)
+    // Variants especials de Planes Bones (La Clau de la Forja a Can Vinyals / Joan i Pere / Farga)
     if (stationType.includes('plane') || stationType.includes('bones')) {
       if (
+        subCompact.includes('CLAU') ||
+        subCompact.includes('FORJA') ||
+        subCompact.includes('CANVINYALS') ||
+        subCompact.includes('PEDRAVINYALS') ||
+        subCompact.includes('NOGUERA') ||
+        subCompact.includes('NOGUERES') ||
+        subClean === 'CLAU FORJA' ||
+        subClean === 'CLAU DE LA FORJA' ||
+        subClean === 'CLAU DE FORJA' ||
+        subClean === 'LA CLAU' ||
+        subClean === 'CAN VINYALS' ||
+        subClean === 'PEDRA GRAN' ||
         subClean === 'JOAN I PERE' ||
         subClean === 'PERE I JOAN' ||
         subClean === 'JOAN I PERE DEL MOLI' ||
@@ -420,18 +440,48 @@ export async function POST(request: NextRequest) {
         { onConflict: 'team_id,evidence_id', ignoreDuplicates: true }
       )
 
+      // Penalització de -10 punts per haver-se equivocat d'acusat (Anton és innocent!)
+      const suspectName =
+        typeof answer === 'object' && answer !== null && 'suspect' in answer
+          ? String((answer as Record<string, unknown>).suspect)
+          : 'anton'
+
+      await serviceClient.from('score_events').insert({
+        team_id: team.id,
+        points: -10,
+        event_type: 'accusation_wrong_suspect',
+        details: {
+          station_id: stationId,
+          suspect: suspectName,
+          reason: 'acusat_erroni_anton',
+        },
+      })
+
+      const newScore = Math.max(0, (session.score ?? 0) - 10)
+      await serviceClient
+        .from('sessions')
+        .update({ score: newScore })
+        .eq('id', sessionId)
+
       return NextResponse.json({
         success: true,
         isGiro: true,
-        message: "L'Anton arriba esbufegant: el mossèn ha estat ferit a la rectoria!",
-        reward: 0,
+        message: "L'Anton arriba esbufegant: el mossèn ha estat ferit a la rectoria! Sospitós erroni (-10 punts).",
+        reward: -10,
       })
     }
+
+    const isAccusation =
+      (typeof answer === 'object' && answer !== null && 'suspect' in answer) ||
+      stationId.includes('masset') ||
+      stationId.includes('acusacio')
 
     let scoreReward = 0
     let responseMessage = isCorrect
       ? 'Resposta correcta!'
-      : 'Resposta incorrecta. Torna-ho a intentar.'
+      : isAccusation
+        ? 'Acusació desestimada. Sospitós erroni o proves no concloents (-10 punts).'
+        : 'Resposta incorrecta. Torna-ho a intentar.'
 
     // === Step 6: On correct answer, update game state ===
     if (isCorrect) {
@@ -493,6 +543,26 @@ export async function POST(request: NextRequest) {
           { onConflict: 'team_id,evidence_id', ignoreDuplicates: true }
         )
       }
+    } else if (isAccusation) {
+      // Penalització de -10 punts per error d'acusació (sospitós erroni o proves no concloents)
+      scoreReward = -10
+
+      await serviceClient.from('score_events').insert({
+        team_id: team.id,
+        points: -10,
+        event_type: 'accusation_penalty',
+        details: {
+          station_id: stationId,
+          answer: answerString,
+          reason: 'error_acusacio',
+        },
+      })
+
+      const newScore = Math.max(0, (session.score ?? 0) - 10)
+      await serviceClient
+        .from('sessions')
+        .update({ score: newScore })
+        .eq('id', sessionId)
     }
 
     // === Step 7: Return response ===
