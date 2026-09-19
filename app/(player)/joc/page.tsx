@@ -15,6 +15,7 @@ import { AccuseTab } from '@/components/player/AccuseTab'
 import { QRScanner } from '@/components/player/QRScanner'
 import { BottomNav, type NavTabId } from '@/components/player/BottomNav'
 import { PlayerTimer } from '@/components/player/PlayerTimer'
+import { NightModeToggle } from '@/components/ui/NightModeToggle'
 import { GameStartedModal } from '@/components/player/GameStartedModal'
 import { BellRungModal } from '@/components/player/BellRungModal'
 import { EmissariAlertModal } from '@/components/game/EmissariAlertModal'
@@ -165,9 +166,12 @@ export default function JocHubPage() {
       {/* Header */}
       <header className="bg-parchment border-b-2 border-[#8C6D53] shadow-sm sticky top-0 z-40 text-center">
         <div className="max-w-4xl mx-auto px-4 py-3 sm:py-4">
-          <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold block">
-            Equip: {playerSession.teamName}
-          </span>
+          <div className="flex items-center justify-between">
+            <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
+              Equip: {playerSession.teamName}
+            </span>
+            <NightModeToggle compact />
+          </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] font-serif mt-1 uppercase">
             El Traïdor de la Guixa
           </h1>
@@ -205,7 +209,11 @@ export default function JocHubPage() {
         {/* Tab Content - Takes remaining space */}
         <div className="flex-1 overflow-hidden flex flex-col">
           {activeTab === 'map' && (
-            <MapTab stations={teamState.stations} teamId={playerSession.teamId} />
+            <MapTab
+              stations={teamState.stations}
+              evidences={teamState.evidences}
+              teamId={playerSession.teamId}
+            />
           )}
 
           {activeTab === 'notebook' && (
@@ -213,11 +221,16 @@ export default function JocHubPage() {
               evidences={teamState.evidences}
               stations={teamState.stations}
               coartadaFrase={coartadaFrase}
+              teamCode={teamState.team?.code || 'EQUIP1'}
             />
           )}
 
           {activeTab === 'historia' && (
-            <IntroTab stations={teamState.stations} onOpenMap={() => setActiveTab('map')} />
+            <IntroTab
+              stations={teamState.stations}
+              evidences={teamState.evidences}
+              onOpenMap={() => setActiveTab('map')}
+            />
           )}
 
           {activeTab === 'salconduit' && (

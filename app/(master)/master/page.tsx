@@ -84,12 +84,20 @@ export default function MasterDashboard() {
               <span>⚔️</span> Escanejar Salvos (Emissari)
             </button>
 
-            {/* Botó QR Equips */}
+            {/* Botó Central QR */}
+            <Link
+              href="/master/qr"
+              className="px-4 py-2.5 text-sm font-semibold text-white bg-amber-800 hover:bg-amber-900 rounded-lg shadow transition-colors flex items-center gap-2 border border-amber-700"
+            >
+              <span>📍</span> Codis QR (Estacions + Equips)
+            </Link>
+
+            {/* Botó Codis QR i Manuals Modal */}
             <button
               onClick={() => setIsQRModalOpen(true)}
-              className="px-4 py-2.5 text-sm font-semibold text-white bg-amber-800 hover:bg-amber-900 rounded-lg shadow transition-colors flex items-center gap-2"
+              className="px-4 py-2.5 text-sm font-semibold text-amber-950 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg shadow-sm transition-colors flex items-center gap-2"
             >
-              <span>📱</span> Codis QR dels Equips
+              <span>📱</span> Codis QR i Manuals
             </button>
 
             {/* Botó Nova Partida / Reiniciar */}

@@ -264,7 +264,7 @@ export function SerratBruixesGame(props: GameProps) {
 
   return (
     <motion.div
-      className="w-full max-w-xl mx-auto pb-12 flex flex-col font-serif text-[#2B2118]"
+      className="w-full max-w-4xl mx-auto pb-12 flex flex-col font-serif text-[#2B2118]"
       initial="hidden"
       animate="visible"
       variants={fadeInVariants}
@@ -283,9 +283,9 @@ export function SerratBruixesGame(props: GameProps) {
       </header>
 
       {/* Imatge d'ambientació de l'estació */}
-      <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
+      <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
         <img
-          src="/images/scenes/serrat-bruixes.jpg"
+          src="/images/scenes/serrat-bruixes.webp"
           alt="Serrat de les Bruixes - Creu de terme i fogueres de nit"
           className="w-full h-full object-cover object-center"
         />
@@ -303,8 +303,8 @@ export function SerratBruixesGame(props: GameProps) {
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'historia' }))}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               state.activeDocTab === 'historia'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+                ? 'bg-[#EAE0CA] text-[#1D3557] dark:text-[#E5A93C] border-b-2 border-[#1D3557] dark:border-[#E5A93C] shadow-inner'
+                : 'text-[#5C4533] dark:text-[#C2A68E] hover:text-[#1D3557] dark:hover:text-[#E5A93C] hover:bg-[#E2D6B8] dark:hover:bg-[#2C221A]'
             }`}
           >
             <span>📜</span>
@@ -316,8 +316,8 @@ export function SerratBruixesGame(props: GameProps) {
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'sospitosos' }))}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               state.activeDocTab === 'sospitosos'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+                ? 'bg-[#EAE0CA] text-[#1D3557] dark:text-[#E5A93C] border-b-2 border-[#1D3557] dark:border-[#E5A93C] shadow-inner'
+                : 'text-[#5C4533] dark:text-[#C2A68E] hover:text-[#1D3557] dark:hover:text-[#E5A93C] hover:bg-[#E2D6B8] dark:hover:bg-[#2C221A]'
             }`}
           >
             <span>👥</span>
@@ -329,8 +329,8 @@ export function SerratBruixesGame(props: GameProps) {
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'taula' }))}
             className={`flex-1 min-w-[110px] py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               state.activeDocTab === 'taula'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+                ? 'bg-[#EAE0CA] text-[#1D3557] dark:text-[#E5A93C] border-b-2 border-[#1D3557] dark:border-[#E5A93C] shadow-inner'
+                : 'text-[#5C4533] dark:text-[#C2A68E] hover:text-[#1D3557] dark:hover:text-[#E5A93C] hover:bg-[#E2D6B8] dark:hover:bg-[#2C221A]'
             }`}
           >
             <span>🔤</span>
@@ -342,8 +342,8 @@ export function SerratBruixesGame(props: GameProps) {
             onClick={() => setState(prev => ({ ...prev, activeDocTab: 'senyals' }))}
             className={`flex-1 min-w-[110px] py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               state.activeDocTab === 'senyals'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+                ? 'bg-[#EAE0CA] text-[#1D3557] dark:text-[#E5A93C] border-b-2 border-[#1D3557] dark:border-[#E5A93C] shadow-inner'
+                : 'text-[#5C4533] dark:text-[#C2A68E] hover:text-[#1D3557] dark:hover:text-[#E5A93C] hover:bg-[#E2D6B8] dark:hover:bg-[#2C221A]'
             }`}
           >
             <span>🔥</span>
@@ -408,7 +408,7 @@ export function SerratBruixesGame(props: GameProps) {
 
                 {/* Barra d'eines del teclat tàctil */}
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-1 font-sans text-xs">
-                  <span className="text-[#5C4533] italic text-[11px] text-center sm:text-left">
+                  <span className="text-[#5C4533] italic text-xs text-center sm:text-left">
                     💡 Clica directament sobre les lletres per escriure (· = espai)
                   </span>
                   <div className="flex items-center gap-2">
@@ -444,7 +444,7 @@ export function SerratBruixesGame(props: GameProps) {
                   <h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif mb-1">
 			  L'Alerta dels Vigies
 			  </h3>
-                <div className="text-[11px] font-sans uppercase font-bold text-[#8C6D53] tracking-wider">
+                <div className="text-xs font-sans uppercase font-bold text-[#8C6D53] tracking-wider">
                   Informe confidencial dels Vigatans
                 </div>
                 <p>
@@ -462,31 +462,31 @@ export function SerratBruixesGame(props: GameProps) {
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="bg-[#FAF5E9] border border-[#8C6D53] p-3.5 rounded-lg text-xs space-y-2 font-sans"
+                className="bg-[#FAF5E9] dark:bg-[#1f1711] border border-[#8C6D53] dark:border-[#8C6D53]/40 p-3.5 rounded-lg text-xs space-y-2 font-sans"
               >
-                <div className="font-bold text-[#1D3557] text-xs uppercase tracking-wide">
+                <div className="font-bold text-[#1D3557] dark:text-[#8BB2E8] text-xs uppercase tracking-wide">
                   Nivell d'alfabetització al poble:
                 </div>
                 <div className="space-y-1.5">
-                  <div className="p-2 bg-white/80 rounded border border-[#8C6D53]/30 flex justify-between items-center">
-                    <span><strong>Bernat Mas</strong> (Mestre)</span>
-                    <span className="text-emerald-700 font-bold">Sap escriure</span>
+                  <div className="p-2 bg-white/80 dark:bg-[#140F0B] rounded border border-[#8C6D53]/30 dark:border-[#C2A68E]/20 flex justify-between items-center text-[#2B2118] dark:text-[#F3EBD8]">
+                    <span><strong className="text-ink">Bernat Mas</strong> <span className="text-[#5C4533] dark:text-[#C2A68E]">(Mestre)</span></span>
+                    <span className="text-emerald-700 dark:text-emerald-400 font-bold">Sap escriure</span>
                   </div>
-                  <div className="p-2 bg-white/80 rounded border border-[#8C6D53]/30 flex justify-between items-center">
-                    <span><strong>Mossèn Carrió</strong> (Rector)</span>
-                    <span className="text-emerald-700 font-bold">Sap escriure</span>
+                  <div className="p-2 bg-white/80 dark:bg-[#140F0B] rounded border border-[#8C6D53]/30 dark:border-[#C2A68E]/20 flex justify-between items-center text-[#2B2118] dark:text-[#F3EBD8]">
+                    <span><strong className="text-ink">Mossèn Ramon</strong> <span className="text-[#5C4533] dark:text-[#C2A68E]">(Rector)</span></span>
+                    <span className="text-emerald-700 dark:text-emerald-400 font-bold">Sap escriure</span>
                   </div>
-                  <div className="p-2 bg-white/80 rounded border border-[#8C6D53]/30 flex justify-between items-center">
-                    <span><strong>Anton</strong> (Escolà)</span>
-                    <span className="text-emerald-700 font-bold">Sap escriure</span>
+                  <div className="p-2 bg-white/80 dark:bg-[#140F0B] rounded border border-[#8C6D53]/30 dark:border-[#C2A68E]/20 flex justify-between items-center text-[#2B2118] dark:text-[#F3EBD8]">
+                    <span><strong className="text-ink">Anton</strong> <span className="text-[#5C4533] dark:text-[#C2A68E]">(Escolà)</span></span>
+                    <span className="text-emerald-700 dark:text-emerald-400 font-bold">Sap escriure</span>
                   </div>
-                  <div className="p-2 bg-white/80 rounded border border-[#8C6D53]/30 flex justify-between items-center">
-                    <span><strong>Pere del Molí</strong></span>
-                    <span className="text-amber-800 font-bold">Signa amb una creu (Analfabet)</span>
+                  <div className="p-2 bg-white/80 dark:bg-[#140F0B] rounded border border-[#8C6D53]/30 dark:border-[#C2A68E]/20 flex justify-between items-center text-[#2B2118] dark:text-[#F3EBD8]">
+                    <span><strong className="text-ink">Pere del Molí</strong></span>
+                    <span className="text-amber-800 dark:text-amber-400 font-bold">Signa amb una creu (Analfabet)</span>
                   </div>
-                  <div className="p-2 bg-white/80 rounded border border-[#8C6D53]/30 flex justify-between items-center">
-                    <span><strong>Joan el traginer</strong></span>
-                    <span className="text-amber-800 font-bold">Signa amb una creu (Analfabet)</span>
+                  <div className="p-2 bg-white/80 dark:bg-[#140F0B] rounded border border-[#8C6D53]/30 dark:border-[#C2A68E]/20 flex justify-between items-center text-[#2B2118] dark:text-[#F3EBD8]">
+                    <span><strong className="text-ink">Joan el traginer</strong></span>
+                    <span className="text-amber-800 dark:text-amber-400 font-bold">Signa amb una creu (Analfabet)</span>
                   </div>
                 </div>
               </motion.div>
@@ -709,8 +709,9 @@ export function SerratBruixesGame(props: GameProps) {
               <div className="text-[11px] font-mono uppercase tracking-widest text-[#C99E32]">
                 XIFRA DE L'ELEMENT DESCOBERTA
               </div>
-              <div className="text-xl sm:text-2xl font-bold font-serif mt-0.5">
-                🔥 FOC = 4
+              <div className="text-xl sm:text-2xl font-bold font-serif mt-1 flex items-center justify-center gap-2.5">
+                <img src="/images/elements/foc.webp" alt="Foc" className="w-8 h-8 object-contain drop-shadow" />
+                <span>FOC = 4</span>
               </div>
               <div className="text-[11px] text-[#FAF5E9]/80 font-sans mt-0.5">
                 Anota aquesta xifra al teu quadern d'equip!

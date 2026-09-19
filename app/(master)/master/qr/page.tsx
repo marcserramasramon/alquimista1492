@@ -16,6 +16,7 @@ interface StationQRMeta {
   location: string
   format: string
   elementReward?: string
+  elementImage?: string
   contentSummary: string
   path: string
   fileBaseName: string
@@ -33,6 +34,7 @@ const STATIONS_METADATA: StationQRMeta[] = [
     location: 'Serrat de les Bruixes (punt alt, pal o fita de fusta visible)',
     format: 'Cartell A2 laminat (protegit contra vent i humitat)',
     elementReward: 'Xifra 4 (FOC)',
+    elementImage: '/images/elements/foc.webp',
     contentSummary: 'Quadrat de Polibi 5×5 (A–Z, Ç i punt per desxifrar senyals de foc)',
     path: '/s/serrat-bruixes',
     fileBaseName: 'cartell-01-serrat-bruixes',
@@ -47,6 +49,7 @@ const STATIONS_METADATA: StationQRMeta[] = [
     location: 'Vora la Font del Ferro (lloc natural humit)',
     format: 'Cartell A2 laminat (resistent a esquitxades)',
     elementReward: 'Xifra 2 (AIGUA)',
+    elementImage: '/images/elements/aigua.webp',
     contentSummary: 'Recepta de la Tinta de Gales + Registre de torns 10–16 de maig (12 de maig clau)',
     path: '/s/font-ferro',
     fileBaseName: 'cartell-02-font-ferro',
@@ -61,6 +64,7 @@ const STATIONS_METADATA: StationQRMeta[] = [
     location: 'Tram de camí de Planes Bones (cruïlla estratègica)',
     format: 'Cartell A1 o A2 laminat',
     elementReward: 'Xifra 3 (TERRA)',
+    elementImage: '/images/elements/terra.webp',
     contentSummary: 'Mapa de camins i masies, taula de temps en quarts d’hora i advertència dels jurats',
     path: '/s/planes-bones',
     fileBaseName: 'cartell-03-planes-bones',
@@ -75,6 +79,7 @@ const STATIONS_METADATA: StationQRMeta[] = [
     location: 'Entrecreuament cap al camí de Can Vinyals, sota les nogueres (fita de pedra)',
     format: 'Targeta / adhesiu A5 o A6 plastificat i resistent a la intempèrie',
     elementReward: 'Validació Clau (TERRA = 3)',
+    elementImage: '/images/elements/terra.webp',
     contentSummary: 'QR de troballa de la clau perduda d’Isidre + Codi manual de reserva CLAU-FORJA',
     path: '/s/clau-forja',
     fileBaseName: 'objecte-pedra-can-vinyals',
@@ -89,7 +94,8 @@ const STATIONS_METADATA: StationQRMeta[] = [
     act: 1,
     location: 'Cementiri vell (exterior, FORA de la reixa de ferro)',
     format: 'Cartell A2 o A3 laminat',
-    elementReward: 'Xifra 1 (PEDRA)',
+    elementReward: 'Xifra 1 (AIRE)',
+    elementImage: '/images/elements/aire.webp',
     contentSummary: 'Text sobre làpides velles + Fragment de carta manuscrita clavada amb clau',
     path: '/s/cementiri',
     fileBaseName: 'cartell-04-cementiri',
@@ -371,8 +377,11 @@ export default function MasterQRDashboard() {
                           Cartell {st.number} · {st.category === 'principal' ? 'Acte 1 (Principal)' : 'Acte 2 (Final)'}
                         </span>
                         {st.elementReward && (
-                          <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-stone-100 text-stone-800 border border-stone-200">
-                            {st.elementReward}
+                          <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-stone-100 text-stone-800 border border-stone-200 flex items-center gap-1.5">
+                            {st.elementImage && (
+                              <img src={st.elementImage} alt="" className="w-3.5 h-3.5 object-contain" />
+                            )}
+                            <span>{st.elementReward}</span>
                           </span>
                         )}
                       </div>

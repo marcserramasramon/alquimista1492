@@ -15,6 +15,7 @@ export interface Station {
   latitude: number
   longitude: number
   icon: string
+  elementImage?: string
   difficulty: 'facil' | 'mig' | 'dificil'
   image?: string
 }
@@ -30,8 +31,9 @@ export const STATIONS: Record<string, Station> = {
     latitude: 41.910887,
     longitude: 2.224452,
     icon: '🔥',
+    elementImage: '/images/elements/foc.webp',
     difficulty: 'facil',
-    image: '/images/scenes/serrat-bruixes.jpg',
+    image: '/images/scenes/serrat-bruixes.webp',
   },
   'font-ferro': {
     id: 'font-ferro',
@@ -43,8 +45,9 @@ export const STATIONS: Record<string, Station> = {
     latitude: 41.915501,
     longitude: 2.227690,
     icon: '💧',
+    elementImage: '/images/elements/aigua.webp',
     difficulty: 'mig',
-    image: '/images/scenes/font-ferro.jpg',
+    image: '/images/scenes/font-ferro.webp',
   },
   'planes-bones': {
     id: 'planes-bones',
@@ -56,8 +59,9 @@ export const STATIONS: Record<string, Station> = {
     latitude: 41.913588,
     longitude: 2.232733,
     icon: '🗺️',
+    elementImage: '/images/elements/terra.webp',
     difficulty: 'mig',
-    image: '/images/scenes/planes-bones.jpg',
+    image: '/images/scenes/planes-bones.webp',
   },
   'cementiri': {
     id: 'cementiri',
@@ -69,8 +73,9 @@ export const STATIONS: Record<string, Station> = {
     latitude: 41.912515,
     longitude: 2.227446,
     icon: '🪦',
+    elementImage: '/images/elements/aire.webp',
     difficulty: 'dificil',
-    image: '/images/scenes/cementiri.jpg',
+    image: '/images/scenes/cementiri.webp',
   },
   'rectoria': {
     id: 'rectoria',
@@ -83,7 +88,7 @@ export const STATIONS: Record<string, Station> = {
     longitude: 2.228130,
     icon: '⛪',
     difficulty: 'mig',
-    image: '/images/scenes/rectoria.jpg',
+    image: '/images/scenes/rectoria.webp',
   },
   'pla-masset': {
     id: 'pla-masset',
@@ -96,7 +101,7 @@ export const STATIONS: Record<string, Station> = {
     longitude: 2.229841,
     icon: '🦹‍♂️',
     difficulty: 'facil',
-    image: '/images/scenes/acusacio.jpg',
+    image: '/images/scenes/acusacio.webp',
   },
   'escola': {
     id: 'escola',
@@ -121,7 +126,7 @@ export const STATIONS: Record<string, Station> = {
     longitude: 2.228130,
     icon: '🪎',
     difficulty: 'dificil',
-    image: '/images/scenes/caixa-almoines.jpg',
+    image: '/images/scenes/caixa-almoines.webp',
   },
   'sometent-campanar': {
     id: 'sometent-campanar',
@@ -134,7 +139,7 @@ export const STATIONS: Record<string, Station> = {
     longitude: 2.228500,
     icon: '🔔',
     difficulty: 'dificil',
-    image: '/images/scenes/sometent.jpg',
+    image: '/images/scenes/sometent.webp',
   },
 } as const
 

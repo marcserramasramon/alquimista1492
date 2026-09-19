@@ -196,7 +196,7 @@ export function FontFerroGame(props: GameProps) {
     TORNS_DATA.find(d => d.day === state.inspectingDay) || TORNS_DATA[2]
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-5 pb-8 font-serif">
+    <div className="w-full max-w-4xl mx-auto space-y-5 pb-8 font-serif">
       {/* CAPÇALERA HISTÒRICA */}
       <header className="border-b-2 border-[#8C6D53] pb-3 mb-4 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
@@ -211,9 +211,9 @@ export function FontFerroGame(props: GameProps) {
       </header>
 
       {/* Imatge d'ambientació de l'estació */}
-      <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
+      <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
         <img
-          src="/images/scenes/font-ferro.jpg"
+          src="/images/scenes/font-ferro.webp"
           alt="Font del Ferro - Brollador ferruginós i roures"
           className="w-full h-full object-cover object-center"
         />
@@ -396,14 +396,14 @@ export function FontFerroGame(props: GameProps) {
                               {record.visitors.map((v, idx) => (
                                 <span
                                   key={idx}
-                                  className="inline-block px-1.5 py-0.5 bg-[#EAE0CA] rounded text-[11px] font-sans border border-[#8C6D53]/30"
+                                  className="inline-block px-1.5 py-0.5 bg-[#EAE0CA] rounded text-xs font-sans border border-[#8C6D53]/30"
                                 >
                                   <strong>{v.name}</strong> ({v.role.split(' ')[0]}) · {v.cantirs} c.
                                 </span>
                               ))}
                             </div>
                           </td>
-                          <td className="p-2 border border-[#8C6D53]/30 text-[11px] font-sans hidden sm:table-cell text-[#5C4533]">
+                          <td className="p-2 border border-[#8C6D53]/30 text-xs font-sans hidden sm:table-cell text-[#5C4533]">
                             {record.note}
                           </td>
                         </tr>
@@ -498,7 +498,7 @@ export function FontFerroGame(props: GameProps) {
                         >
                           <div>
                             <div className="font-bold text-[#2B2118]">{v.name}</div>
-                            <div className="text-[11px] text-[#5C4533]">{v.role}</div>
+                            <div className="text-xs text-[#5C4533]">{v.role}</div>
                           </div>
                           <div className="font-mono font-bold text-[#1D3557] bg-[#D8CCAE] px-2 py-0.5 rounded border border-[#8C6D53]/20">
                             {v.cantirs} càntir{v.cantirs > 1 ? 's' : ''}
@@ -627,8 +627,9 @@ export function FontFerroGame(props: GameProps) {
               <div className="text-[11px] font-mono uppercase tracking-widest text-[#C99E32]">
                 XIFRA DE L'ELEMENT DESCOBERTA
               </div>
-              <div className="text-xl sm:text-2xl font-bold font-serif mt-0.5">
-                💧 AIGUA = 2
+              <div className="text-xl sm:text-2xl font-bold font-serif mt-1 flex items-center justify-center gap-2.5">
+                <img src="/images/elements/aigua.webp" alt="Aigua" className="w-8 h-8 object-contain drop-shadow" />
+                <span>AIGUA = 2</span>
               </div>
               <div className="text-[11px] text-[#FAF5E9]/80 font-sans mt-0.5">
                 Anota aquesta xifra al teu quadern d'equip!

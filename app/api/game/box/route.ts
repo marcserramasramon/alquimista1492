@@ -53,16 +53,16 @@ export async function POST(request: NextRequest) {
         const normalized = (answer as string).replace(/[\s-]/g, '')
         isCorrect = normalized === boxSolutions.part1.answer
         if (!isCorrect) {
-          message = 'Contrasenya incorrecta. Recorda els 4 elements: FOC(4) AIGUA(2) TERRA(3) PEDRA(1)'
+          message = 'Contrasenya incorrecta. Recorda els 4 elements: FOC(4) AIGUA(2) TERRA(3) AIRE(1)'
           penalty = -10
         } else {
           message = 'Caixa oberta! Continua a la Part 2.'
         }
       } else if (part === '2') {
         const submitted = (answer as string).trim()
-        isCorrect = submitted === boxSolutions.part2.answer
+        isCorrect = submitted === boxSolutions.part2.answer || submitted === '15-05' || submitted === '16-05'
         if (!isCorrect) {
-          message = 'Data incorrecta. Busca la carta amb data 16-05-1705'
+          message = 'Data incorrecta. Busca la carta amb data 15-05-1705'
           penalty = -120
         } else {
           message = 'Carta correcta substituïda! Continua a la Part 3.'
@@ -137,17 +137,17 @@ export async function POST(request: NextRequest) {
       isCorrect = normalized === boxSolutions.part1.answer
 
       if (!isCorrect) {
-        message = 'Contrasenya incorrecta. Recorda els 4 elements: FOC(4) AIGUA(2) TERRA(3) PEDRA(1)'
+        message = 'Contrasenya incorrecta. Recorda els 4 elements: FOC(4) AIGUA(2) TERRA(3) AIRE(1)'
         penalty = -10
       } else {
         message = 'Caixa oberta! Continua a la Part 2.'
       }
     } else if (part === '2') {
       const submitted = (answer as string).trim()
-      isCorrect = submitted === boxSolutions.part2.answer
+      isCorrect = submitted === boxSolutions.part2.answer || submitted === '15-05' || submitted === '16-05'
 
       if (!isCorrect) {
-        message = 'Data incorrecta. Busca la carta amb data 16-05-1705'
+        message = 'Data incorrecta. Busca la carta amb data 15-05-1705'
         penalty = -120 // −2 minuts
       } else {
         message = 'Carta correcta substituïda! Continua a la Part 3.'
@@ -159,7 +159,8 @@ export async function POST(request: NextRequest) {
       isCorrect =
         submitted === expectedSeal.id ||
         submitted === `segell-${expectedSeal.number}` ||
-        submitted === String(expectedSeal.number)
+        submitted === String(expectedSeal.number) ||
+        submitted === 'bernat'
 
       if (!isCorrect) {
         message = 'Aquest segell no coincideix amb el de la carta original de Bernat! Compareu-lo amb la carta trobada a la caixa.'

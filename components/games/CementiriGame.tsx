@@ -134,7 +134,7 @@ export function CementiriGame(props: GameProps) {
 
   return (
     <motion.div
-      className="w-full max-w-xl mx-auto pb-12 flex flex-col font-serif text-[#2B2118]"
+      className="w-full max-w-4xl mx-auto pb-12 flex flex-col font-serif text-[#2B2118]"
       initial="hidden"
       animate="visible"
       variants={fadeInVariants}
@@ -153,9 +153,9 @@ export function CementiriGame(props: GameProps) {
       </header>
 
       {/* Imatge d'ambientació de l'estació */}
-      <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
+      <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
         <img
-          src="/images/scenes/cementiri.jpg"
+          src="/images/scenes/cementiri.webp"
           alt="Cementiri de la Guixa a la nit"
           className="w-full h-full object-cover object-center"
         />
@@ -273,13 +273,13 @@ export function CementiriGame(props: GameProps) {
                 </div>
 				
 				 <h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif mb-1">
-			  La Carta del Traïdor
+			  L'Esborrany del Traïdor
 			  </h3>
                 <div className="text-xs text-[#5C4533] font-bold mb-2">
-                  15 de maig de 1705 — Paller de la rectoria
+                  15 de maig de 1705 — Esborrany trobat al paller
                 </div>
                 <p className="italic text-sm sm:text-base leading-relaxed text-[#2B2118] border-l-2 border-[#8C6D53] pl-3 my-2">
-                  "Si el Pacte cau, els homes de Sentfoses hauran de fugir. Només l'Emissari pot salvar-nos si li donem la clau de la Rectoria. Els conjurats sabran qui ha triat deixar morir el Pacte..."
+                  "...en testimoni del tracte secret amb la guarnició de Vic, per a la seguretat dels homes de Sentfores... Qui busqui la veritat trobarà la fi del Pacte dels Vigatans abans de l'alba..."
                 </p>
                 <div className="mt-4 pt-3 border-t border-[#8C6D53]/40 flex items-baseline justify-between">
                   <span className="text-xs text-[#5C4533]">Signat:</span>
@@ -310,12 +310,12 @@ export function CementiriGame(props: GameProps) {
                       key={r.year}
                       className="p-2 rounded border flex justify-between items-center bg-white/70 border-[#D8CCAE]"
                     >
-                      <span className="font-mono text-[11px] text-[#8C6D53]">{r.year}</span>
+                      <span className="font-mono text-xs text-[#8C6D53]">{r.year}</span>
                       <span className="font-serif">{r.name}</span>
                     </div>
                   ))}
                 </div>
-                <p className="text-[11px] text-[#5C4533] mt-2 italic text-center">
+                <p className="text-xs text-[#5C4533] mt-2 italic text-center">
                   El registre parroquial té els noms canònics ben transcrits per l'Escolà.
                 </p>
               </motion.div>
@@ -521,13 +521,14 @@ export function CementiriGame(props: GameProps) {
               </div>
             </div>
 
-            {/* XIFRA DE L'ELEMENT PEDRA */}
+            {/* XIFRA DE L'ELEMENT AIRE */}
             <div className="p-3.5 bg-[#1D3557] text-[#FAF5E9] rounded-lg border-2 border-[#C99E32] shadow text-center">
               <div className="text-[11px] font-mono uppercase tracking-widest text-[#C99E32]">
                 XIFRA DE L'ELEMENT DESCOBERTA
               </div>
-              <div className="text-xl sm:text-2xl font-bold font-serif mt-0.5">
-                🪨 PEDRA = 1
+              <div className="text-xl sm:text-2xl font-bold font-serif mt-1 flex items-center justify-center gap-2.5">
+                <img src="/images/elements/aire.webp" alt="Aire" className="w-8 h-8 object-contain drop-shadow" />
+                <span>AIRE = 1</span>
               </div>
               <div className="text-[11px] text-[#FAF5E9]/80 font-sans mt-0.5">
                 Anota aquesta xifra al teu quadern d'equip!

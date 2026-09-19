@@ -21,7 +21,7 @@ test.describe('Edge Cases: Error Handling & Retries', () => {
       await page.waitForTimeout(500);
 
       // Click a game station
-      const gameButton = page.locator('button', { hasText: /Estació|Sentfoses/ }).first();
+      const gameButton = page.locator('button', { hasText: /Estació|Sentfores|Sentfoses/ }).first();
       if (await gameButton.isVisible()) {
         await gameButton.click();
         await page.waitForTimeout(1000);
@@ -54,7 +54,7 @@ test.describe('Edge Cases: Error Handling & Retries', () => {
       await page.waitForTimeout(500);
 
       // Click first station to open game
-      const gameButton = page.locator('button', { hasText: /Estació|Sentfoses/ }).first();
+      const gameButton = page.locator('button', { hasText: /Estació|Sentfores|Sentfoses/ }).first();
       if (await gameButton.isVisible()) {
         await gameButton.click();
         await page.waitForTimeout(1000);

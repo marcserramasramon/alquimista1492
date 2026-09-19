@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import QRCode from 'qrcode'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
@@ -38,6 +39,10 @@ export function BellsGame(props: GameProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const teamCode = ((props.content as Record<string, unknown>)?.teamCode as string) || 'EQUIP1'
+  const [letterValidated, setLetterValidated] = useState(false)
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null)
+
   const [state, setState] = useState<BellsGameState>(() => {
     const saved = props.sharedState as BellsGameState | undefined
     if (saved && 'currentTab' in saved) {
@@ -59,6 +64,74 @@ export function BellsGame(props: GameProps) {
   useEffect(() => {
     props.setSharedState(state)
   }, [state, props])
+
+  // Comprovar si l'Emissari ha validat la carta (pol·ling mentre no estigui validada)
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null
+    let isMounted = true
+
+    const checkLetterStatus = async () => {
+      try {
+        const res = await fetch(`/api/emissari/validate-letter?teamCode=${teamCode}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data.isLetterValidated && isMounted) {
+            setLetterValidated(true)
+            return true
+          }
+        }
+      } catch (err) {
+        console.error('Error comprovant la carta a BellsGame:', err)
+      }
+      return false
+    }
+
+    checkLetterStatus().then(validated => {
+      if (!validated && isMounted) {
+        interval = setInterval(async () => {
+          const isNowValidated = await checkLetterStatus()
+          if (isNowValidated) {
+            play('evidence-unlock')
+            setState(prev => {
+              if (prev.currentTab === 'porta') {
+                return { ...prev, currentTab: 'decisio', moralTimer: 60 }
+              }
+              return prev
+            })
+            if (interval) clearInterval(interval)
+          }
+        }, 2500)
+      }
+    })
+
+    return () => {
+      isMounted = false
+      if (interval) clearInterval(interval)
+    }
+  }, [teamCode, play])
+
+  // Generar QR de la carta perquè l'Emissari la pugui escanejar
+  useEffect(() => {
+    if (!qrCanvasRef.current || letterValidated) return
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    const qrTargetUrl = `${origin}/emissari/carta/${teamCode}`
+
+    QRCode.toCanvas(
+      qrCanvasRef.current,
+      qrTargetUrl,
+      {
+        width: 150,
+        margin: 1,
+        color: {
+          dark: '#2B2118',
+          light: '#F4EBD9',
+        },
+      },
+      err => {
+        if (err) console.error('Error generant QR a BellsGame:', err)
+      }
+    )
+  }, [teamCode, state.currentTab, letterValidated])
 
   // Moral timer
   useEffect(() => {
@@ -233,7 +306,7 @@ export function BellsGame(props: GameProps) {
 
   return (
     <motion.div
-      className="w-full max-w-md mx-auto pb-12 flex flex-col font-serif text-[#2B2118]"
+      className="w-full max-w-4xl mx-auto pb-12 flex flex-col font-serif text-[#2B2118]"
       initial="hidden"
       animate="visible"
       variants={fadeInVariants}
@@ -261,20 +334,20 @@ export function BellsGame(props: GameProps) {
           EL SOMETENT
         </h1>
         <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">
-          "Les campanades de l'alba alertaran els conjurats"
+          &ldquo;Les campanades de l&apos;alba alertaran els conjurats&rdquo;
         </p>
       </header>
 
       {/* Imatge d'ambientació de l'estació */}
-      <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
+      <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
         <img
-          src="/images/scenes/sometent.jpg"
+          src="/images/scenes/sometent.webp"
           alt="Campanar de Sant Sebastià - El Sometent"
           className="w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
         <div className="absolute bottom-2 left-3 right-3 text-white/90 text-[11px] sm:text-xs font-sans italic drop-shadow">
-          🔔 Campanar de Sant Sebastià · El toc de sometent a l'alba
+          🔔 Campanar de Sant Sebastià · El toc de sometent a l&apos;alba
         </div>
       </div>
 
@@ -282,26 +355,26 @@ export function BellsGame(props: GameProps) {
       <section className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl shadow-sm overflow-hidden mb-6">
         <div className="bg-[#D8CCAE] border-b border-[#8C6D53] flex">
           {[
-            { key: 'porta', label: 'La porta', emoji: '🚪' },
-            { key: 'decisio', label: 'Decisió', emoji: '🤔' },
-            { key: 'pista', label: 'Pista sonora', emoji: '🎵' },
-            { key: 'senyal', label: 'La senyal', emoji: '📻' },
+            { key: 'porta', label: 'La porta', emoji: '🚪', locked: false },
+            { key: 'decisio', label: 'Decisió', emoji: '⚖️', locked: !letterValidated },
+            { key: 'pista', label: 'Pista sonora', emoji: '🎵', locked: !letterValidated || state.moralChoice === null },
+            { key: 'senyal', label: 'La senyal', emoji: '📻', locked: !letterValidated || state.moralChoice === null },
           ].map(tab => (
             <motion.button
               key={tab.key}
-              onClick={() => setState(prev => ({ ...prev, currentTab: tab.key as any }))}
-              disabled={state.currentTab === 'result'}
+              onClick={() => !tab.locked && setState(prev => ({ ...prev, currentTab: tab.key as BellsGameState['currentTab'] }))}
+              disabled={tab.locked || state.currentTab === 'result'}
               className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
                 state.currentTab === tab.key
                   ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                  : state.currentTab === 'result'
-                    ? 'text-[#A9A09A] cursor-not-allowed'
+                  : tab.locked || state.currentTab === 'result'
+                    ? 'text-[#A9A09A] opacity-60 cursor-not-allowed'
                     : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
               }`}
-              whileHover={state.currentTab !== 'result' ? { scale: 1.02 } : {}}
-              whileTap={state.currentTab !== 'result' ? { scale: 0.98 } : {}}
+              whileHover={!tab.locked && state.currentTab !== 'result' ? { scale: 1.02 } : {}}
+              whileTap={!tab.locked && state.currentTab !== 'result' ? { scale: 0.98 } : {}}
             >
-              <span>{tab.emoji}</span>
+              <span>{tab.locked ? '🔒' : tab.emoji}</span>
               <span>{tab.label}</span>
             </motion.button>
           ))}
@@ -312,72 +385,189 @@ export function BellsGame(props: GameProps) {
         {/* La Porta */}
         {state.currentTab === 'porta' && (
           <div className="flex flex-col justify-center flex-1 gap-4">
-            <motion.div
-              className="bg-[#EAE0CA] border border-[#8C6D53] rounded-xl p-4"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-                <h3 className="font-bold text-[#1D3557] text-sm sm:text-base font-serif mb-1">
-                    El Sometent
-                  </h3>             
-			 <p className="text-sm text-[#2B2118] leading-relaxed">
-                Les campanades del campanar són l'últim senyal. Els conjurats de Sant Sebastià esperen aquest soroll per fugir pel camí segur.
-              </p>
-              <p className="text-sm text-[#5C4533] mt-3 italic">
-                &quot;La carta és a l'Emissari. Ahora, una decisió final: compassió o justícia?&quot;
-              </p>
-            </motion.div>
-            <motion.button
-              onClick={() => setState(prev => ({ ...prev, currentTab: 'decisio', moralTimer: 60 }))}
-              className="w-full p-3 bg-[#2B2118] text-[#EAE0CA] font-bold border-2 border-[#2B2118] hover:bg-[#1D3557] rounded-lg transition font-sans"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              CONTINUAR →
-            </motion.button>
+            {!letterValidated ? (
+              <motion.div
+                className="bg-[#FFF9F0] border-2 border-amber-700/70 rounded-xl p-4 shadow-md space-y-3"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex items-center gap-2 border-b border-amber-700/30 pb-2">
+                  <span className="text-2xl">⚔️</span>
+                  <div>
+                    <h3 className="font-bold text-[#7B1A1A] text-sm sm:text-base font-serif">
+                      Pas Barrat per l&apos;Emissari al Pla de Masset
+                    </h3>
+                    <p className="text-[11px] text-amber-900 font-sans">
+                      Control reial a la porta del campanar
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-xs sm:text-sm text-[#2B2118] leading-relaxed font-serif">
+                  L&apos;Emissari reial custodia el Pla de Masset i no us deixarà accedir al campanar de Sant Sebastià fins que no rebi la carta que espera.
+                </p>
+
+                <div className="bg-[#EAE0CA] p-3 rounded-lg border border-[#8C6D53] text-xs text-[#2B2118] space-y-1 font-serif">
+                  <p className="font-bold font-sans text-[#1D3557] uppercase text-[11px]">
+                    Instruccions per als jugadors:
+                  </p>
+                  <p>1. Aneu al Pla de Masset i trobeu l&apos;Emissari.</p>
+                  <p>2. Dieu la contrasenya de viva veu: <strong>«L&apos;alba ve de Vic»</strong>.</p>
+                  <p>3. Mostreu-li aquest codi QR de la carta segellada perquè l&apos;escanegi amb el seu dispositiu.</p>
+                </div>
+
+                {/* Codi QR de la carta */}
+                <div className="bg-[#F4EBD9] border border-[#8C6D53] p-3 rounded-xl flex flex-col items-center text-center">
+                  <p className="text-xs font-bold text-[#8C6D53] uppercase font-sans mb-2">
+                    Codi QR de la Carta Falsa
+                  </p>
+                  <div className="bg-white p-2 rounded border border-[#8C6D53]/40 shadow-inner">
+                    <canvas ref={qrCanvasRef} />
+                  </div>
+                  <p className="text-[10px] font-mono text-[#8C6D53] mt-2 font-bold">
+                    Equip: {teamCode}
+                  </p>
+                </div>
+
+                {/* Indicador d'espera */}
+                <div className="p-3 bg-amber-100/80 border border-amber-300 rounded-lg text-center font-sans text-xs text-amber-900 font-medium flex items-center justify-center gap-2">
+                  <span className="animate-spin text-sm">⏳</span>
+                  <span>Esperant que l&apos;Emissari escanegi i validi la carta...</span>
+                </div>
+
+                {/* Botó de simulador per a proves */}
+                <button
+                  onClick={async () => {
+                    await fetch('/api/emissari/validate-letter', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ teamCode, action: 'accept' }),
+                    })
+                    setLetterValidated(true)
+                    play('evidence-unlock')
+                    setState(prev => ({ ...prev, currentTab: 'decisio', moralTimer: 60 }))
+                  }}
+                  className="w-full py-2 text-[11px] text-stone-500 hover:text-stone-800 underline font-sans text-center transition"
+                >
+                  ⚙️ (Mode Prova / Simulador) Simular validació de la carta
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div
+                className="bg-[#D5F4E6] border-2 border-[#16A085] rounded-xl p-4 shadow-md space-y-3"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex items-center gap-2 border-b border-[#16A085]/40 pb-2">
+                  <span className="text-2xl">✓</span>
+                  <div>
+                    <h3 className="font-bold text-[#117A65] text-sm sm:text-base font-serif">
+                      L&apos;Emissari ha marxat enganyat!
+                    </h3>
+                    <p className="text-[11px] text-[#16A085] font-sans">
+                      La carta falsa ha estat lliurada amb èxit
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-xs sm:text-sm text-[#2B2118] leading-relaxed font-serif">
+                  L&apos;Emissari ha acceptat la carta amb la contrasenya i ha emprès el camí cap a Vic a galop. El pas al campanar de Sant Sebastià és lliure.
+                </p>
+
+                <motion.button
+                  onClick={() => setState(prev => ({ ...prev, currentTab: 'decisio', moralTimer: 60 }))}
+                  className="w-full p-3.5 bg-[#2B2118] text-[#EAE0CA] font-bold border-2 border-[#2B2118] hover:bg-[#1D3557] rounded-lg transition font-sans shadow-md"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  PASSAR A LA DECISIÓ MORAL →
+                </motion.button>
+              </motion.div>
+            )}
           </div>
         )}
 
         {/* Decisió */}
         {state.currentTab === 'decisio' && (
           <div className="flex flex-col justify-center flex-1 gap-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-[#2B2118] mb-2">VOSALTRES... QUÈ HAURÍEU FET?</p>
-              <p className="text-sm text-[#5C4533] mb-4">Bernat ofereix el camí segur. Temps: {state.moralTimer} seg</p>
+            {/* Text B: Narrativa de la Decisió Moral */}
+            <motion.div
+              className="bg-[#F5EFE0] border-2 border-[#8C6D53] p-4 rounded-xl shadow-sm text-left space-y-2.5"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="flex items-center gap-2 border-b border-[#8C6D53]/30 pb-2 mb-1">
+                <span className="text-xl">⚖️</span>
+                <h3 className="text-xs uppercase tracking-wider text-[#8C6D53] font-sans font-bold">
+                  Dilema Moral · Pla de Masset
+                </h3>
+              </div>
+
+              <p className="text-xs sm:text-sm text-[#2B2118] leading-relaxed font-serif">
+                L&apos;Emissari fuig enganyat cap a Vic amb la carta falsa entre les mans. El pla ha funcionat!
+              </p>
+              <p className="text-xs sm:text-sm text-[#2B2118] leading-relaxed font-serif">
+                De sobte, d&apos;entre els arbres del Pla de Masset, sorgeix la figura d&apos;en <strong>Bernat Mas</strong>, tremolós i amb llàgrimes als ulls:
+              </p>
+              <div className="border-l-4 border-[#8C6D53] pl-3 py-1 bg-[#EAE0CA]/60 rounded-r text-xs sm:text-sm text-[#5C4533] italic font-serif leading-relaxed">
+                «Per favor... el meu fill Jaume és presoner a Vic... Només volia salvar-li la vida. Deixeu-me fugir pel bosc abans que no arribin els dragons!»
+              </div>
+              <p className="text-xs sm:text-sm text-[#2B2118] font-bold text-center pt-1 font-serif">
+                Vosaltres... què hauríeu fet amb el mestre d&apos;escola?
+              </p>
+            </motion.div>
+
+            <div className="flex items-center justify-between text-xs font-sans text-[#5C4533] px-1">
+              <span>Trieu sàviament</span>
+              <span className="font-mono font-bold bg-[#EAE0CA] px-2 py-0.5 rounded border border-[#8C6D53]">
+                ⏱️ {state.moralTimer} seg
+              </span>
             </div>
 
             <motion.button
               onClick={() => handleMoralChoice('A')}
               disabled={state.moralChoice !== null}
-              className="p-4 bg-[#D5F4E6] border-2 border-[#16A085] hover:bg-[#C9EDE3] transition text-left rounded-lg disabled:opacity-50"
+              className={`p-4 border-2 transition text-left rounded-xl ${
+                state.moralChoice === 'A'
+                  ? 'bg-[#D5F4E6] border-[#16A085] ring-2 ring-[#16A085]'
+                  : 'bg-[#E8F8F5] border-[#16A085]/60 hover:bg-[#D5F4E6]'
+              } disabled:opacity-50`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <p className="font-bold text-[#117A65]">A: COMPASSIÓ</p>
-              <p className="text-sm text-[#16A085] mt-1">Deixa que fugis a buscar el teu fill.</p>
+              <p className="font-bold text-[#117A65] font-sans text-sm">A: COMPASSIÓ</p>
+              <p className="text-xs sm:text-sm text-[#16A085] mt-1 font-serif italic">
+                «Fuig, Bernat, busca el teu fill i no tornis mai més a la Guixa.»
+              </p>
             </motion.button>
 
             <motion.button
               onClick={() => handleMoralChoice('B')}
               disabled={state.moralChoice !== null}
-              className="p-4 bg-[#FADBD8] border-2 border-[#E74C3C] hover:bg-[#F5CCC5] transition text-left rounded-lg disabled:opacity-50"
+              className={`p-4 border-2 transition text-left rounded-xl ${
+                state.moralChoice === 'B'
+                  ? 'bg-[#FADBD8] border-[#E74C3C] ring-2 ring-[#E74C3C]'
+                  : 'bg-[#FDEDEC] border-[#E74C3C]/60 hover:bg-[#FADBD8]'
+              } disabled:opacity-50`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <p className="font-bold text-[#C0392B]">B: JUSTÍCIA</p>
-              <p className="text-sm text-[#E74C3C] mt-1">No. Bernat, estàs detingut.</p>
+              <p className="font-bold text-[#C0392B] font-sans text-sm">B: JUSTÍCIA</p>
+              <p className="text-xs sm:text-sm text-[#C0392B] mt-1 font-serif italic">
+                «No, Bernat. Has venut el poble i els conjurats. Rendeix-te al Sometent.»
+              </p>
             </motion.button>
 
             {state.moralChoice && (
               <motion.button
                 onClick={() => setState(prev => ({ ...prev, currentTab: 'pista' }))}
-                className="w-full p-3 bg-[#2B2118] text-[#EAE0CA] font-bold border-2 border-[#2B2118] hover:bg-[#1D3557] rounded-lg transition font-sans mt-4"
+                className="w-full p-3.5 bg-[#2B2118] text-[#EAE0CA] font-bold border-2 border-[#2B2118] hover:bg-[#1D3557] rounded-lg transition font-sans mt-2 shadow-md"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                SEGUIR →
+                PUJAR AL CAMPANAR I PREPARAR EL SENYAL →
               </motion.button>
             )}
           </div>
@@ -489,6 +679,19 @@ export function BellsGame(props: GameProps) {
               <p className="text-xs text-[#16A085] mt-2">La seqüència de campanades ha estat correcta</p>
             </motion.div>
 
+            {/* Imatge de desenllaç (ENDING) */}
+            <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md bg-stone-950">
+              <img
+                src="/images/scenes/ending.webp"
+                alt="El Desenllaç de la Conjuració"
+                className="w-full h-full object-cover object-center"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/20 pointer-events-none" />
+              <div className="absolute bottom-2 left-3 right-3 text-amber-100 text-xs font-serif italic drop-shadow">
+                ⚔️ El Sometent ha sonat · El Desenllaç de la Conjuració
+              </div>
+            </div>
+
             {/* Epíleg de la história */}
             <motion.div
               className="bg-[#F5EFE0] border-2 border-[#8C6D53] p-4 rounded-sm"
@@ -545,7 +748,7 @@ export function BellsGame(props: GameProps) {
             {/* Punts finals */}
             <div className="bg-[#F9F7F3] border border-[#D8CCAE] p-4 rounded-sm text-center">
               <p className="text-2xl mb-2">⏱️ + 100 PUNTS</p>
-              <p className="text-xs text-[#8C6D53] font-sans">Compartida per tots l'equip</p>
+              <p className="text-xs text-[#8C6D53] font-sans">Compartida per tots l&apos;equip</p>
             </div>
 
             <motion.button
@@ -555,7 +758,7 @@ export function BellsGame(props: GameProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <span>Veure Resultats de l'Equip</span>
+              <span>Veure Resultats de l&apos;Equip</span>
               <span>➔</span>
             </motion.button>
           </div>

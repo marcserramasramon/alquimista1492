@@ -13,6 +13,7 @@ import { IntroTab } from '@/components/player/IntroTab'
 import { ResultsView } from '@/components/player/ResultsView'
 import { BottomNav, type NavTabId } from '@/components/player/BottomNav'
 import { PlayerTimer } from '@/components/player/PlayerTimer'
+import { NightModeToggle } from '@/components/ui/NightModeToggle'
 import { getAllStations } from '@/content/public/stations'
 import type { TeamRow, SessionRow, TeamStationRow } from '@/lib/realtime/useTeamState'
 
@@ -116,14 +117,14 @@ const PREVIEW_EVIDENCES = [
   {
     id: 'mock-ev-1',
     team_id: 'preview-team-id',
-    evidence_id: 'ev-foc-1',
+    evidence_id: 'literacy',
     unlocked_at: new Date().toISOString(),
     created_at: new Date().toISOString(),
   },
   {
     id: 'mock-ev-2',
     team_id: 'preview-team-id',
-    evidence_id: 'ev-tinta-2',
+    evidence_id: 'ink',
     unlocked_at: new Date().toISOString(),
     created_at: new Date().toISOString(),
   },
@@ -174,7 +175,7 @@ export default function PreviewPage() {
     current_station: null,
     solved_stations: ['serrat-bruixes', 'font-ferro'],
     code_digits: ['4', '2', '', ''],
-    evidence_unlocked: ['ev-foc-1', 'ev-tinta-2'],
+    evidence_unlocked: ['literacy', 'ink'],
     suspects_dismissed: [],
     salconduits_remaining: 2,
     salconduits_used: [],
@@ -237,6 +238,62 @@ export default function PreviewPage() {
       return result
     }
 
+    if (answerObj?.suspect !== undefined) {
+      const suspect = answerObj.suspect
+      if (suspect === 'anton') {
+        const result: SubmitResult = {
+          correct: true,
+          isGiro: true,
+          giro: true,
+          message: "L'Anton arriba esbufegant: el mossèn ha estat ferit a la rectoria! Sospitós erroni (-10 punts).",
+          score: -10,
+        }
+        setSubmissionLog(prev => [
+          {
+            time: new Date().toLocaleTimeString('ca-ES'),
+            data: answer,
+            result,
+          },
+          ...prev.slice(0, 4),
+        ])
+        return result
+      } else if (suspect === 'bernat') {
+        const has3Evidence = Array.isArray(answerObj.evidence) && answerObj.evidence.length >= 3
+        const isOk = isCorrect && has3Evidence
+        const result: SubmitResult = {
+          correct: isOk,
+          message: isOk
+            ? 'Acusació demostrada! Bernat Mestre d\'Escola és el traïdor.'
+            : 'Proves insuficients o no vàlides (-10 punts).',
+          score: isOk ? 100 : -10,
+        }
+        setSubmissionLog(prev => [
+          {
+            time: new Date().toLocaleTimeString('ca-ES'),
+            data: answer,
+            result,
+          },
+          ...prev.slice(0, 4),
+        ])
+        return result
+      } else {
+        const result: SubmitResult = {
+          correct: false,
+          message: 'Aquest sospitós no és el traïdor (-10 punts).',
+          score: -10,
+        }
+        setSubmissionLog(prev => [
+          {
+            time: new Date().toLocaleTimeString('ca-ES'),
+            data: answer,
+            result,
+          },
+          ...prev.slice(0, 4),
+        ])
+        return result
+      }
+    }
+
     const result: SubmitResult = {
       correct: isCorrect,
       message: isCorrect ? 'Enigma resolt correctament!' : 'Resposta incorrecta. Torna-ho a provar.',
@@ -277,9 +334,13 @@ export default function PreviewPage() {
             </div>
           </div>
 
-          {/* Validation toggle for testing both correct and incorrect feedback */}
-          {!isSpecialView && (
-            <div className="flex items-center gap-2 text-xs bg-[#162740] px-3 py-1.5 rounded-full border border-blue-400/30">
+          <div className="flex items-center flex-wrap gap-2.5">
+            {/* Night Mode Toggle */}
+            <NightModeToggle showLabel compact />
+
+            {/* Validation toggle for testing both correct and incorrect feedback */}
+            {!isSpecialView && (
+              <div className="flex items-center gap-2 text-xs bg-[#162740] px-3 py-1.5 rounded-full border border-blue-400/30">
               <span className="font-sans text-gray-300">Resposta simulada:</span>
               <button
                 onClick={() => setForceCorrect(true)}
@@ -297,8 +358,9 @@ export default function PreviewPage() {
               >
                 ✗ Incorrecta
               </button>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Tab Selector */}
@@ -365,7 +427,7 @@ export default function PreviewPage() {
 
                 {homeStep === 'scan' && (
                   <div className="flex-1 flex flex-col items-center justify-center p-6 bg-[#2B2118] text-[#F4EBD9]">
-                    <div className="w-full max-w-md bg-[#382C22] border border-[#8C6D53] rounded-xl p-6 shadow-2xl text-center">
+                    <div className="w-full max-w-4xl mx-auto bg-[#382C22] border border-[#8C6D53] rounded-xl p-6 shadow-2xl text-center">
                       <div className="w-16 h-16 bg-[#1D3557] text-[#F4EBD9] rounded-full flex items-center justify-center text-3xl mx-auto mb-4 border border-[#C99E32]">
                         📷
                       </div>
@@ -428,7 +490,7 @@ export default function PreviewPage() {
 
                 {homeStep === 'name' && (
                   <div className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-amber-50 to-white">
-                    <div className="w-full max-w-md">
+                    <div className="w-full max-w-4xl mx-auto">
                       <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-amber-900 mb-1 font-serif">
                           El Traïdor de la Guixa
@@ -736,7 +798,13 @@ export default function PreviewPage() {
             <div className="p-2 sm:p-4 flex-1">
               <GameComponent
                 stationId={selectedGame}
-                content={{}}
+                content={{
+                  code: previewTeamCode,
+                  teamCode: previewTeamCode,
+                  variant: mockTeam.variant,
+                  id: mockTeam.id,
+                  teamId: mockTeam.id,
+                }}
                 sharedState={sharedState}
                 setSharedState={setSharedState}
                 submit={mockSubmit}

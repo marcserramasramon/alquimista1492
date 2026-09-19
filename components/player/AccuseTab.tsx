@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { getAllSuspects } from '@/content/public/suspects'
-import { getAllEvidence } from '@/content/public/evidence'
+import { getAllEvidence, getCanonicalEvidenceId } from '@/content/public/evidence'
 import type { TeamStationRow, TeamEvidenceRow } from '@/lib/realtime/useTeamState'
 import { getSolvedStationsCount } from '@/lib/realtime/useTeamState'
 
@@ -30,7 +30,9 @@ export function AccuseTab({
 
   const allSuspects = getAllSuspects()
   const allEvidence = getAllEvidence()
-  const unlockedEvidenceIds = evidences.map((e) => e.evidence_id)
+  const unlockedEvidenceIds = Array.from(
+    new Set(evidences.map((e) => getCanonicalEvidenceId(e.evidence_id)))
+  )
 
   const toggleEvidence = useCallback((evidenceId: string) => {
     setSelectedEvidences((prev) => {

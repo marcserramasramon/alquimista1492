@@ -106,13 +106,40 @@ export const EVIDENCE_PUBLIC: Record<string, Evidence> = {
     category: 'testimony',
     icon: '📋',
   },
+  carta_lliurada: {
+    id: 'carta_lliurada',
+    name: 'Letter Delivered to Emissary',
+    catalan: 'Carta lliurada a l\'Emissari',
+    description: 'L\'Emissari ha acceptat la carta falsa i marxa enganyat cap a Vic. S\'ha obert la porta del Campanar!',
+    discoveredAt: 'Pla de Masset',
+    category: 'document',
+    icon: '✉️',
+  },
 } as const
+
+export const EVIDENCE_ALIASES: Record<string, string> = {
+  'ev-foc-1': 'literacy',
+  'fire_beacons': 'literacy',
+  'foc': 'literacy',
+  'ev-tinta-2': 'ink',
+  'tinta': 'ink',
+  'evidence_patrol_route': 'light',
+  'evidence_tombstone': 'seal',
+}
+
+/**
+ * Get canonical evidence ID resolving aliases
+ */
+export function getCanonicalEvidenceId(id: string): string {
+  return EVIDENCE_ALIASES[id] || id
+}
 
 /**
  * Get evidence by ID
  */
 export function getEvidence(id: string): Evidence | undefined {
-  return EVIDENCE_PUBLIC[id as keyof typeof EVIDENCE_PUBLIC]
+  const canonicalId = getCanonicalEvidenceId(id)
+  return EVIDENCE_PUBLIC[canonicalId as keyof typeof EVIDENCE_PUBLIC]
 }
 
 /**

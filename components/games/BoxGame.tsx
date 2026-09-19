@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import QRCode from 'qrcode'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
 import { useAudio } from '@/lib/audio/useAudio'
@@ -24,7 +26,7 @@ interface BoxGameState {
   isCorrect: boolean
 }
 
-const CORRECT_DATE = '16-05'
+const CORRECT_DATE = '15-05'
 
 const CARD_DETAILS: Record<string, {
   signature: string;
@@ -35,70 +37,79 @@ const CARD_DETAILS: Record<string, {
   analysis: string;
   correct: boolean
 }> = {
-  '14-05': {
-    signature: 'Jaume Sala',
-    seal: '◆✓',
-    date: '14 de maig de 1705',
-    from: 'Jaume (fill de Bernat)',
-    content: 'Pare, la carta és a la rectoria com es va acordar. He parlat amb els homes del paller i diuen que el rector està en perill. No podem esperar més.\n\n— J.S.',
-    analysis: 'Signatura jove, insegura. Podria ser del fill, però la lletra no coincideix amb mostres d\'escrit juvenil.',
-    correct: false
-  },
   '15-05': {
-    signature: 'Bernat Sala',
-    seal: '◆✓',
-    date: '15 de maig de 1705',
-    from: 'Bernat Sala (Mestre escola)',
-    content: 'He retornat de Vic. Tot està acordat. Els noms estan dins el sobre, segellat. Es lliura demà a l\'alba. Que Déu ens protegeixi.\n\n— B.S.',
-    analysis: 'Segell irregular, manca precisió. La filigrana no és consistent amb els escrits de Bernat.',
-    correct: false
-  },
-  '16-05': {
-    signature: 'Bernat Sala',
+    signature: 'Bernat Mas',
     seal: '✓✓',
-    date: '16 de maig de 1705',
-    from: 'Bernat Sala (Mestre escola)',
-    content: 'Mossèn Ramon,\n\nEnviament dels noms dels signants per al Pacte. Els homes de Sant Sebastià han estat seleccionats. Es presenten a l\'alba. El rector ha de guardar aquesta carta fins a l\'últim moment.\n\nEl mestre ha fet la seva part.\n\n— B.S.',
+    date: '15 de maig de 1705',
+    from: 'Bernat Mas (Mestre d\'Escola)',
+    content: 'Al Capità de la Guarnició de Vic,\n\nCompleixo el tracte acordat per salvar la vida del meu fill Jaume. Aquests són els noms dels conjurats que signaran el pacte a l\'ermita de Sant Sebastià a trenc d\'alba: Antoni de Peguera, Bac de Roda, Jaume Puig i la resta de vigatans.\n\nExigeixo l\'alliberament immediat del meu fill segons la vostra paraula.\n\n— Bernat Mas, Mestre',
     analysis: '',
     correct: true
   },
-  '17-05': {
-    signature: 'Anton Sala',
+  '16-05': {
+    signature: 'Bernat Mas',
     seal: '✓✓',
-    date: '17 de maig de 1705',
-    from: 'Anton (Escolà)',
-    content: 'Bernat, no possis la carta del 16 al sobre. He sabut que l\'Emissari ronda pels camps. Millor no arribar. Els signants ja saben el lloc.\n\n— A.S.',
-    analysis: 'Data posterior al dia dels fets. Lletra clara però l\'Anton no sap de tinta. Impossible.',
+    date: '15 de maig de 1705',
+    from: 'Bernat Mas (Mestre d\'Escola)',
+    content: 'Al Capità de la Guarnició de Vic,\n\nCompleixo el tracte acordat per salvar la vida del meu fill Jaume. Aquests són els noms dels conjurats que signaran el pacte a l\'ermita de Sant Sebastià a trenc d\'alba: Antoni de Peguera, Bac de Roda, Jaume Puig i la resta de vigatans.\n\nExigeixo l\'alliberament immediat del meu fill segons la vostra paraula.\n\n— Bernat Mas, Mestre',
+    analysis: '',
+    correct: true
+  },
+  '14-05': {
+    signature: 'Jaume Mas',
+    seal: '◆✓',
+    date: '14 de maig de 1705',
+    from: 'Jaume Mas (fill de Bernat)',
+    content: 'Pare, temo que els dragons sospitin de mi a la guarnició. Si teniu alguna manera d\'ajudar-me, feu-ho aviat, però no us poseu en perill amb la gent del poble.\n\n— J.M.',
+    analysis: 'Lletra jove i angoixada d\'en Jaume des de la presó de Vic abans de ser incomunicat.',
     correct: false
   },
   '13-05': {
-    signature: 'Jaume',
+    signature: 'Jaume Mas',
     seal: '◆',
     date: '13 de maig de 1705',
-    from: 'Jaume (sense vincle clar)',
-    content: 'He rebut el missatge. Els dragó es mouen cap a Manlleu. Déu meu, si ho descobreixen...\n\n— J.',
-    analysis: 'Signatura incompleta, imprecisa. Segell fragmentat i mal format. No sembla autèntica.',
+    from: 'Jaume Mas',
+    content: 'He rebut el missatge. Els dragons es mouen cap a Manlleu. Si ens descobreixen les armes clandestines, estem perduts.\n\n— J.M.',
+    analysis: 'Signatura incompleta, paper gastat. Correspon als dies previs a la seva captura.',
     correct: false
   },
-  '18-05': {
+  '12-05': {
+    signature: 'Bernat Mas',
+    seal: '◆✓',
+    date: '12 de maig de 1705',
+    from: 'Bernat Mas (Mestre d\'Escola)',
+    content: 'Esborrany de comptes de l\'escola i petició d\'oli per a les llànties de la rectoria.\n\n— B.M.',
+    analysis: 'Escrit ordinari de l\'escola. La tinta és antiga i no és la tinta ferrogàl·lica recent macerada.',
+    correct: false
+  },
+  '11-05': {
     signature: 'Anton de Manlleu',
-    seal: '◆◆',
-    date: '18 de maig de 1705',
-    from: 'Anton (foraster)',
-    content: 'Els conjurats han marxat. La carta no arribarà a Vic. Bernat ha dit que fugirà cap al nord. Que no el trobin.\n\n— A.M.',
-    analysis: 'Segell clarament falsificat: dues marques idèntiques, innaturals. Letra posterior als fets.',
+    seal: '◆',
+    date: '11 de maig de 1705',
+    from: 'Anton (Escolà)',
+    content: 'Llista d\'almoines recollides a la missa major per als pobres de la parròquia. Registrat amb permís de mossèn Ramon.\n\n— Anton, escolà',
+    analysis: 'Anotació de l\'escolà a la caixa de les almoines. Lletra d\'aprenent, no coincideix amb la del traïdor.',
+    correct: false
+  },
+  '10-05': {
+    signature: 'Bernat Mas',
+    seal: '◆',
+    date: '10 de maig de 1705',
+    from: 'Bernat Mas',
+    content: 'Còpia d\'exercici de cal·ligrafia per als nens de l\'estudi. Textos llatins i deures escolars.\n\n— B.M.',
+    analysis: 'Paper d\'escola senzill, sense segell de lacre ni signatura oficial.',
     correct: false
   },
 }
 
 const BOX_ITEMS = [
   { id: 'sobre', type: 'sobre' as const, label: 'Carta Segellada', emoji: '📬' },
-  { id: '14-05', type: 'carta' as const, label: 'Carta 1', emoji: '📄' },
-  { id: '15-05', type: 'carta' as const, label: 'Carta 2', emoji: '📄' },
-  { id: '16-05', type: 'carta' as const, label: 'Carta 3', emoji: '📄' },
-  { id: '17-05', type: 'carta' as const, label: 'Carta 4', emoji: '📄' },
-  { id: '13-05', type: 'carta' as const, label: 'Carta 5', emoji: '📄' },
-  { id: '18-05', type: 'carta' as const, label: 'Carta 6', emoji: '📄' },
+  { id: '10-05', type: 'carta' as const, label: 'Carta 1', emoji: '📄' },
+  { id: '11-05', type: 'carta' as const, label: 'Carta 2', emoji: '📄' },
+  { id: '12-05', type: 'carta' as const, label: 'Carta 3', emoji: '📄' },
+  { id: '13-05', type: 'carta' as const, label: 'Carta 4', emoji: '📄' },
+  { id: '14-05', type: 'carta' as const, label: 'Carta 5', emoji: '📄' },
+  { id: '15-05', type: 'carta' as const, label: 'Carta 6', emoji: '📄' },
   { id: 'nota', type: 'nota' as const, label: 'Nota', emoji: '📝' },
 ]
 
@@ -113,6 +124,10 @@ export function BoxGame(props: GameProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const teamSeal = getTeamCorrectSeal(props.content as any)
+  const teamCode =
+    ((props.content as any)?.teamCode as string) ||
+    ((props.content as any)?.code as string) ||
+    'EQUIP1'
 
   const [state, setState] = useState<BoxGameState>(() => {
     const saved = props.sharedState as BoxGameState | undefined
@@ -273,7 +288,7 @@ export function BoxGame(props: GameProps) {
 
   return (
     <motion.div
-      className="w-full max-w-md mx-auto pb-12 flex flex-col font-serif text-[#2B2118]"
+      className="w-full max-w-4xl mx-auto pb-12 flex flex-col font-serif text-[#2B2118]"
       initial="hidden"
       animate="visible"
       variants={fadeInVariants}
@@ -292,10 +307,6 @@ export function BoxGame(props: GameProps) {
         )}
       </AnimatePresence>
 
-      {/* Timer at top */}
-      <div className="text-right text-xs font-mono text-[#8C6D53] mb-2 font-sans">
-        12:34:56
-      </div>
 
       {/* Part 1: Obrir caixa */}
       {state.currentPart === 1 && (
@@ -375,7 +386,7 @@ export function BoxGame(props: GameProps) {
       )}
 
       {state.currentScreen === 'sealed' && (
-        <Part4CompleteScreen teamSeal={teamSeal} />
+        <Part4CompleteScreen teamSeal={teamSeal} teamCode={teamCode} />
       )}
     </motion.div>
   )
@@ -425,17 +436,17 @@ function Part1WithMenu({
         </p>
       </header>
 
-      {/* Hero Image */}
-      <div className="relative rounded-lg overflow-hidden border-2 border-[#8C6D53] shadow-md aspect-[16/9] w-full bg-[#1c140e]">
+      {/* Imatge d'ambientació de l'estació */}
+      <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md bg-stone-950">
         <img
-          src="/images/scenes/caixa-almoines.jpg"
+          src="/images/scenes/caixa-almoines.webp"
           alt="Caixa de les Almoines a la Rectoria"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-        <span className="absolute bottom-2 left-2 text-[11px] font-sans font-medium text-[#F5EFE0] bg-black/50 px-2 py-0.5 rounded backdrop-blur-sm">
-          Rectoria · Caixa Forta de les Almoines
-        </span>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
+        <div className="absolute bottom-2 left-3 right-3 text-white/90 text-[11px] sm:text-xs font-sans italic drop-shadow">
+          🔒 Rectoria · Caixa Forta de les Almoines
+        </div>
       </div>
 
       {/* Menu de pestanyes */}
@@ -447,8 +458,8 @@ function Part1WithMenu({
             onClick={() => onTabChange('historia')}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               tab === 'historia'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+                ? 'bg-[#EAE0CA] text-[#1D3557] dark:text-[#E5A93C] border-b-2 border-[#1D3557] dark:border-[#E5A93C] shadow-inner'
+                : 'text-[#5C4533] dark:text-[#C2A68E] hover:text-[#1D3557] dark:hover:text-[#E5A93C] hover:bg-[#E2D6B8] dark:hover:bg-[#2C221A]'
             }`}
           >
             <span>📖</span>
@@ -461,8 +472,8 @@ function Part1WithMenu({
             onClick={() => onTabChange('pistes')}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               tab === 'pistes'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+                ? 'bg-[#EAE0CA] text-[#1D3557] dark:text-[#E5A93C] border-b-2 border-[#1D3557] dark:border-[#E5A93C] shadow-inner'
+                : 'text-[#5C4533] dark:text-[#C2A68E] hover:text-[#1D3557] dark:hover:text-[#E5A93C] hover:bg-[#E2D6B8] dark:hover:bg-[#2C221A]'
             }`}
           >
             <span>💡</span>
@@ -475,8 +486,8 @@ function Part1WithMenu({
             onClick={() => onTabChange('cadenat')}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               tab === 'cadenat'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
-                : 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8]'
+                ? 'bg-[#EAE0CA] text-[#1D3557] dark:text-[#E5A93C] border-b-2 border-[#1D3557] dark:border-[#E5A93C] shadow-inner'
+                : 'text-[#5C4533] dark:text-[#C2A68E] hover:text-[#1D3557] dark:hover:text-[#E5A93C] hover:bg-[#E2D6B8] dark:hover:bg-[#2C221A]'
             }`}
           >
             <span>🔒</span>
@@ -490,10 +501,10 @@ function Part1WithMenu({
             disabled={!solved}
             className={`flex-1 py-2.5 px-2 text-xs sm:text-sm font-bold font-sans transition-all flex items-center justify-center gap-1.5 ${
               tab === 'cofre'
-                ? 'bg-[#EAE0CA] text-[#1D3557] border-b-2 border-[#1D3557] shadow-inner'
+                ? 'bg-[#EAE0CA] text-[#1D3557] dark:text-[#E5A93C] border-b-2 border-[#1D3557] dark:border-[#E5A93C] shadow-inner'
                 : solved
-                  ? 'text-[#5C4533] hover:text-[#1D3557] hover:bg-[#E2D6B8] cursor-pointer'
-                  : 'text-[#A9A09A] cursor-not-allowed'
+                  ? 'text-[#5C4533] dark:text-[#C2A68E] hover:text-[#1D3557] dark:hover:text-[#E5A93C] hover:bg-[#E2D6B8] dark:hover:bg-[#2C221A] cursor-pointer'
+                  : 'text-[#A9A09A] dark:text-[#6E645C] cursor-not-allowed'
             }`}
           >
             <span>🧧</span>
@@ -514,15 +525,15 @@ function Part1WithMenu({
                 className="space-y-4"
               >
                 <motion.div
-                  className="bg-[#F5EFE0] border border-[#8C6D53] rounded-lg p-4"
+                  className="bg-[#F5EFE0] dark:bg-[#1f1711] border border-[#8C6D53] dark:border-[#8C6D53]/40 rounded-lg p-4"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <p className="text-sm text-[#2B2118] leading-relaxed mb-3">
-                    La <strong>Caixa de les Almoines</strong> de la Rectoria de la Guixa amaga el
-                    testament secret dels conjurats. En Bernat Sala t'ha fet arribar la clau i la
-                    paraula d'ordre. Obre-la, substitueix la carta comprometedora per una
-                    d'inofensiva i tanca-la de nou — abans que no arribi el correu reial.
+                  <p className="text-sm text-[#2B2118] dark:text-[#F3EBD8] leading-relaxed mb-3">
+                    La <strong>Caixa de les Almoines</strong> de la Rectoria de la Guixa conté la
+                    carta que en Bernat Mas ha introduït per la ranura per lliurar els conjurats a l'Emissari.
+                    Amb la clau que mossèn Ramon va aconseguir llençar a la foscor i el codi dels quatre elements (<strong>4-2-3-1</strong>),
+                    obriu la caixa, recupereu la carta del traïdor i prepareu la substitució per la carta falsa abans que no arribi l'Emissari reial.
                   </p>
                 </motion.div>
 
@@ -548,9 +559,9 @@ function Part1WithMenu({
                 <div className="bg-[#F0EAE3] border border-[#D8CCAE] rounded-lg p-3 shadow-inner">
                   <div className="grid grid-cols-4 gap-2 text-center">
                     {/* FOC */}
-                    <div className="group relative bg-gradient-to-b from-orange-50 to-white p-2.5 rounded-lg border border-amber-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-                      <div className="text-2xl sm:text-3xl animate-bounce [animation-duration:2.5s]">
-                        🔥
+                    <div className="group relative bg-gradient-to-b from-orange-50 to-white p-2.5 rounded-lg border border-amber-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col items-center">
+                      <div className="w-11 h-11 flex items-center justify-center">
+                        <img src="/images/elements/foc.webp" alt="Foc" className="w-10 h-10 object-contain drop-shadow" />
                       </div>
                       <div className="mt-1 text-[10px] font-bold tracking-widest text-amber-900 uppercase">
                         Foc
@@ -559,9 +570,9 @@ function Part1WithMenu({
                     </div>
 
                     {/* AIGUA */}
-                    <div className="group relative bg-gradient-to-b from-blue-50 to-white p-2.5 rounded-lg border border-sky-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-                      <div className="text-2xl sm:text-3xl animate-pulse [animation-duration:2s]">
-                        💧
+                    <div className="group relative bg-gradient-to-b from-blue-50 to-white p-2.5 rounded-lg border border-sky-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col items-center">
+                      <div className="w-11 h-11 flex items-center justify-center">
+                        <img src="/images/elements/aigua.webp" alt="Aigua" className="w-10 h-10 object-contain drop-shadow" />
                       </div>
                       <div className="mt-1 text-[10px] font-bold tracking-widest text-sky-900 uppercase">
                         Aigua
@@ -570,9 +581,9 @@ function Part1WithMenu({
                     </div>
 
                     {/* TERRA */}
-                    <div className="group relative bg-gradient-to-b from-emerald-50 to-white p-2.5 rounded-lg border border-emerald-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-                      <div className="text-2xl sm:text-3xl animate-bounce [animation-duration:3s]">
-                        🌍
+                    <div className="group relative bg-gradient-to-b from-emerald-50 to-white p-2.5 rounded-lg border border-emerald-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col items-center">
+                      <div className="w-11 h-11 flex items-center justify-center">
+                        <img src="/images/elements/terra.webp" alt="Terra" className="w-10 h-10 object-contain drop-shadow" />
                       </div>
                       <div className="mt-1 text-[10px] font-bold tracking-widest text-emerald-900 uppercase">
                         Terra
@@ -580,15 +591,15 @@ function Part1WithMenu({
                       <div className="mt-1.5 text-[9px] text-emerald-800 font-bold">3</div>
                     </div>
 
-                    {/* PEDRA */}
-                    <div className="group relative bg-gradient-to-b from-stone-50 to-white p-2.5 rounded-lg border border-stone-400 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-                      <div className="text-2xl sm:text-3xl animate-pulse [animation-duration:2.8s]">
-                        ⛰️
+                    {/* AIRE */}
+                    <div className="group relative bg-gradient-to-b from-purple-50 to-white p-2.5 rounded-lg border border-purple-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md flex flex-col items-center">
+                      <div className="w-11 h-11 flex items-center justify-center">
+                        <img src="/images/elements/aire.webp" alt="Aire" className="w-10 h-10 object-contain drop-shadow" />
                       </div>
-                      <div className="mt-1 text-[10px] font-bold tracking-widest text-stone-900 uppercase">
-                        Pedra
+                      <div className="mt-1 text-[10px] font-bold tracking-widest text-purple-900 uppercase">
+                        Aire
                       </div>
-                      <div className="mt-1.5 text-[9px] text-stone-800 font-bold">1</div>
+                      <div className="mt-1.5 text-[9px] text-purple-800 font-bold">1</div>
                     </div>
                   </div>
                 </div>
@@ -604,6 +615,19 @@ function Part1WithMenu({
                 exit={{ opacity: 0 }}
                 className="space-y-4"
               >
+                {/* Imatge del cofre tancat sobre el cadenat */}
+                <div className="relative w-full aspect-[16/9] max-w-md mx-auto rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md bg-stone-950">
+                  <img
+                    src="/images/scenes/caixa-tancada.webp"
+                    alt="Caixa de les Almoines Tancada"
+                    className="w-full h-full object-cover object-center"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-2 left-3 right-3 text-white/90 text-[11px] sm:text-xs font-sans italic drop-shadow">
+                    🔒 Caixa de les Almoines tancada amb cadenat
+                  </div>
+                </div>
+
                 <motion.div
                   className="bg-gradient-to-b from-[#8C6D53] via-[#6B5244] to-[#5C4533] border-4 border-[#3D3428] rounded-xl p-6 shadow-2xl relative overflow-hidden"
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -625,15 +649,22 @@ function Part1WithMenu({
                       transition={{ delay: 0.2 }}
                     >
                       <div className="flex gap-4 justify-center">
-                        {[0, 1, 2, 3].map((index, idx) => (
-                          <div key={index} className="flex flex-col items-center">
+                        {[
+                          { name: 'FOC', img: '/images/elements/foc.webp' },
+                          { name: 'AIGUA', img: '/images/elements/aigua.webp' },
+                          { name: 'TERRA', img: '/images/elements/terra.webp' },
+                          { name: 'AIRE', img: '/images/elements/aire.webp' },
+                        ].map((elem, idx) => (
+                          <div key={idx} className="flex flex-col items-center">
+                            <div className="mb-2 flex items-center justify-center w-8 h-8 rounded-full bg-[#5C4533]/15 border border-[#5C4533]/30 p-1 shadow-sm">
+                              <img src={elem.img} alt={elem.name} className="w-full h-full object-contain drop-shadow-sm" />
+                            </div>
                             <DialWheel
-                              value={parseInt(digits[index] || '0')}
-                              onChange={val => handleDigitChange(index, String(val))}
+                              value={parseInt(digits[idx] || '0')}
+                              onChange={val => handleDigitChange(idx, String(val))}
                             />
                             <div className="mt-2 text-center">
-                              <p className="text-xs text-[#5C4533] font-sans font-bold">{['FOC', 'AIGUA', 'TERRA', 'PEDRA'][idx]}</p>
-                             
+                              <p className="text-xs text-[#5C4533] font-sans font-bold">{elem.name}</p>
                             </div>
                           </div>
                         ))}
@@ -679,19 +710,22 @@ function Part1WithMenu({
                 className="space-y-4"
               >
                 <motion.div
-                  className="bg-[#D5F4E6] border-2 border-[#16A085] p-6 rounded-lg shadow-lg text-center"
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                  className="bg-[#D5F4E6] border-2 border-[#16A085] p-5 rounded-lg shadow-lg text-center"
+                  animate={{ y: [0, -4, 0] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
                 >
-                  <motion.p
-                    className="text-5xl mb-3"
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 0.8, repeat: Infinity }}
-                  >
-                    🏺
-                  </motion.p>
-                  <p className="font-bold text-[#117A65] text-sm">COFRE OBERT!</p>
-                  <p className="text-xs text-[#16A085] mt-2">El cadenat s'ha obrit correctament</p>
+                  <div className="relative w-full aspect-[16/9] max-w-md mx-auto rounded-lg overflow-hidden border-2 border-[#16A085] shadow-md mb-3 bg-stone-950">
+                    <img
+                      src="/images/scenes/caixa-oberta.webp"
+                      alt="Caixa de les Almoines Oberta"
+                      className="w-full h-full object-cover object-center"
+                    />
+                    <div className="absolute top-2 right-2 bg-[#16A085] text-white text-[11px] font-bold font-sans px-2.5 py-0.5 rounded-full shadow">
+                      OBERTA
+                    </div>
+                  </div>
+                  <p className="font-bold text-[#117A65] text-base font-sans uppercase">COFRE OBERT!</p>
+                  <p className="text-xs text-[#16A085] mt-1">El cadenat s'ha desclavat i la caixa s'ha obert correctament</p>
                 </motion.div>
 
                 <p className="text-xs text-[#5C4533] italic text-center">
@@ -809,7 +843,17 @@ function Part2CardsScreen({
   const [activeTab, setActiveTab] = useState<'sobre' | 'cartes' | 'nota'>('sobre')
   const [sobreObert, setSobreObert] = useState(false)
   const sobreRobat = stolenCards.has('sobre')
-  const cartesIds = ['14-05', '15-05', '16-05', '17-05', '13-05', '18-05']
+  const cartesIds = ['10-05', '11-05', '12-05', '13-05', '14-05', '15-05']
+
+  const originalLetter = CARD_DETAILS[CORRECT_DATE] || CARD_DETAILS['15-05'] || {
+    signature: 'Bernat Mas',
+    seal: '✓✓',
+    date: '15 de maig de 1705',
+    from: "Bernat Mas (Mestre d'Escola)",
+    content: "Al Capità de la Guarnició de Vic,\n\nCompleixo el tracte acordat per salvar la vida del meu fill Jaume. Aquests són els noms dels conjurats que signaran el pacte a l'ermita de Sant Sebastià a trenc d'alba: Antoni de Peguera, Bac de Roda, Jaume Puig i la resta de vigatans.\n\nExigeixo l'alliberament immediat del meu fill segons la vostra paraula.\n\n— Bernat Mas, Mestre",
+    analysis: '',
+    correct: true,
+  }
 
   const TABS = [
     { id: 'sobre' as const, label: 'El Sobre', emoji: '📬' },
@@ -830,17 +874,17 @@ function Part2CardsScreen({
         </p>
       </header>
 
-      {/* Hero Image */}
-      <div className="relative rounded-lg overflow-hidden border-2 border-[#8C6D53] shadow-md aspect-[16/9] w-full bg-[#1c140e]">
+      {/* Imatge d'ambientació de l'estació */}
+      <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md bg-stone-950">
         <img
-          src="/images/scenes/rectoria.jpg"
+          src="/images/scenes/rectoria.webp"
           alt="Rectoria de Santa Eulàlia de Riuprimer"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-        <span className="absolute bottom-2 left-2 text-[11px] font-sans font-medium text-[#F5EFE0] bg-black/50 px-2 py-0.5 rounded backdrop-blur-sm">
-          Rectoria de Santa Eulàlia · Taula del Rector
-        </span>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
+        <div className="absolute bottom-2 left-3 right-3 text-white/90 text-[11px] sm:text-xs font-sans italic drop-shadow">
+          📜 Rectoria de Santa Eulàlia · Taula del Rector
+        </div>
       </div>
 
       {/* Tab bar */}
@@ -886,7 +930,7 @@ function Part2CardsScreen({
                     <div className="relative z-10 pt-4">
                       <p className="text-xs text-[#8C6D53] uppercase tracking-widest font-bold font-sans mb-1">Sobre Segellat Original</p>
                       <p className="text-xs text-[#5C4533] font-sans mb-4">
-                        Bernat Sala · 16 de maig de 1705
+                        {originalLetter.from} · {originalLetter.date}
                       </p>
 
                       <motion.button
@@ -933,24 +977,31 @@ function Part2CardsScreen({
                     className="relative bg-[#F5EFE0] border-2 border-[#8C6D53] p-5 rounded-sm shadow-lg mb-4"
                     style={{ backgroundImage: 'repeating-linear-gradient(90deg,transparent,transparent 2px,rgba(139,109,83,0.03) 2px,rgba(139,109,83,0.03) 4px)' }}
                   >
-                    <div className="flex items-center gap-3 mb-3 border-b border-[#D8CCAE] pb-2">
-                      <img src={teamSeal.image} alt={teamSeal.label} className="w-10 h-10 object-contain drop-shadow" />
+                    <div className="flex items-center justify-between mb-3 border-b border-[#D8CCAE] pb-2">
                       <div>
-                        <p className="text-xs text-[#8C6D53] uppercase tracking-widest font-bold font-sans">📅 16 de maig de 1705</p>
-                        <p className="text-xs text-[#5C4533] italic font-sans">De: Bernat Sala, Mestre d'Escola</p>
+                        <p className="text-xs text-[#8C6D53] uppercase tracking-widest font-bold font-sans">📅 {originalLetter.date}</p>
+                        <p className="text-xs text-[#5C4533] italic font-sans">De: {originalLetter.from}</p>
                       </div>
+                      <span className="text-[10px] font-mono text-[#8C6D53] uppercase bg-[#EAE0CA] border border-[#D8CCAE] px-2 py-0.5 rounded font-bold">
+                        Carta Original
+                      </span>
                     </div>
 
-                    <div className="bg-white/60 p-4 rounded border border-[#D8CCAE] mb-3">
-                      <p className="text-xs text-[#2B2118] leading-relaxed whitespace-pre-wrap font-serif">
-                        {CARD_DETAILS['16-05'].content}
+                    <div className="bg-white/60 p-4 sm:p-5 rounded border border-[#D8CCAE] mb-3">
+                      <p className="text-xs sm:text-sm text-[#2B2118] leading-relaxed whitespace-pre-wrap font-serif">
+                        {originalLetter.content}
                       </p>
-                    </div>
 
-                    <div className="bg-[#FFF9F0] border border-[#D8CCAE] p-3 rounded">
-                      <p className="text-xs text-[#5C4533] italic">
-                        <span className="font-bold">Observació:</span> Porta imprès el {teamSeal.label} ({teamSeal.heraldry}).
-                      </p>
+                      {/* Segell a la part inferior dreta */}
+                      <div className="flex justify-end mt-4 pt-2">
+                        <div className="w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
+                          <img
+                            src={teamSeal.image}
+                            alt={teamSeal.label}
+                            className="w-full h-full object-contain filter drop-shadow-xl"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -1103,7 +1154,7 @@ function Part3SealScreen({
         animate={{ opacity: 1, y: 0 }}
       >
         <p className="text-xs text-[#2B2118] leading-relaxed">
-          A la caixa hi ha <strong>8 segells de cera</strong> diferents. Heu de segellar la nova carta amb el mateix segell que duia la carta original de Bernat Sala perquè l'Emissari no descobreixi l'engany.
+          A la caixa hi ha <strong>8 segells de cera</strong> diferents. Heu de segellar la nova carta amb el mateix segell que duia la carta original de Bernat Mas perquè l'Emissari no descobreixi l'engany.
         </p>
       </motion.div>
 
@@ -1282,10 +1333,10 @@ function BoxItemModal({
 
               <div className="bg-white/40 backdrop-blur-sm border border-[#8C6D53]/30 rounded p-3 mb-3">
                 <p className="text-xs text-[#5C4533] mb-1">
-                  <span className="font-bold">De:</span> Bernat Sala, Mestre d'Escola
+                  <span className="font-bold">De:</span> Bernat Mas, Mestre d'Escola
                 </p>
                 <p className="text-xs text-[#8C6D53]">
-                  <span className="font-bold">Data:</span> 16 de maig de 1705
+                  <span className="font-bold">Data:</span> 15 de maig de 1705
                 </p>
               </div>
 
@@ -1416,20 +1467,45 @@ function BoxItemModal({
   )
 }
 
-function Part4CompleteScreen({ teamSeal }: { teamSeal: SealOption }) {
+function Part4CompleteScreen({ teamSeal, teamCode }: { teamSeal: SealOption; teamCode: string }) {
+  const router = useRouter()
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    if (!qrCanvasRef.current) return
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    const qrTargetUrl = `${origin}/emissari/carta/${teamCode}`
+
+    QRCode.toCanvas(
+      qrCanvasRef.current,
+      qrTargetUrl,
+      {
+        width: 170,
+        margin: 1,
+        color: {
+          dark: '#2B2118',
+          light: '#F4EBD9',
+        },
+      },
+      (err) => {
+        if (err) console.error('Error generating carta QR:', err)
+      }
+    )
+  }, [teamCode])
+
   return (
-    <div className="flex flex-col justify-center flex-1 gap-4">
+    <div className="flex flex-col justify-center flex-1 gap-4 pb-8">
       <header className="border-b-2 border-[#8C6D53] pb-3 text-center">
         <h2 className="text-2xl font-bold text-[#2B2118]">✅ PROVA SUPERADA</h2>
-        <p className="text-xs text-[#5C4533] mt-1 font-sans">Carta segellada correctament</p>
+        <p className="text-xs text-[#5C4533] mt-1 font-sans">Caixa d'Almoines oberta i carta segellada</p>
       </header>
 
       <motion.div
-        className="bg-[#D5F4E6] border-2 border-[#16A085] p-6 rounded-lg shadow-lg text-center flex flex-col items-center"
-        animate={{ y: [0, -6, 0] }}
+        className="bg-[#D5F4E6] border-2 border-[#16A085] p-5 rounded-xl shadow-lg text-center flex flex-col items-center"
+        animate={{ y: [0, -4, 0] }}
         transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
       >
-        <div className="w-24 h-24 rounded-full p-2 bg-gradient-to-br from-red-800 via-red-700 to-red-950 border-4 border-amber-500 shadow-xl mb-3 flex items-center justify-center">
+        <div className="w-20 h-20 rounded-full p-2 bg-gradient-to-br from-red-800 via-red-700 to-red-950 border-4 border-amber-500 shadow-xl mb-2 flex items-center justify-center">
           <img
             src={teamSeal.image}
             alt={teamSeal.label}
@@ -1437,41 +1513,79 @@ function Part4CompleteScreen({ teamSeal }: { teamSeal: SealOption }) {
           />
         </div>
         <p className="font-bold text-[#117A65] text-sm font-sans uppercase">SEGELL AUTÈNTIC DE BERNAT #{teamSeal.number}</p>
-        <p className="text-xs text-[#16A085] mt-1 font-serif">{teamSeal.label} · {teamSeal.subtitle}</p>
-        <p className="text-[11px] text-[#5C4533] italic mt-1 max-w-xs">{teamSeal.heraldry}</p>
+        <p className="text-xs text-[#16A085] mt-0.5 font-serif">{teamSeal.label} · {teamSeal.subtitle}</p>
       </motion.div>
 
-      {/* Info de la carta segellada */}
+      {/* Instruccions de la següent missió */}
       <motion.div
-        className="bg-[#F5EFE0] border-2 border-[#8C6D53] p-4 rounded-lg shadow-sm"
+        className="bg-[#FAF5E9] border-2 border-[#8C6D53] p-4 rounded-xl shadow-sm space-y-3"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <div className="space-y-2 text-xs text-[#2B2118]">
-          <p><span className="font-bold">Carta:</span> Falsa amb noms inventats</p>
-          <p><span className="font-bold">Segell:</span> {teamSeal.label} (Autèntic de Bernat ✓✓)</p>
-          <p><span className="font-bold">Destinatari:</span> L'Emissari</p>
-          <p><span className="font-bold">Contrasenya:</span> "L'alba ve de Vic"</p>
+        <div className="flex items-center gap-2 border-b border-[#8C6D53]/30 pb-2">
+          <span className="text-xl">🦹‍♂️</span>
+          <div>
+            <span className="text-[10px] font-mono uppercase font-bold text-[#8C6D53] block">
+              SEGÜENT MISSIÓ · PLA DE MASSET
+            </span>
+            <h4 className="font-serif font-bold text-sm text-[#2B2118]">
+              Lliurar la Carta Falsa a l'Emissari
+            </h4>
+          </div>
+        </div>
+
+        <p className="text-xs text-[#2B2118] leading-relaxed">
+          Heu de portar la carta falsa a l&apos;Emissari reial, que us espera al <strong>Pla de Masset</strong>. Presenteu-vos com a enviats del mestre d&apos;escola i digueu la contrasenya verbal:
+        </p>
+
+        <div className="bg-[#EAE0CA] border border-[#8C6D53] rounded-lg p-2.5 text-center">
+          <span className="text-[10px] font-mono text-[#8C6D53] uppercase block font-bold">Contrasenya Secreta:</span>
+          <span className="font-serif font-bold text-[#1D3557] text-sm sm:text-base">«L'alba ve de Vic»</span>
+        </div>
+
+        {/* Avís del Quadern */}
+        <div className="bg-[#1D3557]/10 border-l-4 border-[#1D3557] p-3 rounded-r-lg">
+          <p className="text-xs text-[#1D3557] leading-relaxed font-sans">
+            📖 <strong>Trobareu aquesta carta amb el seu codi QR al QUADERN</strong> (a la pestanya de <em>Proves</em>). Quan arribeu davant de l&apos;Emissari, obriu el Quadern i mostreu-li el codi QR perquè l&apos;escanegi.
+          </p>
         </div>
       </motion.div>
 
-      {/* Instruccions */}
+      {/* Codi QR de consulta ràpida */}
       <motion.div
-        className="bg-[#EAE0CA] border border-[#8C6D53] p-4 rounded-lg"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        className="bg-[#F4EBD9] border border-[#8C6D53] p-4 rounded-xl shadow-sm flex flex-col items-center text-center"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.5 }}
       >
-        <p className="text-xs font-bold text-[#2B2118] mb-2">SEGÜENT MISSIÓ:</p>
-        <p className="text-xs text-[#5C4533] leading-relaxed">
-          Porteu la carta segellada al Pla de Masset. L'Emissari us hi espera a la porta del campanar. Presenteu-vos com a enviats del mestre, dieu la contrasenya i lliureu la carta.
+        <span className="text-[11px] font-sans font-bold uppercase tracking-wider text-[#8C6D53] mb-1">
+          Codi QR de la Carta
+        </span>
+        <div className="bg-[#F4EBD9] p-2 rounded-lg border border-[#8C6D53]/40 shadow-inner">
+          <canvas ref={qrCanvasRef} className="rounded" />
+        </div>
+        <p className="text-[11px] font-mono text-[#8C6D53] mt-1.5 font-bold">
+          Equip: {teamCode}
         </p>
       </motion.div>
 
-      <div className="bg-[#F9F7F3] border border-[#D8CCAE] p-4 rounded-lg text-center">
-        <p className="text-2xl mb-2">⏱️ + 100 PUNTS</p>
-        <p className="text-xs text-[#8C6D53] font-sans">Compartida per tots l'equip</p>
+      {/* Recompensa */}
+      <div className="bg-[#1D3557] text-[#FAF5E9] border-2 border-[#C99E32] p-3 rounded-xl text-center font-serif">
+        <span className="text-xs font-mono uppercase text-[#C99E32] font-bold">FASE COMPLETADA</span>
+        <div className="text-lg font-bold mt-0.5">+100 Punts d'Equip</div>
+      </div>
+
+      {/* Botó de Tancar i Anar al Menú / Quadern */}
+      <div className="pt-2">
+        <button
+          type="button"
+          onClick={() => router.push('/joc')}
+          className="w-full py-3.5 px-4 bg-[#1D3557] hover:bg-[#2B4C7E] text-white font-bold font-sans rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-sm"
+        >
+          <span>📖</span>
+          <span>Tancar i Anar al Quadern / Menú</span>
+        </button>
       </div>
     </div>
   )

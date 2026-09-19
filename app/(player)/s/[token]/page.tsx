@@ -7,6 +7,7 @@ import { GameProps, SubmitResult } from '@/components/gameTypes'
 import { useGameNavigation } from '@/lib/context/GameNavigationContext'
 import { useGameClockAlerts } from '@/lib/realtime/useGameClockAlerts'
 import { BellRungModal } from '@/components/player/BellRungModal'
+import { supabase } from '@/lib/db'
 
 interface StationData {
   stationId: string
@@ -40,10 +41,25 @@ export default function StationQRPage() {
       try {
         setIsLoading(true)
 
+        let teamId: string | undefined
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const { data: player } = await supabase
+              .from('players')
+              .select('team_id')
+              .eq('user_id', user.id)
+              .maybeSingle()
+            if (player?.team_id) teamId = player.team_id
+          }
+        } catch {
+          // ignore auth lookup error
+        }
+
         const response = await fetch('/api/game/validate-pass', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token }),
+          body: JSON.stringify({ token, teamId }),
         })
 
         if (!response.ok) {
@@ -105,8 +121,17 @@ export default function StationQRPage() {
 
       const result = await response.json()
 
-      // On successful answer (and not a narrative giro), redirect to hub
-      if (result.success && !result.isGiro) {
+      // Check if station manages its own completion screen (e.g. AccusationGame)
+      const isMultiScreenStation =
+        stationData.stationId.includes('masset') ||
+        stationData.stationId.includes('acusacio') ||
+        stationData.stationId.includes('caixa') ||
+        stationData.stationId.includes('rectoria') ||
+        stationData.stationId.includes('campanar') ||
+        stationData.stationId.includes('sometent')
+
+      // On successful answer (and not a narrative giro or multi-screen station), redirect to hub
+      if (result.success && !result.isGiro && !isMultiScreenStation) {
         clearActiveGame()
         setTimeout(() => {
           router.push('/joc')
@@ -226,29 +251,33 @@ export default function StationQRPage() {
   return (
     <div className="bg-amber-50 relative">
       {/* Game Header with Exit Button */}
-      <div className="sticky top-0 z-10 bg-white border-b-2 border-amber-700 p-3 flex items-center justify-between">
-        <h2 className="font-bold text-amber-900">
-          {stationData.stationId}
-        </h2>
-        <button
-          onClick={() => {
-            clearActiveGame()
-            router.push('/joc')
-          }}
-          className="px-4 py-2 bg-amber-700 text-white rounded font-semibold hover:bg-amber-800 text-sm"
-        >
-          Menú
-        </button>
+      <div className="sticky top-0 z-10 bg-white border-b-2 border-amber-700 p-3">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <h2 className="font-bold text-amber-900">
+            {stationData.stationId}
+          </h2>
+          <button
+            onClick={() => {
+              clearActiveGame()
+              router.push('/joc')
+            }}
+            className="px-4 py-2 bg-amber-700 text-white rounded font-semibold hover:bg-amber-800 text-sm"
+          >
+            Menú
+          </button>
+        </div>
       </div>
 
-      <GameComponent
-        stationId={stationData.stationId}
-        content={stationData.content}
-        sharedState={sharedState}
-        setSharedState={setSharedState}
-        submit={handleSubmit}
-        solved={false}
-      />
+      <main className="w-full max-w-4xl mx-auto p-2 sm:p-4">
+        <GameComponent
+          stationId={stationData.stationId}
+          content={stationData.content}
+          sharedState={sharedState}
+          setSharedState={setSharedState}
+          submit={handleSubmit}
+          solved={false}
+        />
+      </main>
     </div>
   )
 }

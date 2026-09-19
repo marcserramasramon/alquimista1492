@@ -39,7 +39,7 @@ export function PlayerNameInput({
   const isValid = value.length >= 2
 
   return (
-    <div className="w-full max-w-sm mx-auto">
+    <div className="w-full max-w-4xl mx-auto">
       <div className="space-y-6">
         {/* Player Name Input */}
         <div>

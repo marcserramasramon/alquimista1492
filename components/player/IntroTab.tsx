@@ -2,11 +2,12 @@
 
 import { useState, Fragment } from 'react'
 import { STORY_ENTRIES } from '@/content/public/story'
-import type { TeamStationRow } from '@/lib/realtime/useTeamState'
+import type { TeamStationRow, TeamEvidenceRow } from '@/lib/realtime/useTeamState'
 import { getTeamStation } from '@/lib/realtime/useTeamState'
 
 interface IntroTabProps {
   stations?: TeamStationRow[]
+  evidences?: TeamEvidenceRow[]
   onOpenMap?: () => void
 }
 
@@ -33,13 +34,17 @@ function renderParagraph(text: string) {
  * resoldre l'estació corresponent (p. ex. l'Alerta dels Vigies al Serrat de
  * les Bruixes, o la Història a la Font del Ferro).
  */
-export function IntroTab({ stations = [], onOpenMap }: IntroTabProps) {
+export function IntroTab({ stations = [], evidences = [], onOpenMap }: IntroTabProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const isUnlocked = (entry: (typeof STORY_ENTRIES)[number]) => {
     if (!entry.stationId) return true
     if (getTeamStation(stations, entry.stationId)?.solved) return true
     if (entry.stationAliases?.some((alias) => getTeamStation(stations, alias)?.solved)) {
+      return true
+    }
+    // Also check if matches an unlocked evidence (e.g. carta_lliurada)
+    if (evidences.some((ev) => ev.evidence_id === entry.stationId || entry.stationAliases?.includes(ev.evidence_id))) {
       return true
     }
     return false
@@ -51,7 +56,7 @@ export function IntroTab({ stations = [], onOpenMap }: IntroTabProps) {
   if (selectedEntry) {
     return (
       <div className="flex-1 overflow-y-auto px-6 py-6">
-        <div className="max-w-md mx-auto">
+        <div className="w-full max-w-4xl mx-auto">
           <button
             onClick={() => setSelectedId(null)}
             className="mb-4 text-sm font-sans font-bold text-leather flex items-center gap-1"
@@ -91,7 +96,7 @@ export function IntroTab({ stations = [], onOpenMap }: IntroTabProps) {
 
   return (
     <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
-      <div className="max-w-md mx-auto">
+      <div className="w-full max-w-4xl mx-auto">
         <header className="border-b-2 border-leather pb-3 mb-5 text-center">
           <span className="text-xs uppercase tracking-widest text-leather font-sans font-bold">
             Recull de Fets

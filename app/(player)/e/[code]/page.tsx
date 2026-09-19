@@ -32,7 +32,7 @@ export default function PlayerEntryPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-amber-50 to-white">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-amber-900 mb-2">

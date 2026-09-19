@@ -42,7 +42,7 @@ export const GAME_SOLUTIONS = {
   cementiri: {
     answer: 1, // Corminas (1698)
     type: 'lapida_id',
-    elementCode: 1, // PEDRA
+    elementCode: 1, // AIRE
     description: 'Gravestone for Joseph Coromines (1698)',
     realName: 'Joseph Coromines',
     year: 1698,
@@ -69,12 +69,12 @@ export const GAME_SOLUTIONS = {
     part1: {
       answer: '4231',
       type: 'code',
-      description: 'Box code from 4 elements: FOC(4) AIGUA(2) TERRA(3) PEDRA(1)',
+      description: 'Box code from 4 elements: FOC(4) AIGUA(2) TERRA(3) AIRE(1)',
     },
     part2: {
-      answer: '16-05',
+      answer: '15-05',
       type: 'date',
-      description: 'Date of stolen letter inside box',
+      description: 'Date of stolen letter inside box (written May 15 with ink from May 12)',
     },
     part3: {
       answer: 'bernat', // Correct seal: Bernat's seal with anchor filigree

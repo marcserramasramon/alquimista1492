@@ -38,12 +38,12 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (passError || !pass) {
+      // Fallback directly to stationId so physical stations work without pre-seeded passes
       return NextResponse.json(
         {
-          code: 'NO_PASS_FOUND',
-          message: 'No active pass found for this station',
+          token: stationId,
         },
-        { status: 404 }
+        { status: 200 }
       )
     }
 

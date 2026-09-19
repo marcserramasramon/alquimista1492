@@ -86,7 +86,7 @@ export const STORY_ENTRIES: StoryEntry[] = [
       "La carta del delator anava signada amb un nom estrany. Examinant les làpides del cementiri i creuant-les amb el llibre de difunts de la parròquia, la veritat surt a la llum:",
       "El delator va copiar el nom de **Joseph Coromines (difunt el 1698)**, però el va escriure malament a la làpida: **Corminas**.",
       "Qui té accés als registres parroquials per copiar noms antics? Tothom mira **l'Anton, el jove escolà**, que en guarda la clau... A més, el document porta una marca personal: un **segell de ploma i clau** i paper amb **filigrana d'àncora**.",
-      "Xifra elemental descoberta: **PEDRA = 1**.",
+      "Xifra elemental descoberta: **AIRE = 1**.",
     ],
   },
   {
@@ -115,6 +115,20 @@ export const STORY_ENTRIES: StoryEntry[] = [
       "A dins hi ha la carta autèntica de Bernat i una nota terrible del capità de la guarnició de Vic: **«Els noms a trenc d'alba, i el vostre fill dorm a casa»**.",
       "Ara s'entén tot: **en Jaume, el fill de dinou anys de Bernat, està pres a la guarnició de Vic**. El mestre no actuava per cobdícia, sinó desesperat per salvar la vida del seu fill.",
       "Mossèn Ramon havia preparat una **carta falsa** amb noms ficticis. Segellada amb el segell autèntic de Bernat, l'entregareu a l'Emissari sota la contrasenya: **«L'alba ve de Vic»**.",
+    ],
+  },
+  {
+    id: 'lliurament-carta',
+    stationId: 'carta_lliurada',
+    stationAliases: ['carta_lliurada', 'carta-lliurada', 'emissari-carta'],
+    eyebrow: "Pla de Masset · L'Engany a l'Emissari",
+    title: "L'Emissari Marxa Enganyat",
+    icon: '✉️',
+    paragraphs: [
+      "Amb sang freda i pronunciant la contrasenya **«L'alba ve de Vic»**, heu lliurat la carta falsa a l'Emissari reial.",
+      "L'Emissari ha comprovat el lacre autèntic de Bernat Mas, ha donat el document per vàlid i ha girat cua al galop camí de Vic. **L'engany ha funcionat!**",
+      "Però el temps s'acaba: abans que el Virrei descobreixi a Vic que els noms són ficticis, cal alertar els patriotes reunits a l'ermita de Sant Sebastià.",
+      "**La porta del campanar és oberta.** Aneu al mapa, accediu al Campanar per prendre la decisió final sobre en Bernat i feu sonar el sometent abans no trenqui el dia!",
     ],
   },
   {

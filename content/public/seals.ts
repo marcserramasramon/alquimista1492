@@ -21,7 +21,7 @@ export const SEALS: Record<string, SealOption> = {
     label: 'Lleó i Quatre Barres',
     subtitle: 'Segell Reial / Senyera',
     heraldry: "Corona reial d'or, escut partit amb lleó rampant i les quatre barres catalanes.",
-    image: '/images/seals/segell-1.png',
+    image: '/images/seals/segell-1.webp',
   },
   'segell-2': {
     id: 'segell-2',
@@ -29,7 +29,7 @@ export const SEALS: Record<string, SealOption> = {
     label: 'Creu dels Alquimistes',
     subtitle: 'Capel Eclesiàstic',
     heraldry: 'Capel amb sis borles a cada banda, creu central amb símbols de mercuri, sofre i creixent lunar.',
-    image: '/images/seals/segell-2.png',
+    image: '/images/seals/segell-2.webp',
   },
   'segell-3': {
     id: 'segell-3',
@@ -37,7 +37,7 @@ export const SEALS: Record<string, SealOption> = {
     label: 'La Clau i el Llibre',
     subtitle: "Mestre d'Escola",
     heraldry: "Elm de cavaller emplomallat, escut amb una clau daurada i el llibre d'ensenyament obert.",
-    image: '/images/seals/segell-3.png',
+    image: '/images/seals/segell-3.webp',
   },
   'segell-4': {
     id: 'segell-4',
@@ -45,7 +45,7 @@ export const SEALS: Record<string, SealOption> = {
     label: 'Claus Creuades de Sant Pere',
     subtitle: 'Mitra Pontifícia',
     heraldry: 'Tiara papal i claus creuades de Sant Pere lligades amb cordons i borles daurades.',
-    image: '/images/seals/segell-4.png',
+    image: '/images/seals/segell-4.webp',
   },
   'segell-5': {
     id: 'segell-5',
@@ -53,7 +53,7 @@ export const SEALS: Record<string, SealOption> = {
     label: 'El Navili i el Roure',
     subtitle: 'Mitra i Bàcul',
     heraldry: "Mitra episcopal amb ínfules, escut quarterat amb un vaixell de veles, un roure mil·lenari, símbols hermètics i un lleó.",
-    image: '/images/seals/segell-5.png',
+    image: '/images/seals/segell-5.webp',
   },
   'segell-6': {
     id: 'segell-6',
@@ -61,7 +61,7 @@ export const SEALS: Record<string, SealOption> = {
     label: 'Sigillvm Episcopi Vicensis',
     subtitle: 'Bisbe de Vic',
     heraldry: 'Segell ovalat amb la figura del Bisbe de Vic sostenint el bàcul pastoral sota mitra i orla de lletres llatines.',
-    image: '/images/seals/segell-6.png',
+    image: '/images/seals/segell-6.webp',
   },
   'segell-7': {
     id: 'segell-7',
@@ -69,7 +69,7 @@ export const SEALS: Record<string, SealOption> = {
     label: 'La Gran Clau del Temple',
     subtitle: 'Elm i Clau Cerimonial',
     heraldry: 'Elm de cavaller emplomallat, gran clau daurada central ornamentada amb llaç cerimonial.',
-    image: '/images/seals/segell-7.png',
+    image: '/images/seals/segell-7.webp',
   },
   'segell-8': {
     id: 'segell-8',
@@ -77,7 +77,7 @@ export const SEALS: Record<string, SealOption> = {
     label: 'Sigillvm Nob. Barcino',
     subtitle: 'Segell Noble de Barcelona',
     heraldry: 'Inscripció llatina, cimera amb lleó, escut quarterat amb sol radiant, mercuri, símbol alquímic i lleó rampant.',
-    image: '/images/seals/segell-8.png',
+    image: '/images/seals/segell-8.webp',
   },
 }
 
@@ -89,16 +89,19 @@ export const ALL_SEALS: SealOption[] = Object.values(SEALS)
  */
 export function getTeamCorrectSeal(teamInfo?: {
   code?: string | null
+  teamCode?: string | null
   variant?: string | null
   id?: string | null
+  teamId?: string | null
 } | null): SealOption {
   if (!teamInfo) {
     return SEALS['segell-3'] // Valor per defecte
   }
 
   // 1. Si el codi té número (ex: EQUIP1 -> segell-1, EQUIP2 -> segell-2... EQUIP8 -> segell-8)
-  if (teamInfo.code) {
-    const match = teamInfo.code.match(/(\d+)/)
+  const code = teamInfo.code || teamInfo.teamCode
+  if (code) {
+    const match = code.match(/(\d+)/)
     if (match) {
       const num = parseInt(match[1], 10)
       if (num >= 1 && num <= 8) {
@@ -118,10 +121,11 @@ export function getTeamCorrectSeal(teamInfo?: {
   if (teamInfo.variant === 'C') return SEALS['segell-1'] // Lleó i Senyera
 
   // 3. Determinista per hash d'ID d'equip
-  if (teamInfo.id) {
+  const teamId = teamInfo.id || teamInfo.teamId
+  if (teamId) {
     let hash = 0
-    for (let i = 0; i < teamInfo.id.length; i++) {
-      hash = (hash * 31 + teamInfo.id.charCodeAt(i)) | 0
+    for (let i = 0; i < teamId.length; i++) {
+      hash = (hash * 31 + teamId.charCodeAt(i)) | 0
     }
     const idx = (Math.abs(hash) % 8) + 1
     return SEALS[`segell-${idx}`] || SEALS['segell-3']
@@ -129,3 +133,4 @@ export function getTeamCorrectSeal(teamInfo?: {
 
   return SEALS['segell-3']
 }
+

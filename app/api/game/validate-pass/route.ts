@@ -5,8 +5,11 @@ import { getGameClock, isGameOver } from '@/lib/scoring/gameClock'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
+import { getStation } from '@/content/public/stations'
+
 const ValidatePassSchema = z.object({
   token: z.string().min(1),
+  teamId: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -26,6 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { token } = validation.data
+    let requestedTeamId = validation.data.teamId || null
 
     // === Step 0: The game clock is authoritative — no station is
     // reachable once it is over, regardless of what the client believes ===
@@ -42,14 +46,57 @@ export async function POST(request: NextRequest) {
 
     const serviceClient = getServiceRoleClient()
 
-    // === Step 1: Find pass by token ===
-    const { data: pass, error: passError } = await serviceClient
+    // === Step 1: Find pass by token OR check if token is a station ID ===
+    const { data: pass } = await serviceClient
       .from('passes')
       .select('id, team_id, used_at, expires_at, used_on_station_id, station_id')
       .eq('pass_token', token)
-      .single()
+      .maybeSingle()
 
-    if (passError || !pass) {
+    let stationId: string | null = null
+    let teamId: string | null = requestedTeamId
+
+    if (pass) {
+      // Validate token not expired
+      if (pass.expires_at) {
+        const expiresAt = new Date(pass.expires_at)
+        const now = new Date()
+        if (now > expiresAt) {
+          return NextResponse.json(
+            {
+              code: 'TOKEN_EXPIRED',
+              message: 'Station token has expired',
+            },
+            { status: 410 }
+          )
+        }
+      }
+
+      // Validate token not already used
+      if (pass.used_at) {
+        return NextResponse.json(
+          {
+            code: 'ALREADY_SOLVED',
+            message: 'This station has already been solved',
+          },
+          { status: 403 }
+        )
+      }
+
+      stationId = pass.station_id
+      if (!teamId) {
+        teamId = pass.team_id
+      }
+    } else {
+      // Token is a direct physical station QR token (e.g. 'serrat-bruixes', 'st-serrat-bruixes', 'caixa-almoines', etc.)
+      const cleanToken = token.replace(/^st-/, '').trim()
+      const matchedStation = getStation(cleanToken)
+      if (matchedStation) {
+        stationId = matchedStation.id
+      }
+    }
+
+    if (!stationId) {
       return NextResponse.json(
         {
           code: 'INVALID_TOKEN',
@@ -59,56 +106,35 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // === Step 2: Validate token not expired ===
-    if (pass.expires_at) {
-      const expiresAt = new Date(pass.expires_at)
-      const now = new Date()
-      if (now > expiresAt) {
-        return NextResponse.json(
-          {
-            code: 'TOKEN_EXPIRED',
-            message: 'Station token has expired',
-          },
-          { status: 410 }
-        )
-      }
-    }
-
-    // === Step 3: Validate token not already used ===
-    if (pass.used_at) {
-      return NextResponse.json(
-        {
-          code: 'ALREADY_SOLVED',
-          message: 'This station has already been solved',
-        },
-        { status: 403 }
-      )
-    }
-
-    // === Step 4: Validate station_id exists on the pass ===
-    const stationId = pass.station_id
-    if (!stationId) {
-      return NextResponse.json(
-        {
-          code: 'STATION_ID_MISSING',
-          message: 'Pass does not have a station associated',
-        },
-        { status: 500 }
-      )
-    }
-
     // === Step 5: Get team and session info ===
-    const { data: team, error: teamError } = await serviceClient
-      .from('teams')
-      .select('id, session_id, variant, code')
-      .eq('id', pass.team_id)
-      .single()
+    let team: any = null
 
-    if (teamError || !team || !team.session_id) {
+    if (teamId) {
+      const { data: foundTeam } = await serviceClient
+        .from('teams')
+        .select('id, session_id, variant, code')
+        .eq('id', teamId)
+        .maybeSingle()
+      team = foundTeam
+    }
+
+    // If no team found yet, try finding the first active team with a session
+    if (!team) {
+      const { data: activeTeam } = await serviceClient
+        .from('teams')
+        .select('id, session_id, variant, code')
+        .eq('is_active', true)
+        .not('session_id', 'is', null)
+        .limit(1)
+        .maybeSingle()
+      team = activeTeam
+    }
+
+    if (!team || !team.session_id) {
       return NextResponse.json(
         {
           code: 'TEAM_NOT_FOUND',
-          message: 'Team or session not found',
+          message: 'Team or session not found. Uneix-te primer a un equip.',
         },
         { status: 404 }
       )
@@ -134,18 +160,18 @@ export async function POST(request: NextRequest) {
     // === Step 7: Load public station content ===
     // Safe team metadata passed to games
     const content: Record<string, unknown> = {
+      code: team.code,
       teamCode: team.code,
       variant: team.variant,
-      teamId: pass.team_id,
+      id: team.id,
+      teamId: team.id,
     }
-
-    // TODO: Load station content from content/public/stations.json or database
 
     // === Step 7: Get team_stations record to check current state ===
     const { data: teamStation } = await serviceClient
       .from('team_stations')
       .select('solved, attempts, solved_at')
-      .eq('team_id', pass.team_id)
+      .eq('team_id', team.id)
       .eq('station_id', stationId)
       .single()
 
@@ -154,7 +180,7 @@ export async function POST(request: NextRequest) {
       {
         stationId,
         sessionId: session.id,
-        teamId: pass.team_id,
+        teamId: team.id,
         variant: team.variant,
         content,
         sharedState: {

@@ -64,9 +64,13 @@ export function StationModal({
         {/* Modal Header */}
         <div className="p-6 bg-gradient-to-r from-amber-900 to-amber-800 text-white flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <span>{station.icon}</span>
-              {station.catalan}
+            <h2 className="text-2xl font-bold flex items-center gap-2.5">
+              {station.elementImage ? (
+                <img src={station.elementImage} alt={station.catalan} className="w-8 h-8 object-contain drop-shadow" />
+              ) : (
+                <span>{station.icon}</span>
+              )}
+              <span>{station.catalan}</span>
             </h2>
             <p className="text-amber-200 text-sm mt-1">
               {station.description}
@@ -82,7 +86,7 @@ export function StationModal({
 
         {/* Station Image if available */}
         {station.image && (
-          <div className="relative w-full h-44 sm:h-52 bg-stone-900 overflow-hidden border-b border-amber-300/40">
+          <div className="relative w-full aspect-[16/9] bg-stone-900 overflow-hidden border-b border-amber-300/40">
             <img
               src={station.image}
               alt={station.catalan}
@@ -144,7 +148,26 @@ export function StationModal({
 
           {/* Action Buttons */}
           <div className="space-y-3 pt-2">
-            {!visited ? (
+            {station.id.includes('campanar') || station.id.includes('sometent') ? (
+              // Campanar: direct play button once unlocked
+              <button
+                onClick={handlePlayGame}
+                className="w-full py-3 px-4 bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-600 hover:to-amber-700 text-white font-bold rounded-lg transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50"
+                disabled={isLoadingToken}
+              >
+                {isLoadingToken ? (
+                  <>
+                    <span className="animate-spin">⏳</span>
+                    Carregant el Campanar...
+                  </>
+                ) : (
+                  <>
+                    <span>🔔</span>
+                    Pujar al Campanar (Obrir Joc)
+                  </>
+                )}
+              </button>
+            ) : !visited ? (
               // Not visited: Show QR Scanner button
               <button
                 onClick={() => setShowScanner(true)}

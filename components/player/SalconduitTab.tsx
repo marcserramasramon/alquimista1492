@@ -58,7 +58,7 @@ export function SalconduitTab({
 
   return (
     <div className="w-full flex-1 overflow-y-auto p-4 sm:p-6 font-serif text-[#2B2118]">
-      <div className="max-w-md mx-auto flex flex-col gap-5 pb-8">
+      <div className="w-full max-w-4xl mx-auto flex flex-col gap-5 pb-8">
         {/* Selector de simulació si estem en mode preview */}
         {isPreview && (
           <div className="p-3 bg-[#EAE0CA] border border-[#8C6D53] rounded-xl text-xs font-sans text-[#5C4533] flex items-center justify-between">

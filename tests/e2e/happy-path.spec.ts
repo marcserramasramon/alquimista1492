@@ -25,7 +25,7 @@ test.describe('Happy Path: Complete Game Flow', () => {
       await stationsTab.click();
 
       // Click first available station
-      const stationButton = page.locator('button', { hasText: /Estació|Sentfoses/ }).first();
+      const stationButton = page.locator('button', { hasText: /Estació|Sentfores|Sentfoses/ }).first();
       if (await stationButton.isVisible()) {
         await stationButton.click();
 

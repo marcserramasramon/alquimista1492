@@ -43,7 +43,7 @@ function formatTime(seconds: number) {
 export function ResultsView({ teamResult, ranking }: ResultsViewProps) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-950 via-stone-900 to-amber-950 text-stone-100 p-4 sm:p-6 flex flex-col items-center">
-      <div className="max-w-2xl w-full">
+      <div className="w-full max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6 pt-4">
           <span className="text-xs uppercase font-mono tracking-widest text-amber-400 font-semibold">
@@ -65,6 +65,19 @@ export function ResultsView({ teamResult, ranking }: ResultsViewProps) {
           )}
         </div>
 
+        {/* Imatge de Final de Joc (ENDING) */}
+        <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden border-2 border-amber-500/40 shadow-2xl mb-6 bg-stone-950">
+          <img
+            src="/images/scenes/ending.webp"
+            alt="El Final de la Conjuració - 1705"
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-transparent to-black/30 pointer-events-none" />
+          <div className="absolute bottom-3 left-4 right-4 text-amber-200 text-xs sm:text-sm font-serif italic drop-shadow">
+            ⚔️ Sentfores–La Guixa · La Conjuració dels Vigatans i el Destí del Poble
+          </div>
+        </div>
+
         {/* Accusation Status Banner */}
         <div className="bg-stone-800/90 border-2 border-amber-500/50 rounded-2xl p-6 mb-6 shadow-xl text-center">
           <div className="text-5xl mb-3">
@@ -76,7 +89,7 @@ export function ResultsView({ teamResult, ranking }: ResultsViewProps) {
               : "La Conjuració S'Ha Desvetllat!"}
           </h2>
           <p className="text-stone-300 text-sm leading-relaxed max-w-lg mx-auto">
-            En Bernat Cufí, l'antic mestre d'escola, era qui passava la informació als dragons de Felip V per salvar la vida del seu fill Jaume.
+            En Bernat Mas, l'antic mestre d'escola, era qui passava la informació als dragons de Felip V per salvar la vida del seu fill Jaume.
           </p>
         </div>
 

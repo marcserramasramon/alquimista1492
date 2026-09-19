@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
 import { useAudio } from '@/lib/audio/useAudio'
@@ -54,6 +55,7 @@ const ALL_EVIDENCE = [
 ]
 
 export function AccusationGame(props: GameProps) {
+  const router = useRouter()
   const { play } = useAudio()
 
   const [state, setState] = useState<AccusationGameState>(() => {
@@ -136,11 +138,12 @@ export function AccusationGame(props: GameProps) {
 
       if (result.correct) {
         if ((state.selectedSuspect === 'anton' || (result as any)?.isGiro) && !state.hasSeenGiro) {
-          play('bell-ring')
+          play('buzzer')
           setState(prev => ({
             ...prev,
             currentScreen: 'giro',
             hasSeenGiro: true,
+            attempts: prev.attempts + 1,
           }))
         } else {
           play('bell-ring')
@@ -182,7 +185,7 @@ export function AccusationGame(props: GameProps) {
   const currentSuspectObj = SUSPECTS.find(s => s.id === state.selectedSuspect)
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-5 pb-8 font-serif">
+    <div className="w-full max-w-4xl mx-auto space-y-5 pb-8 font-serif">
       {/* CAPÇALERA HISTÒRICA */}
       <header className="border-b-2 border-[#8C6D53] pb-3 mb-4 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
@@ -197,9 +200,9 @@ export function AccusationGame(props: GameProps) {
       </header>
 
       {/* Imatge d'ambientació de l'estació */}
-      <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
+      <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden border-2 border-[#8C6D53] shadow-md mb-4 bg-stone-950">
         <img
-          src="/images/scenes/acusacio.jpg"
+          src="/images/scenes/acusacio.webp"
           alt="L'Acusació - Pla de Masset"
           className="w-full h-full object-cover object-center"
         />
@@ -342,32 +345,48 @@ export function AccusationGame(props: GameProps) {
 
               {/* Llista de sospitosos a acusar */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                {SUSPECTS.map(suspect => (
-                  <button
-                    key={suspect.id}
-                    type="button"
-                    onClick={() => handleSuspectSelect(suspect.id)}
-                    className="p-4 bg-[#FAF5E9] hover:bg-[#F4EBD9] border-2 border-[#8C6D53] hover:border-[#1D3557] rounded-xl text-left shadow-sm hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-3xl">{suspect.icon}</span>
-                        <span className="text-xs font-bold font-sans px-2 py-0.5 rounded bg-[#D8CCAE] text-[#1D3557] group-hover:bg-[#1D3557] group-hover:text-white transition-colors">
-                          Acusar ➔
+                {SUSPECTS.map(suspect => {
+                  const isAntonAfterGiro = suspect.id === 'anton' && state.hasSeenGiro
+                  return (
+                    <button
+                      key={suspect.id}
+                      type="button"
+                      disabled={isAntonAfterGiro}
+                      onClick={() => handleSuspectSelect(suspect.id)}
+                      className={`p-4 border-2 rounded-xl text-left shadow-sm transition-all flex flex-col justify-between ${
+                        isAntonAfterGiro
+                          ? 'bg-gray-100/80 border-gray-300 opacity-60 cursor-not-allowed'
+                          : 'bg-[#FAF5E9] hover:bg-[#F4EBD9] border-[#8C6D53] hover:border-[#1D3557] hover:shadow-md cursor-pointer group'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-3xl">{suspect.icon}</span>
+                          <span
+                            className={`text-xs font-bold font-sans px-2 py-0.5 rounded transition-colors ${
+                              isAntonAfterGiro
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-[#D8CCAE] text-[#1D3557] group-hover:bg-[#1D3557] group-hover:text-white'
+                            }`}
+                          >
+                            {isAntonAfterGiro ? '✓ Innocent provat' : 'Acusar ➔'}
+                          </span>
+                        </div>
+                        <h3 className="font-bold text-base text-[#2B2118] font-serif">
+                          {suspect.name}
+                        </h3>
+                        <span className="text-xs font-bold text-[#8C6D53] block font-sans">
+                          {suspect.role}
                         </span>
+                        <p className="text-xs text-[#4A3728] mt-2 font-sans leading-relaxed">
+                          {isAntonAfterGiro
+                            ? 'Coartada confirmada: vetllava el mossèn ferit a la rectoria tota la nit.'
+                            : suspect.desc}
+                        </p>
                       </div>
-                      <h3 className="font-bold text-base text-[#2B2118] font-serif">
-                        {suspect.name}
-                      </h3>
-                      <span className="text-xs font-bold text-[#8C6D53] block font-sans">
-                        {suspect.role}
-                      </span>
-                      <p className="text-xs text-[#4A3728] mt-2 font-sans leading-relaxed">
-                        {suspect.desc}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+                    </button>
+                  )
+                })}
               </div>
 
               {/* Acordió / info dels descartats */}
@@ -531,6 +550,9 @@ export function AccusationGame(props: GameProps) {
                 <p className="text-xs sm:text-sm italic text-red-800 font-serif">
                   «Jo no he sortit de la rectoria en tota la nit del 15 de maig! Vaig estar vetllant el mossèn i sostenint-li el cap fins que va arribar el metge!»
                 </p>
+                <div className="inline-block px-3 py-1 bg-red-200/90 text-red-900 font-mono text-xs font-bold rounded-md mt-1 border border-red-300">
+                  ⚠️ Sospitós erroni: Anton és innocent (−10 punts)
+                </div>
               </div>
 
               {/* Noves revelacions */}
@@ -647,7 +669,7 @@ export function AccusationGame(props: GameProps) {
                     🔑 Ubicació de la Clau
                   </span>
                   <p className="text-xs text-[#5C4533] mt-1 font-sans">
-                    La clau de la Caixa de les Almoines és amagada sota la rajola trencada de l'altar major.
+                    Mossèn Ramon va aconseguir llençar la clau a la foscor, entre el Pla de Masset i el porxo de la Rectoria, abans de quedar inconscient. Busqueu-la abans que l'Emissari la trobi!
                   </p>
                 </div>
 
@@ -669,15 +691,23 @@ export function AccusationGame(props: GameProps) {
                 <div className="text-xl font-bold mt-0.5">+100 Punts d'Equip</div>
               </div>
 
-              {/* BOTÓ CRUCIAL PER TORNAR ENRERE / MODIFICAR L'ACUSACIÓ */}
-              <div className="pt-2">
+              {/* BOTÓ DE TANCAR I TORNAR AL HUB */}
+              <div className="pt-3 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => router.push('/joc')}
+                  className="w-full py-3.5 px-4 bg-[#1D3557] hover:bg-[#2B4C7E] text-white font-bold font-sans rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-sm"
+                >
+                  <span>✕</span>
+                  <span>Tancar i Tornar al Menú</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={handleBackFromResults}
-                  className="w-full py-3 px-4 bg-[#FAF5E9] hover:bg-[#D8CCAE] border-2 border-[#8C6D53] text-[#1D3557] font-bold font-sans rounded-lg shadow transition flex items-center justify-center gap-2 cursor-pointer text-xs sm:text-sm"
+                  className="w-full py-2 px-3 text-[#8C6D53] hover:text-[#5C4533] font-medium font-sans text-xs flex items-center justify-center gap-1 cursor-pointer transition"
                 >
-                  <span>←</span>
-                  <span>Tornar enrere / Modificar l'acusació</span>
+                  <span>← Revisar o modificar l'acusació</span>
                 </button>
               </div>
             </motion.div>

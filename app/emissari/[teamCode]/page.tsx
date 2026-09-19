@@ -97,7 +97,7 @@ export default function EmissariControlPage({
 
   return (
     <div className="min-h-screen bg-[#1D3557] text-[#F4EBD9] p-4 flex flex-col items-center font-serif">
-      <div className="w-full max-w-md my-auto flex flex-col gap-4">
+      <div className="w-full max-w-4xl my-auto flex flex-col gap-4">
         {/* Capçalera Oficial Emissari */}
         <header className="text-center border-b border-[#8C6D53]/60 pb-3">
           <span className="text-3xl block mb-1">⚔️</span>
