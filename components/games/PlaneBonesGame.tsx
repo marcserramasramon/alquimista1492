@@ -513,17 +513,17 @@ export function PlaneBonesGame(props: GameProps) {
                 </div>
               </div>
 
-              {/* CONTENIDOR DEL MAPA SVG */}
-              <div className="w-full overflow-x-auto flex justify-center bg-[#4A3B2C] p-2 sm:p-4 rounded-xl border-2 border-[#8C6D53] shadow-inner relative">
-                <div className="absolute inset-0 bg-gradient-to-b from-[#382B1E] via-[#4A3B2C] to-[#2E2217] opacity-95 pointer-events-none rounded-xl" />
+              {/* CONTENIDOR DEL MAPA SVG (ESTIL PERGAMÍ IL·LUMINAT) */}
+              <div className="w-full overflow-x-auto flex justify-center bg-[#F4EDE0] p-2 sm:p-4 rounded-xl border-2 border-[#B59A72] shadow-inner relative">
+                <div className="absolute inset-0 bg-gradient-to-b from-[#FDFBF5] via-[#F8F2E6] to-[#EFE3CF] opacity-95 pointer-events-none rounded-xl" />
 
                 <svg
                   viewBox="0 0 495 285"
-                  className="w-full max-w-[650px] h-auto relative z-10 select-none drop-shadow-md"
+                  className="w-full max-w-[650px] h-auto relative z-10 select-none drop-shadow-sm"
                 >
                   <defs>
                     <filter id="hexGlow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feGaussianBlur stdDeviation="2.5" result="blur" />
                       <feComposite in="SourceGraphic" in2="blur" operator="over" />
                     </filter>
                   </defs>
@@ -533,64 +533,71 @@ export function PlaneBonesGame(props: GameProps) {
                     <polyline
                       points={pathPointsString}
                       fill="none"
-                      stroke="#F59E0B"
-                      strokeWidth="4"
+                      stroke="#D97706"
+                      strokeWidth="4.5"
                       strokeDasharray="6 3"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="transition-all duration-300 filter drop-shadow"
+                      className="transition-all duration-300 filter drop-shadow-md"
                     />
                   )}
 
-                  {/* Renderització de les 24 caselles hexagonals */}
+                  {/* Renderització de les 24 caselles hexagonals (aquarel·les sobre pergamí) */}
                   {Object.values(HEX_MAP_NODES).map((node) => {
                     const isSelected = state.pathProgress.includes(node.id)
                     const selectedIndex = state.pathProgress.indexOf(node.id)
                     const isShaking = shakeNodeId === node.id
                     const isCanVinyals = node.id === 'can-vinyals'
                     const isMalla = node.id === 'malla'
-                    const isGuixa = node.id === 'la-guixa'
 
-                    let fillColor = '#604F3D'
-                    let strokeColor = '#8C6D53'
-                    let strokeWidth = 1.2
+                    // Base aquarel·la clara sobre pergamí
+                    let fillColor = '#FFFDF7'
+                    let strokeColor = '#C8B28E'
+                    let strokeWidth = 1.4
 
-                    // Colors segons tipologia de terreny
                     if (node.type === 'camp') {
-                      fillColor = '#524332'
-                      strokeColor = '#7A644D'
+                      fillColor = '#FEF9C3' // Groc palla / blat
+                      strokeColor = '#CA8A04'
                     } else if (node.type === 'bosc') {
-                      fillColor = '#2F3E2B'
-                      strokeColor = '#4B5E45'
+                      fillColor = '#DCFCE7' // Verd sàlvia / roures
+                      strokeColor = '#16A34A'
                     } else if (node.type === 'aigua') {
-                      fillColor = '#284454'
-                      strokeColor = '#48718A'
+                      fillColor = '#E0F2FE' // Blau suau de riera
+                      strokeColor = '#0284C7'
                     } else if (node.type === 'perill') {
-                      fillColor = '#4A2A28'
-                      strokeColor = '#7A3F3B'
+                      fillColor = '#FEE2E2' // Rosa clar alerta
+                      strokeColor = '#DC2626'
                     } else if (node.type === 'masia') {
-                      fillColor = '#6E583F'
-                      strokeColor = '#A38460'
+                      fillColor = '#FFEDD5' // Ocre càlid masoveria
+                      strokeColor = '#EA580C'
+                    } else if (node.type === 'inici') {
+                      fillColor = '#FEF3C7' // Daurat inici
+                      strokeColor = '#D97706'
+                      strokeWidth = 2
+                    } else if (node.type === 'desti') {
+                      fillColor = '#F3E8FF' // Lila poble
+                      strokeColor = '#9333EA'
+                      strokeWidth = 2
                     }
 
-                    // Destacat si està seleccionat en el camí
+                    // Destacat noble si està seleccionat en el camí
                     if (isSelected) {
-                      fillColor = '#1D3557'
-                      strokeColor = '#38BDF8'
-                      strokeWidth = 2.5
+                      fillColor = '#1E3A8A' // Blau marí reial
+                      strokeColor = '#F59E0B' // Vora d'or brillant
+                      strokeWidth = 2.8
                     }
 
                     // Destacat especial si és Can Vinyals i s'ha arribat o resolt
                     if (isCanVinyals && hasReachedCanVinyals) {
-                      fillColor = '#854D0E'
-                      strokeColor = '#F59E0B'
+                      fillColor = '#92400E' // Ambre or intens
+                      strokeColor = '#FBBF24'
                       strokeWidth = 3.5
                     }
 
-                    // Punts d'inici i final
+                    // Punts d'inici pendents
                     if (isMalla && !isSelected) {
-                      strokeColor = '#10B981'
-                      strokeWidth = 2
+                      strokeColor = '#059669'
+                      strokeWidth = 2.2
                     }
 
                     return (
@@ -607,7 +614,7 @@ export function PlaneBonesGame(props: GameProps) {
                           fill={fillColor}
                           stroke={strokeColor}
                           strokeWidth={strokeWidth}
-                          className="hover:brightness-125 transition-all"
+                          className="hover:brightness-95 transition-all drop-shadow-xs"
                         />
 
                         {/* Indicador numèric de pas traçat */}
@@ -615,10 +622,10 @@ export function PlaneBonesGame(props: GameProps) {
                           <circle
                             cx={node.cx - 20}
                             cy={node.cy - 18}
-                            r="8"
+                            r="8.5"
                             fill="#F59E0B"
                             stroke="#78350F"
-                            strokeWidth="1"
+                            strokeWidth="1.2"
                           />
                         )}
                         {isSelected && (
@@ -628,7 +635,7 @@ export function PlaneBonesGame(props: GameProps) {
                             textAnchor="middle"
                             fontSize="8"
                             fontWeight="bold"
-                            fill="#1E293B"
+                            fill="#0F172A"
                             fontFamily="monospace"
                           >
                             {selectedIndex + 1}
@@ -646,14 +653,14 @@ export function PlaneBonesGame(props: GameProps) {
                           {node.icon}
                         </text>
 
-                        {/* Nom de la casella */}
+                        {/* Nom de la casella (tinta xinesa fosca i nítida) */}
                         <text
                           x={node.cx}
                           y={node.cy + 12}
                           textAnchor="middle"
                           fontSize="8.5"
                           fontWeight="bold"
-                          fill={isSelected ? '#F8FAFC' : '#E2D6B8'}
+                          fill={isSelected ? '#FFFFFF' : '#1C1917'}
                           fontFamily="sans-serif"
                           className="pointer-events-none tracking-tight"
                         >
@@ -666,7 +673,8 @@ export function PlaneBonesGame(props: GameProps) {
                           y={node.cy + 22}
                           textAnchor="middle"
                           fontSize="6.5"
-                          fill={isSelected ? '#BAE6FD' : '#A89278'}
+                          fontWeight="500"
+                          fill={isSelected ? '#FDE68A' : '#57402D'}
                           fontFamily="sans-serif"
                           className="pointer-events-none"
                         >
@@ -680,8 +688,8 @@ export function PlaneBonesGame(props: GameProps) {
                             cy={node.cy}
                             r={HEX_RADIUS + 4}
                             fill="none"
-                            stroke="#FBBF24"
-                            strokeWidth="2"
+                            stroke="#D97706"
+                            strokeWidth="2.5"
                             strokeDasharray="4 2"
                             className="animate-spin pointer-events-none"
                             style={{ transformOrigin: `${node.cx}px ${node.cy}px` }}
@@ -691,6 +699,25 @@ export function PlaneBonesGame(props: GameProps) {
                     )
                   })}
                 </svg>
+              </div>
+
+              {/* LLEGENDA CARTOGRÀFICA D'AQUAREL·LES */}
+              <div className="flex flex-wrap items-center justify-between text-[11px] text-[#5C4533] font-sans bg-[#F8F3E6] p-2.5 rounded-lg border border-[#B59A72]/50 gap-2">
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-[#FEF9C3] border border-[#CA8A04]" /> Camps de blat
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-[#DCFCE7] border border-[#16A34A]" /> Boscos i Nogueres
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-[#E0F2FE] border border-[#0284C7]" /> Riera i Aigua
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-[#FFEDD5] border border-[#EA580C]" /> Masies
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-[#1E3A8A] border border-[#F59E0B]" /> Ruta d'Isidre
+                </span>
               </div>
 
               {/* Feedback dinàmic */}
