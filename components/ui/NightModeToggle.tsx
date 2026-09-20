@@ -76,7 +76,7 @@ export function NightModeToggle({
         } ${
           iconOnly
             ? compact
-              ? 'w-[30px] h-[30px]'
+              ? 'w-[26px] h-[26px]'
               : 'w-7 h-7'
             : `gap-1.5 px-2.5 py-0.5 ${compact ? 'text-xs min-h-[24px]' : 'text-xs sm:text-sm min-h-[28px]'}`
         }`}

@@ -30,7 +30,9 @@ export function PlayerStatusBar({
 }: PlayerStatusBarProps) {
   return (
     <header className="bg-parchment border-b-2 border-[#8C6D53] shadow-sm sticky top-0 z-40 flex-shrink-0">
-      <div className="max-w-4xl mx-auto px-3 py-1 flex items-center justify-between gap-2">
+      {/* Espai per a la barra d'estat del sistema quan la webapp es mostra a pantalla completa */}
+      <div style={{ height: 'env(safe-area-inset-top)' }} />
+      <div className="max-w-4xl mx-auto px-3 py-0.5 flex items-center justify-between gap-2">
         <div className="flex-1 flex flex-nowrap justify-center items-center gap-1.5 sm:gap-4 text-[10px] sm:text-sm font-sans font-bold text-[#2B2118] overflow-x-auto">
           <PlayerTimer status={gameStatus} expiresAt={expiresAt} />
 

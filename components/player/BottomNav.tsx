@@ -63,7 +63,7 @@ export function BottomNav({
           onClick={() => onTabChange('historia')}
         />
         <NavTab
-          icon="🎖️"
+          icon="🎫"
           label="Salvos"
           isActive={activeTab === 'salconduit'}
           onClick={() => onTabChange('salconduit')}

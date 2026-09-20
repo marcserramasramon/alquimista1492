@@ -36,7 +36,7 @@ export function PlayerTimer({ status, expiresAt }: PlayerTimerProps) {
 
   if (status === 'pending') {
     return (
-      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sans font-semibold shadow-sm bg-vellum text-leather border border-leather">
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-sans font-semibold shadow-sm bg-vellum text-leather border border-leather">
         <span>⏳</span>
         <span>Esperant l&apos;inici</span>
       </div>
@@ -45,7 +45,7 @@ export function PlayerTimer({ status, expiresAt }: PlayerTimerProps) {
 
   if (status === 'finished' || secondsRemaining === null || secondsRemaining <= 0) {
     return (
-      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-serif font-bold tracking-wide shadow-sm bg-cochineal text-parchment">
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-sm font-serif font-bold tracking-wide shadow-sm bg-cochineal text-parchment">
         <span>🔔</span>
         <span>00:00</span>
       </div>
@@ -60,7 +60,7 @@ export function PlayerTimer({ status, expiresAt }: PlayerTimerProps) {
 
   return (
     <div
-      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-serif font-bold tracking-wide shadow-sm transition-all border ${
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-sm font-serif font-bold tracking-wide shadow-sm transition-all border ${
         isCritical
           ? 'bg-cochineal text-parchment border-cochineal animate-pulse'
           : 'bg-vellum text-ink border-leather'
