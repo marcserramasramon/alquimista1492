@@ -107,7 +107,8 @@
 .dark .bg-\[\#EAE0CA\]\/40,
 .dark .bg-\[\#EAE0CA\]\/80,
 .dark .bg-\[\#DFD4BC\],
-.dark [class*="bg-[#DFD4BC]"] {
+.dark [class*="bg-[#DFD4BC]"],
+.dark [class*="bg-[#D8CCAE]"] {
   background-color: #2c221a !important;
 }
 

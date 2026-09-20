@@ -29,7 +29,7 @@ export function BottomNav({
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200 shadow-[0_-2px_16px_rgba(0,0,0,0.08)]">
       <div className="max-w-4xl mx-auto grid grid-cols-5">
         <NavTab
-          icon="📍"
+          icon="🧭"
           label="Mapa"
           isActive={activeTab === 'map'}
           onClick={() => onTabChange('map')}

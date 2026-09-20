@@ -14,6 +14,7 @@ import { ResultsView } from '@/components/player/ResultsView'
 import { BottomNav, type NavTabId } from '@/components/player/BottomNav'
 import { PlayerTimer } from '@/components/player/PlayerTimer'
 import { NightModeToggle } from '@/components/ui/NightModeToggle'
+import { GameNavigationProvider } from '@/lib/context/GameNavigationContext'
 import { getAllStations } from '@/content/public/stations'
 import type { TeamRow, SessionRow, TeamStationRow } from '@/lib/realtime/useTeamState'
 
@@ -318,6 +319,7 @@ export default function PreviewPage() {
   }
 
   return (
+    <GameNavigationProvider>
     <div className="min-h-screen bg-[#F4EBD9] text-[#2B2118] flex flex-col font-serif">
       {/* Top Bar for Navigation between all games */}
       <header className="bg-[#1D3557] text-white px-4 py-3 shadow-md sticky top-0 z-50">
@@ -550,13 +552,9 @@ export default function PreviewPage() {
               </div>
 
               <div className="flex-1 flex flex-col bg-parchment text-ink min-h-[600px]">
-                <header className="bg-parchment border-b-2 border-[#8C6D53] shadow-sm text-center">
-                  <div className="max-w-4xl mx-auto px-4 py-2 sm:py-3">
-                    <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold block">
-                      Equip: {mockTeam.name} {previewPlayerName ? `· Jugador: ${previewPlayerName}` : ''}
-                    </span>
-
-                    <div className="mt-2 flex flex-nowrap justify-center items-center gap-1.5 sm:gap-4 text-[10px] sm:text-sm font-sans font-bold text-[#2B2118]">
+                <header className="bg-parchment border-b-2 border-[#8C6D53] shadow-sm">
+                  <div className="max-w-4xl mx-auto px-3 py-1.5 flex items-center justify-between gap-2">
+                    <div className="flex-1 flex flex-nowrap justify-center items-center gap-1.5 sm:gap-4 text-[10px] sm:text-sm font-sans font-bold text-[#2B2118] overflow-x-auto">
                       <PlayerTimer status="active" expiresAt={mockSession.expires_at} />
 
                       <div className="flex items-center gap-1">
@@ -572,6 +570,8 @@ export default function PreviewPage() {
                         <span>{mockSession.salconduits_remaining} Salvos</span>
                       </div>
                     </div>
+
+                    <NightModeToggle compact />
                   </div>
                 </header>
 
@@ -844,5 +844,6 @@ export default function PreviewPage() {
         </div>
       </main>
     </div>
+    </GameNavigationProvider>
   )
 }
