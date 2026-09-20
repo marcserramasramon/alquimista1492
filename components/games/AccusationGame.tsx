@@ -189,11 +189,11 @@ export function AccusationGame(props: GameProps) {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-5 pb-8 font-serif">
       {/* CAPÇALERA HISTÒRICA */}
-      <header className="border-b-2 border-[#8C6D53] pb-3 mb-4 text-center">
+      <header className="sticky top-0 z-10 bg-parchment pt-3 border-b-2 border-[#8C6D53] pb-2 mb-3 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
           Estació 6 · PLA DE MASSET
         </span>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#2B2118] mt-0.5 font-serif">
           L'ACUSACIÓ FINAL
         </h1>
         <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">

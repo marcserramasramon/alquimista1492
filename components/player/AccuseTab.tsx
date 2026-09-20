@@ -71,9 +71,9 @@ export function AccuseTab({
   return (
     <div className="w-full flex flex-col h-full">
       {/* Title */}
-      <div className="px-6 py-4 border-b border-amber-200">
-        <h2 className="text-xl font-bold text-amber-900">Acusació Final</h2>
-        <p className="text-sm text-amber-700 mt-1">
+      <div className="flex-shrink-0 px-6 py-2.5 border-b border-amber-200">
+        <h2 className="text-lg font-bold text-amber-900">Acusació Final</h2>
+        <p className="text-sm text-amber-700 mt-0.5">
           {canAccuse
             ? 'Estàs preparat per acusar!'
             : `Necessites ${7 - solvedCount} més estacions`}

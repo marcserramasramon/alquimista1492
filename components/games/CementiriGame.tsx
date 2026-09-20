@@ -197,11 +197,11 @@ export function CementiriGame(props: GameProps) {
       variants={fadeInVariants}
     >
       {/* Capçalera històrica */}
-      <header className="border-b-2 border-[#8C6D53] dark:border-[#8C6D53]/40 pb-3 mb-4 text-center">
+      <header className="sticky top-0 z-10 bg-parchment pt-3 border-b-2 border-[#8C6D53] dark:border-[#8C6D53]/40 pb-2 mb-3 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] dark:text-[#c2a68e] font-sans font-bold">
           Estació 4 · Cementiri
         </span>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] dark:text-[#f3ebd8] mt-1 font-serif">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#2B2118] dark:text-[#f3ebd8] mt-0.5 font-serif">
           LA SIGNATURA DEL DIFUNT
         </h1>
         <p className="text-xs sm:text-sm text-[#5C4533] dark:text-[#c2a68e] mt-1 italic max-w-md mx-auto">

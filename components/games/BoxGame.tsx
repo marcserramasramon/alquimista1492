@@ -425,11 +425,11 @@ function Part1WithMenu({
   return (
     <div className="flex flex-col flex-1 gap-4">
       {/* Header */}
-      <header className="border-b-2 border-[#8C6D53] pb-3 mb-2 text-center">
+      <header className="sticky top-0 z-10 bg-parchment pt-3 border-b-2 border-[#8C6D53] pb-2 mb-1 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
           Estació 7 · Rectoria
         </span>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#2B2118] mt-0.5 font-serif">
           CAIXA DE LES ALMOINES
         </h1>
         <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">
@@ -863,11 +863,11 @@ function Part2CardsScreen({
   ]
   return (
     <div className="flex flex-col flex-1 gap-4">
-      <header className="border-b-2 border-[#8C6D53] pb-3 mb-2 text-center">
+      <header className="sticky top-0 z-10 bg-parchment pt-3 border-b-2 border-[#8C6D53] pb-2 mb-1 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
           Estació 7 · Rectoria
         </span>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#2B2118] mt-0.5 font-serif">
           LA CARTA SEGELLADA
         </h1>
         <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">
@@ -1136,11 +1136,11 @@ function Part3SealScreen({
 
   return (
     <div className="flex flex-col flex-1 gap-4">
-      <header className="border-b-2 border-[#8C6D53] pb-3 mb-2 text-center">
+      <header className="sticky top-0 z-10 bg-parchment pt-3 border-b-2 border-[#8C6D53] pb-2 mb-1 text-center">
         <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
           Estació 7 · Rectoria
         </span>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2B2118] mt-1 font-serif">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#2B2118] mt-0.5 font-serif">
           EL SEGELL DE BERNAT
         </h1>
         <p className="text-xs sm:text-sm text-[#5C4533] mt-1 italic max-w-md mx-auto">

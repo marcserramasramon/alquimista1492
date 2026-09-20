@@ -182,22 +182,19 @@ export function NotebookTab({
 
   const tabs: { id: NotebookView; label: string; icon: string; badge?: number }[] = [
     { id: 'fites', label: 'Fites', icon: '🚩', badge: solvedFitesCount },
-    { id: 'suspects', label: 'Sospitosos', icon: '🕵️' },
+    { id: 'suspects', label: 'Sospitosos', icon: '🧖‍♂️' },
     { id: 'evidence', label: 'Proves', icon: '📜', badge: unlockedEvidenceList.length },
   ]
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 pb-24 bg-parchment">
+    <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-24 bg-parchment">
       <div className="w-full max-w-4xl mx-auto space-y-4">
         {/* Header — mateixa estètica que Història */}
-        <header className="border-b-2 border-leather pb-3 mb-4 text-center">
-          <span className="text-xs uppercase tracking-widest text-leather font-sans font-bold">
-            Investigació
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink font-serif mt-1">
+        <header className="sticky top-0 z-10 bg-parchment pt-3 border-b-2 border-leather pb-2 mb-3 text-center">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-ink font-serif">
             Quadern
           </h1>
-          <p className="text-xs text-leather font-sans mt-1">
+          <p className="text-xs text-leather font-sans mt-0.5">
             {solvedFitesCount} de {fites.length} fites superades • {unlockedEvidenceList.length} proves recollides
           </p>
         </header>

@@ -174,17 +174,14 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
   return (
     <div className="w-full h-full flex flex-col bg-parchment overflow-y-auto">
       {/* Header — mateixa estètica que Història */}
-      <div className="px-4 sm:px-6 pt-6 pb-2 flex-shrink-0">
+      <div className="px-4 sm:px-6 pb-2 flex-shrink-0">
         <div className="w-full max-w-4xl mx-auto">
-          <header className="border-b-2 border-leather pb-3 mb-2 text-center">
-            <span className="text-xs uppercase tracking-widest text-leather font-sans font-bold">
-              Plànol de la Vila
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink font-serif mt-1 uppercase">
+          <header className="sticky top-0 z-10 bg-parchment pt-3 border-b-2 border-leather pb-1.5 mb-2 text-center">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-ink font-serif uppercase">
               MAPA
             </h1>
-            <p className="text-xs text-leather font-sans mt-1">
-              Clica una estació per veure més opcions • Scroll per zoom • Arrossega per moure
+            <p className="text-xs text-leather font-sans mt-0.5">
+              Clica les fites • Fes zoom • Arrossega per moure
             </p>
           </header>
 

@@ -14,8 +14,7 @@ import { SalconduitTab } from '@/components/player/SalconduitTab'
 import { AccuseTab } from '@/components/player/AccuseTab'
 import { QRScanner } from '@/components/player/QRScanner'
 import { BottomNav, type NavTabId } from '@/components/player/BottomNav'
-import { PlayerTimer } from '@/components/player/PlayerTimer'
-import { NightModeToggle } from '@/components/ui/NightModeToggle'
+import { PlayerStatusBar } from '@/components/player/PlayerStatusBar'
 import { GameStartedModal } from '@/components/player/GameStartedModal'
 import { BellRungModal } from '@/components/player/BellRungModal'
 import { EmissariAlertModal } from '@/components/game/EmissariAlertModal'
@@ -175,41 +174,17 @@ function JocHubContent() {
   }
 
   return (
-    <div className="min-h-screen bg-parchment text-ink flex flex-col">
-      {/* Header */}
-      <header className="bg-parchment border-b-2 border-[#8C6D53] shadow-sm sticky top-0 z-40 text-center">
-        <div className="max-w-4xl mx-auto px-4 py-2 sm:py-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs uppercase tracking-widest text-[#8C6D53] font-sans font-bold">
-              Equip: {playerSession.teamName}
-            </span>
-            <NightModeToggle compact />
-          </div>
-
-          <div className="mt-2 flex flex-nowrap justify-center items-center gap-1.5 sm:gap-4 text-[10px] sm:text-sm font-sans font-bold text-[#2B2118]">
-            <PlayerTimer status={gameClock.status} expiresAt={gameClock.expiresAt} />
-
-            {teamState.team && teamState.session && (
-              <>
-                <div className="flex items-center gap-1">
-                  <span>📍</span>
-                  <span>
-                    {teamState.stations.filter((s) => s.solved).length}/{teamState.stations.length} Fites
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span>📋</span>
-                  <span>{teamState.evidences.length} Proves</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span>🎫</span>
-                  <span>{teamState.session?.salconduits_remaining ?? 2} Salvos</span>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+    <div className="h-dvh overflow-hidden bg-parchment text-ink flex flex-col">
+      {/* Barra superior */}
+      <PlayerStatusBar
+        gameStatus={gameClock.status}
+        expiresAt={gameClock.expiresAt}
+        showCounters={!!(teamState.team && teamState.session)}
+        stationsSolved={teamState.stations.filter((s) => s.solved).length}
+        stationsTotal={teamState.stations.length}
+        evidencesCount={teamState.evidences.length}
+        salconduitsRemaining={teamState.session?.salconduits_remaining ?? 2}
+      />
 
       {/* Main Content */}
       <main className="flex-1 max-w-4xl w-full mx-auto flex flex-col overflow-hidden">

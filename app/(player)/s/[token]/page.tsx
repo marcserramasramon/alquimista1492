@@ -8,6 +8,7 @@ import { useGameNavigation } from '@/lib/context/GameNavigationContext'
 import { useGameClockAlerts } from '@/lib/realtime/useGameClockAlerts'
 import { BellRungModal } from '@/components/player/BellRungModal'
 import { BottomNav, type NavTabId } from '@/components/player/BottomNav'
+import { PlayerStatusBar } from '@/components/player/PlayerStatusBar'
 import { useTeamState } from '@/lib/realtime/useTeamState'
 import { supabase } from '@/lib/db'
 
@@ -257,16 +258,28 @@ export default function StationQRPage() {
 
   // Render game
   return (
-    <div className="bg-amber-50 relative min-h-screen flex flex-col justify-between">
-      <main className="w-full max-w-4xl mx-auto p-2 sm:p-4 pb-24 flex-1">
-        <GameComponent
-          stationId={stationData.stationId}
-          content={stationData.content}
-          sharedState={sharedState}
-          setSharedState={setSharedState}
-          submit={handleSubmit}
-          solved={false}
-        />
+    <div className="bg-parchment relative h-dvh overflow-hidden flex flex-col">
+      <PlayerStatusBar
+        gameStatus={gameClock.status}
+        expiresAt={gameClock.expiresAt}
+        showCounters={!!(teamState.team && teamState.session)}
+        stationsSolved={teamState.stations.filter((s) => s.solved).length}
+        stationsTotal={teamState.stations.length}
+        evidencesCount={teamState.evidences.length}
+        salconduitsRemaining={teamState.session?.salconduits_remaining ?? 2}
+      />
+
+      <main className="flex-1 max-w-4xl w-full mx-auto flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto px-2 sm:px-4 pb-24">
+          <GameComponent
+            stationId={stationData.stationId}
+            content={stationData.content}
+            sharedState={sharedState}
+            setSharedState={setSharedState}
+            submit={handleSubmit}
+            solved={false}
+          />
+        </div>
       </main>
 
       {/* Bell alert modal */}
