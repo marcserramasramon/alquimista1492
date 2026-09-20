@@ -62,20 +62,8 @@ export function usePlayerSignIn() {
         })
       }
 
-      // Initialize coartadas for the team (blocking)
-      if (data.teamId) {
-        try {
-          await fetch('/api/game/init-coartada', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ teamId: data.teamId }),
-          })
-        } catch (err) {
-          console.error('[COARTADA INIT ERROR]', err)
-        }
-      }
+      // Coartadas are assigned once the master starts the game (see
+      // /api/master/start), once every teammate has had a chance to join.
 
       // Redirect to game hub on success
       router.push('/joc')

@@ -51,25 +51,57 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
   const [panX, setPanX] = useState(0)
   const [panY, setPanY] = useState(0)
   const svgRef = useState<SVGSVGElement | null>(null)[1]
+  const mapContainerRef = useRef<HTMLDivElement | null>(null)
+
+  // El mapa no es pot arrossegar més enllà del seu propi contorn: com més
+  // zoom, més marge de desplaçament, però mai prou per deixar veure el fons.
+  const getMaxPan = (z: number) => {
+    const el = mapContainerRef.current
+    if (!el || z <= 1) return { maxX: 0, maxY: 0 }
+    const { width, height } = el.getBoundingClientRect()
+    return {
+      maxX: (width * (z - 1)) / (2 * z),
+      maxY: (height * (z - 1)) / (2 * z),
+    }
+  }
+
+  const clampPan = (x: number, y: number, z: number) => {
+    const { maxX, maxY } = getMaxPan(z)
+    return {
+      x: Math.min(Math.max(x, -maxX), maxX),
+      y: Math.min(Math.max(y, -maxY), maxY),
+    }
+  }
+
+  const resetView = () => {
+    setZoom(1)
+    setPanX(0)
+    setPanY(0)
+  }
 
   const handleWheel = (e: React.WheelEvent<SVGSVGElement>) => {
     e.preventDefault()
     const delta = e.deltaY > 0 ? 0.9 : 1.1
-    setZoom((prev) => Math.min(Math.max(prev * delta, 1), 4))
+    const nextZoom = Math.min(Math.max(zoom * delta, 1), 4)
+    const clamped = clampPan(panX, panY, nextZoom)
+    setZoom(nextZoom)
+    setPanX(clamped.x)
+    setPanY(clamped.y)
   }
 
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     // Botó esquerre (arrossegar) o dret: tots dos mouen el mapa a escriptori.
-    let startX = e.clientX
-    let startY = e.clientY
-    let startPanX = panX
-    let startPanY = panY
+    const startX = e.clientX
+    const startY = e.clientY
+    const startPanX = panX
+    const startPanY = panY
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
       const deltaX = moveEvent.clientX - startX
       const deltaY = moveEvent.clientY - startY
-      setPanX(startPanX + deltaX)
-      setPanY(startPanY + deltaY)
+      const clamped = clampPan(startPanX + deltaX / zoom, startPanY + deltaY / zoom, zoom)
+      setPanX(clamped.x)
+      setPanY(clamped.y)
     }
 
     const handleMouseUp = () => {
@@ -89,10 +121,39 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
     startPanY: number
     startDistance: number
     startZoom: number
-  }>({ mode: null, startX: 0, startY: 0, startPanX: 0, startPanY: 0, startDistance: 0, startZoom: 1 }).current
+    lastTapTime: number
+    lastTapX: number
+    lastTapY: number
+  }>({
+    mode: null,
+    startX: 0,
+    startY: 0,
+    startPanX: 0,
+    startPanY: 0,
+    startDistance: 0,
+    startZoom: 1,
+    lastTapTime: 0,
+    lastTapX: 0,
+    lastTapY: 0,
+  }).current
 
   const handleTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
     if (e.touches.length === 1) {
+      // Doble tap: torna el mapa a la mida original.
+      const now = Date.now()
+      const dx = e.touches[0].clientX - touchStateRef.lastTapX
+      const dy = e.touches[0].clientY - touchStateRef.lastTapY
+      const isDoubleTap = now - touchStateRef.lastTapTime < 300 && Math.hypot(dx, dy) < 30
+      touchStateRef.lastTapTime = isDoubleTap ? 0 : now
+      touchStateRef.lastTapX = e.touches[0].clientX
+      touchStateRef.lastTapY = e.touches[0].clientY
+
+      if (isDoubleTap) {
+        touchStateRef.mode = null
+        resetView()
+        return
+      }
+
       touchStateRef.mode = 'pan'
       touchStateRef.startX = e.touches[0].clientX
       touchStateRef.startY = e.touches[0].clientY
@@ -116,21 +177,32 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
     if (touchStateRef.mode === 'pan' && e.touches.length === 1) {
       const deltaX = e.touches[0].clientX - touchStateRef.startX
       const deltaY = e.touches[0].clientY - touchStateRef.startY
-      setPanX(touchStateRef.startPanX + deltaX / zoom)
-      setPanY(touchStateRef.startPanY + deltaY / zoom)
+      const clamped = clampPan(
+        touchStateRef.startPanX + deltaX / zoom,
+        touchStateRef.startPanY + deltaY / zoom,
+        zoom
+      )
+      setPanX(clamped.x)
+      setPanY(clamped.y)
     } else if (touchStateRef.mode === 'pinch' && e.touches.length === 2) {
       const distance = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       )
+      let nextZoom = zoom
       if (touchStateRef.startDistance > 0) {
-        const nextZoom = Math.min(Math.max(touchStateRef.startZoom * (distance / touchStateRef.startDistance), 1), 4)
+        nextZoom = Math.min(Math.max(touchStateRef.startZoom * (distance / touchStateRef.startDistance), 1), 4)
         setZoom(nextZoom)
       }
       const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2
       const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2
-      setPanX(touchStateRef.startPanX + (centerX - touchStateRef.startX) / zoom)
-      setPanY(touchStateRef.startPanY + (centerY - touchStateRef.startY) / zoom)
+      const clamped = clampPan(
+        touchStateRef.startPanX + (centerX - touchStateRef.startX) / zoom,
+        touchStateRef.startPanY + (centerY - touchStateRef.startY) / zoom,
+        nextZoom
+      )
+      setPanX(clamped.x)
+      setPanY(clamped.y)
     }
   }
 
@@ -177,8 +249,8 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
       <div className="px-4 sm:px-6 pb-2 flex-shrink-0">
         <div className="w-full max-w-4xl mx-auto">
           <header className="sticky top-0 z-10 bg-parchment pt-3 border-b-2 border-leather pb-1.5 mb-2 text-center">
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-ink font-serif uppercase">
-              MAPA
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-ink font-serif">
+              Mapa de la Vila
             </h1>
             <p className="text-xs text-leather font-sans mt-0.5">
               Clica les fites • Fes zoom • Arrossega per moure
@@ -211,21 +283,24 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
       </div>
 
       {/* Map Container */}
-      <div className="relative overflow-hidden flex items-center justify-center p-4 bg-[#EAE0CA]/40 aspect-[4/3] flex-shrink-0">
+      <div
+        ref={mapContainerRef}
+        className="relative overflow-hidden flex items-center justify-center bg-[#EAE0CA]/40 aspect-[4/3] flex-shrink-0"
+      >
         <svg
           ref={svgRef as any}
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-          className="border-2 border-leather/50 rounded-xl shadow-lg cursor-grab active:cursor-grabbing touch-none w-full h-full"
+          className="cursor-grab active:cursor-grabbing touch-none w-full h-full block"
           style={{
             maxWidth: '100%',
             maxHeight: '100%',
-            filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
             transform: `scale(${zoom}) translate(${panX}px, ${panY}px)`,
             transformOrigin: 'center',
             transition: zoom === 1 && panX === 0 && panY === 0 ? 'transform 0.3s ease-out' : 'none',
           }}
           onWheel={handleWheel}
           onMouseDown={handleMouseDown}
+          onDoubleClick={resetView}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -278,7 +353,6 @@ export function StaticMap({ stations, evidences = [], teamId }: StaticMapProps) 
           {allStations.map((station) => {
             const { x, y } = latLonToSVG(station.latitude, station.longitude)
             const teamStation = getTeamStation(stations, station.id)
-            const visited = !!teamStation
             const solved = teamStation?.solved ?? false
 
             // Color del marcador: principals vs secundaris,

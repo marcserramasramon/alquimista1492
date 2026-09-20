@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { getGameComponent } from '@/components/games/registry'
-import { GameProps, SubmitResult } from '@/components/gameTypes'
+import { SubmitResult } from '@/components/gameTypes'
 import { useGameNavigation } from '@/lib/context/GameNavigationContext'
 import { useGameClockAlerts } from '@/lib/realtime/useGameClockAlerts'
 import { BellRungModal } from '@/components/player/BellRungModal'
@@ -36,7 +36,7 @@ export default function StationQRPage() {
   const [error, setError] = useState<ValidationError | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [sharedState, setSharedState] = useState<unknown>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [, setIsSubmitting] = useState(false)
   const [pointsToast, setPointsToast] = useState<number | null>(null)
   const teamState = useTeamState(stationData?.teamId)
 
@@ -259,15 +259,7 @@ export default function StationQRPage() {
   // Render game
   return (
     <div className="bg-parchment relative h-dvh overflow-hidden flex flex-col">
-      <PlayerStatusBar
-        gameStatus={gameClock.status}
-        expiresAt={gameClock.expiresAt}
-        showCounters={!!(teamState.team && teamState.session)}
-        stationsSolved={teamState.stations.filter((s) => s.solved).length}
-        stationsTotal={teamState.stations.length}
-        evidencesCount={teamState.evidences.length}
-        salconduitsRemaining={teamState.session?.salconduits_remaining ?? 2}
-      />
+      <PlayerStatusBar gameStatus={gameClock.status} expiresAt={gameClock.expiresAt} />
 
       <main className="flex-1 max-w-4xl w-full mx-auto flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto px-2 sm:px-4 pb-24">

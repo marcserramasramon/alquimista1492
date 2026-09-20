@@ -72,16 +72,19 @@ export function AccuseTab({
     <div className="w-full flex flex-col h-full">
       {/* Title */}
       <div className="flex-shrink-0 px-6 py-2.5 border-b border-amber-200">
-        <h2 className="text-lg font-bold text-amber-900">Acusació Final</h2>
-        <p className="text-sm text-amber-700 mt-0.5">
-          {canAccuse
-            ? 'Estàs preparat per acusar!'
-            : `Necessites ${7 - solvedCount} més estacions`}
-        </p>
+        <div className="w-full max-w-4xl mx-auto">
+          <h2 className="text-lg font-bold text-amber-900">Acusació Final</h2>
+          <p className="text-sm text-amber-700 mt-0.5">
+            {canAccuse
+              ? 'Estàs preparat per acusar!'
+              : `Necessites ${7 - solvedCount} més estacions`}
+          </p>
+        </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 pb-24 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 pb-24">
+        <div className="w-full max-w-4xl mx-auto space-y-4">
         {!canAccuse ? (
           // Not ready to accuse
           <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -189,6 +192,7 @@ export function AccuseTab({
             </button>
           </>
         )}
+        </div>
       </div>
     </div>
   )

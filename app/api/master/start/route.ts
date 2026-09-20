@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyMasterToken } from '@/lib/auth/master'
 import { getServiceRoleClient } from '@/lib/db'
 import { DEFAULT_TEAMS } from '@/lib/master/config'
+import { assignCoartadaForTeam } from '@/lib/coartada/assign'
 
 export async function POST(request: NextRequest) {
   try {
@@ -83,6 +84,18 @@ export async function POST(request: NextRequest) {
             expires_at: expiresAtIso,
           })
           .in('id', sessionIds)
+      }
+
+      // Assign each team's coartada now that the roster is final —
+      // doing this at signin time assigned frases only to whoever had
+      // joined by then, leaving later teammates without one.
+      const coartadaResults = await Promise.all(
+        teamIds.map((id) => assignCoartadaForTeam(serviceClient, id))
+      )
+      for (const result of coartadaResults) {
+        if (result.error) {
+          console.error(`Failed to assign coartada for team ${result.teamId}:`, result.error)
+        }
       }
     }
 

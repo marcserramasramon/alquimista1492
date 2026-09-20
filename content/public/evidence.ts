@@ -13,6 +13,8 @@ export interface Evidence {
   discoveredAt: string
   category: 'physical' | 'testimony' | 'observation' | 'document'
   icon: string
+  /** Station id that unlocks this evidence when solved (for locked/unlocked display). */
+  stationId?: string
 }
 
 export const EVIDENCE_PUBLIC: Record<string, Evidence> = {
@@ -24,6 +26,7 @@ export const EVIDENCE_PUBLIC: Record<string, Evidence> = {
     discoveredAt: 'Registres del cementiri',
     category: 'physical',
     icon: '🔑',
+    stationId: 'cementiri',
   },
   light: {
     id: 'light',
@@ -33,6 +36,7 @@ export const EVIDENCE_PUBLIC: Record<string, Evidence> = {
     discoveredAt: 'Observació de la patrulla a Planes Bones',
     category: 'observation',
     icon: '💡',
+    stationId: 'planes-bones',
   },
   cantirs: {
     id: 'cantirs',
@@ -42,6 +46,7 @@ export const EVIDENCE_PUBLIC: Record<string, Evidence> = {
     discoveredAt: 'Recollida d\'aigua a la Font del Ferro',
     category: 'physical',
     icon: '🏺',
+    stationId: 'font-ferro',
   },
   literacy: {
     id: 'literacy',
@@ -51,6 +56,7 @@ export const EVIDENCE_PUBLIC: Record<string, Evidence> = {
     discoveredAt: 'Anàlisi del senyal al Serrat de les Bruixes',
     category: 'observation',
     icon: '📖',
+    stationId: 'serrat-bruixes',
   },
   caligraphia: {
     id: 'caligraphia',
@@ -60,6 +66,7 @@ export const EVIDENCE_PUBLIC: Record<string, Evidence> = {
     discoveredAt: 'Investigació a l\'escola',
     category: 'document',
     icon: '✍️',
+    stationId: 'pla-masset',
   },
   filigrana: {
     id: 'filigrana',
@@ -69,6 +76,7 @@ export const EVIDENCE_PUBLIC: Record<string, Evidence> = {
     discoveredAt: 'Anàlisi de documents',
     category: 'physical',
     icon: '⚓',
+    stationId: 'cementiri',
   },
   ink: {
     id: 'ink',
@@ -78,6 +86,7 @@ export const EVIDENCE_PUBLIC: Record<string, Evidence> = {
     discoveredAt: 'Anàlisi de la recepta a la Font del Ferro',
     category: 'physical',
     icon: '🖋️',
+    stationId: 'font-ferro',
   },
   nota_capita: {
     id: 'nota_capita',
@@ -87,6 +96,7 @@ export const EVIDENCE_PUBLIC: Record<string, Evidence> = {
     discoveredAt: 'Caixa de les Almoines',
     category: 'document',
     icon: '📜',
+    stationId: 'caixa-almoines',
   },
   carta_falsa: {
     id: 'carta_falsa',
@@ -96,6 +106,7 @@ export const EVIDENCE_PUBLIC: Record<string, Evidence> = {
     discoveredAt: 'Caixa de les Almoines',
     category: 'document',
     icon: '✉️',
+    stationId: 'caixa-almoines',
   },
   declaratio_anton: {
     id: 'declaratio_anton',
@@ -105,6 +116,7 @@ export const EVIDENCE_PUBLIC: Record<string, Evidence> = {
     discoveredAt: 'Confrontació al Pla de Masset',
     category: 'testimony',
     icon: '📋',
+    stationId: 'pla-masset',
   },
   carta_lliurada: {
     id: 'carta_lliurada',
@@ -114,6 +126,7 @@ export const EVIDENCE_PUBLIC: Record<string, Evidence> = {
     discoveredAt: 'Pla de Masset',
     category: 'document',
     icon: '✉️',
+    stationId: 'pla-masset',
   },
 } as const
 
@@ -135,33 +148,8 @@ export function getCanonicalEvidenceId(id: string): string {
 }
 
 /**
- * Get evidence by ID
- */
-export function getEvidence(id: string): Evidence | undefined {
-  const canonicalId = getCanonicalEvidenceId(id)
-  return EVIDENCE_PUBLIC[canonicalId as keyof typeof EVIDENCE_PUBLIC]
-}
-
-/**
  * Get all evidence
  */
 export function getAllEvidence(): Evidence[] {
   return Object.values(EVIDENCE_PUBLIC)
-}
-
-/**
- * Get evidence by category
- */
-export function getEvidenceByCategory(
-  category: Evidence['category']
-): Evidence[] {
-  return Object.values(EVIDENCE_PUBLIC).filter((e) => e.category === category)
-}
-
-/**
- * Get evidence name in Catalan
- */
-export function getEvidenceName(id: string): string {
-  const evidence = getEvidence(id)
-  return evidence?.catalan || id
 }

@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import QRCode from 'qrcode'
 import { useAudio } from '@/lib/audio/useAudio'
 import { getAllSuspects } from '@/content/public/suspects'
-import { getAllEvidence, getEvidence, getCanonicalEvidenceId, type Evidence } from '@/content/public/evidence'
-import { getAllStations } from '@/content/public/stations'
+import { getAllEvidence, getCanonicalEvidenceId, type Evidence } from '@/content/public/evidence'
+import { getAllStations, getStation } from '@/content/public/stations'
 import type { TeamEvidenceRow, TeamStationRow } from '@/lib/realtime/useTeamState'
 import { getTeamStation } from '@/lib/realtime/useTeamState'
 
@@ -77,18 +77,29 @@ export function NotebookTab({
   }
 
   const allSuspects = getAllSuspects()
-  const allEvidence = getAllEvidence()
-  const fites = getAllStations().filter((s) => FITES_IDS.has(s.id))
+  const allStationsOrdered = getAllStations()
+  const stationOrderMap = new Map(allStationsOrdered.map((s) => [s.id, s.order]))
+  const fites = allStationsOrdered.filter((s) => FITES_IDS.has(s.id))
 
   const rawUnlockedIds = evidences.map((e) => e.evidence_id)
   const unlockedEvidenceIds = Array.from(
     new Set(rawUnlockedIds.map((id) => getCanonicalEvidenceId(id)))
   )
 
-  const unlockedEvidenceList: Evidence[] = unlockedEvidenceIds.map((id) => {
-    const existing = getEvidence(id)
-    if (existing) return existing
-    return {
+  // Totes les proves definides, ordenades segons l'ordre de l'estació que les
+  // desbloqueja, perquè es puguin mostrar bloquejades abans de trobar-les
+  // (igual que la pestanya Història).
+  const knownEvidence: Evidence[] = [...getAllEvidence()].sort((a, b) => {
+    const orderA = a.stationId ? stationOrderMap.get(a.stationId) ?? Infinity : Infinity
+    const orderB = b.stationId ? stationOrderMap.get(b.stationId) ?? Infinity : Infinity
+    return orderA - orderB
+  })
+
+  // Proves desbloquejades a la base de dades que no tenen fitxa coneguda
+  // (per compatibilitat amb IDs antics): es mostren sempre desbloquejades.
+  const extraEvidence: Evidence[] = unlockedEvidenceIds
+    .filter((id) => !knownEvidence.some((e) => e.id === id))
+    .map((id) => ({
       id,
       name: id,
       catalan: `Prova: ${id}`,
@@ -96,8 +107,10 @@ export function NotebookTab({
       discoveredAt: 'Investigació',
       category: 'observation',
       icon: '📜',
-    }
-  })
+    }))
+
+  const unlockedEvidenceCount =
+    knownEvidence.filter((e) => unlockedEvidenceIds.includes(e.id)).length + extraEvidence.length
 
   const solvedFitesCount = fites.filter((f) => getTeamStation(stations, f.id)?.solved).length
 
@@ -183,7 +196,7 @@ export function NotebookTab({
   const tabs: { id: NotebookView; label: string; icon: string; badge?: number }[] = [
     { id: 'fites', label: 'Fites', icon: '🚩', badge: solvedFitesCount },
     { id: 'suspects', label: 'Sospitosos', icon: '🧖‍♂️' },
-    { id: 'evidence', label: 'Proves', icon: '📜', badge: unlockedEvidenceList.length },
+    { id: 'evidence', label: 'Proves', icon: '📜', badge: unlockedEvidenceCount },
   ]
 
   return (
@@ -195,7 +208,7 @@ export function NotebookTab({
             Quadern
           </h1>
           <p className="text-xs text-leather font-sans mt-0.5">
-            {solvedFitesCount} de {fites.length} fites superades • {unlockedEvidenceList.length} proves recollides
+            {solvedFitesCount} de {fites.length} fites superades • {unlockedEvidenceCount} de {knownEvidence.length} proves recollides
           </p>
         </header>
 
@@ -444,44 +457,72 @@ export function NotebookTab({
                   </div>
                 )}
 
-                {unlockedEvidenceList.length === 0 && !hasCartaFalsa ? (
-                  <div className="p-8 text-center">
-                    <div className="text-4xl mb-2">🔍</div>
-                    <p className="text-ink font-sans">
-                      Encara no heu trobat cap prova
-                    </p>
-                    <p className="text-xs text-leather mt-2 font-sans">
-                      Resoleu fites per la Guixa per anar-les desbloquejant aquí
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-xs font-sans text-leather mb-1">
-                      {unlockedEvidenceList.length} proves recollides
-                    </p>
-                    {unlockedEvidenceList.map((evidence) => (
-                      <div
-                        key={evidence.id}
-                        className="p-3.5 rounded-lg border border-[#1D3557]/25 bg-[#FAF5E9] shadow-sm"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="text-2xl">{evidence.icon}</div>
-                          <div className="flex-1">
-                            <h4 className="font-serif font-bold text-ink">
-                              {evidence.catalan}
-                            </h4>
-                            <p className="text-sm text-ink/80 font-sans my-1">
-                              {evidence.description}
+                <p className="text-xs font-sans text-leather mb-1">
+                  {unlockedEvidenceCount} de {knownEvidence.length} proves recollides
+                </p>
+
+                {knownEvidence.map((evidence) => {
+                  const unlocked = unlockedEvidenceIds.includes(evidence.id)
+                  const hintStation = evidence.stationId ? getStation(evidence.stationId) : undefined
+                  return (
+                    <div
+                      key={evidence.id}
+                      data-testid={`quadern-prova-${evidence.id}`}
+                      className={`p-3.5 rounded-lg border shadow-sm transition-colors ${
+                        unlocked
+                          ? 'bg-[#FAF5E9] border-[#1D3557]/25'
+                          : 'bg-[#EAE0CA]/50 border-leather/20 opacity-60'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="text-2xl leading-none">{unlocked ? evidence.icon : '🔒'}</div>
+                        <div className="flex-1">
+                          <h4 className="font-serif font-bold text-ink">
+                            {unlocked ? evidence.catalan : 'Prova bloquejada'}
+                          </h4>
+                          {unlocked ? (
+                            <>
+                              <p className="text-sm text-ink/80 font-sans my-1">
+                                {evidence.description}
+                              </p>
+                              <div className="text-xs text-leather font-sans">
+                                📌 {evidence.discoveredAt}
+                              </div>
+                            </>
+                          ) : (
+                            <p className="text-xs text-leather font-sans mt-0.5">
+                              {hintStation
+                                ? `Resol ${hintStation.catalan} per desbloquejar-la`
+                                : 'Resol la fita corresponent per desbloquejar-la'}
                             </p>
-                            <div className="text-xs text-leather font-sans">
-                              📌 {evidence.discoveredAt}
-                            </div>
-                          </div>
+                          )}
                         </div>
                       </div>
-                    ))}
-                  </>
-                )}
+                    </div>
+                  )
+                })}
+
+                {extraEvidence.map((evidence) => (
+                  <div
+                    key={evidence.id}
+                    className="p-3.5 rounded-lg border border-[#1D3557]/25 bg-[#FAF5E9] shadow-sm"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="text-2xl">{evidence.icon}</div>
+                      <div className="flex-1">
+                        <h4 className="font-serif font-bold text-ink">
+                          {evidence.catalan}
+                        </h4>
+                        <p className="text-sm text-ink/80 font-sans my-1">
+                          {evidence.description}
+                        </p>
+                        <div className="text-xs text-leather font-sans">
+                          📌 {evidence.discoveredAt}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </>
             )}
           </div>

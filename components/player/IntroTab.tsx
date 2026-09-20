@@ -9,6 +9,8 @@ interface IntroTabProps {
   stations?: TeamStationRow[]
   evidences?: TeamEvidenceRow[]
   onOpenMap?: () => void
+  /** Entrada a obrir directament en muntar-se (p. ex. la intro, el primer cop que el jugador obre l'app). Només es té en compte en el muntatge inicial. */
+  initialEntryId?: string
 }
 
 /**
@@ -34,8 +36,11 @@ function renderParagraph(text: string) {
  * resoldre l'estació corresponent (p. ex. l'Alerta dels Vigies al Serrat de
  * les Bruixes, o la Història a la Font del Ferro).
  */
-export function IntroTab({ stations = [], evidences = [], onOpenMap }: IntroTabProps) {
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+export function IntroTab({ stations = [], evidences = [], onOpenMap, initialEntryId }: IntroTabProps) {
+  // L'entrada inicial (si n'hi ha) només es té en compte en muntar-se: un
+  // cop obert el component, canvis posteriors de la prop no l'afecten,
+  // perquè els cops següents que es visiti la pestanya s'hi vegi el recull.
+  const [selectedId, setSelectedId] = useState<string | null>(() => initialEntryId ?? null)
 
   const isUnlocked = (entry: (typeof STORY_ENTRIES)[number]) => {
     if (!entry.stationId) return true
