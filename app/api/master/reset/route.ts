@@ -26,7 +26,6 @@ export async function POST(request: NextRequest) {
 
     const now = new Date()
     const nowIso = now.toISOString()
-    const expiresAtIso = new Date(now.getTime() + durationMinutes * 60 * 1000).toISOString()
 
     // 2. Process each of the 8 default teams
     for (const defTeam of DEFAULT_TEAMS) {
@@ -75,11 +74,13 @@ export async function POST(request: NextRequest) {
         // B. Remove previous results
         await serviceClient.from('results').delete().eq('team_id', team.id)
 
-        // C. Clean team_stations, team_evidences, and passes if exist
+        // C. Clean team_stations, team_evidences, passes and coartadas if exist
         try {
           await serviceClient.from('team_stations').delete().eq('team_id', team.id)
           await serviceClient.from('team_evidences').delete().eq('team_id', team.id)
           await serviceClient.from('passes').delete().eq('team_id', team.id)
+          await serviceClient.from('player_coartada_frases').delete().eq('team_id', team.id)
+          await serviceClient.from('team_coartadas').delete().eq('team_id', team.id)
         } catch {
           // Ignore if table does not exist or empty
         }

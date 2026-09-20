@@ -6,10 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
 import { useAudio } from '@/lib/audio/useAudio'
-import {
-  fadeInVariants,
-  scaleVariants,
-} from '@/lib/animations/useAnimations'
+import { fadeInVariants } from '@/lib/animations/useAnimations'
 
 interface BellsGameState {
   currentTab: 'porta' | 'decisio' | 'pista' | 'senyal' | 'result'
@@ -195,15 +192,11 @@ export function BellsGame(props: GameProps) {
         setError('No es pot obtenir la seqüència de campanades')
         setLoading(false)
       }
-    } catch (err) {
+    } catch {
       play('buzzer')
       setError('Error en obtenir la seqüència')
       setLoading(false)
     }
-  }
-
-  const handlePlayPista = async () => {
-    setState(prev => ({ ...prev, currentTab: 'senyal' }))
   }
 
   const playBellSound = (bellNumber: number) => {
@@ -296,7 +289,7 @@ export function BellsGame(props: GameProps) {
           attempts: prev.attempts + 1,
         }))
       }
-    } catch (err) {
+    } catch {
       play('buzzer')
       setError('Error en la validació')
     } finally {

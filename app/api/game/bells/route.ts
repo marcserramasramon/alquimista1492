@@ -1,7 +1,6 @@
 import 'server-only'
 
 import { getServiceRoleClient, supabase } from '@/lib/db'
-import { GAME_SOLUTIONS } from '@/content/private/game-solutions'
 import { getGameClock, isGameOver } from '@/lib/scoring/gameClock'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -21,13 +20,6 @@ const BellsValidationSchema = z.object({
   moralChoice: z.enum(['A', 'B']),
   bellSequence: z.array(z.number().int().min(0).max(3)).min(4).max(8).optional(),
 })
-
-interface BellsGameState {
-  sequence: number[]
-  moralChoice: 'A' | 'B'
-  sequenceSubmitted: boolean
-  sequenceCorrect: boolean
-}
 
 /**
  * Generate a sequence of 4 bells (0-3)

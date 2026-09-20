@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
 import { useAudio } from '@/lib/audio/useAudio'
-import { fadeInVariants, scaleVariants } from '@/lib/animations/useAnimations'
+import { fadeInVariants } from '@/lib/animations/useAnimations'
 
 interface GameState {
   activeDocTab: 'historia' | 'carta' | 'registre' | 'secret' | 'lapides'

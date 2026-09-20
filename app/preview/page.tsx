@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { getGameComponent, GAMES } from '@/components/games/registry'
+import { getGameComponent } from '@/components/games/registry'
 import { SubmitResult } from '@/components/gameTypes'
 import { SalconduitTab } from '@/components/player/SalconduitTab'
 import { EmissariAlertModal } from '@/components/game/EmissariAlertModal'

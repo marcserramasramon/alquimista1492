@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import QRCode from 'qrcode'
-import { motion } from 'framer-motion'
 import type { TeamRow, SessionRow, PassRow } from '@/lib/realtime/useTeamState'
 
 interface SalconduitTabProps {
@@ -15,7 +14,6 @@ interface SalconduitTabProps {
 export function SalconduitTab({
   team,
   session,
-  passes = [],
   onOpenNotebook,
 }: SalconduitTabProps) {
   const qrCanvasRef = useRef<HTMLCanvasElement>(null)

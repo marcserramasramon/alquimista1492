@@ -174,11 +174,3 @@ export function getAllStations(): Station[] {
   return Object.values(STATIONS).sort((a, b) => a.order - b.order)
 }
 
-/**
- * Get station name in Catalan
- */
-export function getStationName(id: string): string {
-  const station = getStation(id)
-  return station?.catalan || id
-}
-

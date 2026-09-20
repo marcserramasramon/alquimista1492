@@ -146,10 +146,3 @@ export const STORY_ENTRIES: StoryEntry[] = [
     ],
   },
 ]
-
-/**
- * Get all story entries in reading order.
- */
-export function getAllStoryEntries(): StoryEntry[] {
-  return STORY_ENTRIES
-}

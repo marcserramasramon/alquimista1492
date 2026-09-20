@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams } from 'next/navigation'
 import { PlayerNameInput } from '@/components/player/PlayerNameInput'
 import { usePlayerSignIn } from '@/lib/player/useSignIn'

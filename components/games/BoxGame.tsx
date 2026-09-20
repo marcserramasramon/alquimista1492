@@ -7,10 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
 import { useAudio } from '@/lib/audio/useAudio'
 import { useGameNavigation } from '@/lib/context/GameNavigationContext'
-import {
-  fadeInVariants,
-  zoomVariants,
-} from '@/lib/animations/useAnimations'
+import { fadeInVariants } from '@/lib/animations/useAnimations'
 import { ALL_SEALS, getTeamCorrectSeal, type SealOption } from '@/content/public/seals'
 
 interface BoxGameState {
@@ -188,7 +185,7 @@ export function BoxGame(props: GameProps) {
         setError(data.message || 'Contrasenya incorrecta')
         setState(prev => ({ ...prev, part1Attempts: prev.part1Attempts + 1, part1Code: '' }))
       }
-    } catch (err) {
+    } catch {
       play('buzzer')
       setError('Error en la validació')
     } finally {
@@ -234,7 +231,7 @@ export function BoxGame(props: GameProps) {
           part2SelectedCard: null,
         }))
       }
-    } catch (err) {
+    } catch {
       play('buzzer')
       setError('Error en la validació')
     } finally {
@@ -279,7 +276,7 @@ export function BoxGame(props: GameProps) {
           part3SelectedSeal: null,
         }))
       }
-    } catch (err) {
+    } catch {
       play('buzzer')
       setError('Error en validar el segell')
     } finally {
@@ -380,7 +377,6 @@ export function BoxGame(props: GameProps) {
           selectedSeal={state.part3SelectedSeal}
           onSelectSeal={id => setState(prev => ({ ...prev, part3SelectedSeal: id }))}
           onSubmit={handlePart3Seal}
-          teamSeal={teamSeal}
           error={error}
           loading={loading}
         />
@@ -1121,14 +1117,12 @@ function Part3SealScreen({
   selectedSeal,
   onSelectSeal,
   onSubmit,
-  teamSeal,
   error,
   loading,
 }: {
   selectedSeal: string | null
   onSelectSeal: (id: string) => void
   onSubmit: () => void
-  teamSeal: SealOption
   error: string
   loading: boolean
 }) {

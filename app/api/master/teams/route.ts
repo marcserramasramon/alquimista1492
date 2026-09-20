@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       throw teamsError
     }
 
-    let teamsList = existingTeams || []
+    const teamsList = existingTeams || []
 
     // If fewer than 8 teams exist, auto-seed missing default teams
     const existingCodes = new Set(teamsList.map((t) => t.code))

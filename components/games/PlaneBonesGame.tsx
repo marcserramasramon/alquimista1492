@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
 import { useAudio } from '@/lib/audio/useAudio'
-import { fadeInVariants, shakeVariants } from '@/lib/animations/useAnimations'
+import { fadeInVariants } from '@/lib/animations/useAnimations'
 import {
   HEX_MAP_NODES,
   CORRECT_PATH_SEQUENCE,

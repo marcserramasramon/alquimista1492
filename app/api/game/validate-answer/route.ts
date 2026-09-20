@@ -467,7 +467,7 @@ export async function POST(request: NextRequest) {
       stationId.includes('acusacio')
 
     let scoreReward = 0
-    let responseMessage = isCorrect
+    const responseMessage = isCorrect
       ? 'Resposta correcta!'
       : isAccusation
         ? 'Acusació desestimada. Sospitós erroni o proves no concloents (-10 punts).'

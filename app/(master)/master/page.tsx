@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useMasterDashboard, TeamData } from '@/lib/master/useDashboard'
+import { useMasterDashboard } from '@/lib/master/useDashboard'
 import { TeamsTable } from '@/components/master/TeamsTable'
 import { GameTimer } from '@/components/master/GameTimer'
 import { EquipsQRModal } from '@/components/master/EquipsQRModal'
@@ -59,7 +59,7 @@ export default function MasterDashboard() {
       setShowResetConfirm(false)
       // Automatically open the QR modal so the master can immediately show QR codes to players
       setIsQRModalOpen(true)
-    } catch (err) {
+    } catch {
       alert('Error reiniciant la partida. Revisa la consola.')
     }
   }
@@ -192,7 +192,7 @@ export default function MasterDashboard() {
             onStart={async () => {
               try {
                 await startGame(durationMinutes)
-              } catch (e) {
+              } catch {
                 alert('Error iniciant el temps.')
               }
             }}

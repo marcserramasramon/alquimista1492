@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     // Els codis d'estació (QR físic o entrada manual) són sempre en
     // minúscules; no depenem de com el teclat mòbil hagi capitalitzat el text
     const token = validation.data.token.trim().toLowerCase()
-    let requestedTeamId = validation.data.teamId || null
+    const requestedTeamId = validation.data.teamId || null
 
     // === Step 0: The game clock is authoritative — no station is
     // reachable once it is over, regardless of what the client believes ===

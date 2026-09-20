@@ -100,32 +100,8 @@ export const SUSPECTS: Record<string, Suspect> = {
 } as const
 
 /**
- * Get suspect by ID
- */
-export function getSuspect(id: string): Suspect | undefined {
-  return SUSPECTS[id as keyof typeof SUSPECTS]
-}
-
-/**
  * Get all suspects
  */
 export function getAllSuspects(): Suspect[] {
   return Object.values(SUSPECTS)
-}
-
-/**
- * Get all suspects with high suspicion factor
- */
-export function getHighSuspects(): Suspect[] {
-  return Object.values(SUSPECTS).filter(
-    (s) => s.suspicionFactor === 'alta'
-  )
-}
-
-/**
- * Get suspect name in Catalan
- */
-export function getSuspectName(id: string): string {
-  const suspect = getSuspect(id)
-  return suspect?.catalan || id
 }

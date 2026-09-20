@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import QRCode from 'qrcode'
@@ -492,7 +492,6 @@ export default function MasterQRDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 print:grid-cols-2 print:gap-3">
               {DEFAULT_TEAMS.map((tm) => {
                 const qr = teamQRs[tm.code]
-                const fullUrl = `${origin}/e/${tm.code}`
 
                 return (
                   <div

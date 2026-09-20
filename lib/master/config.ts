@@ -10,7 +10,6 @@ export interface StationConfig {
   name: string
   catalan: string
   order: number
-  gameComponent: string
 }
 
 export const DEFAULT_TEAMS: DefaultTeamConfig[] = [
@@ -25,12 +24,12 @@ export const DEFAULT_TEAMS: DefaultTeamConfig[] = [
 ]
 
 export const GAME_STATIONS: StationConfig[] = [
-  { id: 'serrat-bruixes', name: 'Serrat de les Bruixes', catalan: 'Serrat de les Bruixes', order: 1, gameComponent: 'SerratBruixesGame' },
-  { id: 'font-ferro', name: 'Font del Ferro', catalan: 'Font del Ferro', order: 2, gameComponent: 'FontFerroGame' },
-  { id: 'planes-bones', name: 'Planes Bones', catalan: 'Planes Bones', order: 3, gameComponent: 'PlaneBonesGame' },
-  { id: 'cementiri', name: 'Cementiri de la Guixa', catalan: 'Cementiri de la Guixa', order: 4, gameComponent: 'CementiriGame' },
-  { id: 'pla-masset', name: 'Pla de Masset — Control', catalan: 'Pla de Masset', order: 5, gameComponent: 'ControlGame' },
-  { id: 'pla-masset-accusation', name: 'Pla de Masset — Acusació', catalan: 'Pla de Masset', order: 6, gameComponent: 'AccusationGame' },
-  { id: 'caixa-almoines', name: 'Caixa de les Almoines', catalan: 'Caixa de les Almoines', order: 7, gameComponent: 'BoxGame' },
-  { id: 'bells-sometent', name: 'Campanar de Sant Sebastià', catalan: 'Campanar de Sant Sebastià', order: 8, gameComponent: 'BellsGame' },
+  { id: 'serrat-bruixes', name: 'Serrat de les Bruixes', catalan: 'Serrat de les Bruixes', order: 1 },
+  { id: 'font-ferro', name: 'Font del Ferro', catalan: 'Font del Ferro', order: 2 },
+  { id: 'planes-bones', name: 'Planes Bones', catalan: 'Planes Bones', order: 3 },
+  { id: 'cementiri', name: 'Cementiri de la Guixa', catalan: 'Cementiri de la Guixa', order: 4 },
+  { id: 'pla-masset', name: 'Pla de Masset — Control', catalan: 'Pla de Masset', order: 5 },
+  { id: 'pla-masset-accusation', name: 'Pla de Masset — Acusació', catalan: 'Pla de Masset', order: 6 },
+  { id: 'caixa-almoines', name: 'Caixa de les Almoines', catalan: 'Caixa de les Almoines', order: 7 },
+  { id: 'bells-sometent', name: 'Campanar de Sant Sebastià', catalan: 'Campanar de Sant Sebastià', order: 8 },
 ]

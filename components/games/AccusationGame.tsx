@@ -6,12 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { GameProps } from '@/components/gameTypes'
 import { useAudio } from '@/lib/audio/useAudio'
 import { useGameNavigation } from '@/lib/context/GameNavigationContext'
-import {
-  fadeInVariants,
-  containerVariants,
-  itemVariants,
-  shakeVariants,
-} from '@/lib/animations/useAnimations'
 
 interface AccusationGameState {
   currentScreen: 'intro' | 'suspect_select' | 'evidence_select' | 'giro' | 'result' | 'incorrect'

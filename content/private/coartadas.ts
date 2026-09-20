@@ -67,19 +67,3 @@ export function selectRandomCoartada(): Coartada {
   const randomKey = keys[Math.floor(Math.random() * keys.length)];
   return COARTADAS[randomKey];
 }
-
-/**
- * Distributes the 4 frases of a coartada cyclically among players.
- * Players are assigned frases in order: 1, 2, 3, 4, 1, 2, 3, 4, ...
- *
- * @param coartada The coartada object containing 4 frases
- * @param playerCount Number of players
- * @returns Array where index = player number (0-indexed), value = frase index (0-3)
- */
-export function distributeFrags(coartada: Coartada, playerCount: number): number[] {
-  const distribution: number[] = [];
-  for (let i = 0; i < playerCount; i++) {
-    distribution[i] = i % 4; // Cycles through 0, 1, 2, 3
-  }
-  return distribution;
-}
