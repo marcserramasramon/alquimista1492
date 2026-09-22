@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface Equip {
@@ -18,22 +18,32 @@ export default function MasterPage() {
   const [nom, setNom] = useState("");
   const [creant, setCreant] = useState(false);
 
-  async function carregar() {
+  const llegirEquips = useCallback(async (): Promise<Equip[] | null> => {
     const res = await fetch("/api/master/equips");
     if (res.status === 401) {
       router.push("/master/login");
-      return;
+      return null;
     }
     const data = await res.json();
-    setEquips(data.equips);
+    return data.equips;
+  }, [router]);
+
+  async function carregar() {
+    const nous = await llegirEquips();
+    if (nous) setEquips(nous);
   }
 
   useEffect(() => {
-    carregar();
-    const interval = setInterval(carregar, 5000);
+    const refresca = () =>
+      llegirEquips()
+        .then((nous) => {
+          if (nous) setEquips(nous);
+        })
+        .catch(() => {});
+    refresca();
+    const interval = setInterval(refresca, 5000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [llegirEquips]);
 
   async function crearEquip(e: React.FormEvent) {
     e.preventDefault();
