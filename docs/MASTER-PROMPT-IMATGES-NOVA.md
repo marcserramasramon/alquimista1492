@@ -1,6 +1,6 @@
 # 🎨 MASTER PROMPT — L'Alquimista de Sentfores — Generació d'Imatges (v2)
 
-> **Estat:** ESBORRANY DE TREBALL. Substitueix `docs/MASTER-PROMPT-IMATGES.md` (obsolet: era per a la trama del Traïdor/1705, barroc). Depèn de `docs/historia-nova.md` i `docs/fites-nova.md`, encara oberts — algunes seccions d'aquí queden marcades PENDENT perquè depenen de decisions de trama que no es prenen en aquest document.
+> **Estat:** ESBORRANY DE TREBALL. Substitueix `docs/arxiu/MASTER-PROMPT-IMATGES.md` (obsolet: era per a la trama del Traïdor/1705, barroc). Depèn de `docs/historia-nova.md` i `docs/fites-nova.md`, encara oberts — algunes seccions d'aquí queden marcades PENDENT perquè depenen de decisions de trama que no es prenen en aquest document.
 >
 > Origen del canvi d'època: `historia-nova.md` punt 12 — la cronologia passa de 1705 (Guerra de Successió) a **1472** (Guerra dels Remences), fet que obliga a canviar tota l'estètica visual de barroc a baixa edat mitjana catalana.
 
@@ -18,7 +18,7 @@
 
 ## 2. PALETA DE COLORS (PROPOSTA — a confirmar, no és trama)
 
-La paleta de `MASTER-PROMPT-IMATGES.md` (or vell #D4AF37, beige pergamí #F5E6D3) estava pensada per a estampes barroques del XVIII. Amb el salt a 1472, proposo una paleta inspirada en **manuscrits il·luminats i retaules gòtics catalans** (més austera, menys daurada, amb accents alquímics):
+La paleta de `docs/arxiu/MASTER-PROMPT-IMATGES.md` (or vell #D4AF37, beige pergamí #F5E6D3) estava pensada per a estampes barroques del XVIII. Amb el salt a 1472, proposo una paleta inspirada en **manuscrits il·luminats i retaules gòtics catalans** (més austera, menys daurada, amb accents alquímics):
 
 ```
 Fons principal:        #EDE3CE (pergamí envellit, més grisós que l'anterior)
@@ -166,7 +166,7 @@ orientation, high resolution for pan/zoom use."
 - Vestuari de la disfressa de comissari inquisitorial
 - Vestuari/aparença quan es desemmascara com a Fra Francesc
 
-**No generis cap prompt de personatge fins que això es tanqui explícitament** (regla del CLAUDE.md: "No improvisis trama ni solucions"). Quan es decideixi, aquesta secció s'ompliria seguint el mateix format que `docs/MASTER-PROMPT-IMATGES.md` §4 (edat, roba, cabells, detalls, expressió) però amb l'estil visual d'aquest document (§3), no el barroc antic.
+**No generis cap prompt de personatge fins que això es tanqui explícitament** (regla del CLAUDE.md: "No improvisis trama ni solucions"). Quan es decideixi, aquesta secció s'ompliria seguint el mateix format que `docs/arxiu/MASTER-PROMPT-IMATGES.md` §4 (edat, roba, cabells, detalls, expressió) però amb l'estil visual d'aquest document (§3), no el barroc antic.
 
 ---
 

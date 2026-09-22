@@ -12,12 +12,12 @@
 - `solutions_private.hints` (JSONB `{level_1, level_2, level_3}`) — existeix, ja té contingut sembrat per als jocs actuals.
 - Taula `hints_used` (team_id, hint_id) — existeix, pensada per no cobrar dues vegades la mateixa pista.
 - `score_events` — existeix, pot registrar la penalització.
-- **NO existeix:** cap ruta API per demanar una pista, ni cap component que mostri el flux "confirmació → pista revelada" descrit a `docs/pantalles-i-mecaniques-compartides.md`.
+- **NO existeix:** cap ruta API per demanar una pista, ni cap component que mostri el flux "confirmació → pista revelada" descrit a `docs/arxiu/pantalles-i-mecaniques-compartides.md`.
 
 **A construir:**
 - `app/api/game/hint/route.ts`: rep `stationId` + `level`, valida equip actiu, comprova a `hints_used` si ja s'ha pagat aquest nivell (si sí, retorna el text sense tornar a cobrar), si no resta punts via `score_events` i insereix a `hints_used`, retorna el text del nivell demanat.
 - `lib/hints/useHints.ts`: hook client que crida la ruta, gestiona l'estat de confirmació.
-- `components/player/HintPanel.tsx`: UI compartida (botó `[PISTA (−X)]` → confirmació → text), seguint el layout ja especificat a `docs/pantalles-i-mecaniques-compartides.md`.
+- `components/player/HintPanel.tsx`: UI compartida (botó `[PISTA (−X)]` → confirmació → text), seguint el layout ja especificat a `docs/arxiu/pantalles-i-mecaniques-compartides.md`.
 - Ampliar `GameProps` (`components/gameTypes/index.ts`) amb el que calgui perquè els jocs puguin muntar el `HintPanel` (probablement només cal `stationId`, que ja hi és).
 
 **Abast d'aquesta fase:** connectar-ho només al joc d'AIGUA (Font del Ferro) primer. Els altres jocs (existents i els 4 elements nous) l'adopten després sense refer la infraestructura.
@@ -47,7 +47,7 @@ Les 4 fites elementals comparteixen la mateixa forma: text/poema + instrucció d
 
 ### 🔥 FOC
 - També encaixa a `RevealGame` pel que fa a l'input/validació — **però `fites-nova.md` el marca com a CRÍTIC de seguretat** (flama oberta + paper, supervisió obligatòria). Això sí que és un forat de disseny d'app real: ara mateix cap pantalla genèrica cobreix "avís de seguretat obligatori abans de fer l'acció física".
-- **Proposta nova:** una pantalla genèrica reutilitzable "Avís de seguretat" (afegir a `docs/pantalles-i-mecaniques-compartides.md` quan es tanqui): apareix un cop, abans de mostrar l'input de resposta, amb el text d'instruccions + una confirmació explícita ("He llegit les instruccions i hi ha un adult supervisant" o similar) abans de deixar continuar. Pensada per FOC ara, però reutilitzable si algun altre repte físic futur ho necessita.
+- **Proposta nova:** una pantalla genèrica reutilitzable "Avís de seguretat" (afegir a `docs/arxiu/pantalles-i-mecaniques-compartides.md` quan es tanqui): apareix un cop, abans de mostrar l'input de resposta, amb el text d'instruccions + una confirmació explícita ("He llegit les instruccions i hi ha un adult supervisant" o similar) abans de deixar continuar. Pensada per FOC ara, però reutilitzable si algun altre repte físic futur ho necessita.
 - **PENDENT (trama/operativa, no jo):** si l'acció la fan els jugadors sota supervisió o la fa un monitor/màster i els jugadors només validen el resultat a l'app — canvia si cal aquesta pantalla o no.
 
 ### 🌬️ AIRE
@@ -91,20 +91,20 @@ Les 4 fites elementals comparteixen la mateixa forma: text/poema + instrucció d
 
 ## 6bis. Confirmat des de `historia-nova.md` (2026-09-21): sense app per a les interaccions amb l'antagonista
 
-L'Inquisidor/Alquimista disfressat (personatge del màster) **no té cap component d'app durant l'Acte I** — ni ruta, ni component, ni registre d'estat. Els vigila i els adverteix en viu (interpretació pura, sense digitalitzar-ho). Això confirma que **no cal reconstruir res equivalent a l'antiga estació "Pla de Masset — control"** (`docs/fitxes-estacions/estacio-05-pla-masset-control.md`, ja obsoleta): aquell disseny antic sí validava l'aturada/interrogatori des de l'app; el nou disseny no ho fa. Només el ritual final del Gresol (Pla de Masset) necessita validació d'app (el codi que en resulta) — veure `docs/fites-nova.md` § Estació central.
+L'Inquisidor/Alquimista disfressat (personatge del màster) **no té cap component d'app durant l'Acte I** — ni ruta, ni component, ni registre d'estat. Els vigila i els adverteix en viu (interpretació pura, sense digitalitzar-ho). Això confirma que **no cal reconstruir res equivalent a l'antiga estació "Pla de Masset — control"** (`docs/arxiu/fitxes-estacions/estacio-05-pla-masset-control.md`, ja obsoleta): aquell disseny antic sí validava l'aturada/interrogatori des de l'app; el nou disseny no ho fa. Només el ritual final del Gresol (Pla de Masset) necessita validació d'app (el codi que en resulta) — veure `docs/fites-nova.md` § Estació central.
 
 ## 6. Coses NO tocades en aquesta fase (esperen `historia-nova.md`)
 
 - `components/games/AccusationGame.tsx`
-- `docs/evidencies.md`
+- `docs/arxiu/evidencies.md`
 - `app/api/game/dismiss-suspect/route.ts`
-- Fitxes de sospitosos (`docs/fitxes-personatges/*.md`)
+- Fitxes de sospitosos (`docs/arxiu/fitxes-personatges/*.md`)
 
 ---
 
 ## 7bis. Flux i disseny de pantalles (redisseny del HUB)
 
-> Origen: conversa del 2026-09-21. Substitueix conceptualment `docs/interficie.md`, que descriu el hub antic (5 botons: Mapa/Quadern/**Escaneja**/Història/Salvos) — desactualitzat en els punts que xoquen amb aquest apartat. La resta de `interficie.md` (colors, tipografia, mides, patró de pantalla d'estació) es manté vàlida.
+> Origen: conversa del 2026-09-21. Substitueix conceptualment `docs/arxiu/interficie.md`, que descriu el hub antic (5 botons: Mapa/Quadern/**Escaneja**/Història/Salvos) — desactualitzat en els punts que xoquen amb aquest apartat. La resta de `interficie.md` (colors, tipografia, mides, patró de pantalla d'estació) es manté vàlida.
 >
 > Confirmat en aquesta conversa: la comunicació amb el personatge que volta físicament pel poble és **sempre amb el mateix personatge** (independentment de com acabi tancant-se `historia-nova.md`), via **xat en directe** des de la webapp.
 
@@ -272,7 +272,7 @@ Hi ha una carpeta `v2/` a l'arrel del repo (Next.js complet, propi `node_modules
 - [ ] Resoldre la carpeta `v2/` (mantenir, documentar el seu propòsit, o esborrar) — també xoca amb el flux multi-dispositiu de §7bis.1
 - [ ] Confirmar nom/identitat del personatge del XAT (§7bis.3) i si es manté algun equivalent de "salconduits"
 - [ ] Decidir si el xat es bloqueja/desbloqueja per actes
-- [ ] Un cop tancat: actualitzar `docs/interficie.md` perquè reflecteixi el hub de 3 pestanyes (MAPA+FITES fusionades) (o marcar-lo obsolet i fusionar-lo aquí)
+- [ ] Un cop tancat: actualitzar `docs/arxiu/interficie.md` perquè reflecteixi el hub de 3 pestanyes (MAPA+FITES fusionades) (o marcar-lo obsolet i fusionar-lo aquí)
 - [ ] Construir "La Gran Obra" (§7bis.2bis): component `GranObra.tsx`, nodes en pentàgon, línies progressives, oroborus al completar-se
 - [ ] Encarregar/crear l'asset visual de l'oroborus
 - [ ] Tancar a `historia-nova.md`/`fites-nova.md` si el pentagrama té significat in-fiction (qui el va traçar, per què) — NO decidit aquí, només la seva presentació visual

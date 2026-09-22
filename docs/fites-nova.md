@@ -1,6 +1,6 @@
 # El Traïdor de la Guixa — Fites (Redisseny: 5 Elements)
 
-> **Estat:** ESBORRANY DE TREBALL. Substitueix conceptualment `docs/old/jocs.md` i les fitxes a `docs/fitxes-estacions/`. Mentre es treballa aquest document en el seu propi xat, les fitxes existents (`docs/fitxes-estacions/estacio-0X-*.md`) es consideren desactualitzades per a les estacions que canvien.
+> **Estat:** ESBORRANY DE TREBALL. Substitueix conceptualment `docs/arxiu/jocs.md` i les fitxes a `docs/arxiu/fitxes-estacions/`. Mentre es treballa aquest document en el seu propi xat, les fitxes existents (`docs/arxiu/fitxes-estacions/estacio-0X-*.md`) es consideren desactualitzades per a les estacions que canvien.
 >
 > Depèn de: `docs/historia-nova.md` (especialment els punts PENDENT — sense trama definida, el "per què" de cada estació queda en l'aire).
 
@@ -187,4 +187,4 @@ Amb 4 elements el codi era **4231** (FOC·AIGUA·TERRA·PEDRA, cada un un dígit
 - [ ] Escriure les 3 pistes de cada element
 - [ ] Revisió de seguretat específica per FOC (obligatòria abans de fer-ho servir amb jugadors)
 - [ ] Triar color i patró de camuflatge del cartell d'ÀNIMA, i concretar la implementació del filtre de color + mirall a la webapp (ja triat: opció B, càmera de l'app)
-- [ ] Un cop tancat: actualitzar/crear `docs/fitxes-estacions/estacio-0X-*.md` per a cada fita i marcar `docs/old/jocs.md` com a obsolet
+- [ ] Un cop tancat: actualitzar/crear `docs/arxiu/fitxes-estacions/estacio-0X-*.md` per a cada fita i marcar `docs/arxiu/jocs.md` com a obsolet
