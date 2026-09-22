@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { llegirDecisioUbicacio } from "@/lib/ubicacio";
 import { VistaEntradaCodi } from "@/components/vistes/VistaEntradaCodi";
 
 export function EntradaEquip({ codiInicial = "" }: { codiInicial?: string }) {
@@ -26,7 +27,10 @@ export function EntradaEquip({ codiInicial = "" }: { codiInicial?: string }) {
         return;
       }
       // La primera vegada que l'equip entra, tria el seu nom.
-      router.push(data.primeraEntrada === true ? "/nom" : "/joc");
+      // Primera entrada: nom → ubicació → hub. Si no, directe al hub, passant per
+      // la ubicació si aquest mòbil encara no ho ha decidit.
+      if (data.primeraEntrada === true) router.push("/nom");
+      else router.push(llegirDecisioUbicacio() ? "/joc" : "/ubicacio");
     } catch {
       setError("Error de connexió. Torna-ho a provar.");
     } finally {

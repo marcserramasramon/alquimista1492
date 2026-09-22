@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServiceRoleClient } from "@/lib/supabase";
 import { getEquipSession } from "@/lib/auth";
 import { getEstacionsOrdenades, getEstacionsJugables } from "@/content/public/estacions";
+import { MAXIMA_EDAT_UBICACIO_MASTER_MS } from "@/lib/ubicacio";
 
 export async function GET(request: NextRequest) {
   const sessio = await getEquipSession(request);
@@ -32,7 +33,21 @@ export async function GET(request: NextRequest) {
   const jugables = getEstacionsJugables();
   const totesResoltes = jugables.every((e) => progresPerEstacio.get(e.id)?.resolta);
 
+  // Posició del màster: només si la comparteix i és recent.
+  const { data: ubicacioMaster } = await db
+    .from("v2_master_location")
+    .select("lat, lng, sharing, updated_at")
+    .eq("id", 1)
+    .maybeSingle();
+  const masterVisible =
+    ubicacioMaster?.sharing &&
+    ubicacioMaster.lat !== null &&
+    ubicacioMaster.lng !== null &&
+    ubicacioMaster.updated_at &&
+    Date.now() - new Date(ubicacioMaster.updated_at).getTime() < MAXIMA_EDAT_UBICACIO_MASTER_MS;
+
   return NextResponse.json({
+    master: masterVisible ? { lat: ubicacioMaster.lat, lng: ubicacioMaster.lng } : null,
     equip,
     estacions: getEstacionsOrdenades().map((e) => ({
       ...e,

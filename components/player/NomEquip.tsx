@@ -57,7 +57,7 @@ export function NomEquip() {
         setError(data.error ?? "No s'ha pogut desar el nom");
         return;
       }
-      router.push("/joc");
+      router.push("/ubicacio");
     } catch {
       setError("Error de connexió. Torna-ho a provar.");
     } finally {

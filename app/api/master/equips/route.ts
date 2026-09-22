@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const db = getServiceRoleClient();
   const { data: equips, error: equipsError } = await db
     .from("v2_teams")
-    .select("id, code, name, status, started_at, finished_at")
+    .select("id, code, name, status, started_at, finished_at, last_lat, last_lng, last_location_at")
     .order("created_at", { ascending: true });
 
   if (equipsError) {
@@ -37,7 +37,13 @@ export async function GET(request: NextRequest) {
     return { ...e, resoltes, total };
   });
 
-  return NextResponse.json({ equips: resultat });
+  const { data: ubicacioMaster } = await db
+    .from("v2_master_location")
+    .select("lat, lng, sharing, updated_at")
+    .eq("id", 1)
+    .maybeSingle();
+
+  return NextResponse.json({ equips: resultat, master: ubicacioMaster ?? null });
 }
 
 const NouEquipSchema = z.object({ nom: z.string().trim().min(1).max(60) });

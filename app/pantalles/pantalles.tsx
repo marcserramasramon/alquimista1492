@@ -14,8 +14,9 @@
  */
 
 import type { ReactNode } from "react";
-import { getEstacionsJugables, getEstacionsOrdenades, type Estacio } from "@/content/public/estacions";
-import type { EstacioMapa } from "@/components/player/MapaEquip";
+import { getEstacio, getEstacionsJugables, getEstacionsOrdenades, type Estacio } from "@/content/public/estacions";
+import type { EstacioMapa, MarcadorMapa } from "@/components/player/MapaEquip";
+import { VistaUbicacio } from "@/components/vistes/VistaUbicacio";
 import { VistaBenvinguda } from "@/components/vistes/VistaBenvinguda";
 import { VistaEntradaCodi } from "@/components/vistes/VistaEntradaCodi";
 import { VistaNomEquip } from "@/components/vistes/VistaNomEquip";
@@ -76,7 +77,7 @@ const SEGUENT_FITA = getEstacionsOrdenades().find(
   (e) => e.tipus !== "especial" && e.disponible && !RESOLTES_MITJA_PARTIDA.includes(e.id),
 );
 
-function hub(resoltes: string[], seleccionadaInicialId: string | null = null) {
+function hub(resoltes: string[], seleccionadaInicialId: string | null = null, marcadors: MarcadorMapa[] = []) {
   const estacions = estacionsAmbProgres(resoltes);
   // Mateix criteri que /api/estat: totes les estacions jugables resoltes.
   const totesResoltes = JUGABLES.every((id) => resoltes.includes(id));
@@ -88,6 +89,7 @@ function hub(resoltes: string[], seleccionadaInicialId: string | null = null) {
       onAnarEstacio={noop}
       onAnarFinal={noop}
       seleccionadaInicialId={seleccionadaInicialId}
+      marcadors={marcadors}
     />
   );
 }
@@ -167,12 +169,49 @@ function pantallesFita(estacio: Estacio): Pantalla[] {
   ];
 }
 
+/** Posició d'exemple a tocar d'una fita real (una mica desplaçada perquè no la tapi). */
+function propDe(estacioId: string, desplacament = 0.0004) {
+  const estacio = getEstacio(estacioId);
+  return estacio ? { lat: estacio.latitud + desplacament, lng: estacio.longitud + desplacament } : null;
+}
+
+const POSICIO_MASTER = propDe("font-ferro", -0.0005);
+const POSICIO_EQUIP = propDe("planes-bones");
+
 const TOTAL_MASTER = getEstacionsJugables().filter((e) => e.disponible).length;
 const EQUIPS_MASTER: EquipMaster[] = [
-  { id: "1", code: "K7M2QX", name: "Els Salamandres", status: "joc", resoltes: 2, total: TOTAL_MASTER },
-  { id: "2", code: "P4R9TB", name: "Equip 2", status: "espera", resoltes: 0, total: TOTAL_MASTER },
-  { id: "3", code: "W3HZ8N", name: "Les Fènix", status: "final", resoltes: TOTAL_MASTER, total: TOTAL_MASTER },
+  {
+    id: "1",
+    code: "K7M2QX",
+    name: "Els Salamandres",
+    status: "joc",
+    resoltes: 2,
+    total: TOTAL_MASTER,
+    ubicacio: POSICIO_EQUIP && { ...POSICIO_EQUIP, faMinuts: 0 },
+  },
+  { id: "2", code: "P4R9TB", name: "Equip 2", status: "espera", resoltes: 0, total: TOTAL_MASTER, ubicacio: null },
+  {
+    id: "3",
+    code: "W3HZ8N",
+    name: "Les Fènix",
+    status: "final",
+    resoltes: TOTAL_MASTER,
+    total: TOTAL_MASTER,
+    ubicacio: propDe("aire") && { ...propDe("aire")!, faMinuts: 4 },
+  },
 ];
+
+const ESTACIONS_MASTER = estacionsAmbProgres([]);
+
+const MASTER_BASE = {
+  nom: "",
+  creant: false,
+  onNomChange: noop,
+  onCrear: noop,
+  onReiniciar: noop,
+  estacions: ESTACIONS_MASTER,
+  onComparteixoChange: noop,
+};
 
 // ---------------------------------------------------------------------------
 // Registre
@@ -262,6 +301,20 @@ export const PANTALLES: Pantalla[] = [
       />
     ),
   },
+  {
+    id: "ubicacio",
+    grup: "entrada",
+    titol: "Ubicació · consentiment",
+    descripcio: "Després del nom, abans de demanar el permís de GPS.",
+    render: () => <VistaUbicacio demanant={false} onAcceptar={noop} onRebutjar={noop} />,
+  },
+  {
+    id: "ubicacio-demanant",
+    grup: "entrada",
+    titol: "Ubicació · esperant permís",
+    descripcio: "Mentre el navegador mostra el seu diàleg de permís.",
+    render: () => <VistaUbicacio demanant onAcceptar={noop} onRebutjar={noop} />,
+  },
 
   // Hub
   {
@@ -297,6 +350,17 @@ export const PANTALLES: Pantalla[] = [
     titol: "Hub · totes resoltes",
     descripcio: "Apareix el botó del Pla de Masset.",
     render: () => hub(JUGABLES),
+  },
+  {
+    id: "hub-amb-master",
+    grup: "hub",
+    titol: "Hub · amb el màster",
+    descripcio: "El màster comparteix la ubicació (marcador vermell) i el punt blau és l'equip.",
+    render: () =>
+      hub(RESOLTES_MITJA_PARTIDA, null, [
+        ...(POSICIO_MASTER ? [{ id: "master", tipus: "master" as const, ...POSICIO_MASTER }] : []),
+        ...(POSICIO_EQUIP ? [{ id: "jo", tipus: "jo" as const, ...POSICIO_EQUIP }] : []),
+      ]),
   },
 
   // Fites
@@ -341,12 +405,40 @@ export const PANTALLES: Pantalla[] = [
     descripcio: "Tres equips en estats diferents.",
     render: () => (
       <VistaMasterEquips
+        {...MASTER_BASE}
         equips={EQUIPS_MASTER}
-        nom=""
-        creant={false}
-        onNomChange={noop}
-        onCrear={noop}
-        onReiniciar={noop}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+      />
+    ),
+  },
+  {
+    id: "master-comparteix",
+    grup: "master",
+    titol: "Màster · compartint ubicació",
+    descripcio: "El màster (punt blau) comparteix la seva posició amb els equips.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={POSICIO_MASTER}
+        comparteixo
+        estatUbicacio="actiu"
+      />
+    ),
+  },
+  {
+    id: "master-gps-denegat",
+    grup: "master",
+    titol: "Màster · GPS denegat",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo
+        estatUbicacio="denegat"
       />
     ),
   },
@@ -356,7 +448,7 @@ export const PANTALLES: Pantalla[] = [
     titol: "Màster · sense equips",
     descripcio: "Abans de crear cap equip.",
     render: () => (
-      <VistaMasterEquips equips={[]} nom="" creant={false} onNomChange={noop} onCrear={noop} onReiniciar={noop} />
+      <VistaMasterEquips {...MASTER_BASE} equips={[]} posicioMaster={null} comparteixo={false} estatUbicacio="inactiu" />
     ),
   },
 ];

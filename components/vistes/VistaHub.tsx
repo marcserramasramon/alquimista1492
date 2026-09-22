@@ -1,6 +1,6 @@
 "use client";
 
-import { MapaEquip, type EstacioMapa } from "@/components/player/MapaEquip";
+import { MapaEquip, type EstacioMapa, type MarcadorMapa } from "@/components/player/MapaEquip";
 
 export interface VistaHubProps {
   nomEquip: string;
@@ -10,6 +10,8 @@ export interface VistaHubProps {
   onAnarFinal: () => void;
   /** Fita seleccionada en obrir la vista (mostra el seu popup). */
   seleccionadaInicialId?: string | null;
+  /** Posició del màster (si la comparteix) i la del mateix equip. */
+  marcadors?: MarcadorMapa[];
 }
 
 export function VistaHub({
@@ -19,6 +21,7 @@ export function VistaHub({
   onAnarEstacio,
   onAnarFinal,
   seleccionadaInicialId,
+  marcadors,
 }: VistaHubProps) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-4 px-4 py-6">
@@ -32,6 +35,7 @@ export function VistaHub({
         totesResoltes={totesResoltes}
         onAnar={onAnarEstacio}
         seleccionadaInicialId={seleccionadaInicialId}
+        marcadors={marcadors}
       />
 
       {totesResoltes && (

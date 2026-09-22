@@ -19,9 +19,26 @@ export interface MapaEquipProps {
   estacions: EstacioMapa[];
   totesResoltes: boolean;
   /** Es crida quan l'equip prem "Anar-hi" al popup d'una fita disponible. */
-  onAnar: (estacio: EstacioMapa) => void;
+  onAnar?: (estacio: EstacioMapa) => void;
   /** Fita seleccionada inicialment (popup obert). */
   seleccionadaInicialId?: string | null;
+  /** Posicions en viu (màster, equips, el propi mòbil). */
+  marcadors?: MarcadorMapa[];
+  /** Graella de fites sota el mapa (el màster no la necessita). */
+  ambLlista?: boolean;
+}
+
+export interface MarcadorMapa {
+  id: string;
+  tipus: "master" | "equip" | "jo";
+  lat: number;
+  lng: number;
+  /** Text al costat del marcador (nom d'equip). El del màster no en porta. */
+  etiqueta?: string;
+}
+
+function dinsDelMapa(lat: number, lng: number) {
+  return lat >= BOUND_MIN_LAT && lat <= BOUND_MAX_LAT && lng >= BOUND_MIN_LON && lng <= BOUND_MAX_LON;
 }
 
 // Límits geogràfics del mapa il·lustrat (mateixos que l'app v1, "esta bé")
@@ -38,8 +55,33 @@ function latLonToSVG(lat: number, lon: number) {
   return { x, y };
 }
 
-export function MapaEquip({ estacions, totesResoltes, onAnar, seleccionadaInicialId = null }: MapaEquipProps) {
+export function MapaEquip({
+  estacions,
+  totesResoltes,
+  onAnar,
+  seleccionadaInicialId = null,
+  marcadors = [],
+  ambLlista = true,
+}: MapaEquipProps) {
   const [seleccionadaId, setSeleccionadaId] = useState<string | null>(seleccionadaInicialId);
+  // Fora dels límits del mapa il·lustrat, un marcador es queda a l'última
+  // posició coneguda de dins (app-nova.md §7ter.3).
+  const [darreresDins, setDarreresDins] = useState<Record<string, { lat: number; lng: number }>>({});
+  const nousDins = marcadors.filter(
+    (m) => dinsDelMapa(m.lat, m.lng) && (darreresDins[m.id]?.lat !== m.lat || darreresDins[m.id]?.lng !== m.lng)
+  );
+  if (nousDins.length > 0) {
+    setDarreresDins((actuals) => {
+      const seguents = { ...actuals };
+      for (const m of nousDins) seguents[m.id] = { lat: m.lat, lng: m.lng };
+      return seguents;
+    });
+  }
+  const marcadorsVisibles = marcadors.flatMap((m) => {
+    if (dinsDelMapa(m.lat, m.lng)) return [m];
+    const darrera = darreresDins[m.id];
+    return darrera ? [{ ...m, ...darrera }] : [];
+  });
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -111,7 +153,7 @@ export function MapaEquip({ estacions, totesResoltes, onAnar, seleccionadaInicia
               const { x, y } = latLonToSVG(estacio.latitud, estacio.longitud);
               const color = estacio.progres.resolta ? "#9CA3AF" : estacio.disponible ? "#1E3A5F" : "#B0B7C3";
               return (
-                <g key={estacio.id} onClick={() => setSeleccionadaId(estacio.id)} style={{ cursor: "pointer" }}>
+                <g key={estacio.id} onClick={() => onAnar && setSeleccionadaId(estacio.id)} style={{ cursor: onAnar ? "pointer" : undefined }}>
                   <circle cx={x} cy={y} r={16} fill={color} stroke="#C99E32" strokeWidth={2} />
                   <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize={16} fill="white" fontWeight="bold">
                     {estacio.progres.resolta ? "✓" : "?"}
@@ -119,46 +161,86 @@ export function MapaEquip({ estacions, totesResoltes, onAnar, seleccionadaInicia
                 </g>
               );
             })}
+          {marcadorsVisibles.map((m) => {
+            const { x, y } = latLonToSVG(m.lat, m.lng);
+            if (m.tipus === "jo") {
+              return <circle key={m.id} cx={x} cy={y} r={8} fill="#2563EB" stroke="white" strokeWidth={3} />;
+            }
+            if (m.tipus === "master") {
+              return (
+                <g key={m.id} aria-label="Posició del màster">
+                  <circle cx={x} cy={y} r={14} fill="none" stroke="#7A1F26" strokeWidth={3}>
+                    <animate attributeName="r" values="14;26" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.8;0" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                  <circle cx={x} cy={y} r={14} fill="#7A1F26" stroke="#C99E32" strokeWidth={3} />
+                  <circle cx={x} cy={y} r={5} fill="#F4EBD9" />
+                </g>
+              );
+            }
+            return (
+              <g key={m.id}>
+                <circle cx={x} cy={y} r={11} fill="#7A1F26" stroke="white" strokeWidth={3} />
+                {m.etiqueta && (
+                  <text
+                    x={x}
+                    y={y - 18}
+                    textAnchor="middle"
+                    fontSize={18}
+                    fontWeight="bold"
+                    fill="#2B2118"
+                    stroke="#F4EBD9"
+                    strokeWidth={4}
+                    paintOrder="stroke"
+                  >
+                    {m.etiqueta}
+                  </text>
+                )}
+              </g>
+            );
+          })}
         </svg>
       </div>
 
-      <div>
-        <p className="mb-2 text-xs font-bold uppercase tracking-wider text-leather">
-          📍 Estacions del joc
-        </p>
-        <div className="grid grid-cols-2 gap-1.5 text-sm sm:grid-cols-3">
-          {estacions
-            .filter((e) => e.tipus !== "especial" || totesResoltes)
-            .map((estacio) => {
-              const element = estacio.element ? ELEMENTS[estacio.element] : null;
-              return (
-                <button
-                  key={estacio.id}
-                  onClick={() => setSeleccionadaId(estacio.id)}
-                  className="flex items-center gap-2 rounded-lg border border-leather/20 bg-vellum/80 px-2 py-1.5 text-left shadow-sm transition hover:bg-vellum"
-                >
-                  {element ? (
-                    <img src={element.icona} alt={element.nom} className="h-6 w-6 flex-shrink-0 object-contain drop-shadow-sm" />
-                  ) : (
-                    <span className="flex-shrink-0">
-                      {estacio.progres.resolta ? "✓" : estacio.disponible ? "?" : "🔒"}
-                    </span>
-                  )}
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-xs font-bold text-ink sm:text-sm">
-                      {element ? element.nom : estacio.nom}
-                    </span>
-                    {element && (
-                      <span className="block truncate text-[11px] italic text-leather">{estacio.nom}</span>
+      {ambLlista && (
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-leather">
+            📍 Estacions del joc
+          </p>
+          <div className="grid grid-cols-2 gap-1.5 text-sm sm:grid-cols-3">
+            {estacions
+              .filter((e) => e.tipus !== "especial" || totesResoltes)
+              .map((estacio) => {
+                const element = estacio.element ? ELEMENTS[estacio.element] : null;
+                return (
+                  <button
+                    key={estacio.id}
+                    onClick={() => setSeleccionadaId(estacio.id)}
+                    className="flex items-center gap-2 rounded-lg border border-leather/20 bg-vellum/80 px-2 py-1.5 text-left shadow-sm transition hover:bg-vellum"
+                  >
+                    {element ? (
+                      <img src={element.icona} alt={element.nom} className="h-6 w-6 flex-shrink-0 object-contain drop-shadow-sm" />
+                    ) : (
+                      <span className="flex-shrink-0">
+                        {estacio.progres.resolta ? "✓" : estacio.disponible ? "?" : "🔒"}
+                      </span>
                     )}
-                  </span>
-                </button>
-              );
-            })}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-bold text-ink sm:text-sm">
+                        {element ? element.nom : estacio.nom}
+                      </span>
+                      {element && (
+                        <span className="block truncate text-[11px] italic text-leather">{estacio.nom}</span>
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
+          </div>
         </div>
-      </div>
+      )}
 
-      {seleccionada && (
+      {seleccionada && onAnar && (
         <div className="rounded-xl border-2 border-leather/40 bg-vellum p-4 shadow-md">
           <h3 className="font-serif text-lg font-bold text-ink">{seleccionada.nom}</h3>
           <p className="mt-1 text-sm text-ink/80">{seleccionada.entrada}</p>
