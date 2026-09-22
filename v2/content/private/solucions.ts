@@ -8,27 +8,16 @@ import "server-only";
  * content/public/estacions.ts fins que es tanqui.
  */
 
-export interface SolucioText {
-  tipus: "text";
+export interface Solucio {
   /** Totes les formes acceptades (majúscules/minúscules i accents es normalitzen igualment). */
   respostesAcceptades: string[];
   pistes: string[];
 }
 
-export interface SolucioImatge {
-  tipus: "imatge";
-  opcions: { id: string; imatge: string; etiqueta: string }[];
-  correctaId: string;
-  pistes: string[];
-}
-
-export type Solucio = SolucioText | SolucioImatge;
-
 export const SOLUCIONS: Record<string, Solucio> = {
   // AIGUA — Font del Ferro. Cera d'espelma + aigua tintada revela un número;
   // la manovella té 4 radis, el número revelat n'és el doble.
   "font-ferro": {
-    tipus: "text",
     respostesAcceptades: ["8"],
     pistes: [
       "El que brolla revela el secret.",
@@ -40,7 +29,6 @@ export const SOLUCIONS: Record<string, Solucio> = {
   // TERRA — Planes Bones. Cola blanca + fang revela el missatge; la resposta
   // és el nombre d'àmfores del lloc.
   "planes-bones": {
-    tipus: "text",
     respostesAcceptades: ["3"],
     pistes: [
       "Busca on guarda els elixirs l'alquimista.",
@@ -52,7 +40,6 @@ export const SOLUCIONS: Record<string, Solucio> = {
   // AIRE — Creu del Pujolar. Número gravat a la creu (1246) menys el número
   // que apareix bafant sobre el vidre ensabonat (1239).
   aire: {
-    tipus: "text",
     respostesAcceptades: ["7"],
     pistes: [
       "El primer número aguanta la creu, el segon número es desvelarà amb l'aire del teu halè.",
@@ -63,7 +50,6 @@ export const SOLUCIONS: Record<string, Solucio> = {
 
   // ÀNIMA — Pista skate. Tinta UV al punt més alt de la pista.
   anima: {
-    tipus: "text",
     respostesAcceptades: ["4"],
     pistes: [
       "El que busques és sota els teus peus.",
@@ -77,17 +63,6 @@ export function getSolucio(estacioId: string): Solucio | undefined {
   return SOLUCIONS[estacioId];
 }
 
-/** Versió sense la resposta correcta: l'única part d'una SolucioImatge que es pot enviar al client. */
-export function getSolucioPublica(estacioId: string) {
-  const solucio = getSolucio(estacioId);
-  if (!solucio) return undefined;
-  if (solucio.tipus === "text") return { tipus: "text" as const };
-  return {
-    tipus: "imatge" as const,
-    opcions: solucio.opcions.map(({ id, imatge, etiqueta }) => ({ id, imatge, etiqueta })),
-  };
-}
-
 export function normalitzaText(text: string): string {
   return text
     .normalize("NFD")
@@ -99,7 +74,7 @@ export function normalitzaText(text: string): string {
     .trim();
 }
 
-export function comparaResposta(solucio: SolucioText, resposta: string): boolean {
+export function comparaResposta(solucio: Solucio, resposta: string): boolean {
   const normalitzada = normalitzaText(resposta);
   return solucio.respostesAcceptades.some((r) => normalitzaText(r) === normalitzada);
 }

@@ -4,7 +4,7 @@
  * Les respostes correctes viuen a content/private/solucions.ts.
  */
 
-export type TipusJoc = "text" | "imatge" | "especial";
+export type TipusJoc = "text" | "especial";
 
 /** Element alquímic de la fita (docs/fites-nova.md). Sense valor = estació no elemental. */
 export type Element = "aigua" | "terra" | "foc" | "aire" | "anima";
@@ -100,8 +100,8 @@ export const ESTACIONS: Estacio[] = [
   },
   {
     // Ritual final "El Gresol dels Cinc Elements" (docs/historia-nova.md, docs/fites-nova.md § Estació central).
-    // Ordre dels elements i codi/símbol final encara PENDENT de tancar: CampanarFinal.tsx és un placeholder
-    // heretat de l'antic tancament amb sometent i cal refer-lo quan es defineixi el ritual exacte.
+    // Ordre dels elements i codi/símbol final encara PENDENT de tancar: /final és un placeholder
+    // fins que es defineixi el ritual exacte.
     id: "gresol",
     ordre: 6,
     nom: "Pla de Masset",

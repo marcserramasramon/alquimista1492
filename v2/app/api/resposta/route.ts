@@ -9,7 +9,7 @@ import { getSolucio, comparaResposta } from "@/content/private/solucions";
 
 const RespostaSchema = z.object({
   estacioId: z.string().min(1),
-  resposta: z.union([z.string(), z.object({ opcioId: z.string() })]),
+  resposta: z.string().trim().min(1).max(100),
 });
 
 export async function POST(request: NextRequest) {
@@ -32,12 +32,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Aquesta estació encara no està disponible" }, { status: 404 });
   }
 
-  let correcte = false;
-  if (solucio.tipus === "text" && typeof resposta === "string") {
-    correcte = comparaResposta(solucio, resposta);
-  } else if (solucio.tipus === "imatge" && typeof resposta === "object") {
-    correcte = resposta.opcioId === solucio.correctaId;
-  }
+  const correcte = comparaResposta(solucio, resposta);
 
   const db = getServiceRoleClient();
 

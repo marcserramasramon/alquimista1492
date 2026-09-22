@@ -25,8 +25,6 @@ export async function POST(request: NextRequest) {
       status: "espera",
       started_at: null,
       finished_at: null,
-      coartada_revelada_at: null,
-      campanes_fetes_at: null,
     })
     .eq("id", validacio.data.teamId);
 

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { InputAnswerGame } from "@/components/games/InputAnswerGame";
-import { ChooseImageGame } from "@/components/games/ChooseImageGame";
 
 interface EstacioData {
   estacio: {
@@ -13,7 +12,6 @@ interface EstacioData {
     imatge?: string;
     disponible: boolean;
   };
-  joc: { tipus: "text" } | { tipus: "imatge"; opcions: { id: string; imatge: string; etiqueta: string }[] };
 }
 
 export default function EstacioPage() {
@@ -58,7 +56,7 @@ export default function EstacioPage() {
     );
   }
 
-  const { estacio, joc } = dades;
+  const { estacio } = dades;
 
   return (
     <PantallaEstacio>
@@ -72,16 +70,7 @@ export default function EstacioPage() {
       <h1 className="mb-2 text-center font-serif text-2xl font-bold text-ink">{estacio.nom}</h1>
       <p className="mb-6 text-center text-ink/90">{estacio.entrada}</p>
 
-      {joc.tipus === "text" && (
-        <InputAnswerGame estacioId={estacioId} onResolt={() => router.push("/joc")} />
-      )}
-      {joc.tipus === "imatge" && (
-        <ChooseImageGame
-          estacioId={estacioId}
-          opcions={joc.opcions}
-          onResolt={() => router.push("/joc")}
-        />
-      )}
+      <InputAnswerGame estacioId={estacioId} onResolt={() => router.push("/joc")} />
 
       <TornarHub />
     </PantallaEstacio>

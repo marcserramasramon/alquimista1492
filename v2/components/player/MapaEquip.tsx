@@ -10,7 +10,7 @@ export interface EstacioMapa {
   entrada: string;
   latitud: number;
   longitud: number;
-  tipus: "text" | "imatge" | "especial";
+  tipus: "text" | "especial";
   disponible: boolean;
   element?: Element;
   progres: { resolta: boolean };

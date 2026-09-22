@@ -3,7 +3,6 @@ import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { getEquipSession } from "@/lib/auth";
 import { getEstacio } from "@/content/public/estacions";
-import { getSolucioPublica } from "@/content/private/solucions";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ estacioId: string }> }) {
   const sessio = await getEquipSession(request);
@@ -17,6 +16,5 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "Estació no disponible" }, { status: 404 });
   }
 
-  const solucioPublica = getSolucioPublica(estacioId);
-  return NextResponse.json({ estacio, joc: solucioPublica });
+  return NextResponse.json({ estacio });
 }

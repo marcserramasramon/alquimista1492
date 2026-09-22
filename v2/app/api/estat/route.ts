@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   const { data: equip } = await db
     .from("v2_teams")
-    .select("id, name, status, started_at, coartada_revelada_at, campanes_fetes_at")
+    .select("id, name, status, started_at")
     .eq("id", sessio.teamId)
     .single();
 

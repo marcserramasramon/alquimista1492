@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { MapaEquip, type EstacioMapa } from "@/components/player/MapaEquip";
 
 interface EstatResponse {
-  equip: { name: string; coartada_revelada_at: string | null };
+  equip: { name: string };
   estacions: EstacioMapa[];
   totesResoltes: boolean;
 }
@@ -13,7 +13,6 @@ interface EstatResponse {
 export default function HubPage() {
   const router = useRouter();
   const [estat, setEstat] = useState<EstatResponse | null>(null);
-  const [coartada, setCoartada] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/estat")
@@ -26,12 +25,6 @@ export default function HubPage() {
       })
       .catch(() => {});
   }, [router]);
-
-  async function veureCoartada() {
-    const res = await fetch("/api/coartada", { method: "POST" });
-    const data = await res.json();
-    setCoartada(data.text);
-  }
 
   if (!estat) {
     return (
@@ -49,19 +42,6 @@ export default function HubPage() {
       </header>
 
       <MapaEquip estacions={estat.estacions} totesResoltes={estat.totesResoltes} />
-
-      <div className="rounded-xl border-2 border-leather/40 bg-vellum p-4">
-        {coartada || estat.equip.coartada_revelada_at ? (
-          <p className="text-sm italic text-ink/90">{coartada ?? "Coartada ja consultada."}</p>
-        ) : (
-          <button
-            onClick={veureCoartada}
-            className="w-full rounded-lg border-2 border-leather bg-transparent px-4 py-3 font-semibold text-leather"
-          >
-            📜 Consultar la coartada
-          </button>
-        )}
-      </div>
 
       {estat.totesResoltes && (
         <button
