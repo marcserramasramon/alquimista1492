@@ -14,6 +14,8 @@ export interface EstacioMapa {
   tipus: "text" | "especial";
   disponible: boolean;
   element?: Element;
+  /** false = l'equip encara no hi ha arribat (GPS o QR del cartell). Sense valor, es pot entrar. */
+  oberta?: boolean;
   progres: { resolta: boolean };
 }
 

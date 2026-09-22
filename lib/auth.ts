@@ -67,7 +67,16 @@ export async function signMasterToken(): Promise<string> {
 }
 
 export async function getMasterSession(request: NextRequest): Promise<MasterSession | null> {
-  const token = request.cookies.get(MASTER_COOKIE)?.value;
+  return verifyMasterToken(request.cookies.get(MASTER_COOKIE)?.value);
+}
+
+/** Com getMasterSession, però per a Server Components. */
+export async function getMasterSessionFromCookies(): Promise<MasterSession | null> {
+  const cookieStore = await cookies();
+  return verifyMasterToken(cookieStore.get(MASTER_COOKIE)?.value);
+}
+
+async function verifyMasterToken(token: string | undefined): Promise<MasterSession | null> {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, secret("MASTER_SESSION_SECRET"));

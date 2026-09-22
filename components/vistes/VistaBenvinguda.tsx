@@ -2,6 +2,7 @@
 
 import { Pentagrama } from "@/components/ui/Pentagrama";
 import { Marca, Pantalla } from "@/components/ui/Pantalla";
+import { BENVINGUDA } from "@/content/public/textos";
 
 export type ModeInstallacio = "boto" | "ios" | "installada" | "no-disponible";
 
@@ -28,9 +29,8 @@ export function VistaBenvinguda({
         <div className="animate-entrar [animation-delay:120ms]">
           <Marca />
         </div>
-        {/* TEXT PROVISIONAL */}
         <p className="animate-entrar text-center text-xl text-ink-soft [animation-delay:200ms]">
-          Benvinguts! Prepareu-vos per començar l&apos;aventura.
+          {BENVINGUDA.frase}
         </p>
       </div>
 
@@ -40,10 +40,7 @@ export function VistaBenvinguda({
             <button type="button" onClick={onInstallar} disabled={installant} className="btn btn-primari">
               {installant ? "Descarregant..." : "⬇ Descarregar l'app"}
             </button>
-            {/* TEXT PROVISIONAL */}
-            <p className="-mt-1 text-center text-base text-ink-soft">
-              Així la tindreu a mà durant tota la partida.
-            </p>
+            <p className="-mt-1 text-center text-base text-ink-soft">{BENVINGUDA.installar}</p>
           </>
         )}
 

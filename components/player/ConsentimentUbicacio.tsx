@@ -15,7 +15,7 @@ export function ConsentimentUbicacio() {
 
   function acabar(decisio: "si" | "no") {
     desarDecisioUbicacio(decisio);
-    router.push("/joc");
+    router.push("/missatge");
   }
 
   function acceptar() {

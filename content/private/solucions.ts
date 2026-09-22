@@ -2,10 +2,7 @@ import "server-only";
 
 /**
  * Solucions — NOMÉS accessible des de codi de servidor.
- * Respostes i pistes de font-ferro/planes-bones/aire/anima confirmades a
- * docs/fites-nova.md. L'estació "foc" encara no hi és: el seu contingut
- * (poema, resposta) és allà PENDENT, i "foc" té disponible:false a
- * content/public/estacions.ts fins que es tanqui.
+ * Respostes i pistes de les cinc fites segons docs/fites-nova.md.
  */
 
 export interface Solucio {
@@ -26,14 +23,26 @@ export const SOLUCIONS: Record<string, Solucio> = {
     ],
   },
 
-  // TERRA — Planes Bones. Cola blanca + fang revela el missatge; la resposta
-  // és el nombre d'àmfores del lloc.
+  // TERRA — Planes Bones. Cal buscar i comptar les àmfores del lloc; el
+  // recompte és directament la resposta.
   "planes-bones": {
     respostesAcceptades: ["3"],
     pistes: [
       "Busca on guarda els elixirs l'alquimista.",
       "Compta les àmfores.",
       "El número és el 3.",
+    ],
+  },
+
+  // FOC — Entrada del poble. El "paper de foc" (cel·lofana vermella) deixa
+  // llegir el número escrit en verd enmig del soroll de colors. El 8 és un
+  // placeholder a docs/fites-nova.md: si canvia el full imprès, cal canviar-lo aquí.
+  foc: {
+    respostesAcceptades: ["8"],
+    pistes: [
+      "El vidre de foc desvela el secret.",
+      "Posa el paper vermell davant.",
+      "El número és el 8.",
     ],
   },
 

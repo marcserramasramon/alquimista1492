@@ -117,24 +117,10 @@ export function Pentagrama({
         );
       })}
 
-      {/* Gresol central */}
+      {/* Gresol central: el símbol alquímic de la Pedra Filosofal */}
       <g>
-        <circle
-          cx={C}
-          cy={C}
-          r={30}
-          fill={centreActiu ? "#eab308" : "#e9d5a6"}
-          stroke="#1b1511"
-          strokeWidth={3}
-        />
-        <path
-          d={`M ${C - 14} ${C - 8} L ${C + 14} ${C - 8} L ${C + 9} ${C + 12} L ${C - 9} ${C + 12} Z`}
-          fill={centreActiu ? "#1b1511" : "none"}
-          stroke="#1b1511"
-          strokeWidth={2.5}
-          strokeLinejoin="round"
-        />
-        <line x1={C - 18} y1={C - 8} x2={C + 18} y2={C - 8} stroke="#1b1511" strokeWidth={3} strokeLinecap="round" />
+        <circle cx={C} cy={C} r={29} fill={centreActiu ? "#eab308" : "#e9d5a6"} />
+        <image href="/images/gresol.webp" x={C - 31} y={C - 31} width={62} height={62} />
       </g>
 
       {/* Puntes elementals */}

@@ -5,6 +5,8 @@ import { z } from "zod";
 import { getServiceRoleClient } from "@/lib/supabase";
 import { getEquipSession } from "@/lib/auth";
 import { getSolucio } from "@/content/private/solucions";
+import { getEstacio } from "@/content/public/estacions";
+import { fitaOberta } from "@/lib/obertura";
 
 const PistaSchema = z.object({
   estacioId: z.string().min(1),
@@ -28,6 +30,11 @@ export async function POST(request: NextRequest) {
   const solucio = getSolucio(estacioId);
   if (!solucio || solucio.pistes.length === 0) {
     return NextResponse.json({ error: "No hi ha pistes per a aquesta estació" }, { status: 404 });
+  }
+
+  const estacio = getEstacio(estacioId);
+  if (!estacio || !(await fitaOberta(sessio.teamId, estacio))) {
+    return NextResponse.json({ error: "Aquesta fita encara és tancada" }, { status: 403 });
   }
 
   const db = getServiceRoleClient();

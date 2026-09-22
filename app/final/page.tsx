@@ -1,5 +1,5 @@
-import { VistaFinal } from "@/components/vistes/VistaFinal";
+import { Gresol } from "@/components/player/Gresol";
 
 export default function FinalPage() {
-  return <VistaFinal />;
+  return <Gresol />;
 }

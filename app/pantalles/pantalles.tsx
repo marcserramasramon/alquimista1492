@@ -25,8 +25,14 @@ import { VistaCarregant } from "@/components/vistes/VistaCarregant";
 import { VistaEstacio } from "@/components/vistes/VistaEstacio";
 import type { VistaJocRespostaProps } from "@/components/vistes/VistaJocResposta";
 import { VistaFinal } from "@/components/vistes/VistaFinal";
+import { VistaMissatge } from "@/components/vistes/VistaMissatge";
+import { VistaTempsConsumit } from "@/components/vistes/VistaTempsConsumit";
+import { VistaGuardians } from "@/components/vistes/VistaGuardians";
+import { RESPOSTA_CORRECTA, RESPOSTES_INCORRECTES } from "@/content/public/textos";
 import { VistaMasterLogin } from "@/components/vistes/VistaMasterLogin";
 import { VistaMasterEquips, type EquipMaster } from "@/components/vistes/VistaMasterEquips";
+import { VistaMasterCodis } from "@/components/vistes/VistaMasterCodis";
+import { VistaObrirFita, type VistaObrirFitaProps } from "@/components/vistes/VistaObrirFita";
 
 export const GRUPS = [
   { id: "entrada", nom: "Entrada" },
@@ -60,10 +66,11 @@ const noop = () => {};
 const NOM_EQUIP = "Els Salamandres";
 const CODI_EXEMPLE = "K7M2QX";
 
-/** Estacions tal com les retorna /api/estat, amb el progrés simulat. */
-function estacionsAmbProgres(resoltes: string[]): EstacioMapa[] {
+/** Estacions tal com les retorna /api/estat, amb el progrés simulat. Només són obertes les resoltes (i les d'`obertes`). */
+function estacionsAmbProgres(resoltes: string[], obertes: string[] = []): EstacioMapa[] {
   return getEstacionsOrdenades().map((e) => ({
     ...e,
+    oberta: e.tipus === "especial" || resoltes.includes(e.id) || obertes.includes(e.id),
     progres: { resolta: resoltes.includes(e.id) },
   }));
 }
@@ -77,8 +84,13 @@ const SEGUENT_FITA = getEstacionsOrdenades().find(
   (e) => e.tipus !== "especial" && e.disponible && !RESOLTES_MITJA_PARTIDA.includes(e.id),
 );
 
-function hub(resoltes: string[], seleccionadaInicialId: string | null = null, marcadors: MarcadorMapa[] = []) {
-  const estacions = estacionsAmbProgres(resoltes);
+function hub(
+  resoltes: string[],
+  seleccionadaInicialId: string | null = null,
+  marcadors: MarcadorMapa[] = [],
+  fitaArribadaId: string | null = null,
+) {
+  const estacions = estacionsAmbProgres(resoltes, fitaArribadaId ? [fitaArribadaId] : []);
   // Mateix criteri que /api/estat: totes les estacions jugables resoltes.
   const totesResoltes = JUGABLES.every((id) => resoltes.includes(id));
   return (
@@ -88,8 +100,10 @@ function hub(resoltes: string[], seleccionadaInicialId: string | null = null, ma
       totesResoltes={totesResoltes}
       onAnarEstacio={noop}
       onAnarFinal={noop}
+      onLlegirMissatge={noop}
       seleccionadaInicialId={seleccionadaInicialId}
       marcadors={marcadors}
+      fitaArribadaId={fitaArribadaId}
     />
   );
 }
@@ -106,9 +120,25 @@ const JOC_BUIT: VistaJocRespostaProps = {
   onDemanarPista: noop,
 };
 
+const OBRIR_BASE: VistaObrirFitaProps = {
+  mode: "camera",
+  camera: (
+    <div className="flex h-full items-center justify-center p-6 text-center text-lg text-paper/80">
+      (aquí es veu la càmera del mòbil)
+    </div>
+  ),
+  codi: "",
+  enviant: false,
+  error: null,
+  onCodiChange: noop,
+  onEnviarCodi: noop,
+  onMode: noop,
+  onTancar: noop,
+};
+
 // Missatges iguals que els de /api/resposta.
-const MISSATGE_CORRECTE = "Resposta correcta!";
-const MISSATGE_INCORRECTE = "Encara no ho és. Torneu-ho a provar.";
+const MISSATGE_CORRECTE = RESPOSTA_CORRECTA;
+const MISSATGE_INCORRECTE = RESPOSTES_INCORRECTES[0];
 
 function pantallesFita(estacio: Estacio): Pantalla[] {
   const base = { grup: "fites" as const };
@@ -140,6 +170,13 @@ function pantallesFita(estacio: Estacio): Pantalla[] {
     },
     {
       ...base,
+      id: `fita-${estacio.id}-resolta`,
+      titol: `${estacio.nom} · fragment`,
+      descripcio: "Ja resolta: es mostra el fragment de Fra Francesc.",
+      render: () => <VistaEstacio {...JOC_BUIT} estacio={estacio} error={null} resolta onTornar={noop} />,
+    },
+    {
+      ...base,
       id: `fita-${estacio.id}-incorrecta`,
       titol: `${estacio.nom} · incorrecta`,
       render: () => fita({ resposta: "0", missatge: MISSATGE_INCORRECTE, correcte: false }),
@@ -148,7 +185,7 @@ function pantallesFita(estacio: Estacio): Pantalla[] {
       ...base,
       id: `fita-${estacio.id}-correcta`,
       titol: `${estacio.nom} · correcta`,
-      descripcio: "Just abans de tornar al mapa.",
+      descripcio: "Celebració, just abans de mostrar el fragment.",
       render: (dades) =>
         fita({ resposta: dades.fites[estacio.id]?.resposta ?? "", missatge: MISSATGE_CORRECTE, correcte: true }),
     },
@@ -316,6 +353,21 @@ export const PANTALLES: Pantalla[] = [
     render: () => <VistaUbicacio demanant onAcceptar={noop} onRebutjar={noop} />,
   },
 
+  {
+    id: "missatge",
+    grup: "entrada",
+    titol: "Missatge secret",
+    descripcio: "Després de la ubicació, abans del hub.",
+    render: () => <VistaMissatge onContinuar={noop} />,
+  },
+  {
+    id: "missatge-tornada",
+    grup: "entrada",
+    titol: "Missatge secret · relectura",
+    descripcio: "Obert des del botó del hub.",
+    render: () => <VistaMissatge onContinuar={noop} textContinuar="← Tornar al mapa" />,
+  },
+
   // Hub
   {
     id: "hub-carregant",
@@ -345,10 +397,19 @@ export const PANTALLES: Pantalla[] = [
     render: () => hub(RESOLTES_MITJA_PARTIDA, SEGUENT_FITA?.id ?? null),
   },
   {
+    id: "hub-fita-arribada",
+    grup: "hub",
+    titol: "Hub · heu arribat a una fita",
+    descripcio: SEGUENT_FITA
+      ? `El GPS situa l'equip a menys de 20 m de ${SEGUENT_FITA.nom}: sona el so i se n'obre la fitxa.`
+      : undefined,
+    render: () => hub(RESOLTES_MITJA_PARTIDA, null, [], SEGUENT_FITA?.id ?? null),
+  },
+  {
     id: "hub-totes-resoltes",
     grup: "hub",
     titol: "Hub · totes resoltes",
-    descripcio: "Apareix el botó del Pla de Masset.",
+    descripcio: "Text de l'estrella completa i botó del Pla de Masset.",
     render: () => hub(JUGABLES),
   },
   {
@@ -370,17 +431,78 @@ export const PANTALLES: Pantalla[] = [
     titol: "Fita · carregant",
     render: () => <VistaEstacio {...JOC_BUIT} estacio={null} error={null} onTornar={noop} />,
   },
+  {
+    id: "obrir-fita-camera",
+    grup: "fites",
+    titol: "Obrir fita · escanejar QR",
+    descripcio: "Igual per a totes les fites. En tocar \"Hi som! Obrir la fita\" si el GPS encara no l'ha oberta.",
+    render: () => <VistaObrirFita {...OBRIR_BASE} />,
+  },
+  {
+    id: "obrir-fita-manual",
+    grup: "fites",
+    titol: "Obrir fita · codi manual",
+    render: () => <VistaObrirFita {...OBRIR_BASE} mode="manual" codi="TM" />,
+  },
+  {
+    id: "obrir-fita-codi-incorrecte",
+    grup: "fites",
+    titol: "Obrir fita · codi incorrecte",
+    render: () => (
+      <VistaObrirFita
+        {...OBRIR_BASE}
+        mode="manual"
+        codi="ABCDE"
+        error="Aquest codi no és de cap fita. Reviseu-lo."
+      />
+    ),
+  },
+  {
+    id: "fita-tancada",
+    grup: "fites",
+    titol: "Fita · tancada",
+    descripcio: "Si s'entra a /s/[id] sense haver-hi arribat.",
+    render: () => (
+      <VistaEstacio
+        {...JOC_BUIT}
+        estacio={null}
+        error="Aquesta fita encara és tancada. Aneu-hi i escanegeu el QR del cartell."
+        onTornar={noop}
+      />
+    ),
+  },
   ...getEstacionsOrdenades()
     .filter((e) => e.tipus !== "especial")
     .flatMap(pantallesFita),
 
   // Final
   {
+    id: "temps-consumit",
+    grup: "final",
+    titol: "S'acaba el temps",
+    descripcio: "Encara no s'activa: no hi ha durada de partida.",
+    render: () => <VistaTempsConsumit onAnarPlaMasset={noop} />,
+  },
+  {
     id: "final",
     grup: "final",
-    titol: "El Gresol",
-    descripcio: "Placeholder: el ritual final està PENDENT.",
-    render: () => <VistaFinal />,
+    titol: "Pla de Masset · arribada",
+    descripcio: "Esperant Fra Francesc (abans del desemmascarament).",
+    render: () => <VistaFinal ritual={false} onComencarRitual={noop} />,
+  },
+  {
+    id: "final-ritual",
+    grup: "final",
+    titol: "Pla de Masset · ritual",
+    descripcio: "El Gresol: ordre i resultat PENDENT.",
+    render: () => <VistaFinal ritual onComencarRitual={noop} />,
+  },
+  {
+    id: "guardians",
+    grup: "final",
+    titol: "Guardians del Secret",
+    descripcio: "Pantalla final. Encara sense ruta: depèn del resultat del Gresol.",
+    render: () => <VistaGuardians />,
   },
 
   // Màster
@@ -439,6 +561,22 @@ export const PANTALLES: Pantalla[] = [
         posicioMaster={null}
         comparteixo
         estatUbicacio="denegat"
+      />
+    ),
+  },
+  {
+    id: "master-codis",
+    grup: "master",
+    titol: "Màster · codis QR",
+    descripcio: "Codis d'exemple: els reals només es veuen a /master/codis.",
+    render: () => (
+      <VistaMasterCodis
+        fites={getEstacionsOrdenades()
+          .filter((e) => e.tipus !== "especial")
+          .map((e, i) => {
+            const codi = ["AAAAA", "BBBBB", "CCCCC", "DDDDD", "EEEEE"][i] ?? "XXXXX";
+            return { id: e.id, nom: e.nom, element: e.element, codi, url: `https://exemple.cat/s/${e.id}?c=${codi}` };
+          })}
       />
     ),
   },

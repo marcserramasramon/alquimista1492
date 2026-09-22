@@ -45,14 +45,14 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 | Camp | Valor |
 |------|-------|
 | Ubicació | **Planes Bones** — coordenades confirmades: **41.912256, 2.233469** (reaprofita el nom de l'estació existent, però ~150 m al sud de les coordenades actuals a `stations.ts`: 41.913588, 2.232733 — cal actualitzar) |
-| Tècnica | Cola blanca (cola d'escola) + fang/terra |
-| Material del jugador | Full amb el missatge escrit amb cola blanca; en assecar-se és invisible |
-| Acció física | Els jugadors freguen terra o fang per sobre; la textura s'enganxa a la cola seca i revela el missatge per contrast |
+| Tècnica | Observació: buscar i comptar les àmfores del lloc (ja no es fa servir el full amb cola blanca + fang) |
+| Material del jugador | Cap: només el cartell amb el poema |
+| Acció física | Els jugadors busquen les àmfores de Planes Bones i les compten |
 | Element físic real aprofitat | **3 àmfores** a Planes Bones (confirmat) — mateix patró que el 1246 de la creu (Aire) i els 4 radis de la manovella (Aigua): cal comptar-les in situ. Aquí, a diferència dels altres dos, **el recompte és directament la resposta**, sense cap operació addicional |
 | Poema/context | **Confirmat i tancat:**<br>*Vasos d'argila vella reposen en el recer,*<br>*marcats pel secret fosc de l'alquimista:*<br>*un guarda el sofre que crema sense encendre's,*<br>*l'altre el mercuri viu, d'argent fugisser,*<br>*i el darrer té la sal que arrela la terra.*<br><br>*No cerquis fórmules vanes ni llibres perduts,*<br>*obre bé els ulls i comença a enumerar:*<br>*quants cossos de fang custodien la matèria?*<br>*Suma cada recipient que vetlla el racó,*<br>*i en la munió de gerres trobaràs la solució.*<br><br>Refereix les 3 àmfores a la tria prima alquímica (sofre, mercuri, sal — mateix univers hermètic que la "tríada sagrada" del poema d'Aigua). No esmenta la xifra 3 explícitament: l'estructura "un / l'altre / el darrer" les enumera, però cal anar a comptar-les físicament |
 | Resposta esperada | **Confirmat:** comptar les àmfores. Resposta final a validar al servidor: **3** |
 | Pistes | 1. "Busca on guarda els elixirs l'alquimista." · 2. "Compta les àmfores." · 3. "El número és el 3." |
-| Notes de seguretat/logística | Cal preveure un punt amb terra/fang disponible (o que se'l portin els jugadors); risc de tacar roba — avisar als equips |
+| Notes de seguretat/logística | Comprovar abans de la partida que les 3 àmfores hi són i es veuen bé |
 
 ---
 

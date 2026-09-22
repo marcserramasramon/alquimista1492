@@ -5,6 +5,7 @@ import { getServiceRoleClient } from "@/lib/supabase";
 import { getEquipSession } from "@/lib/auth";
 import { getEstacionsOrdenades, getEstacionsJugables } from "@/content/public/estacions";
 import { MAXIMA_EDAT_UBICACIO_MASTER_MS } from "@/lib/ubicacio";
+import { estaOberta, necessitaObertura } from "@/lib/obertura";
 
 export async function GET(request: NextRequest) {
   const sessio = await getEquipSession(request);
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
 
   const { data: progres } = await db
     .from("v2_progres")
-    .select("estacio_id, resolta, intents, pistes_usades")
+    .select("estacio_id, resolta, intents, pistes_usades, oberta_at")
     .eq("team_id", sessio.teamId);
 
   const progresPerEstacio = new Map((progres ?? []).map((p) => [p.estacio_id, p]));
@@ -49,10 +50,19 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     master: masterVisible ? { lat: ubicacioMaster.lat, lng: ubicacioMaster.lng } : null,
     equip,
-    estacions: getEstacionsOrdenades().map((e) => ({
-      ...e,
-      progres: progresPerEstacio.get(e.id) ?? { resolta: false, intents: 0, pistes_usades: 0 },
-    })),
+    estacions: getEstacionsOrdenades().map((e) => {
+      const { oberta_at, ...progres } = progresPerEstacio.get(e.id) ?? {
+        resolta: false,
+        intents: 0,
+        pistes_usades: 0,
+        oberta_at: null,
+      };
+      return {
+        ...e,
+        oberta: !necessitaObertura(e) || estaOberta({ oberta_at, resolta: progres.resolta }),
+        progres,
+      };
+    }),
     totesResoltes,
   });
 }

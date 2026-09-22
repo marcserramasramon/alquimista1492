@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Grenze_Gotisch, Alegreya_Sans, Alegreya_Sans_SC } from "next/font/google";
+import BarraScroll from "@/components/ui/BarraScroll";
 import "./globals.css";
 
 // Títols: gòtica llegible (1472). Text: humanista amb arrel cal·ligràfica.
@@ -44,7 +45,10 @@ export default function RootLayout({
       lang="ca"
       className={`${grenzeGotisch.variable} ${alegreyaSans.variable} ${alegreyaSansSC.variable}`}
     >
-      <body className="text-ink antialiased">{children}</body>
+      <body className="text-ink antialiased">
+        {children}
+        <BarraScroll />
+      </body>
     </html>
   );
 }

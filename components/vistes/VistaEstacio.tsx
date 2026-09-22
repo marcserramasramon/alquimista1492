@@ -3,7 +3,9 @@
 import { VistaJocResposta, type VistaJocRespostaProps } from "@/components/vistes/VistaJocResposta";
 import { AvisError } from "@/components/ui/Pantalla";
 import { Pentagrama } from "@/components/ui/Pentagrama";
+import { Narracio } from "@/components/ui/Narracio";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
+import { ARRIBADES, CORRECTE_PER_ELEMENT, FRAGMENTS, RESPOSTA_CORRECTA } from "@/content/public/textos";
 
 /** Dades públiques d'una estació tal com les retorna /api/joc/[estacioId]. */
 export interface EstacioPublica {
@@ -22,12 +24,14 @@ export interface VistaEstacioProps extends VistaJocRespostaProps {
   estacio: EstacioPublica | null;
   /** Si hi ha error (p.ex. "Estació no disponible"), es mostra en lloc del joc. */
   error?: string | null;
+  /** Ja resolta: es mostra el fragment en lloc de la prova. */
+  resolta?: boolean;
   onTornar: () => void;
 }
 
 const ROMANS = ["I", "II", "III", "IV", "V", "VI"];
 
-export function VistaEstacio({ estacio, error, onTornar, ...joc }: VistaEstacioProps) {
+export function VistaEstacio({ estacio, error, resolta = false, onTornar, ...joc }: VistaEstacioProps) {
   if (error) {
     return (
       <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-5 py-8 text-center">
@@ -53,6 +57,19 @@ export function VistaEstacio({ estacio, error, onTornar, ...joc }: VistaEstacioP
 
   const element = estacio.element ? ELEMENTS[estacio.element] : null;
   const color = element?.color ?? "var(--gold)";
+
+  // La celebració ocupa tota la pantalla: sense la fita a sota, no hi ha res per fer scroll.
+  if (joc.correcte && !resolta) {
+    return (
+      <Celebracio
+        nomElement={element?.nom}
+        frase={estacio.element ? CORRECTE_PER_ELEMENT[estacio.element] : undefined}
+        icona={element?.icona}
+        color={color}
+        missatge={joc.missatge}
+      />
+    );
+  }
 
   return (
     <main className="mx-auto min-h-dvh w-full max-w-md pb-[max(2rem,env(safe-area-inset-bottom))]">
@@ -97,37 +114,49 @@ export function VistaEstacio({ estacio, error, onTornar, ...joc }: VistaEstacioP
         </p>
         <h1 className="mb-5 text-5xl font-extrabold">{estacio.nom}</h1>
 
-        <section className="targeta mb-8 p-5">
-          <p className="etiqueta mb-1">la prova</p>
-          <p className="text-xl leading-snug">{estacio.entrada}</p>
-          {estacio.situacio && (
-            <p className="mt-3 flex gap-2 border-t-2 border-dashed border-ink/20 pt-3 text-base text-ink-soft">
-              <span aria-hidden>📍</span>
-              {estacio.situacio}
-            </p>
-          )}
-        </section>
+        {resolta ? (
+          estacio.element && (
+            <Narracio
+              text={FRAGMENTS[estacio.element]}
+              etiqueta="✓ fragment trobat"
+              color={color}
+              className="animate-entrar"
+            />
+          )
+        ) : (
+          <>
+            {estacio.element && (
+              <Narracio text={ARRIBADES[estacio.element]} etiqueta="fra francesc" color={color} className="mb-6" />
+            )}
 
-        <VistaJocResposta {...joc} />
+            <section className="targeta mb-8 p-5">
+              <p className="etiqueta mb-1">la prova</p>
+              <p className="text-xl leading-snug">{estacio.entrada}</p>
+            </section>
+
+            <VistaJocResposta {...joc} />
+          </>
+        )}
 
         <button onClick={onTornar} className="btn btn-secundari mt-8">
           ← Tornar al mapa
         </button>
       </div>
 
-      {joc.correcte && <Celebracio nomElement={element?.nom} icona={element?.icona} color={color} missatge={joc.missatge} />}
     </main>
   );
 }
 
-/** Pantalla d'encert: el segell de l'element cau sobre la pantalla. */
+/** Pantalla d'encert: el segell de l'element cau sobre la pantalla. Després es mostra el fragment. */
 function Celebracio({
   nomElement,
+  frase,
   icona,
   color,
   missatge,
 }: {
   nomElement?: string;
+  frase?: string;
   icona?: string;
   color: string;
   missatge: string | null;
@@ -135,7 +164,7 @@ function Celebracio({
   return (
     <div
       role="status"
-      className="fixed inset-0 z-50 flex animate-entrar flex-col items-center justify-center gap-6 px-6 text-center"
+      className="fixed inset-0 z-50 flex animate-entrar overflow-hidden flex-col items-center justify-center gap-6 px-6 text-center"
       style={{ background: `radial-gradient(circle at 50% 42%, #fffdf7 0%, #fbf4e4 35%, ${color} 140%)` }}
     >
       <div className="relative">
@@ -155,14 +184,15 @@ function Celebracio({
         </div>
       </div>
       <div className="animate-entrar [animation-delay:350ms]">
-        <p className="font-display text-6xl font-extrabold leading-none">{missatge ?? "Correcte!"}</p>
+        <p className="font-display text-6xl font-extrabold leading-none">{missatge ?? RESPOSTA_CORRECTA}</p>
         {nomElement && (
           <p className="etiqueta mt-3 text-lg" style={{ color }}>
             ✦ {nomElement} ✦
           </p>
         )}
+        {frase && <p className="mt-4 text-2xl font-bold">{frase}</p>}
       </div>
-      <p className="etiqueta animate-pulse">tornant al mapa...</p>
+      <p className="etiqueta animate-pulse">obrint el fragment...</p>
     </div>
   );
 }

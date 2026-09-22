@@ -5,7 +5,9 @@ import { z } from "zod";
 import { getServiceRoleClient } from "@/lib/supabase";
 import { getEquipSession } from "@/lib/auth";
 import { getEstacio } from "@/content/public/estacions";
+import { fitaOberta } from "@/lib/obertura";
 import { getSolucio, comparaResposta } from "@/content/private/solucions";
+import { RESPOSTA_CORRECTA, RESPOSTES_INCORRECTES } from "@/content/public/textos";
 
 const RespostaSchema = z.object({
   estacioId: z.string().min(1),
@@ -30,6 +32,10 @@ export async function POST(request: NextRequest) {
   const solucio = getSolucio(estacioId);
   if (!estacio || !estacio.disponible || !solucio) {
     return NextResponse.json({ error: "Aquesta estació encara no està disponible" }, { status: 404 });
+  }
+
+  if (!(await fitaOberta(sessio.teamId, estacio))) {
+    return NextResponse.json({ error: "Aquesta fita encara és tancada" }, { status: 403 });
   }
 
   const correcte = comparaResposta(solucio, resposta);
@@ -64,8 +70,10 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  // Els missatges d'error es van alternant a cada intent.
+  const intent = existent?.intents ?? 0;
   return NextResponse.json({
     correcte,
-    missatge: correcte ? "Resposta correcta!" : "Encara no ho és. Torneu-ho a provar.",
+    missatge: correcte ? RESPOSTA_CORRECTA : RESPOSTES_INCORRECTES[intent % RESPOSTES_INCORRECTES.length],
   });
 }

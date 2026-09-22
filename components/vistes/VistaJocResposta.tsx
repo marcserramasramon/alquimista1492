@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AvisError } from "@/components/ui/Pantalla";
+import { PISTES } from "@/content/public/textos";
 
 /** Tres nivells: cada botó només s'activa si ja s'ha demanat l'anterior. */
 export const NOMS_PISTES = ["Pista 1", "Pista 2", "Resposta"] as const;
@@ -36,6 +36,14 @@ export function VistaJocResposta({
   // Demanar la Resposta demana una confirmació: és fàcil tocar-la sense voler.
   const [confirmantResposta, setConfirmantResposta] = useState(false);
   const incorrecte = Boolean(missatge) && !correcte;
+
+  // El pop-up d'error es tanca tocant a qualsevol lloc; es torna a obrir amb cada resposta nova.
+  const [errorTancat, setErrorTancat] = useState(false);
+  const [missatgeAnterior, setMissatgeAnterior] = useState(missatge);
+  if (missatge !== missatgeAnterior) {
+    setMissatgeAnterior(missatge);
+    setErrorTancat(false);
+  }
 
   function demanar(index: number) {
     if (index === INDEX_RESPOSTA && !confirmantResposta) {
@@ -75,7 +83,6 @@ export function VistaJocResposta({
           />
         </div>
 
-        {missatge && !correcte && <AvisError>✗ {missatge}</AvisError>}
         {missatge && correcte && (
           <p role="status" className="animate-entrar rounded-2xl border-[3px] border-ok bg-ok px-4 py-3 text-center text-lg font-extrabold text-white">
             ✓ {missatge}
@@ -89,9 +96,9 @@ export function VistaJocResposta({
 
       <section aria-labelledby="titol-pistes" className="rounded-3xl border-[3px] border-dashed border-ink/35 p-4">
         <h2 id="titol-pistes" className="text-3xl font-bold">
-          Necessiteu ajuda?
+          {PISTES.titol}
         </h2>
-        <p className="mb-4 text-base text-ink-soft">Les pistes s&apos;obren d&apos;una en una.</p>
+        <p className="mb-4 text-base text-ink-soft">{PISTES.subtitol}</p>
 
         {/* Escala de tres segells: fet → següent → tancat */}
         <ol className="relative grid grid-cols-3">
@@ -137,13 +144,13 @@ export function VistaJocResposta({
 
         {confirmantResposta && pistes.length === INDEX_RESPOSTA && (
           <div role="alertdialog" className="mt-4 animate-entrar rounded-2xl border-[3px] border-blood bg-blood/10 p-4">
-            <p className="mb-3 text-center font-bold text-blood">Segur que voleu veure la resposta?</p>
+            <p className="mb-3 text-center font-bold text-blood">{PISTES.confirmacio}</p>
             <div className="grid grid-cols-2 gap-3">
               <button type="button" onClick={() => setConfirmantResposta(false)} className="btn btn-secundari">
-                No
+                {PISTES.cancelar}
               </button>
               <button type="button" onClick={() => demanar(INDEX_RESPOSTA)} disabled={carregantPista} className="btn btn-perill">
-                Sí, mostra-la
+                {PISTES.confirmar}
               </button>
             </div>
           </div>
@@ -171,6 +178,24 @@ export function VistaJocResposta({
           </ol>
         )}
       </section>
+
+      {incorrecte && !errorTancat && (
+        <button
+          type="button"
+          onClick={() => setErrorTancat(true)}
+          aria-label="Tancar el missatge"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 px-6"
+        >
+          <div
+            role="alert"
+            className="animate-entrar w-full max-w-sm rounded-3xl border-[3px] border-blood bg-[#fde8e6] p-6 text-center shadow-[0_6px_0_var(--ink)]"
+          >
+            <img src="/images/error.webp" alt="" className="mx-auto -my-4 h-36 w-36" />
+            <p className="text-xl font-bold text-blood">{missatge}</p>
+            <p className="mt-4 text-sm font-bold text-ink-soft">Toca per continuar</p>
+          </div>
+        </button>
+      )}
     </div>
   );
 }

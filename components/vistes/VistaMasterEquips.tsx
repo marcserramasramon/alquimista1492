@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { MapaEquip, type EstacioMapa, type MarcadorMapa } from "@/components/player/MapaEquip";
 import type { EstatUbicacio } from "@/lib/useCompartirUbicacio";
 
@@ -78,6 +79,9 @@ export function VistaMasterEquips({
           <p className="etiqueta">panell del</p>
           <h1 className="text-5xl font-extrabold">Màster</h1>
         </div>
+        <Link href="/master/codis" className="btn btn-secundari ml-auto mr-3 w-auto px-4 text-base">
+          🔳 Codis QR
+        </Link>
         {equips && (
           <p className="rounded-2xl border-[3px] border-ink bg-ink px-3 py-1 text-center font-display text-2xl font-extrabold text-gold">
             {equips.length} <span className="etiqueta text-xs text-paper">equips</span>

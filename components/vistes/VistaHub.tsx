@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { MapaEquip, type EstacioMapa, type MarcadorMapa } from "@/components/player/MapaEquip";
 import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
+import { Narracio } from "@/components/ui/Narracio";
 import { ELEMENTS } from "@/content/public/estacions";
+import { ESTRELLA_COMPLETA } from "@/content/public/textos";
 
 export interface VistaHubProps {
   nomEquip: string;
@@ -11,10 +13,14 @@ export interface VistaHubProps {
   totesResoltes: boolean;
   onAnarEstacio: (estacio: EstacioMapa) => void;
   onAnarFinal: () => void;
+  /** Tornar a llegir el missatge secret de l'inici. */
+  onLlegirMissatge: () => void;
   /** Fita seleccionada en obrir la vista (mostra la seva fitxa). */
   seleccionadaInicialId?: string | null;
   /** Posició del màster (si la comparteix) i la del mateix equip. */
   marcadors?: MarcadorMapa[];
+  /** Fita que el GPS acaba d'obrir en arribar-hi: se'n mostra la fitxa amb l'avís. */
+  fitaArribadaId?: string | null;
 }
 
 const ROMANS = ["I", "II", "III", "IV", "V", "VI"];
@@ -25,10 +31,18 @@ export function VistaHub({
   totesResoltes,
   onAnarEstacio,
   onAnarFinal,
+  onLlegirMissatge,
   seleccionadaInicialId = null,
   marcadors,
+  fitaArribadaId = null,
 }: VistaHubProps) {
-  const [seleccionadaId, setSeleccionadaId] = useState<string | null>(seleccionadaInicialId);
+  const [seleccionadaId, setSeleccionadaId] = useState<string | null>(seleccionadaInicialId ?? fitaArribadaId);
+  // Quan el GPS obre una fita nova, se'n mostra la fitxa encara que n'hi hagués una altra de triada.
+  const [arribadaVista, setArribadaVista] = useState(fitaArribadaId);
+  if (fitaArribadaId !== arribadaVista) {
+    setArribadaVista(fitaArribadaId);
+    if (fitaArribadaId) setSeleccionadaId(fitaArribadaId);
+  }
 
   const elementals = estacions.filter((e) => e.element);
   const resoltes = elementals.filter((e) => e.progres.resolta).length;
@@ -71,12 +85,13 @@ export function VistaHub({
           onTriar={setSeleccionadaId}
           className="mx-auto w-full max-w-[18rem]"
         />
-        <p className="mt-1 text-center text-base text-ink-soft">
-          {totesResoltes
-            ? "Els cinc elements són vostres. El Gresol us espera!"
-            : "Toqueu un element per veure on és."}
-        </p>
+        {/* Amb totes resoltes, just a sota ve el text de l'estrella completa. */}
+        {!totesResoltes && (
+          <p className="mt-1 text-center text-base text-ink-soft">Toqueu un element per veure on és.</p>
+        )}
       </section>
+
+      {totesResoltes && <Narracio text={ESTRELLA_COMPLETA} etiqueta="fra francesc" className="animate-entrar" />}
 
       <section className="animate-entrar [animation-delay:160ms]">
         <h2 className="etiqueta mb-2 text-base">mapa de sentfores</h2>
@@ -164,6 +179,10 @@ export function VistaHub({
         </ul>
       </section>
 
+      <button type="button" onClick={onLlegirMissatge} className="btn btn-secundari animate-entrar [animation-delay:320ms]">
+        📜 Tornar a llegir el missatge
+      </button>
+
       {totesResoltes && (
         <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 [background:linear-gradient(to_top,var(--paper)_60%,transparent)]">
           <div className="animate-bategar rounded-2xl">
@@ -178,6 +197,7 @@ export function VistaHub({
         <FitxaFita
           estacio={seleccionada}
           numero={ROMANS[estacions.indexOf(seleccionada)] ?? ""}
+          acabadaDarribar={seleccionada.id === fitaArribadaId}
           onTancar={() => setSeleccionadaId(null)}
           onAnar={() => onAnarEstacio(seleccionada)}
         />
@@ -190,11 +210,13 @@ export function VistaHub({
 function FitxaFita({
   estacio,
   numero,
+  acabadaDarribar,
   onTancar,
   onAnar,
 }: {
   estacio: EstacioMapa;
   numero: string;
+  acabadaDarribar: boolean;
   onTancar: () => void;
   onAnar: () => void;
 }) {
@@ -232,6 +254,16 @@ function FitxaFita({
             </button>
           </div>
 
+          {acabadaDarribar && !resolta && (
+            <p
+              role="status"
+              className="mt-4 animate-bategar rounded-2xl border-[3px] border-ink px-4 py-3 text-lg font-extrabold text-white"
+              style={{ background: color }}
+            >
+              📍 Heu arribat! La fita s&apos;ha obert.
+            </p>
+          )}
+
           {estacio.situacio && (
             <p className="mt-4 flex gap-2 text-lg font-bold">
               <span aria-hidden>📍</span>
@@ -247,7 +279,9 @@ function FitxaFita({
                 ? "✓ Ja resolta · Tornar-hi"
                 : estacio.tipus === "especial"
                   ? "Començar el ritual →"
-                  : "Hi som! Obrir la fita →"}
+                  : estacio.oberta === false
+                    ? "Hi som! Obrir la fita →"
+                    : "Entrar a la fita →"}
           </button>
         </div>
       </div>

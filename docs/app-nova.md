@@ -42,8 +42,8 @@ Les 4 fites elementals comparteixen la mateixa forma: text/poema + instrucció d
 > Això és disseny tècnic/UI, no trama: **no hi ha cap poema, resposta ni pista escrits aquí** — segueixen pendents a `docs/fites-nova.md`, que es tanca en un altre xat. El que segueix és què li falta a l'app per poder acollir cada element un cop aquell document es tanqui.
 
 ### 🪨 TERRA
-- Encaixa sencer al patró genèric `RevealGame` (§2): text/poema + truc físic (cola blanca + fang) + input d'un dígit + 3 pistes. **Res a dissenyar de nou a l'app.**
-- Únic detall UI a considerar: l'avís de logística/seguretat de `fites-nova.md` ("risc de tacar roba") — decidir si es mostra com a text simple dins la pantalla d'introducció de l'estació (Pantalla 0, §`pantalles-i-mecaniques-compartides.md`) o no cal res especial. No bloqueja.
+- Encaixa sencer al patró genèric `RevealGame` (§2): text/poema + buscar i comptar les àmfores + input d'un dígit + 3 pistes. **Res a dissenyar de nou a l'app.**
+- Cap detall UI especial: la fita és només d'observació (buscar i comptar les àmfores), sense material ni avís de seguretat.
 
 ### 🔥 FOC
 - També encaixa a `RevealGame` pel que fa a l'input/validació — **però `fites-nova.md` el marca com a CRÍTIC de seguretat** (flama oberta + paper, supervisió obligatòria). Això sí que és un forat de disseny d'app real: ara mateix cap pantalla genèrica cobreix "avís de seguretat obligatori abans de fer l'acció física".
@@ -278,3 +278,11 @@ Hi ha una carpeta `v2/` a l'arrel del repo (Next.js complet, propi `node_modules
 - [ ] Tancar a `historia-nova.md`/`fites-nova.md` si el pentagrama té significat in-fiction (qui el va traçar, per què) — NO decidit aquí, només la seva presentació visual
 - [ ] Confirmar operativa de FOC (jugadors supervisats vs. ho fa un monitor) per saber si cal la pantalla "Avís de seguretat" (§2bis)
 - [ ] Decidir opció d'ÀNIMA (mirall vs. càmera/mòbil) — determina si cal `AnimaCameraGame.tsx` o s'integra a `RevealGame` (§2bis)
+
+## Obertura de les fites (GPS + QR) — implementat 2026-09-23
+
+- Les 5 fites elementals comencen **tancades**. S'obren soles quan el GPS situa l'equip a **20 m** o menys (`RADI_OBERTURA_M` a `lib/ubicacio.ts`); el servidor recalcula la distància (`POST /api/obrir`). En obrir-se sona una campaneta (Web Audio) i vibra (Android), i s'obre la fitxa de la fita al hub.
+- **Límit conegut:** amb el mòbil bloquejat el navegador congela la pàgina: no hi ha so ni detecció fins que el tornen a obrir. Es va decidir no fer servir Wake Lock.
+- El botó "Hi som! Obrir la fita" obre l'escàner de QR (`@yudiel/react-qr-scanner`) amb l'opció "Entreu el codi manualment" a sota (equips sense GPS o sense càmera).
+- Cada cartell porta un QR amb `{APP_URL}/s/{id}?c={codi}` i el codi escrit a sota. Els codis viuen a `content/private/codisFites.ts`; el màster els veu a `/master/codis`.
+- `/api/joc`, `/api/resposta` i `/api/pista` refusen les fites tancades. Taula: `v2_progres.oberta_at` i `obertura` (`gps` | `qr` | `codi`).

@@ -70,6 +70,15 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Sense barra de scroll nativa: ocupa amplada. La substitueix la píndola
+   flotant de components/ui/BarraScroll.tsx. */
+html {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
 h1,
 h2,
 h3 {

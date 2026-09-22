@@ -1,5 +1,7 @@
+import { Narracio } from "@/components/ui/Narracio";
 import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
 import { Pantalla } from "@/components/ui/Pantalla";
+import { GRESOL_ARRIBADA, GRESOL_RITUAL } from "@/content/public/textos";
 
 const TOTS: NodePentagrama[] = (["aigua", "terra", "foc", "aire", "anima"] as const).map((element) => ({
   id: element,
@@ -8,19 +10,37 @@ const TOTS: NodePentagrama[] = (["aigua", "terra", "foc", "aire", "anima"] as co
   disponible: true,
 }));
 
-export function VistaFinal() {
-  // Ritual del Gresol dels Cinc Elements: ordre dels elements i codi final PENDENT
-  // (docs/fites-nova.md § Estació central). Placeholder fins que es tanqui.
+export interface VistaFinalProps {
+  /** false: esperant Fra Francesc (4a). true: el ritual (4b). */
+  ritual: boolean;
+  onComencarRitual: () => void;
+}
+
+/**
+ * Pla de Masset. Primer l'espera (sense espòilers del desemmascarament) i, quan Fra Francesc
+ * els ho indica, el ritual. Com es passa d'una part a l'altra, l'ordre dels elements i el
+ * resultat del Gresol són PENDENT (docs/fites-nova.md § Estació central): de moment ho fa
+ * l'equip amb un botó.
+ */
+export function VistaFinal({ ritual, onComencarRitual }: VistaFinalProps) {
   return (
-    <Pantalla centrat className="items-center gap-6 text-center">
-      <Pentagrama nodes={TOTS} centreActiu girar className="w-72 max-w-full animate-segellar" />
-      <div className="animate-entrar [animation-delay:300ms]">
-        <p className="etiqueta text-gold-deep">pla de masset</p>
-        <h1 className="text-6xl font-extrabold">El Gresol dels Cinc Elements</h1>
-      </div>
-      <p className="animate-entrar text-xl [animation-delay:450ms]">
-        Aneu al Pla de Masset amb els cinc fragments. El ritual comença allà.
-      </p>
+    <Pantalla className="gap-5">
+      <Pentagrama nodes={TOTS} centreActiu girar className="mx-auto w-64 max-w-full animate-segellar" />
+      <p className="etiqueta animate-entrar text-center text-gold-deep">pla de masset</p>
+      {ritual ? (
+        <Narracio key="ritual" text={GRESOL_RITUAL} className="animate-entrar" />
+      ) : (
+        <>
+          <Narracio key="arribada" text={GRESOL_ARRIBADA} className="animate-entrar [animation-delay:300ms]" />
+          <button
+            type="button"
+            onClick={onComencarRitual}
+            className="btn btn-fosc animate-entrar [animation-delay:450ms]"
+          >
+            ⚗️ Comencem el ritual
+          </button>
+        </>
+      )}
     </Pantalla>
   );
 }
