@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     .order("created_at", { ascending: true });
 
   if (equipsError) {
-    console.error("Error llegint equips v2:", equipsError);
+    console.error("Error llegint equips:", equipsError);
     return NextResponse.json({ error: "No s'ha pogut llegir els equips" }, { status: 500 });
   }
 
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (!error && data) {
       return NextResponse.json({ equip: data });
     }
-    console.error("Error creant equip v2:", error);
+    console.error("Error creant equip:", error);
     // Codi duplicat (molt improbable): torna-ho a provar amb un altre.
   }
 
