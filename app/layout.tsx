@@ -1,23 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Inknut_Antiqua, Source_Sans_3, Fira_Sans } from "next/font/google";
+import { Grenze_Gotisch, Alegreya_Sans, Alegreya_Sans_SC } from "next/font/google";
 import "./globals.css";
 
-const inknutAntiqua = Inknut_Antiqua({
-  variable: "--font-inknut-antiqua",
-  weight: ["500", "600", "700"],
+// Títols: gòtica llegible (1472). Text: humanista amb arrel cal·ligràfica.
+const grenzeGotisch = Grenze_Gotisch({
+  variable: "--font-grenze-gotisch",
+  weight: ["600", "700", "800"],
   subsets: ["latin"],
 });
 
-const sourceSansPro = Source_Sans_3({
-  variable: "--font-source-sans-pro",
-  weight: ["400", "500", "600"],
+const alegreyaSans = Alegreya_Sans({
+  variable: "--font-alegreya-sans",
+  weight: ["400", "500", "700", "800"],
   style: ["normal", "italic"],
   subsets: ["latin"],
 });
 
-const firaSans = Fira_Sans({
-  variable: "--font-fira-sans",
-  weight: ["400", "500", "600", "700"],
+const alegreyaSansSC = Alegreya_Sans_SC({
+  variable: "--font-alegreya-sans-sc",
+  weight: ["700"],
   subsets: ["latin"],
 });
 
@@ -32,6 +33,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
+  themeColor: "#fbf4e4",
 };
 
 export default function RootLayout({
@@ -40,9 +42,9 @@ export default function RootLayout({
   return (
     <html
       lang="ca"
-      className={`${inknutAntiqua.variable} ${sourceSansPro.variable} ${firaSans.variable}`}
+      className={`${grenzeGotisch.variable} ${alegreyaSans.variable} ${alegreyaSansSC.variable}`}
     >
-      <body className="bg-parchment text-ink antialiased">{children}</body>
+      <body className="text-ink antialiased">{children}</body>
     </html>
   );
 }

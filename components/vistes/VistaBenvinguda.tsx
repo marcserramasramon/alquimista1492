@@ -1,5 +1,8 @@
 "use client";
 
+import { Pentagrama } from "@/components/ui/Pentagrama";
+import { Marca, Pantalla } from "@/components/ui/Pantalla";
+
 export type ModeInstallacio = "boto" | "ios" | "installada" | "no-disponible";
 
 export interface VistaBenvingudaProps {
@@ -19,40 +22,41 @@ export function VistaBenvinguda({
   const teBotoInstallar = modeInstallacio === "boto";
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 py-8">
-      <h1 className="mb-3 text-center font-serif text-3xl font-bold text-ink">
-        Els Guardians del Secret de Sentfores
-      </h1>
-      {/* TEXT PROVISIONAL */}
-      <p className="mb-10 text-center text-lg text-leather">
-        Benvinguts! Prepareu-vos per començar l&apos;aventura.
-      </p>
+    <Pantalla>
+      <div className="flex flex-1 flex-col items-center justify-center gap-6">
+        <Pentagrama girar vius className="w-64 max-w-full animate-entrar" />
+        <div className="animate-entrar [animation-delay:120ms]">
+          <Marca />
+        </div>
+        {/* TEXT PROVISIONAL */}
+        <p className="animate-entrar text-center text-xl text-ink-soft [animation-delay:200ms]">
+          Benvinguts! Prepareu-vos per començar l&apos;aventura.
+        </p>
+      </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex animate-entrar flex-col gap-4 pt-6 [animation-delay:280ms]">
         {teBotoInstallar && (
           <>
-            <button
-              type="button"
-              onClick={onInstallar}
-              disabled={installant}
-              className="min-h-12 w-full rounded-xl bg-prussian px-4 py-4 text-lg font-bold text-parchment shadow-md disabled:opacity-50"
-            >
-              {installant ? "Descarregant..." : "Descarregar l'app"}
+            <button type="button" onClick={onInstallar} disabled={installant} className="btn btn-primari">
+              {installant ? "Descarregant..." : "⬇ Descarregar l'app"}
             </button>
             {/* TEXT PROVISIONAL */}
-            <p className="text-center text-sm text-leather">
+            <p className="-mt-1 text-center text-base text-ink-soft">
               Així la tindreu a mà durant tota la partida.
             </p>
           </>
         )}
 
         {modeInstallacio === "ios" && (
-          <div className="rounded-xl border-2 border-leather bg-vellum px-4 py-4 text-center text-ink">
+          <div className="targeta px-4 py-4 text-center">
             {/* TEXT PROVISIONAL */}
-            <p className="mb-1 font-bold">Descarregueu l&apos;app</p>
-            <p>
-              Toca <span className="font-bold">Compartir</span> i després{" "}
-              <span className="font-bold">&lsquo;Afegeix a la pantalla d&apos;inici&rsquo;</span>
+            <p className="etiqueta mb-1">descarregueu l&apos;app</p>
+            <p className="text-lg">
+              Toqueu <span className="font-extrabold">Compartir</span>{" "}
+              <span aria-hidden className="inline-block rounded-md border-2 border-ink px-1 text-base leading-tight">
+                ⬆
+              </span>{" "}
+              i després <span className="font-extrabold">&lsquo;Afegeix a la pantalla d&apos;inici&rsquo;</span>
             </p>
           </div>
         )}
@@ -60,15 +64,11 @@ export function VistaBenvinguda({
         <button
           type="button"
           onClick={onContinuar}
-          className={
-            teBotoInstallar
-              ? "min-h-12 w-full rounded-xl border-2 border-prussian bg-transparent px-4 py-4 text-lg font-bold text-prussian"
-              : "min-h-12 w-full rounded-xl bg-prussian px-4 py-4 text-lg font-bold text-parchment shadow-md"
-          }
+          className={teBotoInstallar ? "btn btn-secundari" : "btn btn-primari"}
         >
-          Continuar
+          Continuar →
         </button>
       </div>
-    </main>
+    </Pantalla>
   );
 }

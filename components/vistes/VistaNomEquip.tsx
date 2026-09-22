@@ -1,5 +1,7 @@
 "use client";
 
+import { AvisError, Pantalla } from "@/components/ui/Pantalla";
+
 export interface VistaNomEquipProps {
   nom: string;
   error: string | null;
@@ -8,9 +10,11 @@ export interface VistaNomEquipProps {
   onSubmit: () => void;
 }
 
+const MAXIM = 30;
+
 /** Pantalla on l'equip tria el seu nom (primera entrada). */
 export function VistaNomEquip({ nom, error, enviant, onNomChange, onSubmit }: VistaNomEquipProps) {
-  const nomValid = nom.trim().length >= 2 && nom.trim().length <= 30;
+  const nomValid = nom.trim().length >= 2 && nom.trim().length <= MAXIM;
 
   function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -18,33 +22,41 @@ export function VistaNomEquip({ nom, error, enviant, onNomChange, onSubmit }: Vi
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 py-8">
-      {/* TEXT PROVISIONAL */}
-      <h1 className="mb-2 text-center font-serif text-3xl font-bold text-ink">
-        Com es diu el vostre equip?
-      </h1>
-      {/* TEXT PROVISIONAL */}
-      <p className="mb-8 text-center text-leather">Escolliu un nom per a la partida.</p>
-
-      <form onSubmit={enviar} className="flex flex-col gap-4">
-        <input
-          type="text"
-          value={nom}
-          onChange={(e) => onNomChange(e.target.value.slice(0, 30))}
-          placeholder="Nom de l'equip"
-          autoComplete="off"
-          maxLength={30}
-          className="w-full rounded-xl border-2 border-leather bg-vellum px-4 py-4 text-center text-2xl font-bold text-ink placeholder:text-leather/50 focus:outline-none focus:ring-2 focus:ring-prussian"
-        />
-        <button
-          type="submit"
-          disabled={!nomValid || enviant}
-          className="min-h-12 w-full rounded-xl bg-prussian px-4 py-4 text-lg font-bold text-parchment shadow-md disabled:opacity-50"
+    <Pantalla centrat>
+      <div className="mb-8 animate-entrar text-center">
+        <div
+          aria-hidden
+          className="mx-auto mb-5 flex h-20 w-20 rotate-3 items-center justify-center rounded-2xl border-[3px] border-ink bg-gold text-4xl shadow-[0_5px_0_var(--ink)]"
         >
-          {enviant ? "Desant..." : "Som-hi"}
+          🛡️
+        </div>
+        {/* TEXT PROVISIONAL */}
+        <h1 className="text-5xl font-bold">Com es diu el vostre equip?</h1>
+        {/* TEXT PROVISIONAL */}
+        <p className="mt-2 text-ink-soft">Escolliu un nom per a la partida.</p>
+      </div>
+
+      <form onSubmit={enviar} className="flex animate-entrar flex-col gap-4 [animation-delay:100ms]">
+        <div>
+          <input
+            type="text"
+            value={nom}
+            onChange={(e) => onNomChange(e.target.value.slice(0, MAXIM))}
+            placeholder="Nom de l'equip"
+            autoComplete="off"
+            maxLength={MAXIM}
+            aria-label="Nom de l'equip"
+            className="camp text-center"
+          />
+          <p className="mt-1 pr-1 text-right text-sm text-ink-soft">
+            {nom.length}/{MAXIM}
+          </p>
+        </div>
+        {error && <AvisError>{error}</AvisError>}
+        <button type="submit" disabled={!nomValid || enviant} className="btn btn-primari">
+          {enviant ? "Desant..." : "Som-hi! →"}
         </button>
-        {error && <p className="text-center font-semibold text-cochineal">{error}</p>}
       </form>
-    </main>
+    </Pantalla>
   );
 }

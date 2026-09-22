@@ -39,6 +39,12 @@ const TEXT_ESTAT_UBICACIO: Record<EstatUbicacio, string> = {
   "no-disponible": "No s'ha pogut obtenir la posició.",
 };
 
+const ESTATS: Record<EquipMaster["status"], { text: string; classe: string }> = {
+  espera: { text: "En espera", classe: "bg-paper-3 text-ink" },
+  joc: { text: "Jugant", classe: "bg-aigua text-white" },
+  final: { text: "Al Gresol", classe: "bg-gold text-ink" },
+};
+
 function textEdat(faMinuts: number) {
   return faMinuts < 1 ? "ara" : `fa ${faMinuts} min`;
 }
@@ -63,78 +69,136 @@ export function VistaMasterEquips({
   );
   if (posicioMaster) marcadors.push({ id: "jo", tipus: "jo", ...posicioMaster });
 
+  const errorGps = comparteixo && (estatUbicacio === "denegat" || estatUbicacio === "no-disponible");
+
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="mb-4 font-serif text-2xl font-bold text-ink">Mapa</h1>
+    <main className="mx-auto flex max-w-2xl flex-col gap-8 px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-[max(1.25rem,env(safe-area-inset-top))]">
+      <header className="flex items-end justify-between">
+        <div>
+          <p className="etiqueta">panell del</p>
+          <h1 className="text-5xl font-extrabold">Màster</h1>
+        </div>
+        {equips && (
+          <p className="rounded-2xl border-[3px] border-ink bg-ink px-3 py-1 text-center font-display text-2xl font-extrabold text-gold">
+            {equips.length} <span className="etiqueta text-xs text-paper">equips</span>
+          </p>
+        )}
+      </header>
 
-      <MapaEquip estacions={estacions} totesResoltes={false} marcadors={marcadors} ambLlista={false} />
+      <section className="flex flex-col gap-3">
+        <h2 className="etiqueta text-base">mapa</h2>
+        <MapaEquip estacions={estacions} totesResoltes={false} marcadors={marcadors} />
 
-      <label className="mt-3 flex min-h-12 items-center gap-3 rounded-xl border-2 border-leather/40 bg-vellum px-4 py-3">
-        <input
-          type="checkbox"
-          checked={comparteixo}
-          onChange={(e) => onComparteixoChange(e.target.checked)}
-          className="h-6 w-6 accent-prussian"
-        />
-        <span className="flex-1">
-          <span className="block font-bold text-ink">Comparteixo la meva ubicació</span>
-          <span className="block text-sm text-leather">
-            {comparteixo ? TEXT_ESTAT_UBICACIO[estatUbicacio] : TEXT_ESTAT_UBICACIO.inactiu}
-          </span>
-        </span>
-      </label>
-
-      <h2 className="mb-4 mt-8 font-serif text-2xl font-bold text-ink">Equips</h2>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onCrear();
-        }}
-        className="mb-6 flex gap-2"
-      >
-        <input
-          value={nom}
-          onChange={(e) => onNomChange(e.target.value)}
-          placeholder="Nom de l'equip"
-          className="flex-1 rounded-xl border-2 border-leather bg-vellum px-4 py-3 text-ink"
-        />
-        <button
-          type="submit"
-          disabled={creant}
-          className="rounded-xl bg-prussian px-4 py-3 font-bold text-parchment disabled:opacity-50"
+        {/* Interruptor gran: es toca amb el polze sense mirar gaire */}
+        <label
+          className={`mt-2 flex min-h-16 cursor-pointer items-center gap-4 rounded-2xl border-[3px] px-4 py-3 transition ${
+            comparteixo ? "border-ink bg-[#fffdf7] shadow-[0_4px_0_var(--ink)]" : "border-ink/30 bg-paper-2"
+          }`}
         >
-          Crear
-        </button>
-      </form>
+          <input
+            type="checkbox"
+            checked={comparteixo}
+            onChange={(e) => onComparteixoChange(e.target.checked)}
+            className="peer sr-only"
+          />
+          <span
+            aria-hidden
+            className={`relative h-9 w-16 shrink-0 rounded-full border-[3px] border-ink transition-colors peer-focus-visible:ring-4 peer-focus-visible:ring-gold ${
+              comparteixo ? "bg-ok" : "bg-paper-3"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 h-6 w-6 rounded-full border-[3px] border-ink bg-white transition-all ${
+                comparteixo ? "left-[1.85rem]" : "left-0.5"
+              }`}
+            />
+          </span>
+          <span className="flex-1">
+            <span className="block text-lg font-extrabold">Comparteixo la meva ubicació</span>
+            <span className={`block text-base ${errorGps ? "font-bold text-blood" : "text-ink-soft"}`}>
+              {comparteixo ? TEXT_ESTAT_UBICACIO[estatUbicacio] : TEXT_ESTAT_UBICACIO.inactiu}
+            </span>
+          </span>
+        </label>
+      </section>
 
-      <div className="flex flex-col gap-3">
-        {equips?.map((equip) => (
-          <div key={equip.id} className="rounded-xl border-2 border-leather/40 bg-vellum p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-bold text-ink">{equip.name}</p>
-                <p className="text-sm text-leather">
-                  Codi: <span className="font-mono font-bold">{equip.code}</span> · {equip.status}
-                </p>
-                <p className="text-sm text-leather">
-                  📍 {equip.ubicacio ? textEdat(equip.ubicacio.faMinuts) : "sense ubicació"}
-                </p>
-              </div>
-              <p className="text-lg font-bold text-ink">
-                {equip.resoltes}/{equip.total}
-              </p>
-            </div>
-            <button
-              onClick={() => onReiniciar(equip.id)}
-              className="mt-3 w-full rounded-lg border border-cochineal px-3 py-2 text-sm font-semibold text-cochineal"
-            >
-              Reiniciar equip
-            </button>
-          </div>
-        ))}
-        {equips?.length === 0 && <p className="text-center text-leather">Encara no hi ha equips.</p>}
-      </div>
+      <section className="flex flex-col gap-4">
+        <h2 className="etiqueta text-base">equips</h2>
+
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            onCrear();
+          }}
+          className="flex gap-3"
+        >
+          <input
+            value={nom}
+            onChange={(e) => onNomChange(e.target.value)}
+            placeholder="Nom de l'equip nou"
+            aria-label="Nom de l'equip nou"
+            className="camp min-w-0 flex-1 text-lg"
+          />
+          <button type="submit" disabled={creant} className="btn btn-primari w-auto shrink-0 px-5">
+            + Crear
+          </button>
+        </form>
+
+        <ul className="flex flex-col gap-4">
+          {equips?.map((equip) => {
+            const estat = ESTATS[equip.status];
+            return (
+              <li key={equip.id} className="targeta p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-2xl font-extrabold leading-tight">{equip.name}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <span className="rounded-lg border-2 border-ink bg-[#fffdf7] px-2 font-mono text-lg font-bold tracking-widest">
+                        {equip.code}
+                      </span>
+                      <span className={`rounded-full border-2 border-ink px-2.5 text-sm font-extrabold ${estat.classe}`}>
+                        {estat.text}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="shrink-0 font-display text-4xl font-extrabold leading-none">
+                    {equip.resoltes}
+                    <span className="text-2xl text-ink-soft">/{equip.total}</span>
+                  </p>
+                </div>
+
+                {/* Progrés en segments, un per fita */}
+                <div className="mt-3 flex gap-1.5" aria-label={`${equip.resoltes} de ${equip.total} fites`}>
+                  {Array.from({ length: equip.total }, (_, i) => (
+                    <span
+                      key={i}
+                      className={`h-3 flex-1 rounded-full border-2 border-ink ${i < equip.resoltes ? "bg-gold" : "bg-[#fffdf7]"}`}
+                    />
+                  ))}
+                </div>
+
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <p className="text-base text-ink-soft">
+                    📍 {equip.ubicacio ? textEdat(equip.ubicacio.faMinuts) : "sense ubicació"}
+                  </p>
+                  <button
+                    onClick={() => onReiniciar(equip.id)}
+                    className="min-h-12 rounded-xl border-[3px] border-blood px-3 text-sm font-extrabold text-blood active:bg-blood active:text-white"
+                  >
+                    ↺ Reiniciar
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        {equips?.length === 0 && (
+          <p className="rounded-2xl border-[3px] border-dashed border-ink/30 p-6 text-center text-ink-soft">
+            Encara no hi ha equips.
+          </p>
+        )}
+        {equips === null && <p className="etiqueta text-center">carregant...</p>}
+      </section>
     </main>
   );
 }

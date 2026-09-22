@@ -37,7 +37,7 @@ export function useInputAnswerGame({ estacioId, onResolt }: InputAnswerGameProps
       setMissatge(data.missatge ?? "Error");
       setCorrecte(Boolean(data.correcte));
       if (data.correcte) {
-        setTimeout(onResolt, 1200);
+        setTimeout(onResolt, 2200);
       }
     } catch {
       setMissatge("Error de connexió. Torna-ho a provar.");

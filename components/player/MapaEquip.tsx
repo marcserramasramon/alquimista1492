@@ -7,6 +7,8 @@ export interface EstacioMapa {
   id: string;
   nom: string;
   entrada: string;
+  /** On és exactament la fita (text públic). */
+  situacio?: string;
   latitud: number;
   longitud: number;
   tipus: "text" | "especial";
@@ -18,14 +20,12 @@ export interface EstacioMapa {
 export interface MapaEquipProps {
   estacions: EstacioMapa[];
   totesResoltes: boolean;
-  /** Es crida quan l'equip prem "Anar-hi" al popup d'una fita disponible. */
-  onAnar?: (estacio: EstacioMapa) => void;
-  /** Fita seleccionada inicialment (popup obert). */
-  seleccionadaInicialId?: string | null;
+  /** Fita destacada al mapa. */
+  seleccionadaId?: string | null;
+  /** Es crida en tocar una fita del mapa. Sense aquesta funció, les fites no es poden tocar. */
+  onSeleccionar?: (estacio: EstacioMapa) => void;
   /** Posicions en viu (màster, equips, el propi mòbil). */
   marcadors?: MarcadorMapa[];
-  /** Graella de fites sota el mapa (el màster no la necessita). */
-  ambLlista?: boolean;
 }
 
 export interface MarcadorMapa {
@@ -48,6 +48,12 @@ const BOUND_MAX_LON = 2.23464;
 const BOUND_MAX_LAT = 41.9166;
 const SVG_W = 800;
 const SVG_H = 600;
+const ZOOM_MAX = 3;
+
+const INK = "#1b1511";
+const PAPER = "#fffdf7";
+const GOLD = "#eab308";
+const BLOOD = "#b3261e";
 
 function latLonToSVG(lat: number, lon: number) {
   const x = ((lon - BOUND_MIN_LON) / (BOUND_MAX_LON - BOUND_MIN_LON)) * SVG_W;
@@ -58,12 +64,10 @@ function latLonToSVG(lat: number, lon: number) {
 export function MapaEquip({
   estacions,
   totesResoltes,
-  onAnar,
-  seleccionadaInicialId = null,
+  seleccionadaId = null,
+  onSeleccionar,
   marcadors = [],
-  ambLlista = true,
 }: MapaEquipProps) {
-  const [seleccionadaId, setSeleccionadaId] = useState<string | null>(seleccionadaInicialId);
   // Fora dels límits del mapa il·lustrat, un marcador es queda a l'última
   // posició coneguda de dins (app-nova.md §7ter.3).
   const [darreresDins, setDarreresDins] = useState<Record<string, { lat: number; lng: number }>>({});
@@ -98,6 +102,12 @@ export function MapaEquip({
     return { x: Math.min(Math.max(x, -maxX), maxX), y: Math.min(Math.max(y, -maxY), maxY) };
   };
 
+  function canviarZoom(z: number) {
+    const seguent = Math.min(Math.max(z, 1), ZOOM_MAX);
+    setZoom(seguent);
+    setPan((p) => clampPan(p.x, p.y, seguent));
+  }
+
   const dragState = useRef({ mode: null as "pan" | "pinch" | null, startX: 0, startY: 0, startPanX: 0, startPanY: 0, startDist: 0, startZoom: 1 });
 
   function handleTouchStart(e: React.TouchEvent<SVGSVGElement>) {
@@ -117,146 +127,162 @@ export function MapaEquip({
       setPan(clampPan(s.startPanX + dx / zoom, s.startPanY + dy / zoom, zoom));
     } else if (s.mode === "pinch" && e.touches.length === 2) {
       const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      const nextZoom = Math.min(Math.max(s.startZoom * (dist / s.startDist), 1), 3);
+      const nextZoom = Math.min(Math.max(s.startZoom * (dist / s.startDist), 1), ZOOM_MAX);
       setZoom(nextZoom);
       setPan(clampPan(s.startPanX, s.startPanY, nextZoom));
     }
   }
 
-  const seleccionada = estacions.find((e) => e.id === seleccionadaId) ?? null;
+  // Els marcadors mantenen la mida a la pantalla encara que s'hi faci zoom.
+  const escala = 1 / Math.sqrt(zoom);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div
-        ref={containerRef}
-        className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border-2 border-leather/40 bg-vellum"
+    <div
+      ref={containerRef}
+      className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border-[3px] border-ink bg-paper-2 shadow-[0_6px_0_var(--ink)]"
+    >
+      <svg
+        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+        className="block h-full w-full touch-none"
+        style={{
+          transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
+          transformOrigin: "center",
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onDoubleClick={() => {
+          setZoom(1);
+          setPan({ x: 0, y: 0 });
+        }}
       >
-        <svg
-          viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-          className="block h-full w-full touch-none"
-          style={{
-            transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
-            transformOrigin: "center",
-          }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onDoubleClick={() => {
-            setZoom(1);
-            setPan({ x: 0, y: 0 });
-          }}
-        >
-          <image href="/map-test.webp" x="0" y="0" width={SVG_W} height={SVG_H} preserveAspectRatio="none" />
+        <image href="/map-test.webp" x="0" y="0" width={SVG_W} height={SVG_H} preserveAspectRatio="none" />
 
-          {estacions
-            .filter((e) => e.tipus !== "especial" || totesResoltes)
-            .map((estacio) => {
-              const { x, y } = latLonToSVG(estacio.latitud, estacio.longitud);
-              const color = estacio.progres.resolta ? "#9CA3AF" : estacio.disponible ? "#1E3A5F" : "#B0B7C3";
-              return (
-                <g key={estacio.id} onClick={() => onAnar && setSeleccionadaId(estacio.id)} style={{ cursor: onAnar ? "pointer" : undefined }}>
-                  <circle cx={x} cy={y} r={16} fill={color} stroke="#C99E32" strokeWidth={2} />
-                  <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fontSize={16} fill="white" fontWeight="bold">
-                    {estacio.progres.resolta ? "✓" : "?"}
-                  </text>
-                </g>
-              );
-            })}
-          {marcadorsVisibles.map((m) => {
-            const { x, y } = latLonToSVG(m.lat, m.lng);
-            if (m.tipus === "jo") {
-              return <circle key={m.id} cx={x} cy={y} r={8} fill="#2563EB" stroke="white" strokeWidth={3} />;
-            }
-            if (m.tipus === "master") {
-              return (
-                <g key={m.id} aria-label="Posició del màster">
-                  <circle cx={x} cy={y} r={14} fill="none" stroke="#7A1F26" strokeWidth={3}>
-                    <animate attributeName="r" values="14;26" dur="2s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="0.8;0" dur="2s" repeatCount="indefinite" />
-                  </circle>
-                  <circle cx={x} cy={y} r={14} fill="#7A1F26" stroke="#C99E32" strokeWidth={3} />
-                  <circle cx={x} cy={y} r={5} fill="#F4EBD9" />
-                </g>
-              );
-            }
+        {estacions
+          .filter((e) => e.tipus !== "especial" || totesResoltes)
+          .map((estacio) => {
+            const { x, y } = latLonToSVG(estacio.latitud, estacio.longitud);
+            const element = estacio.element ? ELEMENTS[estacio.element] : null;
+            const seleccionada = estacio.id === seleccionadaId;
+            const resolta = estacio.progres.resolta;
+            const color = element?.color ?? GOLD;
             return (
-              <g key={m.id}>
-                <circle cx={x} cy={y} r={11} fill="#7A1F26" stroke="white" strokeWidth={3} />
-                {m.etiqueta && (
+              <g
+                key={estacio.id}
+                transform={`translate(${x} ${y}) scale(${escala * (seleccionada ? 1.25 : 1)})`}
+                onClick={onSeleccionar ? () => onSeleccionar(estacio) : undefined}
+                style={{ cursor: onSeleccionar ? "pointer" : undefined }}
+                aria-label={element?.nom ?? estacio.nom}
+              >
+                {/* Zona de toc més gran que el dibuix */}
+                <circle r={44} fill="transparent" />
+                {seleccionada && (
+                  <circle r={30} fill="none" stroke={GOLD} strokeWidth={6}>
+                    <animate attributeName="r" values="30;46" dur="1.4s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="1;0" dur="1.4s" repeatCount="indefinite" />
+                  </circle>
+                )}
+                {/* Agulla: cercle amb punta cap avall */}
+                <path d="M -12 20 L 0 38 L 12 20 Z" fill={INK} />
+                <circle
+                  r={27}
+                  fill={resolta ? color : estacio.disponible ? PAPER : "#d6c7a5"}
+                  stroke={INK}
+                  strokeWidth={4}
+                />
+                {!resolta && estacio.disponible && <circle r={21} fill="none" stroke={color} strokeWidth={5} />}
+                {element && !resolta ? (
+                  <image
+                    href={element.icona}
+                    x={-15}
+                    y={-15}
+                    width={30}
+                    height={30}
+                    opacity={estacio.disponible ? 1 : 0.4}
+                  />
+                ) : (
                   <text
-                    x={x}
-                    y={y - 18}
                     textAnchor="middle"
-                    fontSize={18}
-                    fontWeight="bold"
-                    fill="#2B2118"
-                    stroke="#F4EBD9"
-                    strokeWidth={4}
-                    paintOrder="stroke"
+                    dominantBaseline="central"
+                    fontSize={28}
+                    fontWeight={800}
+                    fill={resolta ? "#fff" : INK}
                   >
-                    {m.etiqueta}
+                    {resolta ? "✓" : "✦"}
                   </text>
                 )}
               </g>
             );
           })}
-        </svg>
-      </div>
 
-      {ambLlista && (
-        <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-leather">
-            📍 Estacions del joc
-          </p>
-          <div className="grid grid-cols-2 gap-1.5 text-sm sm:grid-cols-3">
-            {estacions
-              .filter((e) => e.tipus !== "especial" || totesResoltes)
-              .map((estacio) => {
-                const element = estacio.element ? ELEMENTS[estacio.element] : null;
-                return (
-                  <button
-                    key={estacio.id}
-                    onClick={() => setSeleccionadaId(estacio.id)}
-                    className="flex items-center gap-2 rounded-lg border border-leather/20 bg-vellum/80 px-2 py-1.5 text-left shadow-sm transition hover:bg-vellum"
-                  >
-                    {element ? (
-                      <img src={element.icona} alt={element.nom} className="h-6 w-6 flex-shrink-0 object-contain drop-shadow-sm" />
-                    ) : (
-                      <span className="flex-shrink-0">
-                        {estacio.progres.resolta ? "✓" : estacio.disponible ? "?" : "🔒"}
-                      </span>
-                    )}
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-bold text-ink sm:text-sm">
-                        {element ? element.nom : estacio.nom}
-                      </span>
-                      {element && (
-                        <span className="block truncate text-[11px] italic text-leather">{estacio.nom}</span>
-                      )}
-                    </span>
-                  </button>
-                );
-              })}
-          </div>
-        </div>
-      )}
+        {marcadorsVisibles.map((m) => {
+          const { x, y } = latLonToSVG(m.lat, m.lng);
+          if (m.tipus === "jo") {
+            return (
+              <g key={m.id} transform={`translate(${x} ${y}) scale(${escala})`} aria-label="La vostra posició">
+                <circle r={14} fill="#2563eb" opacity={0.25}>
+                  <animate attributeName="r" values="14;30" dur="2s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.5;0" dur="2s" repeatCount="indefinite" />
+                </circle>
+                <circle r={12} fill="#2563eb" stroke="#fff" strokeWidth={4} />
+              </g>
+            );
+          }
+          if (m.tipus === "master") {
+            return (
+              <g key={m.id} transform={`translate(${x} ${y}) scale(${escala})`} aria-label="Posició del màster">
+                <circle r={18} fill="none" stroke={BLOOD} strokeWidth={4}>
+                  <animate attributeName="r" values="18;36" dur="2s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.9;0" dur="2s" repeatCount="indefinite" />
+                </circle>
+                <circle r={18} fill={BLOOD} stroke={INK} strokeWidth={4} />
+                <circle r={6} fill={PAPER} />
+              </g>
+            );
+          }
+          return (
+            <g key={m.id} transform={`translate(${x} ${y}) scale(${escala})`}>
+              <circle r={14} fill={BLOOD} stroke="#fff" strokeWidth={4} />
+              {m.etiqueta && (
+                <text
+                  y={-24}
+                  textAnchor="middle"
+                  fontSize={22}
+                  fontWeight={800}
+                  fill={INK}
+                  stroke={PAPER}
+                  strokeWidth={6}
+                  paintOrder="stroke"
+                >
+                  {m.etiqueta}
+                </text>
+              )}
+            </g>
+          );
+        })}
+      </svg>
 
-      {seleccionada && onAnar && (
-        <div className="rounded-xl border-2 border-leather/40 bg-vellum p-4 shadow-md">
-          <h3 className="font-serif text-lg font-bold text-ink">{seleccionada.nom}</h3>
-          <p className="mt-1 text-sm text-ink/80">{seleccionada.entrada}</p>
+      {/* Zoom amb una mà: botons grans a la cantonada */}
+      <div className="absolute bottom-2.5 right-2.5 flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => canviarZoom(zoom + 0.75)}
+          disabled={zoom >= ZOOM_MAX}
+          aria-label="Apropar"
+          className="btn btn-secundari btn-rodo"
+        >
+          +
+        </button>
+        {zoom > 1 && (
           <button
-            onClick={() => onAnar(seleccionada)}
-            disabled={!seleccionada.disponible}
-            className="mt-3 w-full rounded-lg bg-prussian px-4 py-3 font-bold text-parchment disabled:opacity-40"
+            type="button"
+            onClick={() => canviarZoom(zoom - 0.75)}
+            aria-label="Allunyar"
+            className="btn btn-secundari btn-rodo"
           >
-            {!seleccionada.disponible
-              ? "Properament"
-              : seleccionada.progres.resolta
-                ? "Ja resolta ✓"
-                : "Anar-hi"}
+            −
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { AvisError, Marca, Pantalla } from "@/components/ui/Pantalla";
+
 export interface VistaEntradaCodiProps {
   codi: string;
   error: string | null;
@@ -8,39 +11,83 @@ export interface VistaEntradaCodiProps {
   onSubmit: () => void;
 }
 
-/** Pantalla d'entrada del codi d'equip (6 caràcters). */
+const LLARGADA = 6;
+
+/** Pantalla d'entrada del codi d'equip (6 caràcters), en sis caselles. */
 export function VistaEntradaCodi({ codi, error, enviant, onCodiChange, onSubmit }: VistaEntradaCodiProps) {
+  const [focus, setFocus] = useState(false);
+
   function enviar(e: React.FormEvent) {
     e.preventDefault();
     onSubmit();
   }
 
-  return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 py-8">
-      <h1 className="mb-1 text-center font-serif text-3xl font-bold text-ink">
-        Els Guardians del Secret de Sentfores
-      </h1>
-      <p className="mb-8 text-center text-leather">Introduïu el codi del vostre equip</p>
+  const complet = codi.trim().length === LLARGADA;
 
-      <form onSubmit={enviar} className="flex flex-col gap-4">
-        <input
-          type="text"
-          value={codi}
-          onChange={(e) => onCodiChange(e.target.value.toUpperCase().slice(0, 6))}
-          placeholder="CODI"
-          autoComplete="off"
-          autoCapitalize="characters"
-          className="w-full rounded-xl border-2 border-leather bg-vellum px-4 py-4 text-center text-2xl font-bold tracking-[0.3em] text-ink placeholder:text-leather/50 focus:outline-none focus:ring-2 focus:ring-prussian"
-        />
-        <button
-          type="submit"
-          disabled={codi.trim().length !== 6 || enviant}
-          className="w-full rounded-xl bg-prussian px-4 py-4 text-lg font-bold text-parchment shadow-md disabled:opacity-50"
-        >
-          {enviant ? "Entrant..." : "Entrar a la partida"}
+  return (
+    <Pantalla centrat>
+      <div className="mb-10 animate-entrar">
+        <Marca petita />
+      </div>
+
+      <form onSubmit={enviar} className="flex animate-entrar flex-col gap-5 [animation-delay:100ms]">
+        <label htmlFor="codi" className="text-center">
+          <span className="block font-display text-4xl font-bold">El codi de l&apos;equip</span>
+          <span className="mt-1 block text-ink-soft">Introduïu els sis caràcters del vostre codi.</span>
+        </label>
+
+        {/* L'input real és invisible i cobreix les caselles: teclat i enganxar funcionen igual. */}
+        <div className={`relative ${error ? "animate-tremolar" : ""}`} key={error ?? "ok"}>
+          <div className="grid grid-cols-6 gap-2" aria-hidden>
+            {Array.from({ length: LLARGADA }, (_, i) => {
+              const lletra = codi[i];
+              const actiu = focus && (i === codi.length || (i === LLARGADA - 1 && complet));
+              return (
+                <div
+                  key={i}
+                  className={`flex aspect-[4/5] items-center justify-center rounded-xl border-[3px] text-4xl font-extrabold transition-all ${
+                    error
+                      ? "border-blood bg-blood/10 text-blood"
+                      : lletra
+                        ? "border-ink bg-[#fffdf7] shadow-[0_4px_0_var(--ink)]"
+                        : "border-ink/40 bg-paper-2"
+                  } ${actiu ? "-translate-y-1 border-ink ring-4 ring-gold/70" : ""}`}
+                >
+                  {lletra ?? (actiu ? <span className="h-8 w-1 animate-pulse rounded bg-ink" /> : "")}
+                </div>
+              );
+            })}
+          </div>
+          <input
+            id="codi"
+            type="text"
+            value={codi}
+            onChange={(e) =>
+              onCodiChange(
+                e.target.value
+                  .toUpperCase()
+                  .replace(/[^A-Z0-9]/g, "")
+                  .slice(0, LLARGADA)
+              )
+            }
+            onFocus={() => setFocus(true)}
+            onBlur={() => setFocus(false)}
+            autoComplete="off"
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
+            maxLength={LLARGADA}
+            className="absolute inset-0 h-full w-full cursor-text opacity-0"
+            style={{ fontSize: 16 }}
+          />
+        </div>
+
+        {error && <AvisError>{error}</AvisError>}
+
+        <button type="submit" disabled={!complet || enviant} className="btn btn-primari mt-2">
+          {enviant ? "Entrant..." : "Entrar a la partida →"}
         </button>
-        {error && <p className="text-center font-semibold text-cochineal">{error}</p>}
       </form>
-    </main>
+    </Pantalla>
   );
 }

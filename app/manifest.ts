@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Escape room exterior a Sentfores–La Guixa",
     start_url: "/",
     display: "standalone",
-    background_color: "#f4ebd9",
-    theme_color: "#f4ebd9",
+    background_color: "#fbf4e4",
+    theme_color: "#fbf4e4",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },

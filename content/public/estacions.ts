@@ -24,12 +24,13 @@ export interface Estacio {
   element?: Element;
 }
 
-export const ELEMENTS: Record<Element, { nom: string; icona: string }> = {
-  aigua: { nom: "Aigua", icona: "/images/elements/aigua.webp" },
-  terra: { nom: "Terra", icona: "/images/elements/terra.webp" },
-  foc: { nom: "Foc", icona: "/images/elements/foc.webp" },
-  aire: { nom: "Aire", icona: "/images/elements/aire.webp" },
-  anima: { nom: "Ànima", icona: "/images/elements/anima.webp" },
+/** `color` és el mateix que la variable CSS de l'element (app/globals.css). */
+export const ELEMENTS: Record<Element, { nom: string; icona: string; color: string }> = {
+  aigua: { nom: "Aigua", icona: "/images/elements/aigua.webp", color: "#1d6fd6" },
+  terra: { nom: "Terra", icona: "/images/elements/terra.webp", color: "#5b8a1e" },
+  foc: { nom: "Foc", icona: "/images/elements/foc.webp", color: "#e8541f" },
+  aire: { nom: "Aire", icona: "/images/elements/aire.webp", color: "#0e9bb8" },
+  anima: { nom: "Ànima", icona: "/images/elements/anima.webp", color: "#8b3fb5" },
 };
 
 export const ESTACIONS: Estacio[] = [

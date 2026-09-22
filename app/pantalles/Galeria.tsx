@@ -54,16 +54,16 @@ export function Galeria() {
   const escala = Math.min(mida, (ampladaFinestra - 2 * GUTTER) / ampladaMarc);
 
   return (
-    <div className="min-h-dvh bg-parchment text-ink">
-      <header className="sticky top-0 z-10 border-b-2 border-leather/30 bg-vellum/95 backdrop-blur">
+    <div className="min-h-dvh bg-paper text-ink">
+      <header className="sticky top-0 z-10 border-b-2 border-ink-soft/30 bg-paper-2/95 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3">
-          <h1 className="font-serif text-lg font-bold">Pantalles</h1>
-          <label className="flex items-center gap-2 text-sm text-leather">
+          <h1 className="font-display text-lg font-bold">Pantalles</h1>
+          <label className="flex items-center gap-2 text-sm text-ink-soft">
             Mida
             <select
               value={mida}
               onChange={(e) => setMida(Number(e.target.value))}
-              className="min-h-10 rounded-lg border-2 border-leather/40 bg-parchment px-2 text-ink"
+              className="min-h-10 rounded-lg border-2 border-ink-soft/40 bg-paper px-2 text-ink"
             >
               {MIDES.map((m) => (
                 <option key={m.valor} value={m.valor}>
@@ -84,12 +84,12 @@ export function Galeria() {
                 role="tab"
                 aria-selected={actiu}
                 className={`flex min-h-12 shrink-0 items-center gap-2 rounded-t-lg border-b-4 px-4 font-semibold ${
-                  actiu ? "border-prussian text-prussian" : "border-transparent text-leather"
+                  actiu ? "border-ink text-ink" : "border-transparent text-ink-soft"
                 }`}
               >
                 {g.nom}
                 <span
-                  className={`rounded-full px-2 text-xs ${actiu ? "bg-prussian text-parchment" : "bg-leather/20 text-leather"}`}
+                  className={`rounded-full px-2 text-xs ${actiu ? "bg-ink text-paper" : "bg-ink-soft/20 text-ink-soft"}`}
                 >
                   {recompte}
                 </span>
@@ -126,7 +126,7 @@ function MarcMobil({ pantalla, escala }: { pantalla: Pantalla; escala: number })
             loading="lazy"
             width={MOBIL_W}
             height={MOBIL_H}
-            className="block rounded-[34px] bg-parchment"
+            className="block rounded-[34px] bg-paper"
           />
         </div>
       </div>
@@ -134,8 +134,8 @@ function MarcMobil({ pantalla, escala }: { pantalla: Pantalla; escala: number })
         <a href={src} target="_blank" rel="noreferrer" className="font-semibold text-ink underline-offset-4 hover:underline">
           {pantalla.titol}
         </a>
-        {pantalla.descripcio && <p className="text-sm text-leather">{pantalla.descripcio}</p>}
-        <p className="font-mono text-xs text-leather/70">{pantalla.id}</p>
+        {pantalla.descripcio && <p className="text-sm text-ink-soft">{pantalla.descripcio}</p>}
+        <p className="font-mono text-xs text-ink-soft/70">{pantalla.id}</p>
       </figcaption>
     </figure>
   );
