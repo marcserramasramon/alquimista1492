@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+/* Paleta d'època (únic tema, PRD secció 16): pergamí envellit, tinta
+   ferrogàl·lica, cuir, blau de Prússia, vermell de cotxinilla, or apagat.
+   Sense mode fosc: es juga a l'exterior de dia (regla no negociable del
+   CLAUDE.md, contrast alt per llegir a ple sol). */
+:root {
+  --parchment: #f4ebd9; /* Fons principal (canvas) */
+  --vellum: #eae0ca;    /* Targetes, panells, navegació inferior */
+  --ink: #2b2118;       /* Text principal */
+  --leather: #8c6d53;   /* Text secundari, vores, ombres */
+  --prussian: #1d3557;  /* Accent primari: botons, enllaços, títols clau */
+  --cochineal: #7a1f26; /* Errors, alertes, penalitzacions */
+  --gold: #c99e32;      /* Accent secundari: focus, ornaments */
+
+  --background: var(--parchment);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-parchment: var(--parchment);
+  --color-vellum: var(--vellum);
+  --color-ink: var(--ink);
+  --color-leather: var(--leather);
+  --color-prussian: var(--prussian);
+  --color-cochineal: var(--cochineal);
+  --color-gold: var(--gold);
+
+  --font-sans: var(--font-source-sans-pro);
+  --font-serif: var(--font-inknut-antiqua);
+  --font-accent: var(--font-fira-sans);
+}
+
+html, body {
+  background: var(--background);
+  color: var(--foreground);
+  min-height: 100dvh;
+}
+
+body {
+  font-family: var(--font-source-sans-pro), ui-sans-serif, system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-inknut-antiqua), serif;
+}
+
+/* Botons mínim 48px, mobile-first, ple sol */
+button, a.btn {
+  min-height: 48px;
+}
+
+/* Anell de focus accessible */
+*:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}

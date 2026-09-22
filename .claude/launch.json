@@ -7,6 +7,12 @@
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "v2",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "v2", "run", "dev"],
+      "port": 3100
     }
   ]
 }
