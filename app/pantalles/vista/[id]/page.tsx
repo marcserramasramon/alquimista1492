@@ -22,7 +22,7 @@ export default async function VistaPantallaPage({ params }: { params: Promise<{ 
   for (const estacio of getEstacionsJugables()) {
     const solucio = getSolucio(estacio.id);
     dades.fites[estacio.id] = {
-      pista: solucio?.pistes[0] ?? null,
+      pistes: solucio?.pistes ?? [],
       resposta: solucio?.respostesAcceptades[0] ?? null,
     };
   }

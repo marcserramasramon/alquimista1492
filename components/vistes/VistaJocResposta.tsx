@@ -1,11 +1,15 @@
 "use client";
 
+/** Tres nivells: cada botó només s'activa si ja s'ha demanat l'anterior. */
+export const NOMS_PISTES = ["Pista 1", "Pista 2", "Resposta"] as const;
+
 export interface VistaJocRespostaProps {
   resposta: string;
   missatge: string | null;
   correcte: boolean;
   enviant: boolean;
-  pista: string | null;
+  /** Pistes ja desbloquejades, en ordre (la tercera és la resposta). */
+  pistes: string[];
   carregantPista: boolean;
   onRespostaChange: (valor: string) => void;
   onSubmit: () => void;
@@ -18,7 +22,7 @@ export function VistaJocResposta({
   missatge,
   correcte,
   enviant,
-  pista,
+  pistes,
   carregantPista,
   onRespostaChange,
   onSubmit,
@@ -60,16 +64,40 @@ export function VistaJocResposta({
         </p>
       )}
 
-      <div className="pt-2 text-center">
-        {pista && <p className="mb-2 rounded-lg bg-gold/20 p-3 text-sm italic text-ink">💡 {pista}</p>}
-        <button
-          type="button"
-          onClick={onDemanarPista}
-          disabled={carregantPista}
-          className="text-sm font-semibold text-leather underline underline-offset-4"
-        >
-          {carregantPista ? "Carregant pista..." : "Necessito una pista"}
-        </button>
+      <div className="pt-2">
+        <p className="mb-2 text-center font-semibold text-leather">Necessites una pista?</p>
+        <div className="grid grid-cols-3 gap-2">
+          {NOMS_PISTES.map((nom, index) => {
+            const demanada = index < pistes.length;
+            const seguent = index === pistes.length;
+            return (
+              <button
+                key={nom}
+                type="button"
+                onClick={onDemanarPista}
+                disabled={!seguent || carregantPista}
+                aria-pressed={demanada}
+                className={`min-h-12 rounded-xl border-2 px-2 py-2 text-sm font-bold ${
+                  demanada
+                    ? "border-gold bg-gold/20 text-ink"
+                    : "border-leather bg-transparent text-leather disabled:opacity-40"
+                }`}
+              >
+                {seguent && carregantPista ? "..." : nom}
+              </button>
+            );
+          })}
+        </div>
+        {pistes.length > 0 && (
+          <ol className="mt-3 flex flex-col gap-2">
+            {pistes.map((text, index) => (
+              <li key={index} className="rounded-lg bg-gold/20 p-3 text-sm text-ink">
+                <span className="font-bold">{NOMS_PISTES[index] ?? `Pista ${index + 1}`}:</span>{" "}
+                <span className="italic">{text}</span>
+              </li>
+            ))}
+          </ol>
+        )}
       </div>
     </form>
   );

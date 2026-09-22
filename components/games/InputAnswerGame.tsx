@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { VistaJocResposta, type VistaJocRespostaProps } from "@/components/vistes/VistaJocResposta";
+import type { VistaJocRespostaProps } from "@/components/vistes/VistaJocResposta";
 
 interface InputAnswerGameProps {
   estacioId: string;
@@ -12,12 +12,15 @@ interface InputAnswerGameProps {
  * Lògica del joc de resposta escrita: valida contra /api/resposta i demana
  * pistes a /api/pista. Retorna les props de VistaJocResposta.
  */
-export function useInputAnswerGame({ estacioId, onResolt }: InputAnswerGameProps): VistaJocRespostaProps {
+export function useInputAnswerGame({ estacioId, onResolt }: InputAnswerGameProps): VistaJocRespostaProps & {
+  /** Pistes que el servidor diu que l'equip ja havia desbloquejat (en carregar l'estació). */
+  setPistesDesbloquejades: (pistes: string[]) => void;
+} {
   const [resposta, setResposta] = useState("");
   const [missatge, setMissatge] = useState<string | null>(null);
   const [correcte, setCorrecte] = useState(false);
   const [enviant, setEnviant] = useState(false);
-  const [pista, setPista] = useState<string | null>(null);
+  const [pistes, setPistes] = useState<string[]>([]);
   const [carregantPista, setCarregantPista] = useState(false);
 
   async function enviarResposta() {
@@ -44,15 +47,19 @@ export function useInputAnswerGame({ estacioId, onResolt }: InputAnswerGameProps
   }
 
   async function demanarPista() {
+    if (carregantPista) return;
+    const nivell = pistes.length;
     setCarregantPista(true);
     try {
       const res = await fetch("/api/pista", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estacioId }),
+        body: JSON.stringify({ estacioId, nivell }),
       });
       const data = await res.json();
-      setPista(data.pista ?? null);
+      if (res.ok && typeof data.pista === "string") {
+        setPistes((actuals) => (actuals.length === nivell ? [...actuals, data.pista] : actuals));
+      }
     } finally {
       setCarregantPista(false);
     }
@@ -63,15 +70,11 @@ export function useInputAnswerGame({ estacioId, onResolt }: InputAnswerGameProps
     missatge,
     correcte,
     enviant,
-    pista,
+    pistes,
     carregantPista,
     onRespostaChange: setResposta,
     onSubmit: enviarResposta,
     onDemanarPista: demanarPista,
+    setPistesDesbloquejades: setPistes,
   };
-}
-
-export function InputAnswerGame(props: InputAnswerGameProps) {
-  const joc = useInputAnswerGame(props);
-  return <VistaJocResposta {...joc} />;
 }

@@ -7,6 +7,7 @@ import { VistaEstacio, type EstacioPublica } from "@/components/vistes/VistaEsta
 
 interface EstacioData {
   estacio: EstacioPublica;
+  pistesDesbloquejades: string[];
 }
 
 export default function EstacioPage() {
@@ -17,7 +18,10 @@ export default function EstacioPage() {
   const [dades, setDades] = useState<EstacioData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const joc = useInputAnswerGame({ estacioId, onResolt: () => router.push("/joc") });
+  const { setPistesDesbloquejades, ...joc } = useInputAnswerGame({
+    estacioId,
+    onResolt: () => router.push("/joc"),
+  });
 
   useEffect(() => {
     fetch(`/api/joc/${estacioId}`)
@@ -31,9 +35,13 @@ export default function EstacioPage() {
           setError(data.error ?? "No s'ha pogut carregar l'estació");
           return;
         }
-        setDades(await res.json());
+        const data: EstacioData = await res.json();
+        setDades(data);
+        setPistesDesbloquejades(data.pistesDesbloquejades ?? []);
       })
       .catch(() => setError("Error de connexió"));
+    // setPistesDesbloquejades és un setter de useState: estable entre renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estacioId, router]);
 
   return (

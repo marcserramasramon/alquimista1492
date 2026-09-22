@@ -39,7 +39,7 @@ export type GrupPantalla = (typeof GRUPS)[number]["id"];
 
 /** Dades que només pot llegir el servidor (content/private) i que la vista necessita. */
 export interface DadesServidor {
-  fites: Record<string, { pista: string | null; resposta: string | null }>;
+  fites: Record<string, { pistes: string[]; resposta: string | null }>;
 }
 
 export interface Pantalla {
@@ -97,7 +97,7 @@ const JOC_BUIT: VistaJocRespostaProps = {
   missatge: null,
   correcte: false,
   enviant: false,
-  pista: null,
+  pistes: [],
   carregantPista: false,
   onRespostaChange: noop,
   onSubmit: noop,
@@ -153,9 +153,16 @@ function pantallesFita(estacio: Estacio): Pantalla[] {
     {
       ...base,
       id: `fita-${estacio.id}-pista`,
-      titol: `${estacio.nom} · amb pista`,
-      descripcio: "Primera pista real.",
-      render: (dades) => fita({ pista: dades.fites[estacio.id]?.pista ?? null }),
+      titol: `${estacio.nom} · pista 1`,
+      descripcio: "Pista 1 demanada: s'activa Pista 2.",
+      render: (dades) => fita({ pistes: dades.fites[estacio.id]?.pistes.slice(0, 1) ?? [] }),
+    },
+    {
+      ...base,
+      id: `fita-${estacio.id}-pistes-totes`,
+      titol: `${estacio.nom} · totes les pistes`,
+      descripcio: "Pista 1, Pista 2 i Resposta demanades.",
+      render: (dades) => fita({ pistes: dades.fites[estacio.id]?.pistes ?? [] }),
     },
   ];
 }
