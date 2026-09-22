@@ -1,11 +1,14 @@
-"use client";
+import { Benvinguda } from "@/components/player/Benvinguda";
 
-import { useParams } from "next/navigation";
-import { EntradaEquip } from "@/components/player/EntradaEquip";
-
-/** Destí del QR d'equip: preomple el codi perquè només calgui confirmar. */
-export default function EntradaPerQRPage() {
-  const params = useParams();
-  const codi = (params.codi as string)?.toUpperCase().slice(0, 6) ?? "";
-  return <EntradaEquip codiInicial={codi} />;
+/** Destí del QR d'equip: mostra la benvinguda i passa el codi a l'entrada perquè només calgui confirmar. */
+export default async function EntradaPerQRPage({ params }: { params: Promise<{ codi: string }> }) {
+  const { codi } = await params;
+  let codiDescodificat = codi ?? "";
+  try {
+    codiDescodificat = decodeURIComponent(codiDescodificat);
+  } catch {
+    // URL mal formada (p.ex. "%"): es fa servir tal com ve.
+  }
+  const codiNet = codiDescodificat.toUpperCase().slice(0, 6);
+  return <Benvinguda codi={codiNet || undefined} />;
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
 
 export interface EstacioMapa {
@@ -16,9 +15,13 @@ export interface EstacioMapa {
   progres: { resolta: boolean };
 }
 
-interface MapaEquipProps {
+export interface MapaEquipProps {
   estacions: EstacioMapa[];
   totesResoltes: boolean;
+  /** Es crida quan l'equip prem "Anar-hi" al popup d'una fita disponible. */
+  onAnar: (estacio: EstacioMapa) => void;
+  /** Fita seleccionada inicialment (popup obert). */
+  seleccionadaInicialId?: string | null;
 }
 
 // Límits geogràfics del mapa il·lustrat (mateixos que l'app v1, "esta bé")
@@ -35,9 +38,8 @@ function latLonToSVG(lat: number, lon: number) {
   return { x, y };
 }
 
-export function MapaEquip({ estacions, totesResoltes }: MapaEquipProps) {
-  const router = useRouter();
-  const [seleccionadaId, setSeleccionadaId] = useState<string | null>(null);
+export function MapaEquip({ estacions, totesResoltes, onAnar, seleccionadaInicialId = null }: MapaEquipProps) {
+  const [seleccionadaId, setSeleccionadaId] = useState<string | null>(seleccionadaInicialId);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -161,10 +163,7 @@ export function MapaEquip({ estacions, totesResoltes }: MapaEquipProps) {
           <h3 className="font-serif text-lg font-bold text-ink">{seleccionada.nom}</h3>
           <p className="mt-1 text-sm text-ink/80">{seleccionada.entrada}</p>
           <button
-            onClick={() => {
-              if (seleccionada.tipus === "especial") router.push("/final");
-              else router.push(`/s/${seleccionada.id}`);
-            }}
+            onClick={() => onAnar(seleccionada)}
             disabled={!seleccionada.disponible}
             className="mt-3 w-full rounded-lg bg-prussian px-4 py-3 font-bold text-parchment disabled:opacity-40"
           >

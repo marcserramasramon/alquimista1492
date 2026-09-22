@@ -40,6 +40,7 @@ app/
   s/[estacioId]/            pantalla d'una fita
   final/                    ritual del Gresol (placeholder, PENDENT)
   master/                   login i dashboard del màster
+  pantalles/                galeria de dev (404 en producció) amb totes les vistes; cada pantalla nova s'ha de registrar a pantalles/pantalles.tsx
   api/                      route handlers (entrar, estat, joc, resposta, pista, master/*)
 components/
   games/  player/

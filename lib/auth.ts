@@ -2,6 +2,7 @@ import "server-only";
 
 import { SignJWT, jwtVerify } from "jose";
 import type { NextRequest } from "next/server";
+import { cookies } from "next/headers";
 
 const EQUIP_COOKIE = "v2_equip";
 const MASTER_COOKIE = "v2_master";
@@ -30,7 +31,16 @@ export async function signEquipToken(session: EquipSession): Promise<string> {
 
 /** Llegeix i verifica la sessió de l'equip a partir de la petició. Retorna null si no n'hi ha o no és vàlida. */
 export async function getEquipSession(request: NextRequest): Promise<EquipSession | null> {
-  const token = request.cookies.get(EQUIP_COOKIE)?.value;
+  return verifyEquipToken(request.cookies.get(EQUIP_COOKIE)?.value);
+}
+
+/** Com getEquipSession, però per a Server Components (llegeix les cookies de next/headers). */
+export async function getEquipSessionFromCookies(): Promise<EquipSession | null> {
+  const cookieStore = await cookies();
+  return verifyEquipToken(cookieStore.get(EQUIP_COOKIE)?.value);
+}
+
+async function verifyEquipToken(token: string | undefined): Promise<EquipSession | null> {
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, secret("PASS_SECRET"));

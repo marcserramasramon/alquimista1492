@@ -29,7 +29,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Aquest codi d'equip no existeix" }, { status: 404 });
   }
 
-  if (equip.status === "espera") {
+  // Primera entrada: l'equip encara no havia començat (passa ara d'"espera" a "joc").
+  const primeraEntrada = equip.status === "espera";
+  if (primeraEntrada) {
     await db
       .from("v2_teams")
       .update({ status: "joc", started_at: new Date().toISOString() })
@@ -38,7 +40,7 @@ export async function POST(request: NextRequest) {
 
   const token = await signEquipToken({ teamId: equip.id, code: equip.code });
 
-  const response = NextResponse.json({ ok: true });
+  const response = NextResponse.json({ ok: true, primeraEntrada });
   response.cookies.set(EQUIP_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

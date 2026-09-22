@@ -2,16 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { InputAnswerGame } from "@/components/games/InputAnswerGame";
+import { useInputAnswerGame } from "@/components/games/InputAnswerGame";
+import { VistaEstacio, type EstacioPublica } from "@/components/vistes/VistaEstacio";
 
 interface EstacioData {
-  estacio: {
-    id: string;
-    nom: string;
-    entrada: string;
-    imatge?: string;
-    disponible: boolean;
-  };
+  estacio: EstacioPublica;
 }
 
 export default function EstacioPage() {
@@ -21,6 +16,8 @@ export default function EstacioPage() {
 
   const [dades, setDades] = useState<EstacioData | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const joc = useInputAnswerGame({ estacioId, onResolt: () => router.push("/joc") });
 
   useEffect(() => {
     fetch(`/api/joc/${estacioId}`)
@@ -39,60 +36,12 @@ export default function EstacioPage() {
       .catch(() => setError("Error de connexió"));
   }, [estacioId, router]);
 
-  if (error) {
-    return (
-      <PantallaEstacio>
-        <p className="text-center text-lg text-cochineal">{error}</p>
-        <TornarHub />
-      </PantallaEstacio>
-    );
-  }
-
-  if (!dades) {
-    return (
-      <PantallaEstacio>
-        <p className="text-center text-leather">Carregant...</p>
-      </PantallaEstacio>
-    );
-  }
-
-  const { estacio } = dades;
-
   return (
-    <PantallaEstacio>
-      {estacio.imatge && (
-        <img
-          src={estacio.imatge}
-          alt={estacio.nom}
-          className="mb-4 aspect-video w-full rounded-xl object-cover shadow-md"
-        />
-      )}
-      <h1 className="mb-2 text-center font-serif text-2xl font-bold text-ink">{estacio.nom}</h1>
-      <p className="mb-6 text-center text-ink/90">{estacio.entrada}</p>
-
-      <InputAnswerGame estacioId={estacioId} onResolt={() => router.push("/joc")} />
-
-      <TornarHub />
-    </PantallaEstacio>
-  );
-}
-
-function PantallaEstacio({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-4 py-8">
-      {children}
-    </main>
-  );
-}
-
-function TornarHub() {
-  const router = useRouter();
-  return (
-    <button
-      onClick={() => router.push("/joc")}
-      className="mt-6 w-full rounded-xl border-2 border-leather bg-transparent px-4 py-3 text-center font-semibold text-leather"
-    >
-      ← Tornar al mapa
-    </button>
+    <VistaEstacio
+      {...joc}
+      estacio={dades?.estacio ?? null}
+      error={error}
+      onTornar={() => router.push("/joc")}
+    />
   );
 }
