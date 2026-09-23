@@ -49,9 +49,9 @@ const TOCS_OU_DE_PASQUA = 5;
 const MAX_ENTRE_TOCS_MS = 800;
 
 /** Opacitat del Gresol central amb 0 fites resoltes. */
-const OPACITAT_GRESOL_MIN = 0.15;
+const OPACITAT_GRESOL_MIN = 0.35;
 /** Opacitat amb totes les fites menys una: el salt fins a 1 marca l'estrella completa. */
-const OPACITAT_GRESOL_QUASI = 0.6;
+const OPACITAT_GRESOL_QUASI = 0.8;
 
 /**
  * El símbol central és gairebé transparent i guanya opacitat amb cada fita
