@@ -22,7 +22,7 @@ export interface VistaFinalProps {
 }
 
 /**
- * Pla de Masset. Primer l'espera (4a, sense espòilers del desemmascarament) i, quan l'equip ha
+ * Pla del Masset. Primer l'espera (4a, sense espòilers del desemmascarament) i, quan l'equip ha
  * respost la contrasenya, el ritual (4b) amb l'ordre dels elements. Com es passa d'una part a
  * l'altra i el resultat del Gresol són PENDENT (docs/fites-nova.md § Estació central): tot es
  * configura a content/public/gresol.ts.

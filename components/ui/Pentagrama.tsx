@@ -64,7 +64,7 @@ function opacitatGresol(resolts: number, total: number, sempreVisible: boolean) 
 }
 
 /**
- * El pentagrama dels cinc elements al voltant del Pla de Masset: fa de segell
+ * El pentagrama dels cinc elements al voltant del Pla del Masset: fa de segell
  * de l'app i de marcador de progrés. Cada fita resolta pren el seu color i,
  * quan dues puntes veïnes de l'estrella estan resoltes, la línia s'encén d'or.
  */

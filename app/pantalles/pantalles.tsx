@@ -323,7 +323,7 @@ const FETS_MASTER: FetPartida[] = [
 });
 const FETS_BASE = { llista: FETS_MASTER, noVistos: 0, onVeure: noop, avisos: [], onEntes: noop };
 
-// Recorregut d'exemple: del Pla de Masset a Aigua, Terra i cap a Foc, amb una mica de soroll de GPS.
+// Recorregut d'exemple: del Pla del Masset a Aigua, Terra i cap a Foc, amb una mica de soroll de GPS.
 const RECORREGUT_EXEMPLE: DadesRecorregut = (() => {
   const parades = ["gresol", "font-ferro", "planes-bones", "foc"].map((id) => getEstacio(id)!);
   const inici = Date.parse(INICI_PARTIDA);
@@ -528,7 +528,7 @@ export const PANTALLES: Pantalla[] = [
     id: "hub-totes-resoltes",
     grup: "hub",
     titol: "Hub · totes resoltes",
-    descripcio: "Text de l'estrella completa i botó del Pla de Masset.",
+    descripcio: "Text de l'estrella completa i botó del Pla del Masset.",
     render: () => hub(JUGABLES),
   },
   {
@@ -635,35 +635,35 @@ export const PANTALLES: Pantalla[] = [
   {
     id: "final",
     grup: "final",
-    titol: "Pla de Masset · arribada",
+    titol: "Pla del Masset · arribada",
     descripcio: "Arribada: esperant la contrasenya (abans del desemmascarament).",
     render: () => <VistaFinal ritual={false} onComencarRitual={noop} />,
   },
   {
     id: "final-ritual",
     grup: "final",
-    titol: "Pla de Masset · ritual",
+    titol: "Pla del Masset · ritual",
     descripcio: "El Gresol: imatge, recipients en ordre i passos. Resultat PENDENT (content/public/gresol.ts).",
     render: () => <VistaFinal ritual onComencarRitual={noop} />,
   },
   {
     id: "final-una-pantalla",
     grup: "final",
-    titol: "Pla de Masset · tot en una pantalla",
+    titol: "Pla del Masset · tot en una pantalla",
     descripcio: "Variant si GRESOL_CONFIG.transicio = \"una-pantalla\" (arribada i ritual sense botó).",
     render: () => <VistaFinal ritual={false} onComencarRitual={noop} transicio="una-pantalla" />,
   },
   {
     id: "final-incomplet",
     grup: "final",
-    titol: "Pla de Masset · sense tots els elements",
+    titol: "Pla del Masset · sense tots els elements",
     descripcio: "S'ha acabat el temps amb tres fragments: només s'encenen i surten els elements aconseguits.",
     render: () => <VistaFinal ritual={false} onComencarRitual={noop} aconseguits={["aigua", "foc", "aire"]} />,
   },
   {
     id: "final-incomplet-ritual",
     grup: "final",
-    titol: "Pla de Masset · ritual sense tots els elements",
+    titol: "Pla del Masset · ritual sense tots els elements",
     descripcio: "La llista de recipients només mostra els elements aconseguits, en l'ordre del ritual.",
     render: () => <VistaFinal ritual onComencarRitual={noop} aconseguits={["aigua", "foc", "aire"]} />,
   },

@@ -37,7 +37,7 @@ const STATIONS: Station[] = [
     color: "bg-sky-400",
   },
   {
-    name: "Pista skate",
+    name: "Dunes d'asfalt",
     element: "Ànima",
     coords: [41.910340, 2.230023],
     angle: 281,
@@ -54,7 +54,7 @@ const STATIONS: Station[] = [
   },
 ];
 
-const CENTER = { coords: [41.913130, 2.229789], name: "Pla de Masset" };
+const CENTER = { coords: [41.913130, 2.229789], name: "Pla del Masset" };
 
 export default function GresolPentagram() {
   return (
@@ -227,7 +227,7 @@ export default function GresolPentagram() {
           Centre del Pentagrama
         </h2>
         <p className="text-sm md:text-base text-amber-100 mb-4 leading-relaxed">
-          <strong className="text-amber-300">Pla de Masset</strong> — Aquí es
+          <strong className="text-amber-300">Pla del Masset</strong> — Aquí es
           reuneixen els Guardians del Secret per realitzar el ritual final. Els
           cinc elements es combinen en ordre: Aigua (1) → Foc (2) → Terra (3) →
           Aire (4) → Ànima (5).

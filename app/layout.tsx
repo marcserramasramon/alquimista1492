@@ -31,8 +31,8 @@ export const metadata: Metadata = {
   description: "Escape room exterior a Sentfores–La Guixa",
   manifest: "/manifest.json",
   icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg",
+    icon: "/icons/icon-192.png",
+    apple: "/icons/icon-apple.png",
   },
 };
 

@@ -404,7 +404,7 @@ function CapcaleraMaster({
           <div className="min-w-0 flex-1">
             <p className="text-lg font-extrabold leading-tight">⚗️ {avis.text}</p>
             <p className="text-base">
-              Va cap al Pla de Masset.{avis.mes > 0 && ` I ${avis.mes} ${avis.mes === 1 ? "equip més" : "equips més"}.`}
+              Va cap al Pla del Masset.{avis.mes > 0 && ` I ${avis.mes} ${avis.mes === 1 ? "equip més" : "equips més"}.`}
             </p>
           </div>
           <button

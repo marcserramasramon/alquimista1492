@@ -24,17 +24,17 @@ export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
   {
     id: "queden-15",
     titol: "Queden 15 minuts",
-    text: "Queden quinze minuts. Acabeu la fita on sou i poseu-vos en camí cap al Pla de Masset.",
+    text: "Queden quinze minuts. Acabeu la fita on sou i poseu-vos en camí cap al Pla del Masset.",
   },
   {
     id: "queden-5",
     titol: "Queden 5 minuts",
-    text: "Només queden cinc minuts. Aneu cap al Pla de Masset sense entretenir-vos.",
+    text: "Només queden cinc minuts. Aneu cap al Pla del Masset sense entretenir-vos.",
   },
   {
     id: "pla-masset",
-    titol: "Torneu al Pla de Masset",
-    text: "Deixeu el que feu i torneu al Pla de Masset. Us hi esperen.",
+    titol: "Torneu al Pla del Masset",
+    text: "Deixeu el que feu i torneu al Pla del Masset. Us hi esperen.",
   },
   {
     id: "inquisidor-vigila",

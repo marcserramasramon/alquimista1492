@@ -11,7 +11,7 @@ export interface VistaTempsConsumitProps {
 }
 
 /**
- * 3b. S'acaba el temps: envia l'equip al Pla de Masset. Encara no hi ha cap durada de
+ * 3b. S'acaba el temps: envia l'equip al Pla del Masset. Encara no hi ha cap durada de
  * partida al model de dades, així que aquesta vista no s'activa sola.
  * En obrir-se sona una campana greu (només si l'àudio ja s'ha desbloquejat amb un toc)
  * i el rellotge de sorra batega fins que marxen.
@@ -34,7 +34,7 @@ export function VistaTempsConsumit({ onAnarPlaMasset }: VistaTempsConsumitProps)
         className="animate-entrar [animation-delay:150ms]"
       />
       <button type="button" onClick={onAnarPlaMasset} className="btn btn-fosc animate-entrar [animation-delay:300ms]">
-        ⚗️ Anar al Pla de Masset
+        ⚗️ Anar al Pla del Masset
       </button>
     </Pantalla>
   );

@@ -12,7 +12,7 @@ export function VistaGuardians() {
   return (
     <Pantalla className="gap-5">
       <BotoMusica className="self-end" />
-      {/* Pedra a la mateixa mida que el pentagrama del Pla de Masset (VistaFinal). */}
+      {/* Pedra a la mateixa mida que el pentagrama del Pla del Masset (VistaFinal). */}
       <img
         src="/images/pedra-filosofal.webp"
         alt="La Pedra Filosofal"

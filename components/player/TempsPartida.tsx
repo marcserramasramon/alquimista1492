@@ -36,7 +36,7 @@ function jaVist(acabaAt: string): boolean {
 /**
  * Compte enrere de la partida, sempre visible a dalt de les pantalles de joc. Es munta una
  * sola vegada al layout arrel. Quan arriba a zero mostra "El temps s'ha consumit" i envia
- * l'equip al Pla de Masset; si Fra Francesc ja l'ha consagrat, l'envia a la pantalla final.
+ * l'equip al Pla del Masset; si Fra Francesc ja l'ha consagrat, l'envia a la pantalla final.
  */
 export function TempsPartida() {
   const router = useRouter();

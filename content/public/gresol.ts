@@ -1,5 +1,5 @@
 /**
- * Configuració del ritual del Gresol dels Cinc Elements (Pla de Masset).
+ * Configuració del ritual del Gresol dels Cinc Elements (Pla del Masset).
  * docs/fites-nova.md § Estació central i docs/textos-nova.md § 4.
  *
  * Tot el que hi ha aquí és públic: cap valor és una solució. Si mai l'app ha de demanar

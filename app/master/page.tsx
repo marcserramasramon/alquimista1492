@@ -307,7 +307,7 @@ export default function MasterPage() {
   function acabarTemps() {
     setConfirmacio({
       titol: "Acabar el temps ara?",
-      text: "Tots els equips veuran que s'ha acabat el temps i aniran al Pla de Masset. Després encara podràs afegir minuts.",
+      text: "Tots els equips veuran que s'ha acabat el temps i aniran al Pla del Masset. Després encara podràs afegir minuts.",
       boto: "⏹ Acabar ara",
       perill: true,
       accio: () => canviarPartida({ accio: "acabar" }),

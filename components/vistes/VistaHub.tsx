@@ -181,7 +181,7 @@ export function VistaHub({
         <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 [background:linear-gradient(to_top,var(--paper)_60%,transparent)]">
           <div className="animate-bategar rounded-2xl">
             <button onClick={onAnarFinal} className="btn btn-fosc text-xl">
-              ⚗️ Anar al Pla de Masset
+              ⚗️ Anar al Pla del Masset
             </button>
           </div>
         </div>

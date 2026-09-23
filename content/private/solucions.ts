@@ -57,7 +57,7 @@ export const SOLUCIONS: Record<string, Solucio> = {
     ],
   },
 
-  // ÀNIMA — Pista skate. Tinta UV al punt més alt de la pista.
+  // ÀNIMA — Dunes d'asfalt. Tinta UV al punt més alt de la pista.
   anima: {
     respostesAcceptades: ["5"],
     pistes: [

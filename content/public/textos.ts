@@ -119,7 +119,7 @@ export const ESTRELLA_COMPLETA: TextNarratiu = {
   paragrafs: [
     "Els cinc fragments són vostres.",
     "Mireu el mapa: Aigua, Terra, Foc, Aire i Ànima dibuixen una estrella de cinc puntes. És el signe de l'Orde del Testament: els quatre elements units sota la Quinta Essència. No és cap casualitat. La vaig traçar jo, pas a pas, sobre la terra del poble.",
-    "I tota estrella té un cor. Les seves línies es creuen al Pla de Masset.",
+    "I tota estrella té un cor. Les seves línies es creuen al Pla del Masset.",
     "Aneu-hi. Allà s'acaba el camí… i allà trobareu qui us ha vigilat tota la nit.",
     CONTRASENYA,
   ],
@@ -131,13 +131,13 @@ export const TEMPS_CONSUMIT: TextNarratiu = {
   titol: "El temps s'ha consumit",
   paragrafs: [
     "El temps s'ha consumit. Els astres ja no estan alineats i la Gran Obra no pot esperar més.",
-    "Deixeu el que estigueu fent i aneu al Pla de Masset, al cor de l'estrella. Porteu els fragments que hàgiu trobat. Allà us espera qui us ha vigilat tota la nit.",
+    "Deixeu el que estigueu fent i aneu al Pla del Masset, al cor de l'estrella. Porteu els fragments que hàgiu trobat. Allà us espera qui us ha vigilat tota la nit.",
     CONTRASENYA,
   ],
   audio: "/audio/temps.mp3",
 };
 
-// 4a. Pla de Masset, en arribar (abans del desemmascarament; sense àudio)
+// 4a. Pla del Masset, en arribar (abans del desemmascarament; sense àudio)
 export const GRESOL_ARRIBADA: TextNarratiu = {
   titol: "El cor de l'estrella",
   // Parteix del text de docs/textos-nova.md § 4a, sense fets nous ni desvelar qui és l'Inquisidor.
