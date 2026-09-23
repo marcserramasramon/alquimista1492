@@ -12,6 +12,7 @@ import type {
   ResultatEnviament,
 } from "@/components/vistes/PanellMissatgesMaster";
 import type { DadesRecorregut } from "@/components/vistes/PanellRecorregut";
+import type { DadesConnexio } from "@/components/ui/EstatConnexio";
 
 /** Cada quant es torna a llegir el recorregut de l'equip triat (els equips envien la posició cada 30 s). */
 const INTERVAL_RECORREGUT_MS = 30_000;
@@ -64,6 +65,7 @@ export default function MasterPage() {
   const [missatgesRecents, setMissatgesRecents] = useState<MissatgeEnviat[]>([]);
   const [recorregutId, setRecorregutId] = useState<string | null>(null);
   const [recorregut, setRecorregut] = useState<DadesRecorregut | null>(null);
+  const [connexio, setConnexio] = useState<DadesConnexio>({ ultimaLecturaAt: null, errorsSeguits: 0 });
 
   useEffect(() => {
     if (!recorregutId) return;
@@ -95,6 +97,7 @@ export default function MasterPage() {
       router.push("/master/login");
       return null;
     }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   }, [router]);
 
@@ -106,7 +109,8 @@ export default function MasterPage() {
   }, []);
 
   async function carregar() {
-    const data = await llegirEquips();
+    // Si falla, ja ho recollirà el refresc periòdic (i l'indicador de connexió).
+    const data = await llegirEquips().catch(() => null);
     if (data) aplicar(data);
   }
 
@@ -117,11 +121,12 @@ export default function MasterPage() {
         .then((data) => {
           if (!data) return;
           aplicar(data);
+          setConnexio({ ultimaLecturaAt: Date.now(), errorsSeguits: 0 });
           // L'interruptor arrenca amb el que diu el servidor (p.ex. després de recarregar).
           if (primera && data.master?.sharing) setComparteixo(true);
           primera = false;
         })
-        .catch(() => {});
+        .catch(() => setConnexio((c) => ({ ...c, errorsSeguits: c.errorsSeguits + 1 })));
     refresca();
     const interval = setInterval(refresca, 5000);
     return () => clearInterval(interval);
@@ -274,6 +279,7 @@ export default function MasterPage() {
       onComparteixoChange={canviarComparteixo}
       missatges={{ recents: missatgesRecents, onEnviar: enviarMissatge }}
       recorregut={{ triatId: recorregutId, dades: recorregut, onTriar: triarRecorregut }}
+      connexio={connexio}
     />
   );
 }

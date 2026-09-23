@@ -10,6 +10,7 @@ import { TargetaEquipMaster, type EquipMaster } from "@/components/vistes/Target
 import { Cronometre } from "@/components/ui/Cronometre";
 import { CompteEnrere } from "@/components/ui/CompteEnrere";
 import { MINUTS_ALERTA, tempsRestantMs } from "@/lib/partida";
+import { FranjaSenseConnexio, PindolaConnexio, useEstatConnexio, type DadesConnexio } from "@/components/ui/EstatConnexio";
 
 export type { EquipMaster };
 
@@ -45,6 +46,8 @@ export interface VistaMasterEquipsProps {
   missatges?: Omit<PanellMissatgesMasterProps, "equips">;
   /** Recorregut d'un equip al mapa, amb els temps. Si no hi és, no es mostra. */
   recorregut?: Omit<PanellRecorregutProps, "equips">;
+  /** Com de fresques són les dades. Sense valor, no es mostra l'indicador. */
+  connexio?: DadesConnexio;
   /** Pestanya amb què s'obre (galeria). Sense valor, la darrera que s'ha fet servir en aquest mòbil. */
   pestanyaInicial?: PestanyaMaster;
 }
@@ -103,6 +106,7 @@ export function VistaMasterEquips({
   onComparteixoChange,
   missatges,
   recorregut,
+  connexio,
   pestanyaInicial,
 }: VistaMasterEquipsProps) {
   const [pestanya, setPestanya] = useState<PestanyaMaster>(pestanyaInicial ?? "equips");
@@ -142,6 +146,7 @@ export function VistaMasterEquips({
         desfasamentMs={desfasamentMs}
         equipsAgafats={equips ? agafats.length : null}
         equipsTotal={equips?.length ?? 0}
+        connexio={connexio}
       />
 
       <main className="flex flex-col px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-5">
@@ -280,13 +285,16 @@ function CapcaleraMaster({
   desfasamentMs,
   equipsAgafats,
   equipsTotal,
+  connexio,
 }: {
   partidaIniciadaAt: string | null;
   partidaAcabaAt: string | null;
   desfasamentMs: number;
   equipsAgafats: number | null;
   equipsTotal: number;
+  connexio?: DadesConnexio;
 }) {
+  const estatConnexio = useEstatConnexio(connexio ?? { ultimaLecturaAt: null, errorsSeguits: 0 });
   const restant = partidaAcabaAt ? tempsRestantMs(partidaAcabaAt, desfasamentMs) : null;
   const acabat = restant === 0;
   const alerta = restant !== null && restant < MINUTS_ALERTA * 60_000;
@@ -311,12 +319,16 @@ function CapcaleraMaster({
             <p className="font-display text-3xl font-extrabold leading-none">—:—</p>
           )}
         </div>
-        {equipsAgafats !== null && (
-          <p className="shrink-0 rounded-2xl border-[3px] border-ink bg-ink px-3 py-1 text-center font-display text-2xl font-extrabold text-gold">
-            {equipsAgafats}/{equipsTotal} <span className="etiqueta text-xs text-paper">equips</span>
-          </p>
-        )}
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          {connexio && <PindolaConnexio {...estatConnexio} />}
+          {equipsAgafats !== null && (
+            <p className="rounded-2xl border-[3px] border-ink bg-ink px-3 py-1 text-center font-display text-2xl font-extrabold text-gold">
+              {equipsAgafats}/{equipsTotal} <span className="etiqueta text-xs text-paper">equips</span>
+            </p>
+          )}
+        </div>
       </div>
+      {connexio && <FranjaSenseConnexio {...estatConnexio} />}
     </header>
   );
 }

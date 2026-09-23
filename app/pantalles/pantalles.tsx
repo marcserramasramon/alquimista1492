@@ -669,6 +669,7 @@ export const PANTALLES: Pantalla[] = [
         posicioMaster={null}
         comparteixo={false}
         estatUbicacio="inactiu"
+        connexio={{ ultimaLecturaAt: Date.now(), errorsSeguits: 0 }}
       />
     ),
   },
@@ -752,6 +753,38 @@ export const PANTALLES: Pantalla[] = [
         posicioMaster={null}
         comparteixo
         estatUbicacio="denegat"
+      />
+    ),
+  },
+  {
+    id: "master-connexio-lenta",
+    grup: "master",
+    titol: "Màster · dades endarrerides",
+    descripcio: "Fa més de 15 s que no arriba res del servidor: la píndola ho diu.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+        connexio={{ ultimaLecturaAt: Date.now() - 25_000, errorsSeguits: 1 }}
+      />
+    ),
+  },
+  {
+    id: "master-sense-connexio",
+    grup: "master",
+    titol: "Màster · sense connexió",
+    descripcio: "Tres lectures fallides seguides (o el mòbil sense xarxa): franja vermella a dalt.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+        connexio={{ ultimaLecturaAt: Date.now() - 3 * 60_000, errorsSeguits: 3 }}
       />
     ),
   },
