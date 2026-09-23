@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CompteEnrere } from "@/components/ui/CompteEnrere";
+import { useExtraFranja, useRegistrarRellotge } from "@/components/player/FranjaPartida";
 import { MINUTS_ALERTA, tempsRestantMs } from "@/lib/partida";
 
 export interface IndicadorTempsProps {
@@ -13,10 +14,12 @@ export interface IndicadorTempsProps {
 /**
  * Píndola amb el temps que queda, a dalt de les pantalles de joc de l'equip. Va en el flux
  * (sticky): empeny la pantalla avall en lloc de tapar-ne el títol. En vermell i bategant
- * els últims minuts.
+ * els últims minuts. Al costat hi pot anar la peça que hi posi la pantalla (FranjaPartida).
  */
 export function IndicadorTemps({ acabaAt, desfasamentMs = 0, onZero }: IndicadorTempsProps) {
   const [alerta, setAlerta] = useState(false);
+  const extra = useExtraFranja();
+  useRegistrarRellotge();
 
   useEffect(() => {
     const comprovar = () => setAlerta(tempsRestantMs(acabaAt, desfasamentMs) < MINUTS_ALERTA * 60_000);
@@ -29,7 +32,7 @@ export function IndicadorTemps({ acabaAt, desfasamentMs = 0, onZero }: Indicador
   }, [acabaAt, desfasamentMs]);
 
   return (
-    <div className="sticky top-0 z-30 flex justify-center pb-1 pt-[max(0.5rem,env(safe-area-inset-top))] [background:linear-gradient(to_bottom,var(--paper)_70%,transparent)]">
+    <div className="sticky top-0 z-30 flex items-center justify-center gap-3 pb-1 pt-[max(0.5rem,env(safe-area-inset-top))] [background:linear-gradient(to_bottom,var(--paper)_70%,transparent)]">
       <p
         role="timer"
         aria-label="Temps que queda"
@@ -40,6 +43,7 @@ export function IndicadorTemps({ acabaAt, desfasamentMs = 0, onZero }: Indicador
         <span aria-hidden>⏳</span>
         <CompteEnrere acabaAt={acabaAt} desfasamentMs={desfasamentMs} onZero={onZero} />
       </p>
+      {extra}
     </div>
   );
 }

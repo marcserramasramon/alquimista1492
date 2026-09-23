@@ -4,6 +4,7 @@ import BarraScroll from "@/components/ui/BarraScroll";
 import { MissatgesMaster } from "@/components/player/MissatgesMaster";
 import { MusicaFons } from "@/components/player/MusicaFons";
 import { TempsPartida } from "@/components/player/TempsPartida";
+import { FranjaPartidaProvider } from "@/components/player/FranjaPartida";
 import "./globals.css";
 
 // Títols: gòtica llegible (1472). Text: humanista amb arrel cal·ligràfica.
@@ -58,9 +59,11 @@ export default function RootLayout({
       className={`${grenzeGotisch.variable} ${alegreyaSans.variable} ${alegreyaSansSC.variable}`}
     >
       <body className="text-ink antialiased">
-        {/* Compte enrere de la partida: només a les pantalles de joc de l'equip. */}
-        <TempsPartida />
-        {children}
+        <FranjaPartidaProvider>
+          {/* Compte enrere de la partida: només a les pantalles de joc de l'equip. */}
+          <TempsPartida />
+          {children}
+        </FranjaPartidaProvider>
         {/* Pop-up dels missatges del màster: només actua a les pantalles de joc de l'equip. */}
         <MissatgesMaster />
         {/* Música de l'entrada fins a l'espera. */}

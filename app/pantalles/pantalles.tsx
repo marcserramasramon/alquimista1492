@@ -74,7 +74,6 @@ export interface Pantalla {
 
 const noop = () => {};
 
-const NOM_EQUIP = EQUIPS[0].nom;
 
 /** Estacions tal com les retorna /api/estat, amb el progrés simulat. Només són obertes les resoltes (i les d'`obertes`). */
 function estacionsAmbProgres(resoltes: string[], obertes: string[] = []): EstacioMapa[] {
@@ -105,7 +104,6 @@ function hub(
   const totesResoltes = JUGABLES.every((id) => resoltes.includes(id));
   return (
     <VistaHub
-      nomEquip={NOM_EQUIP}
       estacions={estacions}
       totesResoltes={totesResoltes}
       onAnarEstacio={noop}

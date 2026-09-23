@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { MapaEquip, type EstacioMapa, type MarcadorMapa } from "@/components/player/MapaEquip";
+import { useMostrarAFranja } from "@/components/player/FranjaPartida";
 import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
 import { Narracio } from "@/components/ui/Narracio";
 import { ELEMENTS } from "@/content/public/estacions";
 import { ESTRELLA_COMPLETA } from "@/content/public/textos";
 
 export interface VistaHubProps {
-  nomEquip: string;
   estacions: EstacioMapa[];
   totesResoltes: boolean;
   onAnarEstacio: (estacio: EstacioMapa) => void;
@@ -24,7 +24,6 @@ export interface VistaHubProps {
 }
 
 export function VistaHub({
-  nomEquip,
   estacions,
   totesResoltes,
   onAnarEstacio,
@@ -53,46 +52,41 @@ export function VistaHub({
   const visibles = estacions.filter((e) => e.tipus !== "especial" || totesResoltes);
   const seleccionada = estacions.find((e) => e.id === seleccionadaId) ?? null;
 
+  // Els elements aconseguits van a la franja de dalt, al costat del compte enrere.
+  const casella = <CasellaElements resoltes={resoltes} total={elementals.length} />;
+  const hiHaRellotge = useMostrarAFranja(casella, [resoltes, elementals.length]);
+
   return (
     <main
-      className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-4 pt-[max(1.25rem,env(safe-area-inset-top))] ${
+      className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pt-2 ${
         totesResoltes ? "pb-32" : "pb-10"
       }`}
     >
-      <header className="flex animate-entrar items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="etiqueta">el vostre equip</p>
-          <h1 className="truncate text-4xl font-extrabold">{nomEquip}</h1>
-        </div>
-        <div className="shrink-0 rounded-2xl border-[3px] border-ink bg-gold px-3 py-1 text-center shadow-[0_4px_0_var(--ink)]">
-          <p className="font-display text-3xl font-extrabold leading-none">
-            {resoltes}
-            <span className="text-xl">/{elementals.length}</span>
-          </p>
-          <p className="etiqueta text-[0.65rem] text-ink">elements</p>
-        </div>
-      </header>
+      {/* Sense compte enrere, la casella dels elements fa ella sola la franja de dalt. */}
+      {!hiHaRellotge && (
+        <div className="flex justify-center pt-[max(0.5rem,env(safe-area-inset-top))]">{casella}</div>
+      )}
 
       {/* Progrés: el pentagrama s'encén a mesura que es resolen les fites */}
-      <section className="targeta relative -mx-1 animate-entrar overflow-hidden px-1 pb-3 pt-2 [animation-delay:80ms]">
+      <section className="targeta relative -mx-1 animate-entrar overflow-hidden px-1 pb-2 pt-0 [animation-delay:80ms]">
         <Pentagrama
           nodes={nodes}
           centreActiu={totesResoltes}
           girar
           seleccionatId={seleccionadaId}
           onTriar={setSeleccionadaId}
-          className="mx-auto w-full"
+          className="mx-auto w-[92%]"
         />
         {/* Amb totes resoltes, just a sota ve el text de l'estrella completa. */}
         {!totesResoltes && (
-          <p className="mt-1 text-center text-base text-ink-soft">Toqueu un element per veure on és.</p>
+          <p className="text-center text-[0.95rem] text-ink-soft">Toqueu un element per veure on és.</p>
         )}
       </section>
 
       {totesResoltes && <Narracio text={ESTRELLA_COMPLETA} etiqueta="fra francesc" className="animate-entrar" />}
 
       <section className="-mx-2 animate-entrar [animation-delay:160ms]">
-        <h2 className="etiqueta mb-2 px-2 text-base">mapa de sentfores</h2>
+        <h2 className="etiqueta mb-1 px-2 text-base normal-case">Mapa de Sentfores</h2>
         <MapaEquip
           estacions={estacions}
           totesResoltes={totesResoltes}
@@ -196,6 +190,21 @@ export function VistaHub({
         />
       )}
     </main>
+  );
+}
+
+/** Elements aconseguits sobre el total: mateixa alçada i forma que el compte enrere. */
+function CasellaElements({ resoltes, total }: { resoltes: number; total: number }) {
+  return (
+    <p
+      aria-label={`${resoltes} de ${total} elements`}
+      className="flex items-center gap-1.5 rounded-full border-[3px] border-ink bg-gold px-3.5 py-0.5 shadow-[0_3px_0_var(--ink)]"
+    >
+      <span className="font-display text-[1.3rem] font-extrabold leading-8">
+        {resoltes}/{total}
+      </span>
+      <span className="etiqueta text-[0.8rem] leading-8 text-ink">elements</span>
+    </p>
   );
 }
 

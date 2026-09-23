@@ -131,7 +131,6 @@ export default function HubPage() {
   return (
     <>
       <VistaHub
-        nomEquip={estat.equip.name}
         estacions={estat.estacions}
         totesResoltes={estat.totesResoltes}
         marcadors={marcadors}
