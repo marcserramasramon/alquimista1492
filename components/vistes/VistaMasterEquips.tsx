@@ -10,6 +10,7 @@ import { TargetaEquipMaster, type EquipMaster } from "@/components/vistes/Target
 import { Cronometre } from "@/components/ui/Cronometre";
 import { CompteEnrere } from "@/components/ui/CompteEnrere";
 import { MINUTS_ALERTA, tempsRestantMs } from "@/lib/partida";
+import { PanellFetsMaster, descriureFet, type FetPartida } from "@/components/vistes/PanellFetsMaster";
 import { DialegConfirmacio, type Confirmacio } from "@/components/ui/DialegConfirmacio";
 import { FranjaSenseConnexio, PindolaConnexio, useEstatConnexio, type DadesConnexio } from "@/components/ui/EstatConnexio";
 
@@ -49,6 +50,18 @@ export interface VistaMasterEquipsProps {
   recorregut?: Omit<PanellRecorregutProps, "equips">;
   /** Com de fresques són les dades. Sense valor, no es mostra l'indicador. */
   connexio?: DadesConnexio;
+  /** Fets de la partida (arribades, fites resoltes...). Si no hi és, no es mostra res. */
+  fets?: {
+    /** Del més nou al més vell. */
+    llista: FetPartida[];
+    /** Quants encara no s'han vist a la pestanya Equips (surten a la pestanya). */
+    noVistos: number;
+    /** La pestanya Equips és a la vista: tot queda vist. */
+    onVeure: () => void;
+    /** Equips que acaben d'aconseguir tots els fragments: avís gran fins que es toca "Entesos". */
+    avisos: FetPartida[];
+    onEntes: (fetId: string) => void;
+  };
   /** Acció pendent de confirmar: es mostra el diàleg. */
   confirmacio?: Confirmacio | null;
   onTancarConfirmacio?: () => void;
@@ -114,6 +127,7 @@ export function VistaMasterEquips({
   missatges,
   recorregut,
   connexio,
+  fets,
   confirmacio = null,
   onTancarConfirmacio = () => {},
   avis = null,
@@ -132,6 +146,13 @@ export function VistaMasterEquips({
     return () => clearTimeout(t);
   }, [pestanyaInicial]);
 
+  // Mentre es mira la pestanya Equips, els fets nous ja es donen per vistos.
+  const hiHaNoVistos = (fets?.noVistos ?? 0) > 0;
+  const veure = fets?.onVeure;
+  useEffect(() => {
+    if (pestanya === "equips" && hiHaNoVistos) veure?.();
+  }, [pestanya, hiHaNoVistos, veure]);
+
   function canviarPestanya(nova: PestanyaMaster) {
     setPestanya(nova);
     desarPestanya(nova);
@@ -146,6 +167,9 @@ export function VistaMasterEquips({
   if (posicioMaster) marcadors.push({ id: "jo", tipus: "jo", ...posicioMaster });
 
   const agafats = (equips ?? []).filter((e) => e.agafat);
+  // Els equips que ja ho tenen tot i esperen la consagració, a dalt de tot.
+  const pendentConsagrar = (e: EquipMaster) => e.agafat && !e.guardians && e.resoltes >= e.total;
+  const equipsOrdenats = equips && [...equips].sort((a, b) => Number(pendentConsagrar(b)) - Number(pendentConsagrar(a)));
   const tempsEsgotat = partidaAcabaAt !== null && tempsRestantMs(partidaAcabaAt, desfasamentMs) === 0;
 
   const errorGps = comparteixo && (estatUbicacio === "denegat" || estatUbicacio === "no-disponible");
@@ -159,6 +183,13 @@ export function VistaMasterEquips({
         equipsAgafats={equips ? agafats.length : null}
         equipsTotal={equips?.length ?? 0}
         connexio={connexio}
+        avis={
+          fets?.avisos[0] && {
+            text: descriureFet(fets.avisos[0], equips?.find((e) => e.id === fets.avisos[0].teamId)?.name ?? "Un equip").text,
+            mes: fets.avisos.length - 1,
+            onEntes: () => fets.onEntes(fets.avisos[0].id),
+          }
+        }
       />
 
       <main className="flex flex-col px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-5">
@@ -173,8 +204,10 @@ export function VistaMasterEquips({
             </div>
           )}
 
+          {fets && partidaIniciadaAt && <PanellFetsMaster fets={fets.llista} equips={equips ?? []} />}
+
           <ul className="flex flex-col gap-4">
-            {equips?.map((equip) => (
+            {equipsOrdenats?.map((equip) => (
               <TargetaEquipMaster
                 key={equip.id}
                 equip={equip}
@@ -298,6 +331,12 @@ export function VistaMasterEquips({
                   {p.icona}
                 </span>
                 {p.nom}
+                {p.id === "equips" && !actiu && hiHaNoVistos && (
+                  <span className="absolute right-2 top-1.5 min-w-6 rounded-full border-2 border-ink bg-blood px-1.5 text-sm leading-5 text-white">
+                    {fets?.noVistos}
+                    <span className="sr-only"> fets nous</span>
+                  </span>
+                )}
               </button>
             );
           })}
@@ -315,6 +354,7 @@ function CapcaleraMaster({
   equipsAgafats,
   equipsTotal,
   connexio,
+  avis,
 }: {
   partidaIniciadaAt: string | null;
   partidaAcabaAt: string | null;
@@ -322,6 +362,7 @@ function CapcaleraMaster({
   equipsAgafats: number | null;
   equipsTotal: number;
   connexio?: DadesConnexio;
+  avis?: { text: string; mes: number; onEntes: () => void } | null | undefined;
 }) {
   const estatConnexio = useEstatConnexio(connexio ?? { ultimaLecturaAt: null, errorsSeguits: 0 });
   const restant = partidaAcabaAt ? tempsRestantMs(partidaAcabaAt, desfasamentMs) : null;
@@ -358,6 +399,23 @@ function CapcaleraMaster({
         </div>
       </div>
       {connexio && <FranjaSenseConnexio {...estatConnexio} />}
+      {avis && (
+        <div role="alert" className="mt-3 flex animate-entrar items-center gap-3 rounded-xl border-[3px] border-ink bg-gold px-3 py-2 text-ink">
+          <div className="min-w-0 flex-1">
+            <p className="text-lg font-extrabold leading-tight">⚗️ {avis.text}</p>
+            <p className="text-base">
+              Va cap al Pla de Masset.{avis.mes > 0 && ` I ${avis.mes} ${avis.mes === 1 ? "equip més" : "equips més"}.`}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={avis.onEntes}
+            className="min-h-12 shrink-0 rounded-xl border-[3px] border-ink bg-ink px-4 text-base font-extrabold text-gold"
+          >
+            Entesos
+          </button>
+        </div>
+      )}
     </header>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VistaMasterEquips, type EquipMaster } from "@/components/vistes/VistaMasterEquips";
 import type { EstacioMapa } from "@/components/player/MapaEquip";
@@ -14,9 +14,22 @@ import type {
 import type { DadesRecorregut } from "@/components/vistes/PanellRecorregut";
 import type { DadesConnexio } from "@/components/ui/EstatConnexio";
 import type { Confirmacio } from "@/components/ui/DialegConfirmacio";
+import type { FetPartida } from "@/components/vistes/PanellFetsMaster";
 
 /** Cada quant es torna a llegir el recorregut de l'equip triat (els equips envien la posició cada 30 s). */
 const INTERVAL_RECORREGUT_MS = 30_000;
+
+/** Vibració quan un equip resol una fita, i quan ja té tots els fragments (més llarga). */
+const VIBRACIO_RESOL = 200;
+const VIBRACIO_FRAGMENTS = [400, 150, 400, 150, 400];
+
+function vibrar(patro: number | number[]) {
+  try {
+    navigator.vibrate?.(patro);
+  } catch {
+    // Sense vibració (iOS, escriptori): l'avís ja surt a la pantalla.
+  }
+}
 
 /** Quant es queda a la vista l'avís d'error d'una acció sense diàleg. */
 const DURADA_AVIS_MS = 6_000;
@@ -72,6 +85,13 @@ export default function MasterPage() {
   const [connexio, setConnexio] = useState<DadesConnexio>({ ultimaLecturaAt: null, errorsSeguits: 0 });
   const [confirmacio, setConfirmacio] = useState<Confirmacio | null>(null);
   const [avis, setAvis] = useState<string | null>(null);
+  const [fets, setFets] = useState<FetPartida[]>([]);
+  /** Fets que ja s'han vist a la pestanya Equips. */
+  const [vistos, setVistos] = useState<ReadonlySet<string>>(new Set());
+  /** Equips que acaben d'aconseguir tots els fragments i encara no s'ha tocat "Entesos". */
+  const [avisosFragments, setAvisosFragments] = useState<FetPartida[]>([]);
+  /** Fets ja coneguts (null abans de la primera lectura: el que ja havia passat no avisa). */
+  const coneguts = useRef<Set<string> | null>(null);
   const tancarConfirmacio = useCallback(() => setConfirmacio(null), []);
   const tancarAvis = useCallback(() => setAvis(null), []);
 
@@ -168,6 +188,46 @@ export default function MasterPage() {
       clearInterval(interval);
     };
   }, [carregarMissatges]);
+
+  // Fets de la partida: els nous vibren i, si un equip ja té tots els fragments, surt l'avís gran.
+  useEffect(() => {
+    const llegir = () =>
+      fetch("/api/master/fets", { cache: "no-store" })
+        .then(async (res) => {
+          if (!res.ok) return;
+          const data: { fets: FetPartida[] } = await res.json();
+          if (coneguts.current === null) {
+            coneguts.current = new Set(data.fets.map((f) => f.id));
+            setVistos(new Set(coneguts.current));
+          } else {
+            const nous = data.fets.filter((f) => !coneguts.current!.has(f.id));
+            nous.forEach((f) => coneguts.current!.add(f.id));
+            const fragments = nous.filter((f) => f.tipus === "fragments");
+            if (fragments.length > 0) {
+              setAvisosFragments((actuals) => [...actuals, ...fragments]);
+              vibrar(VIBRACIO_FRAGMENTS);
+            } else if (nous.some((f) => f.tipus === "resol")) {
+              vibrar(VIBRACIO_RESOL);
+            }
+          }
+          setFets(data.fets);
+        })
+        .catch(() => {});
+    const inicial = setTimeout(llegir, 0);
+    const interval = setInterval(llegir, 5000);
+    return () => {
+      clearTimeout(inicial);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // La consagració la fa el mateix màster: no compta com a fet nou per veure.
+  const noVistos = fets.filter((f) => f.tipus !== "guardians" && !vistos.has(f.id)).length;
+  const veureFets = useCallback(() => setVistos(new Set(fets.map((f) => f.id))), [fets]);
+  const entesFragments = useCallback(
+    (fetId: string) => setAvisosFragments((actuals) => actuals.filter((f) => f.id !== fetId)),
+    []
+  );
 
   async function enviarMissatge(enviament: EnviamentMissatge): Promise<ResultatEnviament> {
     const res = await fetch("/api/master/missatges", {
@@ -330,6 +390,7 @@ export default function MasterPage() {
       missatges={{ recents: missatgesRecents, onEnviar: enviarMissatge }}
       recorregut={{ triatId: recorregutId, dades: recorregut, onTriar: triarRecorregut }}
       connexio={connexio}
+      fets={{ llista: fets, noVistos, onVeure: veureFets, avisos: avisosFragments, onEntes: entesFragments }}
       confirmacio={confirmacio}
       onTancarConfirmacio={tancarConfirmacio}
       avis={avis}

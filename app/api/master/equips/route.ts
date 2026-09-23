@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "No s'ha pogut llegir els equips" }, { status: 500 });
   }
 
-  const { data: progres } = await db.from("v2_progres").select("team_id, estacio_id, resolta");
+  const { data: progres } = await db.from("v2_progres").select("team_id, estacio_id, resolta, pistes_usades");
 
   const total = getEstacionsJugables().filter((e) => e.disponible).length;
 
@@ -30,8 +30,10 @@ export async function GET(request: NextRequest) {
     const e = (equips ?? []).find((x) => x.slug === def.id);
     if (!e) return [];
     const { claimed_at, ...resta } = e;
-    const resoltes = (progres ?? []).filter((p) => p.team_id === e.id && p.resolta).length;
-    return [{ ...resta, name: def.nom, imatge: def.imatge, agafat: claimed_at !== null, resoltes, total }];
+    const seu = (progres ?? []).filter((p) => p.team_id === e.id);
+    const resoltes = seu.filter((p) => p.resolta).length;
+    const pistes = seu.reduce((suma, p) => suma + (p.pistes_usades ?? 0), 0);
+    return [{ ...resta, name: def.nom, imatge: def.imatge, agafat: claimed_at !== null, resoltes, total, pistes }];
   });
 
   const { data: partida } = await db

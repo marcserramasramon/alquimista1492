@@ -39,6 +39,7 @@ import { MISSATGES_MASTER, TITOL_TEXT_LLIURE } from "@/content/public/missatgesM
 import type { MissatgeEnviat } from "@/components/vistes/PanellMissatgesMaster";
 import { IndicadorTemps } from "@/components/ui/IndicadorTemps";
 import type { DadesRecorregut } from "@/components/vistes/PanellRecorregut";
+import type { FetPartida } from "@/components/vistes/PanellFetsMaster";
 
 export const GRUPS = [
   { id: "entrada", nom: "Entrada" },
@@ -303,6 +304,20 @@ const MISSATGES_RECENTS: MissatgeEnviat[] = [
   },
 ];
 const enviarFals = async () => ({ ok: true, enviats: EQUIPS_MASTER.length });
+
+// Fets d'exemple (panell del màster): del més nou al més vell.
+const FETS_MASTER: FetPartida[] = [
+  ["fragments", "3", undefined, 44],
+  ["resol", "3", "anima", 44],
+  ["arriba", "1", "foc", 41],
+  ["resol", "1", "planes-bones", 25],
+  ["arriba", "1", "planes-bones", 16],
+  ["resol", "1", "font-ferro", 14],
+].map(([tipus, teamId, estacioId, minut]) => {
+  const t = new Date(Date.parse(INICI_PARTIDA) + (minut as number) * 60_000).toISOString();
+  return { id: `${tipus}:${teamId}:${estacioId}:${t}`, tipus, teamId, estacioId, t } as FetPartida;
+});
+const FETS_BASE = { llista: FETS_MASTER, noVistos: 0, onVeure: noop, avisos: [], onEntes: noop };
 
 // Recorregut d'exemple: del Pla de Masset a Aigua, Terra i cap a Foc, amb una mica de soroll de GPS.
 const RECORREGUT_EXEMPLE: DadesRecorregut = (() => {
@@ -670,6 +685,7 @@ export const PANTALLES: Pantalla[] = [
         comparteixo={false}
         estatUbicacio="inactiu"
         connexio={{ ultimaLecturaAt: Date.now(), errorsSeguits: 0 }}
+        fets={FETS_BASE}
       />
     ),
   },
@@ -884,6 +900,39 @@ export const PANTALLES: Pantalla[] = [
         posicioMaster={null}
         comparteixo={false}
         estatUbicacio="inactiu"
+      />
+    ),
+  },
+  {
+    id: "master-fets-nous",
+    grup: "master",
+    titol: "Màster · fets nous a una altra pestanya",
+    descripcio: "Mentre es mira el mapa, la pestanya Equips compta els fets que encara no s'han vist.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+        pestanyaInicial="mapa"
+        fets={{ ...FETS_BASE, noVistos: 2 }}
+      />
+    ),
+  },
+  {
+    id: "master-avis-fragments",
+    grup: "master",
+    titol: "Màster · un equip té tots els fragments",
+    descripcio: "Avís gran (i vibració llarga) fins que es toca Entesos; la targeta de l'equip puja a dalt.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+        fets={{ ...FETS_BASE, avisos: [FETS_MASTER[0]] }}
       />
     ),
   },

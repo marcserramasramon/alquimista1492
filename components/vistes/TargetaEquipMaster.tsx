@@ -15,6 +15,8 @@ export interface EquipMaster {
   total: number;
   /** Última posició coneguda; null si l'equip no n'ha enviat cap. */
   ubicacio: { lat: number; lng: number; faMinuts: number } | null;
+  /** Pistes demanades en total (totes les fites). */
+  pistes?: number;
 }
 
 export interface TargetaEquipMasterProps {
@@ -101,7 +103,14 @@ export function TargetaEquipMaster({
       )}
 
       <div className="mt-4 flex items-center justify-between gap-3">
-        <p className="text-base text-ink-soft">📍 {equip.ubicacio ? textEdat(equip.ubicacio.faMinuts) : "sense ubicació"}</p>
+        <div className="text-base text-ink-soft">
+          <p>📍 {equip.ubicacio ? textEdat(equip.ubicacio.faMinuts) : "sense ubicació"}</p>
+          {equip.pistes !== undefined && equip.pistes > 0 && (
+            <p>
+              💡 {equip.pistes} {equip.pistes === 1 ? "pista" : "pistes"}
+            </p>
+          )}
+        </div>
         {teMes && (
           <button
             type="button"
