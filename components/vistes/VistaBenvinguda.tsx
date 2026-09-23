@@ -34,7 +34,7 @@ export function VistaBenvinguda({
         </p>
       </div>
 
-      <div className="flex animate-entrar flex-col gap-4 pt-6 [animation-delay:280ms]">
+      <div className="relative flex animate-entrar flex-col gap-4 pt-6 [animation-delay:280ms]">
         {teBotoInstallar && (
           <>
             <button type="button" onClick={onInstallar} disabled={installant} className="btn btn-primari">
@@ -65,6 +65,10 @@ export function VistaBenvinguda({
         >
           Continuar →
         </button>
+
+        <a href="/master" className="absolute bottom-6 left-6 text-ink-disabled hover:text-ink-soft transition-colors text-2xl">
+          ⚙️
+        </a>
       </div>
     </Pantalla>
   );
