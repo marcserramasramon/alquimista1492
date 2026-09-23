@@ -40,6 +40,8 @@ import type { MissatgeEnviat } from "@/components/vistes/PanellMissatgesMaster";
 import { IndicadorTemps } from "@/components/ui/IndicadorTemps";
 import type { DadesRecorregut } from "@/components/vistes/PanellRecorregut";
 import type { FetPartida } from "@/components/vistes/PanellFetsMaster";
+import { VistaAlquimia } from "@/components/vistes/VistaAlquimia";
+import { ELEMENTS_INICIALS, type ResultatMescla } from "@/content/public/alquimia";
 
 export const GRUPS = [
   { id: "entrada", nom: "Entrada" },
@@ -47,6 +49,7 @@ export const GRUPS = [
   { id: "fites", nom: "Fites" },
   { id: "final", nom: "Final" },
   { id: "master", nom: "Màster" },
+  { id: "extra", nom: "Ou de Pasqua" },
 ] as const;
 
 export type GrupPantalla = (typeof GRUPS)[number]["id"];
@@ -1017,6 +1020,46 @@ export const PANTALLES: Pantalla[] = [
       />
     ),
   },
+  {
+    id: "alquimia-inici",
+    grup: "extra",
+    titol: "Gresol d'alquímia · inici",
+    descripcio: "Ou de Pasqua a /gresol: taula buida i els cinc elements.",
+    render: () => (
+      <VistaAlquimia descoberts={ELEMENTS_INICIALS} total={57} onCombinar={mesclaFalsa} />
+    ),
+  },
+  {
+    id: "alquimia-partida",
+    grup: "extra",
+    titol: "Gresol d'alquímia · jugant",
+    descripcio: "Taula amb peces i menú ple (a la galeria cap mescla funciona).",
+    render: () => (
+      <VistaAlquimia
+        descoberts={[...ELEMENTS_INICIALS, ...ALQUIMIA_DESCOBERTS]}
+        total={57}
+        onCombinar={mesclaFalsa}
+        pecesInicials={[
+          { id: 1, element: ELEMENTS_INICIALS[0], x: 0.36, y: 0.32 },
+          { id: 2, element: ELEMENTS_INICIALS[2], x: 0.66, y: 0.36 },
+          { id: 3, element: ALQUIMIA_DESCOBERTS[1], x: 0.5, y: 0.58 },
+          { id: 4, element: ALQUIMIA_DESCOBERTS[4], x: 0.3, y: 0.64 },
+        ]}
+      />
+    ),
+  },
+];
+
+const mesclaFalsa = async (): Promise<ResultatMescla> => ({ tipus: "res" });
+
+const ALQUIMIA_DESCOBERTS = [
+  { nom: "Vapor", emoji: "♨️" },
+  { nom: "Núvol", emoji: "☁️" },
+  { nom: "Mar", emoji: "🌊" },
+  { nom: "Fang", emoji: "🟤" },
+  { nom: "Lava", emoji: "🌋" },
+  { nom: "Pluja", emoji: "🌧️" },
+  { nom: "Arc de Sant Martí", emoji: "🌈" },
 ];
 
 export function getPantalla(id: string): Pantalla | undefined {
