@@ -155,12 +155,12 @@ export const GRESOL_BOTO_RITUAL = {
   boto: "Hem respost la contrasenya",
 };
 
-// 4b. El ritual (ordre dels elements i resultat PENDENT a docs/fites-nova.md)
+// 4b. El ritual: Fra Francesc els ensenya la recepta i aboquen els cinc líquids (docs/fites-nova.md)
 export const GRESOL_RITUAL: TextNarratiu = {
   titol: "El Gresol dels Cinc Elements",
   paragrafs: [
     "Davant vostre hi ha el gresol i cinc recipients, un per cada element que heu recollit: l'Aigua de Lluna, la Cendra de la Creació, l'Espurna de Rubí, l'Alè d'Eòl i la Quinta Essència.",
-    "Fra Francesc us guiarà. Uniu els cinc elements tal com us indiqui i observeu bé el gresol: quan hi entri l'Ànima, la matèria parlarà.",
+    "Fra Francesc us ensenyarà la recepta de la Pedra Filosofal. Uniu els cinc elements tal com us indiqui i observeu bé el gresol: quan hi entri l'Ànima, la matèria parlarà.",
   ],
 };
 

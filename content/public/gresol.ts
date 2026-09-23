@@ -18,6 +18,19 @@ export const RECIPIENTS: Record<Element, string> = {
 };
 
 /**
+ * Color del líquid de cada recipient (decidit el 2026-09-23). Només el transparent (l'Ànima,
+ * l'últim) porta sal: fa de conductor entre dos fils i encén el LED de la pedra amagada al gresol.
+ * `mostra` és el color amb què es pinta el líquid a la pantalla (null = transparent).
+ */
+export const LIQUIDS: Record<Element, { nom: string; mostra: string | null }> = {
+  aigua: { nom: "blau", mostra: "#1d6fd6" },
+  terra: { nom: "verd", mostra: "#3f8a2a" },
+  foc: { nom: "vermell", mostra: "#c8231b" },
+  aire: { nom: "groc", mostra: "#f2c318" },
+  anima: { nom: "transparent", mostra: null },
+};
+
+/**
  * Com es passa de 4a (arribada) a 4b (ritual).
  * - "boto-equip": l'equip prem un botó quan ja ha respost la contrasenya (actual).
  * - "una-pantalla": les dues parts una sota l'altra, sense botó.
@@ -35,5 +48,8 @@ export const GRESOL_CONFIG: {
   ordreElements: ["aigua", "terra", "foc", "aire", "anima"],
 };
 
-// PENDENT (docs/fites-nova.md): què revela el Gresol i si l'app demana cap codi. No hi ha cap
-// camp de resposta: quan es decideixi, caldrà una API (app/api/) i la solució a content/private/.
+// Quan s'encén el LED, Fra Francesc consagra l'equip des del màster i el mòbil passa a Guardians
+// (components/player/Gresol.tsx). Els números de les fites ja no s'hi fan servir.
+// PENDENT (idea de l'usuari, 2026-09-23): una "fórmula màgica" matemàtica en aquesta pantalla on
+// s'hagin de posar els números trobats. Si es fa, la solució anirà a content/private/ i es validarà
+// al servidor amb una API nova.

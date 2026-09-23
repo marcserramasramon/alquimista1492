@@ -2,7 +2,7 @@ import { Narracio } from "@/components/ui/Narracio";
 import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
 import { Pantalla } from "@/components/ui/Pantalla";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
-import { GRESOL_CONFIG, RECIPIENTS, type TransicioGresol } from "@/content/public/gresol";
+import { GRESOL_CONFIG, LIQUIDS, RECIPIENTS, type TransicioGresol } from "@/content/public/gresol";
 import { GRESOL_ARRIBADA, GRESOL_BOTO_RITUAL, GRESOL_PASSOS, GRESOL_RITUAL } from "@/content/public/textos";
 
 const TOTS: NodePentagrama[] = (["aigua", "terra", "foc", "aire", "anima"] as const).map((element) => ({
@@ -95,6 +95,7 @@ function Recipients({ ordre }: { ordre: Element[] }) {
       <ol className="flex flex-col gap-3">
         {ordre.map((element, i) => {
           const { nom, icona, color } = ELEMENTS[element];
+          const liquid = LIQUIDS[element];
           return (
             <li
               key={element}
@@ -108,17 +109,35 @@ function Recipients({ ordre }: { ordre: Element[] }) {
                 {i + 1}
               </span>
               <img src={icona} alt="" className="h-11 w-11 shrink-0" />
-              <div className="leading-tight">
+              <div className="min-w-0 flex-1 leading-tight">
                 <p className="text-xl font-extrabold">{RECIPIENTS[element]}</p>
                 <p className="text-base font-bold" style={{ color }}>
-                  {nom}
+                  {nom} · <span className="text-ink-soft">líquid {liquid.nom}</span>
                 </p>
               </div>
+              <Vial mostra={liquid.mostra} />
             </li>
           );
         })}
       </ol>
     </section>
+  );
+}
+
+/** Tub d'assaig amb el color del líquid; el transparent, buit amb reflexos. */
+function Vial({ mostra }: { mostra: string | null }) {
+  return (
+    <svg viewBox="0 0 24 48" className="h-12 w-6 shrink-0" aria-hidden>
+      <path d="M5 2 H19 M7 2 V38 a5 5 0 0 0 10 0 V2" fill="#fffdf7" stroke="var(--ink)" strokeWidth={2.5} />
+      <path
+        d="M8.5 18 H15.5 V38 a3.5 3.5 0 0 1 -7 0 Z"
+        fill={mostra ?? "#e6f1f5"}
+        stroke={mostra ? "none" : "var(--ink)"}
+        strokeWidth={1}
+        strokeDasharray={mostra ? undefined : "2 2"}
+      />
+      <path d="M10.5 21 V36" stroke="#fff" strokeOpacity={0.7} strokeWidth={1.5} strokeLinecap="round" />
+    </svg>
   );
 }
 
