@@ -679,6 +679,7 @@ export const PANTALLES: Pantalla[] = [
     descripcio: "Triar la durada; el botó arrenca el compte enrere de tothom.",
     render: () => (
       <VistaMasterEquips
+        pestanyaInicial="partida"
         {...MASTER_BASE}
         partidaIniciadaAt={null}
         equips={EQUIPS_MASTER.map((e) => ({ ...e, status: "espera" as const, resoltes: 0 }))}
@@ -695,6 +696,7 @@ export const PANTALLES: Pantalla[] = [
     descripcio: "El compte enrere ha arribat a zero: encara es poden afegir minuts.",
     render: () => (
       <VistaMasterEquips
+        pestanyaInicial="partida"
         {...MASTER_BASE}
         partidaIniciadaAt={new Date(Date.now() - 92 * 60_000).toISOString()}
         partidaAcabaAt={new Date(Date.now() - 2 * 60_000).toISOString()}
@@ -712,6 +714,7 @@ export const PANTALLES: Pantalla[] = [
     descripcio: "Camí que ha fet l'equip (GPS desat cada 30 s) i hora de cada fita. Només el veu el màster.",
     render: () => (
       <VistaMasterEquips
+        pestanyaInicial="mapa"
         {...MASTER_BASE}
         equips={EQUIPS_MASTER}
         posicioMaster={null}
@@ -728,6 +731,7 @@ export const PANTALLES: Pantalla[] = [
     descripcio: "El màster (punt blau) comparteix la seva posició amb els equips.",
     render: () => (
       <VistaMasterEquips
+        pestanyaInicial="mapa"
         {...MASTER_BASE}
         equips={EQUIPS_MASTER}
         posicioMaster={POSICIO_MASTER}
@@ -742,6 +746,7 @@ export const PANTALLES: Pantalla[] = [
     titol: "Màster · GPS denegat",
     render: () => (
       <VistaMasterEquips
+        pestanyaInicial="mapa"
         {...MASTER_BASE}
         equips={EQUIPS_MASTER}
         posicioMaster={null}
@@ -782,6 +787,7 @@ export const PANTALLES: Pantalla[] = [
     descripcio: "Triar equip (o tots) i missatge; a sota, si els equips l'han llegit.",
     render: () => (
       <VistaMasterEquips
+        pestanyaInicial="missatges"
         {...MASTER_BASE}
         equips={EQUIPS_MASTER}
         posicioMaster={null}
@@ -802,6 +808,7 @@ export const PANTALLES: Pantalla[] = [
     descripcio: "Confirmació després d'enviar un text lliure a tots.",
     render: () => (
       <VistaMasterEquips
+        pestanyaInicial="missatges"
         {...MASTER_BASE}
         equips={EQUIPS_MASTER}
         posicioMaster={null}
