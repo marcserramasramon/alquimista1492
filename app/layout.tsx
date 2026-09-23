@@ -28,7 +28,7 @@ const alegreyaSansSC = Alegreya_Sans_SC({
 
 export const metadata: Metadata = {
   title: "Els Guardians del Secret de Sentfores",
-  description: "Escape room exterior a Sentfores–La Guixa",
+  description: "Escape room exterior a Sentfores. Un secret ens espera.",
   manifest: "/manifest.json",
   icons: {
     icon: "/icons/icon-192.png",
