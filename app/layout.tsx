@@ -34,6 +34,10 @@ export const metadata: Metadata = {
     icon: "/icons/icon-192.png",
     apple: "/icons/icon-apple.png",
   },
+  appleWebApp: {
+    capable: true,
+    title: "Alquimista",
+  },
 };
 
 export const viewport: Viewport = {
