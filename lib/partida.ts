@@ -7,6 +7,9 @@ export const DURADA_PER_DEFECTE_MIN = 90;
 /** Ajustos de temps que el màster pot fer amb un toc un cop la partida corre. */
 export const AJUSTOS_MIN = [-5, 5, 10] as const;
 
+/** Temps mínim entre dues respostes d'un equip a la mateixa fita (el servidor el fa complir). */
+export const ESPERA_ENTRE_INTENTS_MS = 3_000;
+
 /** Per sota d'aquests minuts el compte enrere es posa en alerta. */
 export const MINUTS_ALERTA = 10;
 

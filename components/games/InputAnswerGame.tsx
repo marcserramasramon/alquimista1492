@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { VistaJocRespostaProps } from "@/components/vistes/VistaJocResposta";
+import { ESPERA_ENTRE_INTENTS_MS } from "@/lib/partida";
 
 interface InputAnswerGameProps {
   estacioId: string;
@@ -20,11 +21,14 @@ export function useInputAnswerGame({ estacioId, onResolt }: InputAnswerGameProps
   const [missatge, setMissatge] = useState<string | null>(null);
   const [correcte, setCorrecte] = useState(false);
   const [enviant, setEnviant] = useState(false);
+  // El servidor només accepta una resposta cada ESPERA_ENTRE_INTENTS_MS: el botó s'hi espera.
+  const [esperant, setEsperant] = useState(false);
   const [pistes, setPistes] = useState<string[]>([]);
   const [carregantPista, setCarregantPista] = useState(false);
 
   async function enviarResposta() {
-    if (!resposta.trim() || enviant) return;
+    if (!resposta.trim() || enviant || esperant) return;
+    const inici = Date.now();
     setEnviant(true);
     setMissatge(null);
     try {
@@ -39,6 +43,9 @@ export function useInputAnswerGame({ estacioId, onResolt }: InputAnswerGameProps
       if (data.correcte) {
         // Temps per veure l'animació i sentir el so de CelebracioFragment abans del fragment.
         setTimeout(onResolt, 3000);
+      } else {
+        setEsperant(true);
+        setTimeout(() => setEsperant(false), Math.max(0, inici + ESPERA_ENTRE_INTENTS_MS - Date.now()));
       }
     } catch {
       setMissatge("Error de connexió. Torna-ho a provar.");
@@ -71,6 +78,7 @@ export function useInputAnswerGame({ estacioId, onResolt }: InputAnswerGameProps
     missatge,
     correcte,
     enviant,
+    esperant,
     pistes,
     carregantPista,
     onRespostaChange: setResposta,

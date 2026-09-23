@@ -7,7 +7,8 @@ import { getEquipSession } from "@/lib/auth";
 import { getEstacio } from "@/content/public/estacions";
 import { fitaOberta } from "@/lib/obertura";
 import { getSolucio, comparaResposta } from "@/content/private/solucions";
-import { RESPOSTA_CORRECTA, RESPOSTES_INCORRECTES } from "@/content/public/textos";
+import { RESPOSTA_CORRECTA, RESPOSTA_MASSA_RAPIDA, RESPOSTES_INCORRECTES } from "@/content/public/textos";
+import { ESPERA_ENTRE_INTENTS_MS } from "@/lib/partida";
 
 const RespostaSchema = z.object({
   estacioId: z.string().min(1),
@@ -52,25 +53,45 @@ export async function POST(request: NextRequest) {
     .eq("estacio_id", estacioId)
     .maybeSingle();
 
-  const araIso = new Date().toISOString();
+  const ara = Date.now();
+  const araIso = new Date(ara).toISOString();
+  const massaRapida = NextResponse.json({ correcte: false, missatge: RESPOSTA_MASSA_RAPIDA }, { status: 429 });
 
   if (existent) {
-    await db
+    // Condicional a la BD: si arriben dues respostes alhora, només una troba el camp prou antic.
+    const limit = new Date(ara - ESPERA_ENTRE_INTENTS_MS).toISOString();
+    const { data: actualitzat, error } = await db
       .from("v2_progres")
       .update({
         intents: existent.intents + 1,
         resolta: existent.resolta || correcte,
         resolta_at: existent.resolta ? undefined : correcte ? araIso : undefined,
+        ultim_intent_at: araIso,
       })
-      .eq("id", existent.id);
+      .eq("id", existent.id)
+      .or(`ultim_intent_at.is.null,ultim_intent_at.lt."${limit}"`)
+      .select("id")
+      .maybeSingle();
+    if (error) {
+      console.error("Error desant la resposta:", error);
+      return NextResponse.json({ correcte: false, missatge: "Error de connexió. Torna-ho a provar." }, { status: 500 });
+    }
+    if (!actualitzat) return massaRapida;
   } else {
-    await db.from("v2_progres").insert({
+    const { error } = await db.from("v2_progres").insert({
       team_id: sessio.teamId,
       estacio_id: estacioId,
       intents: 1,
       resolta: correcte,
       resolta_at: correcte ? araIso : null,
+      ultim_intent_at: araIso,
     });
+    // 23505: una altra resposta simultània ja ha creat la fila.
+    if (error?.code === "23505") return massaRapida;
+    if (error) {
+      console.error("Error desant la resposta:", error);
+      return NextResponse.json({ correcte: false, missatge: "Error de connexió. Torna-ho a provar." }, { status: 500 });
+    }
   }
 
   // Els missatges d'error es van alternant a cada intent.

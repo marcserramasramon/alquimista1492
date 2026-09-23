@@ -12,6 +12,8 @@ export interface VistaJocRespostaProps {
   missatge: string | null;
   correcte: boolean;
   enviant: boolean;
+  /** Just després d'una resposta incorrecta: cal esperar uns segons per tornar-ho a provar. */
+  esperant?: boolean;
   /** Pistes ja desbloquejades, en ordre (la tercera és la resposta). */
   pistes: string[];
   carregantPista: boolean;
@@ -28,6 +30,7 @@ export function VistaJocResposta({
   missatge,
   correcte,
   enviant,
+  esperant = false,
   pistes,
   carregantPista,
   onRespostaChange,
@@ -95,8 +98,8 @@ export function VistaJocResposta({
           </p>
         )}
 
-        <button type="submit" disabled={enviant || !resposta.trim() || correcte} className="btn btn-primari">
-          {enviant ? "Comprovant..." : "Comprovar"}
+        <button type="submit" disabled={enviant || esperant || !resposta.trim() || correcte} className="btn btn-primari">
+          {enviant ? "Comprovant..." : esperant ? "Espereu un moment..." : "Comprovar"}
         </button>
       </form>
 
