@@ -242,8 +242,12 @@ No cal cap llibreria nova: `navigator.geolocation` (API nativa del navegador). E
 - **Missatge de consentiment — decidit:** camp de text **editable pel màster** a la mateixa pantalla de configuració (`game_config.location_consent_message` o similar), amb una **frase predefinida** de partida perquè el màster no l'hagi d'escriure de zero. Es mostra abans de demanar permís de geolocalització al navegador (a "Posar nom" o en entrar per primer cop a MAPA — mantenim aquest punt com a detall d'implementació menor, no bloqueja el disseny).
 - **Consentiment (comportament):** si el jugador denega el permís del navegador, el joc continua funcionant igual — la ubicació és una capa opcional, mai bloquejant cap mecànica de joc.
 - **Posició fora del mapa:** veure §7ter.3 — reté l'última posició coneguda, no calen fletxes ni clamps.
-- **Retenció:** esborrar/buidar `last_lat`/`last_lng` quan `teams.status` passa a `'final'`? Encara **PENDENT**.
+- **Retenció — decidit (2026-09-23):** la ubicació **es guarda**. A més de l'última posició (`v2_teams.last_*`), cada posició es desa a `v2_ubicacions` i el màster en veu el **recorregut** de cada equip al mapa, amb els km i l'hora en què arriba i resol cada fita. **Només el veu el màster.** S'esborra en reiniciar la partida o l'equip.
 - **Qui pot aturar de compartir:** el màster té el toggle `sharing` de §7ter.3 per al personatge. Els jugadors no tenen manera d'aturar-ho des de la UI (més enllà de revocar el permís del navegador) — encara **PENDENT** confirmar si cal.
+
+### 7ter.5 Cronòmetre de la partida — decidit (2026-09-23)
+
+Mateix sistema que l'app antiga: el màster tria la **durada** (60/75/90/105/120 min o personalitzada) i prem **Iniciar partida**; comença un compte enrere per a tothom (`v2_partida.ends_at`). Un cop en marxa pot fer **+5, +10, −5 min** o **Acabar** ara. Els equips veuen el temps que queda **sempre**, a dalt de les pantalles de joc (vermell i bategant els últims 10 min). En arribar a zero els surt "El temps s'ha consumit" i els envia al Pla de Masset.
 
 ### Checklist (afegit a §7ter)
 

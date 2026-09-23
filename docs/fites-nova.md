@@ -67,7 +67,7 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 | Material del jugador/equip | Un tros de **"paper de foc" (cel·lofana vermella)** per equip + el full imprès amb el missatge camuflat en verd |
 | Acció física | Els jugadors miren el full a través del "paper de foc" fins que el número en verd es distingeix de la resta |
 | Element físic real aprofitat | Cap — el **pal vell de telèfon** del lloc queda només com a referència visual/logística (ja no hi ha encenedor a penjar-hi, en desaparèixer el foc) |
-| Poema/context | ⚠️ PENDENT reescriure — cal explicar la idea del "paper de foc"/vidre alquímic amb el foc atrapat a dins, i que només mirant-hi a través es desvela el missatge en verd enmig del soroll de colors |
+| Poema/context | ⚠️ **Esborrany proposat (2026-09-23), pendent de validació:**<br>*A les portes del poble, on s'obre el sender,*<br>*l'alquimista tancà el foc dins d'un vidre lleuger.*<br>*No crema cap mà, no deixa fum ni brasa:*<br>*és flama presonera que dorm i no s'apaga.*<br><br>*Davant teu, un full on les xifres fan soroll,*<br>*mil colors barrejats com fulles en un toll;*<br>*vermells, blaus i daurats que enganyen la mirada,*<br>*només una és verda com l'herba de la prada.*<br><br>*L'ull nu s'hi perd: el soroll és massa espès.*<br>*Alça el vidre de foc i mira el full a través:*<br>*la flama s'empassa els colors que et feien nosa*<br>*i la xifra de l'herba s'alça, fosca i victoriosa.*<br><br>Estrofa 1 = el "paper de foc" com a vidre alquímic amb la flama atrapada a dins (i per què aquí ja no hi ha foc real). Estrofa 2 = el full amb el soroll de colors i la pista que el número bo és el **verd**. Estrofa 3 = l'acció: mirar el full a través del paper de foc (cel·lofana vermella). No diu cap xifra |
 | Resposta esperada | Es manté de moment **8** com a placeholder (no lligat a cap objecte real, es pot canviar quan es vulgui) |
 | Pistes | 1. "El vidre de foc desvela el secret." · 2. "Posa el paper vermell davant." · 3. "El número és el 8." |
 | Notes de seguretat/logística | Ja NO cal supervisió de foc obert. Cal preparar un tros de cel·lofana vermella per equip (resistent, que no es trenqui) i imprimir/pintar el full amb prou contrast de "soroll" de colors perquè el verd no es llegeixi a ull nu sense el filtre |
@@ -85,7 +85,7 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 | Element físic real aprofitat | La creu de ferro de la Creu del Pujolar té un **número real gravat/pintat a la base: 1246**. Es confirma que **no és un distractor**: forma part del càlcul de la resposta (veure "Resposta esperada") |
 | Material del jugador | Vidre o mirall amb una capa finíssima de sabó dibuixant **un número de 4 xifres: 1239** (invisible en sec) |
 | Acció física | Els jugadors bufen (alè calent) sobre el vidre; s'entela tot excepte el número de sabó (1239), que queda net i llegible un instant. Prèviament (o en paral·lel) han de localitzar i llegir el 1246 gravat a la base de la creu |
-| Poema/context | ⚠️ PENDENT escriure els versos, però **concepte confirmat**: el text ha de fer entendre que hi ha dos números de 4 xifres —un gravat a la creu (1246), un altre amagat a l'aire/vidre (1239)— i cal restar-los |
+| Poema/context | ⚠️ **Esborrany proposat (2026-09-23), pendent de validació** (concepte confirmat: dos números de 4 xifres —un gravat a la creu (1246), un altre amagat a l'aire/vidre (1239)— i cal restar-los):<br>*Dalt del Pujolar, on la creu desafia el vent,*<br>*l'aire mai no descansa i s'endú qualsevol lament.*<br>*És l'element que no es veu però que tothom respira,*<br>*que ningú no pot tocar i que des de dalt tot ho mira.*<br><br>*Primer mira als peus del ferro que s'alça cap al cel:*<br>*quatre xifres hi dormen, gravades amb zel;*<br>*però l'aire n'amaga unes altres, quatre també,*<br>*escrites en un vidre on l'ull nu no hi veu re.*<br><br>*Buf-hi l'alè calent i el vidre s'entelarà;*<br>*només la xifra oculta, neta, s'hi dibuixarà.*<br>*Del nombre de la creu treu-ne el que l'aire t'ha dit:*<br>*el que et quedi a la mà és el secret que has collit.*<br><br>Estrofa 1 = ambientació (la creu i l'aire, l'element invisible). Estrofa 2 = els dos números de 4 xifres: el gravat a la base de la creu i l'amagat al vidre. Estrofa 3 = l'acció (bufar-hi l'alè) i l'operació: al de la creu, **treure-li** el del vidre. No diu cap xifra |
 | Resposta esperada | **Confirmat:** resta de dos números de 4 xifres: `1246 − 1239 = 7` |
 | Pistes | 1. "El primer número aguanta la creu, el segon número es desvelarà amb l'aire del teu halè." · 2. "Al peu de la creu trobaràs el primer secret, tira el teu halè al vidre." · 3. "1246 − 1239 = 7." |
 | Notes de seguretat/logística | El baf es dissipa ràpid — potser cal poder repetir l'acció diverses vegades; vidre ben fixat perquè no es trenqui/caigui; neteja entre partides (el sabó es pot esborrar amb l'ús) |
@@ -141,10 +141,16 @@ Al centre exacte del pentagrama (Pla de Masset, 41.913130, 2.229789 — coincide
 
 **Decidit (2026-09-24):** els jugadors aboquen **5 líquids de colors**, un per element, **en un ordre determinat**, dins el gresol. A dins del gresol hi ha una **pedra amagada amb un LED a dins**. Quan hi cau **aigua salada**, aquesta fa de conductor, **tanca el circuit elèctric i el LED s'encén**: la pedra s'il·lumina dins el gresol.
 
+**Decidit (2026-09-23):**
+- Color de cada líquid: **Aigua blau, Terra verd, Foc vermell, Aire groc, Ànima transparent**. L'app els mostra al costat de cada recipient (`content/public/gresol.ts`, `LIQUIDS`).
+- **Només el transparent (l'Ànima, l'últim) porta sal.** La sal fa de conductor entre dos fils i el LED s'encén sol.
+- **Qui fa passar l'equip a la pantalla final és el frare:** quan veu el LED encès, prem "Consagrar Guardians del Secret" al panell del màster i el mòbil de l'equip passa a "Guardians del Secret".
+- **L'actor durant el ritual és Fra Francesc, que els ensenya la recepta de la Pedra Filosofal.**
+- **Els números trobats a les fites ja no es fan servir al final** (de moment).
+
 ⚠️ PENDENT:
-- Color de cada element (quin líquid correspon a Aigua, Terra, Foc, Aire i Ànima).
-- Quin/s líquid/s porten sal (només l'últim?) i què passa si l'ordre és incorrecte (el LED s'encén abans d'hora, reset…).
-- Què fa l'app quan el LED s'encén (res, un botó per passar a la pantalla final, el màster ho activa…).
+- Què passa si l'ordre és incorrecte (en principi el LED no pot encendre's abans d'hora, perquè només l'últim líquid porta sal).
+- Idea en estudi: una **"fórmula màgica" matemàtica** a la pantalla de l'experiment on s'hagin de posar els números trobats. No està decidida ni implementada.
 
 > *Proposta anterior, descartada el 2026-09-24:* reacció química amb bicarbonat, indicador de col llombarda, vinagre, aigua tònica i llum UV que revelava un símbol amb tinta invisible.
 
@@ -157,9 +163,9 @@ Al centre exacte del pentagrama (Pla de Masset, 41.913130, 2.229789 — coincide
 ### ⚠️ PENDENT
 
 - [x] ~~Ordre en què s'introdueixen els 5 elements~~ → Aigua → Terra → Foc → Aire → Ànima; el mostra l'app (2026-09-24)
-- [ ] Xifra/símbol final exacte i com es relaciona amb el "codi final" de 5 caràcters (veure secció següent)
+- [x] ~~Xifra/símbol final exacte~~ → ja no hi ha codi final: els números no es fan servir al final (2026-09-23). Idea oberta: fórmula màgica (veure més amunt)
 - [ ] Disseny físic exacte del calaix/mecanisme de sortida (electroimant vs. obertura manual amb el codi UV)
-- [ ] Integració amb el gir de trama: com actua "l'Inquisidor" (Fra Francesc) durant aquest ritual — els vigila, els posa a prova, intervé?
+- [x] ~~Integració amb el gir de trama~~ → durant el ritual, Fra Francesc ja desemmascarat els ensenya la recepta de la Pedra Filosofal i els guia (2026-09-23)
 
 ---
 
@@ -167,7 +173,7 @@ Al centre exacte del pentagrama (Pla de Masset, 41.913130, 2.229789 — coincide
 
 Amb 4 elements el codi era **4231** (FOC·AIGUA·TERRA·PEDRA, cada un un dígit 1-4). Amb 5 elements:
 
-⚠️ **PENDENT — cal decidir:**
+**Decidit (2026-09-23): de moment no hi ha codi final.** Els números de les fites no es fan servir al Gresol. Si la idea de la fórmula màgica tira endavant, aquesta secció es reescriurà. Preguntes antigues, en suspens:
 - El codi final passa a tenir **5 xifres**?
 - On s'utilitza aquest codi nou (caixa de les almoines, porta del campanar, o tots dos com ara)?
 - Cada element continua donant un **dígit únic** (1-5), o alguna fita dona una altra mena de resposta (lletra, paraula)?
