@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
       status: iniciada ? "joc" : "espera",
       started_at: iniciada,
       finished_at: null,
+      guardians_at: null,
     })
     .eq("id", validacio.data.teamId);
 

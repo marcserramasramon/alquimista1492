@@ -14,7 +14,8 @@ import type {
 
 type Equip = EquipMaster;
 
-interface EquipApi extends Omit<EquipMaster, "ubicacio"> {
+interface EquipApi extends Omit<EquipMaster, "ubicacio" | "guardians"> {
+  guardians_at: string | null;
   last_lat: number | null;
   last_lng: number | null;
   last_location_at: string | null;
@@ -24,6 +25,8 @@ interface EquipsResponse {
   equips: EquipApi[];
   master: { sharing: boolean } | null;
   partidaIniciadaAt: string | null;
+  partidaAcabaAt: string | null;
+  ara: string;
 }
 
 // Les fites al mapa del màster, només per situar-se (sense progrés).
@@ -31,8 +34,9 @@ const ESTACIONS_MAPA: EstacioMapa[] = getEstacionsOrdenades().map((e) => ({ ...e
 
 function ambUbicacio(equips: EquipApi[]): Equip[] {
   const ara = Date.now();
-  return equips.map(({ last_lat, last_lng, last_location_at, ...equip }) => ({
+  return equips.map(({ last_lat, last_lng, last_location_at, guardians_at, ...equip }) => ({
     ...equip,
+    guardians: guardians_at !== null,
     ubicacio:
       last_lat !== null && last_lng !== null && last_location_at
         ? {
@@ -48,6 +52,8 @@ export default function MasterPage() {
   const router = useRouter();
   const [equips, setEquips] = useState<Equip[] | null>(null);
   const [partidaIniciadaAt, setPartidaIniciadaAt] = useState<string | null>(null);
+  const [partidaAcabaAt, setPartidaAcabaAt] = useState<string | null>(null);
+  const [desfasamentMs, setDesfasamentMs] = useState(0);
   const [canviantPartida, setCanviantPartida] = useState(false);
   const [comparteixo, setComparteixo] = useState(false);
   const ubicacio = useCompartirUbicacio({ actiu: comparteixo, endpoint: "/api/master/ubicacio" });
@@ -62,11 +68,16 @@ export default function MasterPage() {
     return res.json();
   }, [router]);
 
-  async function carregar() {
-    const data = await llegirEquips();
-    if (!data) return;
+  const aplicar = useCallback((data: EquipsResponse) => {
     setEquips(ambUbicacio(data.equips));
     setPartidaIniciadaAt(data.partidaIniciadaAt);
+    setPartidaAcabaAt(data.partidaAcabaAt);
+    setDesfasamentMs(Date.parse(data.ara) - Date.now());
+  }, []);
+
+  async function carregar() {
+    const data = await llegirEquips();
+    if (data) aplicar(data);
   }
 
   useEffect(() => {
@@ -75,8 +86,7 @@ export default function MasterPage() {
       llegirEquips()
         .then((data) => {
           if (!data) return;
-          setEquips(ambUbicacio(data.equips));
-          setPartidaIniciadaAt(data.partidaIniciadaAt);
+          aplicar(data);
           // L'interruptor arrenca amb el que diu el servidor (p.ex. després de recarregar).
           if (primera && data.master?.sharing) setComparteixo(true);
           primera = false;
@@ -85,7 +95,7 @@ export default function MasterPage() {
     refresca();
     const interval = setInterval(refresca, 5000);
     return () => clearInterval(interval);
-  }, [llegirEquips]);
+  }, [llegirEquips, aplicar]);
 
   const carregarMissatges = useCallback(
     () =>
@@ -135,30 +145,62 @@ export default function MasterPage() {
     }).catch(() => {});
   }
 
-  async function canviarPartida(accio: "iniciar" | "reiniciar") {
+  async function canviarPartida(
+    peticio:
+      | { accio: "iniciar"; durada: number }
+      | { accio: "ajustar"; minuts: number }
+      | { accio: "acabar" }
+      | { accio: "reiniciar" }
+  ) {
     if (canviantPartida) return;
     setCanviantPartida(true);
     try {
-      await fetch("/api/master/partida", {
+      const res = await fetch("/api/master/partida", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accio }),
-      });
+        body: JSON.stringify(peticio),
+      }).catch(() => null);
+      if (!res) alert("Sense connexió. Torna-ho a provar.");
+      else if (!res.ok) alert((await res.json().catch(() => ({}))).error ?? "No s'ha pogut fer");
       await carregar();
     } finally {
       setCanviantPartida(false);
     }
   }
 
-  function iniciarPartida() {
+  function iniciarPartida(durada: number) {
     const aPunt = equips?.filter((e) => e.agafat).length ?? 0;
-    if (!confirm(`Iniciar la partida amb ${aPunt} ${aPunt === 1 ? "equip" : "equips"}? El cronòmetre arrenca ara.`)) return;
-    canviarPartida("iniciar");
+    if (!confirm(`Iniciar la partida de ${durada} minuts amb ${aPunt} ${aPunt === 1 ? "equip" : "equips"}? El compte enrere arrenca ara.`)) return;
+    canviarPartida({ accio: "iniciar", durada });
+  }
+
+  function ajustarTemps(minuts: number) {
+    canviarPartida({ accio: "ajustar", minuts });
+  }
+
+  function acabarTemps() {
+    if (!confirm("Acabar el temps ara? Tots els equips veuran que s'ha acabat el temps i els enviarà al Pla de Masset.")) return;
+    canviarPartida({ accio: "acabar" });
+  }
+
+  async function consagrar(teamId: string, valor: boolean) {
+    const nom = equips?.find((e) => e.id === teamId)?.name ?? "aquest equip";
+    const pregunta = valor
+      ? `Consagrar ${nom} com a Guardians del Secret? El seu mòbil passarà a la pantalla final.`
+      : `Desfer la consagració de ${nom}? El seu mòbil tornarà al Gresol.`;
+    if (!confirm(pregunta)) return;
+    const res = await fetch("/api/master/guardians", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teamId, consagrar: valor }),
+    }).catch(() => null);
+    if (!res?.ok) alert("No s'ha pogut desar. Torna-ho a provar.");
+    await carregar();
   }
 
   function reiniciarPartida() {
     if (!confirm("Reiniciar tota la partida? S'aturarà el cronòmetre, s'alliberaran tots els equips i s'esborrarà el progrés i els missatges.")) return;
-    canviarPartida("reiniciar");
+    canviarPartida({ accio: "reiniciar" });
   }
 
   async function alliberar(teamId: string) {
@@ -185,9 +227,14 @@ export default function MasterPage() {
     <VistaMasterEquips
       equips={equips}
       partidaIniciadaAt={partidaIniciadaAt}
+      partidaAcabaAt={partidaAcabaAt}
+      desfasamentMs={desfasamentMs}
       canviantPartida={canviantPartida}
       onIniciarPartida={iniciarPartida}
+      onAjustarTemps={ajustarTemps}
+      onAcabarTemps={acabarTemps}
       onReiniciarPartida={reiniciarPartida}
+      onConsagrar={consagrar}
       onAlliberar={alliberar}
       onReiniciar={reiniciar}
       estacions={ESTACIONS_MAPA}

@@ -1,10 +1,14 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { VistaFinal } from "@/components/vistes/VistaFinal";
+import { VistaGuardians } from "@/components/vistes/VistaGuardians";
 
 /** Si el mòbil recarrega la pàgina enmig del ritual, no torna a la pantalla d'espera. */
 const CLAU_RITUAL = "sentfores:gresol-ritual";
+
+/** Cada quant es pregunta si Fra Francesc ja ha consagrat l'equip (quan s'encén el LED del Gresol). */
+const INTERVAL_MS = 4_000;
 
 function llegirRitualGuardat(): boolean {
   try {
@@ -20,6 +24,30 @@ const senseSubscripcio = () => () => {};
 export function Gresol() {
   const guardat = useSyncExternalStore(senseSubscripcio, llegirRitualGuardat, () => false);
   const [comencat, setComencat] = useState(false);
+  const [guardians, setGuardians] = useState(false);
+
+  // El LED s'encén sol amb l'aigua salada; qui fa passar l'equip a la pantalla final és el frare, des del màster.
+  useEffect(() => {
+    let cancelat = false;
+    const consultar = () =>
+      fetch("/api/partida", { cache: "no-store" })
+        .then(async (res) => {
+          if (!res.ok || cancelat) return;
+          const data: { guardians: boolean } = await res.json();
+          if (!cancelat) setGuardians(data.guardians);
+        })
+        .catch(() => {});
+    consultar();
+    const interval = setInterval(consultar, INTERVAL_MS);
+    return () => {
+      cancelat = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (guardians) window.scrollTo({ top: 0 });
+  }, [guardians]);
 
   function comencarRitual() {
     setComencat(true);
@@ -31,5 +59,6 @@ export function Gresol() {
     window.scrollTo({ top: 0 });
   }
 
+  if (guardians) return <VistaGuardians />;
   return <VistaFinal ritual={comencat || guardat} onComencarRitual={comencarRitual} />;
 }

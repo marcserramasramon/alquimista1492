@@ -4,8 +4,8 @@ import { Marca, Pantalla } from "@/components/ui/Pantalla";
 import { GUARDIANS } from "@/content/public/textos";
 
 /**
- * 5. Pantalla final: l'equip esdevé Guardians del Secret i obté la Pedra Filosofal. Com s'hi
- * arriba depèn del resultat del Gresol (PENDENT a docs/fites-nova.md), així que encara no té ruta.
+ * 5. Pantalla final: l'equip esdevé Guardians del Secret i obté la Pedra Filosofal. Surt a /final
+ * quan el LED del Gresol s'ha encès i Fra Francesc consagra l'equip des del màster.
  * Sona música èpica en bucle (public/audio/guardians.mp3 o, si no hi és, la sintetitzada de lib/so.ts).
  */
 export function VistaGuardians() {

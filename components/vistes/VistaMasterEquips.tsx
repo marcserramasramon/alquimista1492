@@ -1,10 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { MapaEquip, type EstacioMapa, type MarcadorMapa } from "@/components/player/MapaEquip";
 import type { EstatUbicacio } from "@/lib/useCompartirUbicacio";
 import { PanellMissatgesMaster, type PanellMissatgesMasterProps } from "@/components/vistes/PanellMissatgesMaster";
 import { Cronometre } from "@/components/ui/Cronometre";
+import { CompteEnrere } from "@/components/ui/CompteEnrere";
+import {
+  AJUSTOS_MIN,
+  DURADA_MAXIMA_MIN,
+  DURADA_MINIMA_MIN,
+  DURADA_PER_DEFECTE_MIN,
+  DURADES_RAPIDES_MIN,
+  MINUTS_ALERTA,
+  tempsRestantMs,
+} from "@/lib/partida";
 
 export interface EquipMaster {
   id: string;
@@ -13,6 +24,8 @@ export interface EquipMaster {
   /** Un mòbil ha triat aquest equip. */
   agafat: boolean;
   status: "espera" | "joc" | "final";
+  /** Fra Francesc l'ha consagrat: el mòbil de l'equip és a la pantalla final. */
+  guardians: boolean;
   resoltes: number;
   total: number;
   /** Última posició coneguda; null si l'equip no n'ha enviat cap. */
@@ -24,10 +37,18 @@ export interface VistaMasterEquipsProps {
   equips: EquipMaster[] | null;
   /** Inici global de la partida (ISO); null si encara no ha començat. */
   partidaIniciadaAt: string | null;
+  /** Hora en què s'acaba el temps (ISO); null si la partida no ha començat o és d'abans del compte enrere. */
+  partidaAcabaAt?: string | null;
+  /** Rellotge del servidor menys el del mòbil, en ms. */
+  desfasamentMs?: number;
   /** Esperant el servidor després de tocar "Iniciar" o "Reiniciar partida". */
   canviantPartida?: boolean;
-  onIniciarPartida: () => void;
+  onIniciarPartida: (duradaMinuts: number) => void;
+  onAjustarTemps: (minuts: number) => void;
+  onAcabarTemps: () => void;
   onReiniciarPartida: () => void;
+  /** El LED del Gresol s'ha encès: l'equip passa a la pantalla final (o es desfà). */
+  onConsagrar: (teamId: string, consagrar: boolean) => void;
   onAlliberar: (teamId: string) => void;
   onReiniciar: (teamId: string) => void;
   /** Fites (només per situar-se al mapa). */
@@ -55,6 +76,8 @@ const ESTATS: Record<EquipMaster["status"], { text: string; classe: string }> = 
   final: { text: "Al Gresol", classe: "bg-gold text-ink" },
 };
 
+const GUARDIANS = { text: "✨ Guardians", classe: "bg-anima text-white" };
+
 const LLIURE = { text: "Lliure", classe: "bg-[#fffdf7] text-ink-soft" };
 
 function textEdat(faMinuts: number) {
@@ -64,9 +87,14 @@ function textEdat(faMinuts: number) {
 export function VistaMasterEquips({
   equips,
   partidaIniciadaAt,
+  partidaAcabaAt = null,
+  desfasamentMs = 0,
   canviantPartida = false,
   onIniciarPartida,
+  onAjustarTemps,
+  onAcabarTemps,
   onReiniciarPartida,
+  onConsagrar,
   onAlliberar,
   onReiniciar,
   estacions,
@@ -107,31 +135,17 @@ export function VistaMasterEquips({
       <section className="flex flex-col gap-3">
         <h2 className="etiqueta text-base">partida</h2>
         {partidaIniciadaAt ? (
-          <div className="targeta flex items-center justify-between gap-4 p-4">
-            <div>
-              <p className="etiqueta">temps de joc</p>
-              <Cronometre des={partidaIniciadaAt} className="font-display text-5xl font-extrabold leading-none" />
-            </div>
-            <button
-              type="button"
-              onClick={onReiniciarPartida}
-              disabled={canviantPartida}
-              className="min-h-12 shrink-0 rounded-xl border-[3px] border-blood px-3 text-sm font-extrabold text-blood active:bg-blood active:text-white disabled:opacity-50"
-            >
-              ↺ Reiniciar partida
-            </button>
-          </div>
+          <PartidaEnCurs
+            iniciadaAt={partidaIniciadaAt}
+            acabaAt={partidaAcabaAt}
+            desfasamentMs={desfasamentMs}
+            canviant={canviantPartida}
+            onAjustar={onAjustarTemps}
+            onAcabar={onAcabarTemps}
+            onReiniciar={onReiniciarPartida}
+          />
         ) : (
-          <>
-            <button type="button" onClick={onIniciarPartida} disabled={canviantPartida} className="btn btn-primari">
-              {canviantPartida ? "Iniciant..." : "▶ Iniciar partida"}
-            </button>
-            <p className="text-center text-base text-ink-soft">
-              {agafats.length === 0
-                ? "Encara no ha entrat cap equip."
-                : `${agafats.length} ${agafats.length === 1 ? "equip a punt" : "equips a punt"}. En iniciar, el cronòmetre arrenca per a tothom.`}
-            </p>
-          </>
+          <IniciPartida equipsAPunt={agafats.length} canviant={canviantPartida} onIniciar={onIniciarPartida} />
         )}
       </section>
 
@@ -179,7 +193,7 @@ export function VistaMasterEquips({
 
         <ul className="flex flex-col gap-4">
           {equips?.map((equip) => {
-            const estat = equip.agafat ? ESTATS[equip.status] : LLIURE;
+            const estat = !equip.agafat ? LLIURE : equip.guardians ? GUARDIANS : ESTATS[equip.status];
             return (
               <li key={equip.id} className="targeta p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -211,6 +225,20 @@ export function VistaMasterEquips({
                     />
                   ))}
                 </div>
+
+                {equip.agafat && partidaIniciadaAt && (
+                  <button
+                    type="button"
+                    onClick={() => onConsagrar(equip.id, !equip.guardians)}
+                    className={
+                      equip.guardians
+                        ? "mt-4 min-h-12 w-full rounded-xl border-[3px] border-ink/40 px-3 text-base font-extrabold text-ink-soft active:bg-paper-3"
+                        : "btn btn-fosc mt-4"
+                    }
+                  >
+                    {equip.guardians ? "↩ Desfer la consagració" : "✨ Consagrar Guardians del Secret"}
+                  </button>
+                )}
 
                 <div className="mt-4 flex items-center justify-between gap-3">
                   <p className="text-base text-ink-soft">
@@ -245,5 +273,149 @@ export function VistaMasterEquips({
         {equips === null && <p className="etiqueta text-center">carregant...</p>}
       </section>
     </main>
+  );
+}
+
+function IniciPartida({
+  equipsAPunt,
+  canviant,
+  onIniciar,
+}: {
+  equipsAPunt: number;
+  canviant: boolean;
+  onIniciar: (duradaMinuts: number) => void;
+}) {
+  const [durada, setDurada] = useState<number>(DURADA_PER_DEFECTE_MIN);
+  const valida = Number.isInteger(durada) && durada >= DURADA_MINIMA_MIN && durada <= DURADA_MAXIMA_MIN;
+
+  return (
+    <div className="targeta flex flex-col gap-4 p-4">
+      <div>
+        <p className="etiqueta mb-2">durada de la partida (minuts)</p>
+        <div className="grid grid-cols-5 gap-2">
+          {DURADES_RAPIDES_MIN.map((minuts) => (
+            <button
+              key={minuts}
+              type="button"
+              onClick={() => setDurada(minuts)}
+              aria-pressed={durada === minuts}
+              className={`min-h-12 rounded-xl border-[3px] border-ink text-lg font-extrabold ${
+                durada === minuts ? "bg-ink text-gold" : "bg-[#fffdf7] text-ink"
+              }`}
+            >
+              {minuts}
+            </button>
+          ))}
+        </div>
+        <label className="mt-3 flex items-center gap-3 text-base font-bold">
+          Altres:
+          <input
+            type="number"
+            inputMode="numeric"
+            min={DURADA_MINIMA_MIN}
+            max={DURADA_MAXIMA_MIN}
+            value={Number.isNaN(durada) ? "" : durada}
+            onChange={(e) => setDurada(e.target.valueAsNumber)}
+            className="camp w-24 text-center"
+          />
+          minuts
+        </label>
+      </div>
+      <button type="button" onClick={() => onIniciar(durada)} disabled={canviant || !valida} className="btn btn-primari">
+        {canviant ? "Iniciant..." : `▶ Iniciar partida (${valida ? durada : "?"} min)`}
+      </button>
+      <p className="text-center text-base text-ink-soft">
+        {equipsAPunt === 0
+          ? "Encara no ha entrat cap equip."
+          : `${equipsAPunt} ${equipsAPunt === 1 ? "equip a punt" : "equips a punt"}. En iniciar, el compte enrere arrenca per a tothom.`}
+      </p>
+    </div>
+  );
+}
+
+function PartidaEnCurs({
+  iniciadaAt,
+  acabaAt,
+  desfasamentMs,
+  canviant,
+  onAjustar,
+  onAcabar,
+  onReiniciar,
+}: {
+  iniciadaAt: string;
+  acabaAt: string | null;
+  desfasamentMs: number;
+  canviant: boolean;
+  onAjustar: (minuts: number) => void;
+  onAcabar: () => void;
+  onReiniciar: () => void;
+}) {
+  const restant = acabaAt ? tempsRestantMs(acabaAt, desfasamentMs) : null;
+  const acabat = restant === 0;
+  const alerta = restant !== null && restant < MINUTS_ALERTA * 60_000;
+
+  return (
+    <div className="targeta flex flex-col gap-4 p-4">
+      <div className="flex items-end justify-between gap-4">
+        <div>
+          <p className="etiqueta">{acabaAt ? (acabat ? "temps esgotat" : "temps que queda") : "temps de joc"}</p>
+          {acabaAt ? (
+            <CompteEnrere
+              acabaAt={acabaAt}
+              desfasamentMs={desfasamentMs}
+              className={`font-display text-6xl font-extrabold leading-none ${alerta ? "text-blood" : ""}`}
+            />
+          ) : (
+            <Cronometre des={iniciadaAt} className="font-display text-5xl font-extrabold leading-none" />
+          )}
+        </div>
+        <div className="text-right text-base text-ink-soft">
+          <p>
+            jugant <Cronometre des={iniciadaAt} className="font-bold" />
+          </p>
+          {acabaAt && (
+            <p>
+              fi a les{" "}
+              <strong suppressHydrationWarning>
+                {new Date(Date.parse(acabaAt)).toLocaleTimeString("ca-ES", { hour: "2-digit", minute: "2-digit" })}
+              </strong>
+            </p>
+          )}
+        </div>
+      </div>
+
+      {acabaAt && (
+        <div className="grid grid-cols-4 gap-2">
+          {AJUSTOS_MIN.map((minuts) => (
+            <button
+              key={minuts}
+              type="button"
+              onClick={() => onAjustar(minuts)}
+              disabled={canviant || (minuts < 0 && acabat)}
+              className="min-h-12 rounded-xl border-[3px] border-ink bg-[#fffdf7] text-lg font-extrabold active:bg-ink active:text-paper disabled:opacity-40"
+            >
+              {minuts > 0 ? `+${minuts}` : `−${-minuts}`} min
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={onAcabar}
+            disabled={canviant || acabat}
+            className="min-h-12 rounded-xl border-[3px] border-blood text-base font-extrabold text-blood active:bg-blood active:text-white disabled:opacity-40"
+          >
+            ⏹ Acabar
+          </button>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={onReiniciar}
+        disabled={canviant}
+        className="min-h-12 rounded-xl border-[3px] border-blood px-3 text-sm font-extrabold text-blood active:bg-blood active:text-white disabled:opacity-50"
+      >
+        ↺ Reiniciar partida
+      </button>
+    </div>
   );
 }

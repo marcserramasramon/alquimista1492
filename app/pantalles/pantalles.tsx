@@ -37,6 +37,7 @@ import { VistaObrirFita, type VistaObrirFitaProps } from "@/components/vistes/Vi
 import { VistaMissatgeMaster } from "@/components/vistes/VistaMissatgeMaster";
 import { MISSATGES_MASTER, TITOL_TEXT_LLIURE } from "@/content/public/missatgesMaster";
 import type { MissatgeEnviat } from "@/components/vistes/PanellMissatgesMaster";
+import { IndicadorTemps } from "@/components/ui/IndicadorTemps";
 
 export const GRUPS = [
   { id: "entrada", nom: "Entrada" },
@@ -233,6 +234,7 @@ const EQUIPS_MASTER: EquipMaster[] = [
     imatge: EQUIPS[0].imatge,
     agafat: true,
     status: "joc",
+    guardians: false,
     resoltes: 2,
     total: TOTAL_MASTER,
     ubicacio: POSICIO_EQUIP && { ...POSICIO_EQUIP, faMinuts: 0 },
@@ -243,6 +245,7 @@ const EQUIPS_MASTER: EquipMaster[] = [
     imatge: EQUIPS[1].imatge,
     agafat: false,
     status: "espera",
+    guardians: false,
     resoltes: 0,
     total: TOTAL_MASTER,
     ubicacio: null,
@@ -253,6 +256,7 @@ const EQUIPS_MASTER: EquipMaster[] = [
     imatge: EQUIPS[2].imatge,
     agafat: true,
     status: "final",
+    guardians: true,
     resoltes: TOTAL_MASTER,
     total: TOTAL_MASTER,
     ubicacio: propDe("aire") && { ...propDe("aire")!, faMinuts: 4 },
@@ -261,13 +265,18 @@ const EQUIPS_MASTER: EquipMaster[] = [
 
 const ESTACIONS_MASTER = estacionsAmbProgres([]);
 
-// Els exemples del màster mostren la partida en marxa (fa 47 min); "master-abans-inici", l'espera.
+// Els exemples del màster mostren la partida en marxa (fa 47 min de 90); "master-abans-inici", l'espera.
 const INICI_PARTIDA = new Date(Date.now() - 47 * 60_000).toISOString();
+const FI_PARTIDA = new Date(Date.parse(INICI_PARTIDA) + 90 * 60_000).toISOString();
 
 const MASTER_BASE = {
   partidaIniciadaAt: INICI_PARTIDA,
+  partidaAcabaAt: FI_PARTIDA,
   onIniciarPartida: noop,
+  onAjustarTemps: noop,
+  onAcabarTemps: noop,
   onReiniciarPartida: noop,
+  onConsagrar: noop,
   onAlliberar: noop,
   onReiniciar: noop,
   estacions: ESTACIONS_MASTER,
@@ -427,6 +436,30 @@ export const PANTALLES: Pantalla[] = [
     render: () => hub(RESOLTES_MITJA_PARTIDA),
   },
   {
+    id: "hub-temps",
+    grup: "hub",
+    titol: "Hub · compte enrere",
+    descripcio: "El temps que queda, sempre a dalt de les pantalles de joc (components/player/TempsPartida).",
+    render: () => (
+      <>
+        <IndicadorTemps acabaAt={new Date(Date.now() + 43 * 60_000).toISOString()} />
+        {hub(RESOLTES_MITJA_PARTIDA)}
+      </>
+    ),
+  },
+  {
+    id: "hub-temps-alerta",
+    grup: "hub",
+    titol: "Hub · últims minuts",
+    descripcio: "Per sota de 10 minuts el compte enrere es posa vermell i batega.",
+    render: () => (
+      <>
+        <IndicadorTemps acabaAt={new Date(Date.now() + 6 * 60_000).toISOString()} />
+        {hub(RESOLTES_MITJA_PARTIDA)}
+      </>
+    ),
+  },
+  {
     id: "hub-fita-seleccionada",
     grup: "hub",
     titol: "Hub · fita seleccionada",
@@ -575,7 +608,7 @@ export const PANTALLES: Pantalla[] = [
     id: "guardians",
     grup: "final",
     titol: "Guardians del Secret",
-    descripcio: "Pantalla final. Encara sense ruta: depèn del resultat del Gresol.",
+    descripcio: "Pantalla final (/final): hi arriben quan Fra Francesc els consagra des del màster.",
     render: () => <VistaGuardians />,
   },
 
@@ -598,7 +631,7 @@ export const PANTALLES: Pantalla[] = [
     id: "master-equips",
     grup: "master",
     titol: "Màster · equips",
-    descripcio: "Tres equips en estats diferents.",
+    descripcio: "Compte enrere en marxa i tres equips en estats diferents (un ja consagrat).",
     render: () => (
       <VistaMasterEquips
         {...MASTER_BASE}
@@ -613,12 +646,29 @@ export const PANTALLES: Pantalla[] = [
     id: "master-abans-inici",
     grup: "master",
     titol: "Màster · abans d'iniciar",
-    descripcio: "Equips entrant; el botó arrenca el cronòmetre de tothom.",
+    descripcio: "Triar la durada; el botó arrenca el compte enrere de tothom.",
     render: () => (
       <VistaMasterEquips
         {...MASTER_BASE}
         partidaIniciadaAt={null}
         equips={EQUIPS_MASTER.map((e) => ({ ...e, status: "espera" as const, resoltes: 0 }))}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+      />
+    ),
+  },
+  {
+    id: "master-temps-esgotat",
+    grup: "master",
+    titol: "Màster · temps esgotat",
+    descripcio: "El compte enrere ha arribat a zero: encara es poden afegir minuts.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        partidaIniciadaAt={new Date(Date.now() - 92 * 60_000).toISOString()}
+        partidaAcabaAt={new Date(Date.now() - 2 * 60_000).toISOString()}
+        equips={EQUIPS_MASTER}
         posicioMaster={null}
         comparteixo={false}
         estatUbicacio="inactiu"

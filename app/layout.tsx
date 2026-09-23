@@ -4,6 +4,7 @@ import { Grenze_Gotisch, Alegreya_Sans, Alegreya_Sans_SC } from "next/font/googl
 import BarraScroll from "@/components/ui/BarraScroll";
 import { MissatgesMaster } from "@/components/player/MissatgesMaster";
 import { MusicaFons } from "@/components/player/MusicaFons";
+import { TempsPartida } from "@/components/player/TempsPartida";
 import "./globals.css";
 
 // Títols: gòtica llegible (1472). Text: humanista amb arrel cal·ligràfica.
@@ -49,6 +50,8 @@ export default function RootLayout({
       className={`${grenzeGotisch.variable} ${alegreyaSans.variable} ${alegreyaSansSC.variable}`}
     >
       <body className="text-ink antialiased">
+        {/* Compte enrere de la partida: només a les pantalles de joc de l'equip. */}
+        <TempsPartida />
         {children}
         {/* Pop-up dels missatges del màster: només actua a les pantalles de joc de l'equip. */}
         <MissatgesMaster />

@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
   const db = getServiceRoleClient();
   const { data: equips, error: equipsError } = await db
     .from("v2_teams")
-    .select("id, slug, status, claimed_at, started_at, finished_at, last_lat, last_lng, last_location_at")
+    .select("id, slug, status, claimed_at, started_at, finished_at, guardians_at, last_lat, last_lng, last_location_at")
     .in("slug", EQUIP_IDS);
 
   if (equipsError) {
@@ -34,7 +34,11 @@ export async function GET(request: NextRequest) {
     return [{ ...resta, name: def.nom, imatge: def.imatge, agafat: claimed_at !== null, resoltes, total }];
   });
 
-  const { data: partida } = await db.from("v2_partida").select("started_at").eq("id", 1).maybeSingle();
+  const { data: partida } = await db
+    .from("v2_partida")
+    .select("started_at, duration_minutes, ends_at")
+    .eq("id", 1)
+    .maybeSingle();
 
   const { data: ubicacioMaster } = await db
     .from("v2_master_location")
@@ -46,5 +50,9 @@ export async function GET(request: NextRequest) {
     equips: resultat,
     master: ubicacioMaster ?? null,
     partidaIniciadaAt: partida?.started_at ?? null,
+    partidaAcabaAt: partida?.ends_at ?? null,
+    durada: partida?.duration_minutes ?? null,
+    // Per corregir el rellotge del mòbil al compte enrere.
+    ara: new Date().toISOString(),
   });
 }
