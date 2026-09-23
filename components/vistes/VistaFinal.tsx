@@ -5,12 +5,7 @@ import { ELEMENTS, type Element } from "@/content/public/estacions";
 import { GRESOL_CONFIG, LIQUIDS, RECIPIENTS, type TransicioGresol } from "@/content/public/gresol";
 import { GRESOL_ARRIBADA, GRESOL_BOTO_RITUAL, GRESOL_PASSOS, GRESOL_RITUAL } from "@/content/public/textos";
 
-const TOTS: NodePentagrama[] = (["aigua", "terra", "foc", "aire", "anima"] as const).map((element) => ({
-  id: element,
-  element,
-  resolt: true,
-  disponible: true,
-}));
+const TOTS_ELS_ELEMENTS: Element[] = ["aigua", "terra", "foc", "aire", "anima"];
 
 export interface VistaFinalProps {
   /** false: esperant Fra Francesc (4a). true: el ritual (4b). Amb "una-pantalla" s'ignora. */
@@ -19,6 +14,11 @@ export interface VistaFinalProps {
   /** Per defecte, GRESOL_CONFIG (content/public/gresol.ts). La galeria els sobreescriu. */
   transicio?: TransicioGresol;
   ordreElements?: Element[];
+  /**
+   * Elements que l'equip ha aconseguit. Al pentagrama només s'encenen aquests i a la llista
+   * de recipients només surten aquests (si s'ha acabat el temps abans de trobar-los tots).
+   */
+  aconseguits?: Element[];
 }
 
 /**
@@ -32,7 +32,16 @@ export function VistaFinal({
   onComencarRitual,
   transicio = GRESOL_CONFIG.transicio,
   ordreElements = GRESOL_CONFIG.ordreElements,
+  aconseguits = TOTS_ELS_ELEMENTS,
 }: VistaFinalProps) {
+  const nodes: NodePentagrama[] = TOTS_ELS_ELEMENTS.map((element) => ({
+    id: element,
+    element,
+    resolt: aconseguits.includes(element),
+    disponible: true,
+  }));
+  const complet = TOTS_ELS_ELEMENTS.every((e) => aconseguits.includes(e));
+  const recipients = ordreElements.filter((e) => aconseguits.includes(e));
   const unaPantalla = transicio === "una-pantalla";
   const mostrarArribada = unaPantalla || !ritual;
   const mostrarRitual = unaPantalla || ritual;
@@ -42,7 +51,7 @@ export function VistaFinal({
       {mostrarRitual && !unaPantalla ? (
         <ImatgeGresol />
       ) : (
-        <Pentagrama nodes={TOTS} centreActiu girar className="mx-auto w-64 max-w-full animate-segellar" />
+        <Pentagrama nodes={nodes} centreActiu={complet} girar className="mx-auto w-64 max-w-full animate-segellar" />
       )}
       <p className="etiqueta animate-entrar text-center text-gold-deep">pla de masset</p>
 
@@ -63,7 +72,7 @@ export function VistaFinal({
         <>
           {unaPantalla && <ImatgeGresol />}
           <Narracio key="ritual" text={GRESOL_RITUAL} className="animate-entrar [animation-delay:150ms]" />
-          <Recipients ordre={ordreElements} />
+          {recipients.length > 0 && <Recipients ordre={recipients} />}
           <Passos />
         </>
       )}

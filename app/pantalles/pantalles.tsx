@@ -650,6 +650,20 @@ export const PANTALLES: Pantalla[] = [
     render: () => <VistaFinal ritual={false} onComencarRitual={noop} transicio="una-pantalla" />,
   },
   {
+    id: "final-incomplet",
+    grup: "final",
+    titol: "Pla de Masset · sense tots els elements",
+    descripcio: "S'ha acabat el temps amb tres fragments: només s'encenen i surten els elements aconseguits.",
+    render: () => <VistaFinal ritual={false} onComencarRitual={noop} aconseguits={["aigua", "foc", "aire"]} />,
+  },
+  {
+    id: "final-incomplet-ritual",
+    grup: "final",
+    titol: "Pla de Masset · ritual sense tots els elements",
+    descripcio: "La llista de recipients només mostra els elements aconseguits, en l'ordre del ritual.",
+    render: () => <VistaFinal ritual onComencarRitual={noop} aconseguits={["aigua", "foc", "aire"]} />,
+  },
+  {
     id: "guardians",
     grup: "final",
     titol: "Guardians del Secret",
