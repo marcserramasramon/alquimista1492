@@ -36,8 +36,6 @@ export interface VistaEstacioProps extends VistaJocRespostaProps {
   onTornar: () => void;
 }
 
-const ROMANS = ["I", "II", "III", "IV", "V", "VI"];
-
 export function VistaEstacio({
   estacio,
   error,
@@ -129,10 +127,11 @@ export function VistaEstacio({
             <img src={element.icona} alt={element.nom} className="h-14 w-14 object-contain" />
           </div>
         )}
-        <p className="etiqueta" style={{ color: element ? color : undefined }}>
-          fita {estacio.ordre ? ROMANS[estacio.ordre - 1] : ""}
-          {element && ` · ${element.nom}`}
-        </p>
+        {element && (
+          <p className="etiqueta" style={{ color }}>
+            {element.nom}
+          </p>
+        )}
         <h1 className={`text-5xl font-extrabold ${estacio.situacio ? "mb-1" : "mb-5"}`}>{estacio.nom}</h1>
         {/* On és la fita: informació secundària, ja hi són. */}
         {estacio.situacio && (

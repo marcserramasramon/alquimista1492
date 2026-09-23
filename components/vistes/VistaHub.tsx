@@ -23,8 +23,6 @@ export interface VistaHubProps {
   fitaArribadaId?: string | null;
 }
 
-const ROMANS = ["I", "II", "III", "IV", "V", "VI"];
-
 export function VistaHub({
   nomEquip,
   estacions,
@@ -124,7 +122,6 @@ export function VistaHub({
           {visibles.map((estacio) => {
             const element = estacio.element ? ELEMENTS[estacio.element] : null;
             const resolta = estacio.progres.resolta;
-            const index = estacions.indexOf(estacio);
             return (
               <li key={estacio.id}>
                 <button
@@ -151,10 +148,7 @@ export function VistaHub({
                     )}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="etiqueta block text-xs">
-                      fita {ROMANS[index] ?? index + 1}
-                      {element && ` · ${element.nom}`}
-                    </span>
+                    <span className="etiqueta block text-xs">{element?.nom ?? "Ritual final"}</span>
                     <span className="block truncate text-xl font-extrabold leading-tight">{estacio.nom}</span>
                   </span>
                   <span className="shrink-0">
@@ -196,7 +190,6 @@ export function VistaHub({
       {seleccionada && (
         <FitxaFita
           estacio={seleccionada}
-          numero={ROMANS[estacions.indexOf(seleccionada)] ?? ""}
           acabadaDarribar={seleccionada.id === fitaArribadaId}
           onTancar={() => setSeleccionadaId(null)}
           onAnar={() => onAnarEstacio(seleccionada)}
@@ -206,16 +199,14 @@ export function VistaHub({
   );
 }
 
-/** Fitxa inferior (bottom sheet) de la fita triada: a l'abast del polze. */
+/** Fitxa de la fita triada: baixa des de dalt de la pantalla. */
 function FitxaFita({
   estacio,
-  numero,
   acabadaDarribar,
   onTancar,
   onAnar,
 }: {
   estacio: EstacioMapa;
-  numero: string;
   acabadaDarribar: boolean;
   onTancar: () => void;
   onAnar: () => void;
@@ -225,12 +216,11 @@ function FitxaFita({
   const resolta = estacio.progres.resolta;
 
   return (
-    <div className="fixed inset-0 z-30 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={estacio.nom}>
+    <div className="fixed inset-0 z-30 flex items-start justify-center" role="dialog" aria-modal="true" aria-label={estacio.nom}>
       <button type="button" aria-label="Tancar" onClick={onTancar} className="absolute inset-0 animate-entrar bg-ink/45" />
-      <div className="relative w-full max-w-md animate-pujar overflow-hidden rounded-t-[2rem] border-x-[3px] border-t-[3px] border-ink bg-paper">
-        <div className="h-3" style={{ background: color }} />
-        <div className="px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4">
-          <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-ink/20" />
+      <div className="relative max-h-dvh w-full max-w-md animate-baixar overflow-y-auto rounded-b-[2rem] border-x-[3px] border-b-[3px] border-ink bg-paper">
+        <div className="h-[max(0.75rem,env(safe-area-inset-top))]" style={{ background: color }} />
+        <div className="px-5 pb-4 pt-4">
           <div className="flex items-start gap-4">
             <span
               className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-[3px] border-ink bg-[#fffdf7] shadow-[0_4px_0_var(--ink)]"
@@ -244,8 +234,7 @@ function FitxaFita({
             </span>
             <div className="min-w-0 flex-1">
               <p className="etiqueta" style={{ color: element ? color : undefined }}>
-                fita {numero}
-                {element && ` · ${element.nom}`}
+                {element?.nom ?? "Ritual final"}
               </p>
               <h3 className="text-4xl font-extrabold">{estacio.nom}</h3>
             </div>
@@ -293,6 +282,7 @@ function FitxaFita({
                     ? "Hi som! Obrir la fita →"
                     : "Entrar a la fita →"}
           </button>
+          <div className="mx-auto mt-4 h-1.5 w-12 rounded-full bg-ink/20" />
         </div>
       </div>
     </div>

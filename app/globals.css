@@ -49,6 +49,7 @@
   --animate-segellar: segellar 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both;
   --animate-bategar: bategar 1.6s ease-in-out infinite;
   --animate-pujar: pujar 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-baixar: baixar 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 html,
@@ -244,6 +245,15 @@ h3 {
 @keyframes pujar {
   from {
     transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes baixar {
+  from {
+    transform: translateY(-100%);
   }
   to {
     transform: none;
