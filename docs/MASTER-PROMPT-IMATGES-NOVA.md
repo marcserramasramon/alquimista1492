@@ -74,7 +74,7 @@ Autumn/winter Catalan daylight, slightly overcast.
 | Font del Ferro (Carrer del Call) | 💧 Aigua | Font de pedra amb sortidor en forma de cap de lleó, manovella de ferro amb **4 braços/radis visibles** (detall real, ha de comptar-se), aigua rajant |
 | Planes Bones | 🪨 Terra | Terreny obert, **3 àmfores/gerres d'argila** disposades a la vista (detall real i comptable), herba i pedra seca |
 | Entrada del poble | 🔥 Foc | Portal/entrada del nucli, un vell **pal de fusta de telèfon** com a element de referència, sense flama oberta (ja no hi ha foc real a l'estació — evitar-hi qualsevol flama visible per no confondre) |
-| Creu del Pujolar | 🌬️ Aire | Creu de ferro sobre pedestal, amb **el número "1246" gravat/pintat a la base** llegible a la imatge, situada en un serrat/turó obert |
+| Creu del Pujolar | 🌬️ Aire | Creu de ferro sobre pedestal, situada en un serrat/turó obert |
 | Pista skate (Camí Antic de Malla) | ✨ Ànima | Pista d'skate de ciment amb rampes/turons, punt més alt destacat, ambient nocturn o crepuscular (l'estació es revela amb llanterna UV) |
 | Pla de Masset (estació central) | ⚗️ Gresol | Suport de fusta amb un matràs Erlenmeyer central i **5 recipients marcats amb símbols alquímics al voltant**, en un pla obert del poble — veure §5 per als símbols |
 
@@ -188,7 +188,7 @@ orientation, high resolution for pan/zoom use."
 - [ ] Estil: manuscrit il·luminat gòtic català, no barroc del XVIII (l'estil antic queda obsolet)
 - [ ] Paleta de §2 (pergamí, pedra, ferro, verdet — or només en detalls puntuals)
 - [ ] Sense flama oberta a l'estació de Foc (ja no forma part de la mecànica)
-- [ ] Detalls físics reals inclosos quan n'hi ha (4 radis, 3 àmfores, "1246" a la creu — són pistes jugables, han de ser llegibles a la imatge si el cartell physical se'n serveix)
+- [ ] Detalls físics reals inclosos quan n'hi ha (3 àmfores — són pistes jugables, han de ser llegibles a la imatge si el cartell physical se'n serveix)
 - [ ] Sense elements moderns, sense mode fosc
 - [ ] Cap personatge (Fra Francesc/Inquisidor) fins que §9 es desbloquegi
 
@@ -198,7 +198,7 @@ orientation, high resolution for pan/zoom use."
 
 - [ ] Confirmar paleta de §2 (or vell continu vs. estil més sobri)
 - [ ] Tancar aparença de Fra Francesc/Inquisidor (§9) — bloqueja qualsevol imatge de personatge
-- [ ] Confirmar si es vol reaprofitar `font-ferro.webp`/`planes-bones.webp`/`serrat-bruixes.webp` existents (estil antic, barroc) o regenerar-les totes amb l'estil nou per coherència
+- [x] Imatges de fita regenerades amb l'estil nou (aigua, terra, foc, aire, ànima).
 - [ ] Decidir si el mapa nou es genera per IA o s'il·lustra a mà (per mantenir precisió geogràfica exacta)
 
 ---

@@ -12,14 +12,16 @@ export interface Solucio {
 }
 
 export const SOLUCIONS: Record<string, Solucio> = {
-  // AIGUA — Font del Ferro. Cera d'espelma + aigua tintada revela un número;
-  // la manovella té 4 radis, el número revelat n'és el doble.
+  // Cada número és la posició de l'element a la recepta del Gresol:
+  // Aigua 1 · Foc 2 · Terra 3 · Aire 4 · Ànima 5.
+
+  // AIGUA — Font del Ferro. Cera d'espelma + aigua tintada revela el número.
   "font-ferro": {
-    respostesAcceptades: ["8"],
+    respostesAcceptades: ["1"],
     pistes: [
       "El que brolla revela el secret.",
       "Mulla el paper amb aigua per desvelar el número.",
-      "El número és 8.",
+      "El número és 1.",
     ],
   },
 
@@ -35,35 +37,33 @@ export const SOLUCIONS: Record<string, Solucio> = {
   },
 
   // FOC — Entrada del poble. El "paper de foc" (cel·lofana vermella) deixa
-  // llegir el número escrit en verd enmig del soroll de colors. El 8 és un
-  // placeholder a docs/fites-nova.md: si canvia el full imprès, cal canviar-lo aquí.
+  // llegir el número escrit en verd enmig del soroll de colors.
   foc: {
-    respostesAcceptades: ["8"],
+    respostesAcceptades: ["2"],
     pistes: [
       "El vidre de foc desvela el secret.",
       "Posa el paper vermell davant.",
-      "El número és el 8.",
+      "El número és el 2.",
     ],
   },
 
-  // AIRE — Creu del Pujolar. Número gravat a la creu (1246) menys el número
-  // que apareix bafant sobre el vidre ensabonat (1239).
+  // AIRE — Creu del Pujolar. El número apareix bafant sobre el vidre ensabonat.
   aire: {
-    respostesAcceptades: ["7"],
+    respostesAcceptades: ["4"],
     pistes: [
-      "El primer número aguanta la creu, el segon número es desvelarà amb l'aire del teu halè.",
-      "Al peu de la creu trobaràs el primer secret, tira el teu halè al vidre.",
-      "1246 − 1239 = 7.",
+      "El secret es desvelarà amb l'aire del teu alè.",
+      "Bufa l'alè calent sobre el vidre.",
+      "El número és 4.",
     ],
   },
 
   // ÀNIMA — Pista skate. Tinta UV al punt més alt de la pista.
   anima: {
-    respostesAcceptades: ["4"],
+    respostesAcceptades: ["5"],
     pistes: [
       "El que busques és sota els teus peus.",
       "Il·lumina el terra amb la llanterna.",
-      "El número és 4.",
+      "El número és 5.",
     ],
   },
 };

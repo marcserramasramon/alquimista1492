@@ -58,7 +58,7 @@ Cada fita té dos textos:
 
 **🌬️ Aire — Creu del Pujolar**
 
-> Heu pujat fins a la creu. Aquí dalt el vent no para mai i s'emporta les paraules abans que ningú les senti. La creu guarda un número als seus peus; l'Aire n'amaga un altre. Només el vostre alè el farà visible.
+> Heu pujat fins a la creu. Aquí dalt el vent no para mai i s'emporta les paraules abans que ningú les senti. L'Aire hi amaga un número que l'ull no veu. Només el vostre alè el farà visible.
 
 **✨ Ànima — Pista skate**
 

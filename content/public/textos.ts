@@ -54,7 +54,7 @@ export const ARRIBADES: Record<Element, TextNarratiu> = {
   },
   aire: {
     paragrafs: [
-      "Heu pujat fins a la creu. Aquí dalt el vent no para mai i s'emporta les paraules abans que ningú les senti. La creu guarda un número als seus peus; l'Aire n'amaga un altre. Només el vostre alè el farà visible.",
+      "Heu pujat fins a la creu. Aquí dalt el vent no para mai i s'emporta les paraules abans que ningú les senti. L'Aire hi amaga un número que l'ull no veu. Només el vostre alè el farà visible.",
     ],
     audio: "/audio/arribada-aire.mp3",
   },
@@ -213,6 +213,9 @@ export const RESPOSTES_INCORRECTES = [
   "Encara no. Mireu-ho amb més calma.",
   "Aquest no és el secret. L'element encara calla.",
 ];
+
+/** Resposta enviada abans que passin ESPERA_ENTRE_INTENTS_MS de l'anterior. */
+export const RESPOSTA_MASSA_RAPIDA = "Espereu un moment abans de tornar-ho a provar.";
 
 export const PISTES = {
   titol: "Necessiteu ajuda?",

@@ -45,11 +45,11 @@ export const GRESOL_CONFIG: {
   ordreElements: Element[];
 } = {
   transicio: "boto-equip",
-  ordreElements: ["aigua", "terra", "foc", "aire", "anima"],
+  ordreElements: ["aigua", "foc", "terra", "aire", "anima"],
 };
 
 // Quan s'encén el LED, Fra Francesc consagra l'equip des del màster i el mòbil passa a Guardians
-// (components/player/Gresol.tsx). Els números de les fites ja no s'hi fan servir.
+// (components/player/Gresol.tsx). El número de cada fita és la posició del seu element en aquest ordre.
 // PENDENT (idea de l'usuari, 2026-09-23): una "fórmula màgica" matemàtica en aquesta pantalla on
 // s'hagin de posar els números trobats. Si es fa, la solució anirà a content/private/ i es validarà
 // al servidor amb una API nova.
