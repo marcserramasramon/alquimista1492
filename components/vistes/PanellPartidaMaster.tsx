@@ -49,7 +49,6 @@ export function PanellPartidaMaster({
           canviant={canviant}
           onAjustar={onAjustar}
           onAcabar={onAcabar}
-          onReiniciar={onReiniciar}
         />
       ) : (
         <IniciPartida equipsAPunt={equipsAPunt} canviant={canviant} onIniciar={onIniciar} />
@@ -58,6 +57,25 @@ export function PanellPartidaMaster({
       <Link href="/master/codis" className="btn btn-secundari text-lg">
         🔳 Codis dels cartells
       </Link>
+
+      {/* Lluny de la resta: només per tornar a començar de zero */}
+      {partidaIniciadaAt && (
+        <div className="mt-6 flex flex-col gap-3 rounded-2xl border-[3px] border-dashed border-blood p-4">
+          <p className="etiqueta text-blood">zona perillosa</p>
+          <p className="text-base text-ink-soft">
+            Esborra tota la partida: el compte enrere, el progrés, els recorreguts i els missatges, i allibera tots els
+            equips.
+          </p>
+          <button
+            type="button"
+            onClick={onReiniciar}
+            disabled={canviant}
+            className="min-h-12 rounded-xl border-[3px] border-blood px-3 text-base font-extrabold text-blood active:bg-blood active:text-white disabled:opacity-50"
+          >
+            ↺ Reiniciar partida
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -126,7 +144,6 @@ function PartidaEnCurs({
   canviant,
   onAjustar,
   onAcabar,
-  onReiniciar,
 }: {
   iniciadaAt: string;
   acabaAt: string | null;
@@ -134,7 +151,6 @@ function PartidaEnCurs({
   canviant: boolean;
   onAjustar: (minuts: number) => void;
   onAcabar: () => void;
-  onReiniciar: () => void;
 }) {
   const restant = acabaAt ? tempsRestantMs(acabaAt, desfasamentMs) : null;
   const acabat = restant === 0;
@@ -193,15 +209,6 @@ function PartidaEnCurs({
           </button>
         </div>
       )}
-
-      <button
-        type="button"
-        onClick={onReiniciar}
-        disabled={canviant}
-        className="min-h-12 rounded-xl border-[3px] border-blood px-3 text-sm font-extrabold text-blood active:bg-blood active:text-white disabled:opacity-50"
-      >
-        ↺ Reiniciar partida
-      </button>
     </div>
   );
 }

@@ -789,6 +789,105 @@ export const PANTALLES: Pantalla[] = [
     ),
   },
   {
+    id: "master-zona-perillosa",
+    grup: "master",
+    titol: "Màster · zona perillosa",
+    descripcio: "Reiniciar la partida és a baix de tot de la pestanya Partida, lluny dels ajustos de temps.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+        pestanyaInicial="partida"
+      />
+    ),
+  },
+  {
+    id: "master-confirmar",
+    grup: "master",
+    titol: "Màster · confirmar una acció",
+    descripcio: "Diàleg propi en lloc del confirm() del navegador; el focus va a Enrere.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+        confirmacio={{
+          titol: `Alliberar ${EQUIPS_MASTER[0].name}?`,
+          text: "El mòbil que el té en perdrà l'accés i l'equip quedarà lliure perquè l'agafi un altre mòbil. El progrés es conserva.",
+          boto: "🔓 Alliberar",
+          perill: true,
+          accio: async () => null,
+        }}
+      />
+    ),
+  },
+  {
+    id: "master-confirmar-reinici",
+    grup: "master",
+    titol: "Màster · reiniciar partida (2a confirmació)",
+    descripcio: "Segon pas: els botons canvien de lloc i el vermell no respon fins al cap d'un moment.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+        pestanyaInicial="partida"
+        confirmacio={{
+          titol: "Reiniciar tota la partida?",
+          text: "",
+          boto: "Continuar",
+          perill: true,
+          segonPas: {
+            titol: "N'estàs segur?",
+            text: "No es pot desfer. Els equips que juguen perdran tot el que han fet i hauran de tornar a triar equip.",
+            boto: "↺ Sí, reiniciar",
+          },
+          pasInicial: 2,
+          accio: async () => null,
+        }}
+      />
+    ),
+  },
+  {
+    id: "master-avis-error",
+    grup: "master",
+    titol: "Màster · error d'una acció",
+    descripcio: "Si falla una acció sense diàleg (p.ex. +5 min), l'avís surt a sobre de les pestanyes i marxa sol.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+        pestanyaInicial="partida"
+        avis="Sense connexió. Torna-ho a provar."
+      />
+    ),
+  },
+  {
+    id: "master-consagrar-llest",
+    grup: "master",
+    titol: "Màster · equip amb tots els fragments",
+    descripcio: "El botó de consagrar només es destaca quan l'equip ho té tot (o s'ha esgotat el temps).",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER.map((e) => (e.id === "1" ? { ...e, resoltes: e.total } : e))}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+      />
+    ),
+  },
+  {
     id: "master-codis",
     grup: "master",
     titol: "Màster · codis QR",

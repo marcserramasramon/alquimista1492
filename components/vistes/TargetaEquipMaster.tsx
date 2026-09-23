@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 export interface EquipMaster {
   id: string;
   name: string;
@@ -18,6 +20,8 @@ export interface EquipMaster {
 export interface TargetaEquipMasterProps {
   equip: EquipMaster;
   partidaIniciada: boolean;
+  /** S'ha esgotat el temps: tots els equips van al Gresol, amb els fragments que tinguin. */
+  tempsEsgotat: boolean;
   onConsagrar: (teamId: string, consagrar: boolean) => void;
   onAlliberar: (teamId: string) => void;
   onReiniciar: (teamId: string) => void;
@@ -37,8 +41,31 @@ function textEdat(faMinuts: number) {
   return faMinuts < 1 ? "ara" : `fa ${faMinuts} min`;
 }
 
-export function TargetaEquipMaster({ equip, partidaIniciada, onConsagrar, onAlliberar, onReiniciar }: TargetaEquipMasterProps) {
+const BOTO_SECUNDARI = "min-h-12 w-full rounded-xl border-[3px] px-3 text-left text-base font-extrabold";
+
+export function TargetaEquipMaster({
+  equip,
+  partidaIniciada,
+  tempsEsgotat,
+  onConsagrar,
+  onAlliberar,
+  onReiniciar,
+}: TargetaEquipMasterProps) {
+  const [mesObert, setMesObert] = useState(false);
   const estat = !equip.agafat ? LLIURE : equip.guardians ? GUARDIANS : ESTATS[equip.status];
+
+  const potConsagrar = equip.agafat && partidaIniciada && !equip.guardians;
+  // Només es destaca quan toca: amb tots els fragments, al Gresol o amb el temps esgotat.
+  const llestPerConsagrar =
+    potConsagrar && (equip.resoltes >= equip.total || equip.status === "final" || tempsEsgotat);
+  const potReiniciar = equip.agafat || equip.resoltes > 0 || equip.guardians;
+  const teMes = (potConsagrar && !llestPerConsagrar) || potReiniciar;
+
+  function fer(accio: () => void) {
+    setMesObert(false);
+    accio();
+  }
+
   return (
     <li className="targeta p-4">
       <div className="flex items-start justify-between gap-3">
@@ -67,39 +94,68 @@ export function TargetaEquipMaster({ equip, partidaIniciada, onConsagrar, onAlli
         ))}
       </div>
 
-      {equip.agafat && partidaIniciada && (
-        <button
-          type="button"
-          onClick={() => onConsagrar(equip.id, !equip.guardians)}
-          className={
-            equip.guardians
-              ? "mt-4 min-h-12 w-full rounded-xl border-[3px] border-ink/40 px-3 text-base font-extrabold text-ink-soft active:bg-paper-3"
-              : "btn btn-fosc mt-4"
-          }
-        >
-          {equip.guardians ? "↩ Desfer la consagració" : "✨ Consagrar Guardians del Secret"}
+      {llestPerConsagrar && (
+        <button type="button" onClick={() => onConsagrar(equip.id, true)} className="btn btn-fosc mt-4">
+          ✨ Consagrar Guardians del Secret
         </button>
       )}
 
       <div className="mt-4 flex items-center justify-between gap-3">
         <p className="text-base text-ink-soft">📍 {equip.ubicacio ? textEdat(equip.ubicacio.faMinuts) : "sense ubicació"}</p>
-        <div className="flex gap-2">
-          {equip.agafat && (
+        {teMes && (
+          <button
+            type="button"
+            onClick={() => setMesObert((v) => !v)}
+            aria-expanded={mesObert}
+            className={`min-h-12 rounded-xl border-[3px] border-ink px-4 text-base font-extrabold ${
+              mesObert ? "bg-ink text-paper" : "bg-[#fffdf7] text-ink"
+            }`}
+          >
+            {mesObert ? "✕ Tancar" : "⋯ Més accions"}
+          </button>
+        )}
+      </div>
+
+      {mesObert && (
+        <div className="mt-3 flex flex-col gap-2 rounded-xl border-2 border-dashed border-ink/40 p-3">
+          {potConsagrar && !llestPerConsagrar && (
             <button
-              onClick={() => onAlliberar(equip.id)}
-              className="min-h-12 rounded-xl border-[3px] border-ink px-3 text-sm font-extrabold active:bg-ink active:text-paper"
+              type="button"
+              onClick={() => fer(() => onConsagrar(equip.id, true))}
+              className={`${BOTO_SECUNDARI} border-ink bg-[#fffdf7] active:bg-ink active:text-paper`}
             >
-              🔓 Alliberar
+              ✨ Consagrar Guardians del Secret
             </button>
           )}
-          <button
-            onClick={() => onReiniciar(equip.id)}
-            className="min-h-12 rounded-xl border-[3px] border-blood px-3 text-sm font-extrabold text-blood active:bg-blood active:text-white"
-          >
-            ↺ Reiniciar
-          </button>
+          {equip.guardians && (
+            <button
+              type="button"
+              onClick={() => fer(() => onConsagrar(equip.id, false))}
+              className={`${BOTO_SECUNDARI} border-ink bg-[#fffdf7] active:bg-ink active:text-paper`}
+            >
+              ↩ Desfer la consagració
+            </button>
+          )}
+          {equip.agafat && (
+            <button
+              type="button"
+              onClick={() => fer(() => onAlliberar(equip.id))}
+              className={`${BOTO_SECUNDARI} border-ink bg-[#fffdf7] active:bg-ink active:text-paper`}
+            >
+              🔓 Alliberar el mòbil
+            </button>
+          )}
+          {potReiniciar && (
+            <button
+              type="button"
+              onClick={() => fer(() => onReiniciar(equip.id))}
+              className={`${BOTO_SECUNDARI} border-blood bg-[#fffdf7] text-blood active:bg-blood active:text-white`}
+            >
+              ↺ Reiniciar l&apos;equip
+            </button>
+          )}
         </div>
-      </div>
+      )}
     </li>
   );
 }

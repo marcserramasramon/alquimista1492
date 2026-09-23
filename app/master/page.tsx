@@ -13,9 +13,13 @@ import type {
 } from "@/components/vistes/PanellMissatgesMaster";
 import type { DadesRecorregut } from "@/components/vistes/PanellRecorregut";
 import type { DadesConnexio } from "@/components/ui/EstatConnexio";
+import type { Confirmacio } from "@/components/ui/DialegConfirmacio";
 
 /** Cada quant es torna a llegir el recorregut de l'equip triat (els equips envien la posició cada 30 s). */
 const INTERVAL_RECORREGUT_MS = 30_000;
+
+/** Quant es queda a la vista l'avís d'error d'una acció sense diàleg. */
+const DURADA_AVIS_MS = 6_000;
 
 type Equip = EquipMaster;
 
@@ -66,6 +70,17 @@ export default function MasterPage() {
   const [recorregutId, setRecorregutId] = useState<string | null>(null);
   const [recorregut, setRecorregut] = useState<DadesRecorregut | null>(null);
   const [connexio, setConnexio] = useState<DadesConnexio>({ ultimaLecturaAt: null, errorsSeguits: 0 });
+  const [confirmacio, setConfirmacio] = useState<Confirmacio | null>(null);
+  const [avis, setAvis] = useState<string | null>(null);
+  const tancarConfirmacio = useCallback(() => setConfirmacio(null), []);
+  const tancarAvis = useCallback(() => setAvis(null), []);
+
+  // L'avís d'error se'n va sol al cap d'uns segons.
+  useEffect(() => {
+    if (!avis) return;
+    const t = setTimeout(() => setAvis(null), DURADA_AVIS_MS);
+    return () => clearTimeout(t);
+  }, [avis]);
 
   useEffect(() => {
     if (!recorregutId) return;
@@ -180,82 +195,117 @@ export default function MasterPage() {
     }).catch(() => {});
   }
 
+  /** POST a una ruta del màster. Retorna el missatge d'error, o null si ha anat bé (i refresca els equips). */
+  async function crida(url: string, body: unknown): Promise<string | null> {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).catch(() => null);
+    if (!res) return "Sense connexió. Torna-ho a provar.";
+    if (res.status === 401) {
+      router.push("/master/login");
+      return "Cal tornar a entrar.";
+    }
+    if (!res.ok) return (await res.json().catch(() => ({}))).error ?? "No s'ha pogut fer. Torna-ho a provar.";
+    await carregar();
+    return null;
+  }
+
   async function canviarPartida(
     peticio:
       | { accio: "iniciar"; durada: number }
       | { accio: "ajustar"; minuts: number }
       | { accio: "acabar" }
       | { accio: "reiniciar" }
-  ) {
-    if (canviantPartida) return;
+  ): Promise<string | null> {
+    if (canviantPartida) return null;
     setCanviantPartida(true);
     try {
-      const res = await fetch("/api/master/partida", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(peticio),
-      }).catch(() => null);
-      if (!res) alert("Sense connexió. Torna-ho a provar.");
-      else if (!res.ok) alert((await res.json().catch(() => ({}))).error ?? "No s'ha pogut fer");
-      await carregar();
+      return await crida("/api/master/partida", peticio);
     } finally {
       setCanviantPartida(false);
     }
   }
 
+  const nomEquip = (teamId: string) => equips?.find((e) => e.id === teamId)?.name ?? "aquest equip";
+
   function iniciarPartida(durada: number) {
     const aPunt = equips?.filter((e) => e.agafat).length ?? 0;
-    if (!confirm(`Iniciar la partida de ${durada} minuts amb ${aPunt} ${aPunt === 1 ? "equip" : "equips"}? El compte enrere arrenca ara.`)) return;
-    canviarPartida({ accio: "iniciar", durada });
+    setConfirmacio({
+      titol: "Iniciar la partida?",
+      text: `${durada} minuts amb ${aPunt} ${aPunt === 1 ? "equip" : "equips"}. El compte enrere arrenca per a tothom en tocar el botó.`,
+      boto: "▶ Iniciar",
+      accio: () => canviarPartida({ accio: "iniciar", durada }),
+    });
   }
 
-  function ajustarTemps(minuts: number) {
-    canviarPartida({ accio: "ajustar", minuts });
+  async function ajustarTemps(minuts: number) {
+    setAvis(await canviarPartida({ accio: "ajustar", minuts }));
   }
 
   function acabarTemps() {
-    if (!confirm("Acabar el temps ara? Tots els equips veuran que s'ha acabat el temps i els enviarà al Pla de Masset.")) return;
-    canviarPartida({ accio: "acabar" });
-  }
-
-  async function consagrar(teamId: string, valor: boolean) {
-    const nom = equips?.find((e) => e.id === teamId)?.name ?? "aquest equip";
-    const pregunta = valor
-      ? `Consagrar ${nom} com a Guardians del Secret? El seu mòbil passarà a la pantalla final.`
-      : `Desfer la consagració de ${nom}? El seu mòbil tornarà al Gresol.`;
-    if (!confirm(pregunta)) return;
-    const res = await fetch("/api/master/guardians", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ teamId, consagrar: valor }),
-    }).catch(() => null);
-    if (!res?.ok) alert("No s'ha pogut desar. Torna-ho a provar.");
-    await carregar();
+    setConfirmacio({
+      titol: "Acabar el temps ara?",
+      text: "Tots els equips veuran que s'ha acabat el temps i aniran al Pla de Masset. Després encara podràs afegir minuts.",
+      boto: "⏹ Acabar ara",
+      perill: true,
+      accio: () => canviarPartida({ accio: "acabar" }),
+    });
   }
 
   function reiniciarPartida() {
-    if (!confirm("Reiniciar tota la partida? S'aturarà el cronòmetre, s'alliberaran tots els equips i s'esborrarà el progrés i els missatges.")) return;
-    canviarPartida({ accio: "reiniciar" });
+    setConfirmacio({
+      titol: "Reiniciar tota la partida?",
+      text: "S'aturarà el compte enrere, s'alliberaran tots els equips i s'esborraran el progrés, els recorreguts i els missatges.",
+      boto: "Continuar",
+      perill: true,
+      segonPas: {
+        titol: "N'estàs segur?",
+        text: "No es pot desfer. Els equips que juguen perdran tot el que han fet i hauran de tornar a triar equip.",
+        boto: "↺ Sí, reiniciar",
+      },
+      accio: () => canviarPartida({ accio: "reiniciar" }),
+    });
   }
 
-  async function alliberar(teamId: string) {
-    if (!confirm("Alliberar aquest equip? El mòbil que el té en perdrà l'accés i la icona tornarà a quedar lliure. El progrés es conserva.")) return;
-    await fetch("/api/master/alliberar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ teamId }),
-    });
-    await carregar();
+  function consagrar(teamId: string, valor: boolean) {
+    const nom = nomEquip(teamId);
+    setConfirmacio(
+      valor
+        ? {
+            titol: `Consagrar ${nom}?`,
+            text: "Els consagres com a Guardians del Secret: el seu mòbil passarà a la pantalla final.",
+            boto: "✨ Consagrar",
+            accio: () => crida("/api/master/guardians", { teamId, consagrar: true }),
+          }
+        : {
+            titol: `Desfer la consagració de ${nom}?`,
+            text: "El seu mòbil tornarà al Gresol.",
+            boto: "↩ Desfer",
+            accio: () => crida("/api/master/guardians", { teamId, consagrar: false }),
+          }
+    );
   }
 
-  async function reiniciar(teamId: string) {
-    if (!confirm("Reiniciar el progrés d'aquest equip?")) return;
-    await fetch("/api/master/reset", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ teamId }),
+  function alliberar(teamId: string) {
+    setConfirmacio({
+      titol: `Alliberar ${nomEquip(teamId)}?`,
+      text: "El mòbil que el té en perdrà l'accés i l'equip quedarà lliure perquè l'agafi un altre mòbil. El progrés es conserva.",
+      boto: "🔓 Alliberar",
+      perill: true,
+      accio: () => crida("/api/master/alliberar", { teamId }),
     });
-    await carregar();
+  }
+
+  function reiniciar(teamId: string) {
+    setConfirmacio({
+      titol: `Reiniciar ${nomEquip(teamId)}?`,
+      text: "S'esborraran les fites resoltes, les pistes, el recorregut i la consagració d'aquest equip. Si la partida corre, torna a començar des de zero.",
+      boto: "↺ Reiniciar",
+      perill: true,
+      accio: () => crida("/api/master/reset", { teamId }),
+    });
   }
 
   return (
@@ -280,6 +330,10 @@ export default function MasterPage() {
       missatges={{ recents: missatgesRecents, onEnviar: enviarMissatge }}
       recorregut={{ triatId: recorregutId, dades: recorregut, onTriar: triarRecorregut }}
       connexio={connexio}
+      confirmacio={confirmacio}
+      onTancarConfirmacio={tancarConfirmacio}
+      avis={avis}
+      onTancarAvis={tancarAvis}
     />
   );
 }

@@ -10,6 +10,7 @@ import { TargetaEquipMaster, type EquipMaster } from "@/components/vistes/Target
 import { Cronometre } from "@/components/ui/Cronometre";
 import { CompteEnrere } from "@/components/ui/CompteEnrere";
 import { MINUTS_ALERTA, tempsRestantMs } from "@/lib/partida";
+import { DialegConfirmacio, type Confirmacio } from "@/components/ui/DialegConfirmacio";
 import { FranjaSenseConnexio, PindolaConnexio, useEstatConnexio, type DadesConnexio } from "@/components/ui/EstatConnexio";
 
 export type { EquipMaster };
@@ -48,6 +49,12 @@ export interface VistaMasterEquipsProps {
   recorregut?: Omit<PanellRecorregutProps, "equips">;
   /** Com de fresques són les dades. Sense valor, no es mostra l'indicador. */
   connexio?: DadesConnexio;
+  /** Acció pendent de confirmar: es mostra el diàleg. */
+  confirmacio?: Confirmacio | null;
+  onTancarConfirmacio?: () => void;
+  /** Error d'una acció sense diàleg (p.ex. ajustar el temps). */
+  avis?: string | null;
+  onTancarAvis?: () => void;
   /** Pestanya amb què s'obre (galeria). Sense valor, la darrera que s'ha fet servir en aquest mòbil. */
   pestanyaInicial?: PestanyaMaster;
 }
@@ -107,6 +114,10 @@ export function VistaMasterEquips({
   missatges,
   recorregut,
   connexio,
+  confirmacio = null,
+  onTancarConfirmacio = () => {},
+  avis = null,
+  onTancarAvis = () => {},
   pestanyaInicial,
 }: VistaMasterEquipsProps) {
   const [pestanya, setPestanya] = useState<PestanyaMaster>(pestanyaInicial ?? "equips");
@@ -135,6 +146,7 @@ export function VistaMasterEquips({
   if (posicioMaster) marcadors.push({ id: "jo", tipus: "jo", ...posicioMaster });
 
   const agafats = (equips ?? []).filter((e) => e.agafat);
+  const tempsEsgotat = partidaAcabaAt !== null && tempsRestantMs(partidaAcabaAt, desfasamentMs) === 0;
 
   const errorGps = comparteixo && (estatUbicacio === "denegat" || estatUbicacio === "no-disponible");
 
@@ -167,6 +179,7 @@ export function VistaMasterEquips({
                 key={equip.id}
                 equip={equip}
                 partidaIniciada={partidaIniciadaAt !== null}
+                tempsEsgotat={tempsEsgotat}
                 onConsagrar={onConsagrar}
                 onAlliberar={onAlliberar}
                 onReiniciar={onReiniciar}
@@ -247,6 +260,22 @@ export function VistaMasterEquips({
           />
         </section>
       </main>
+
+      {avis && (
+        <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 mx-auto max-w-2xl px-4 pb-2">
+          <button
+            type="button"
+            role="alert"
+            onClick={onTancarAvis}
+            className="flex min-h-14 w-full animate-pujar items-center gap-3 rounded-xl border-[3px] border-ink bg-blood px-4 py-2 text-left text-lg font-extrabold text-white shadow-[0_4px_0_var(--ink)]"
+          >
+            <span className="flex-1">✗ {avis}</span>
+            <span aria-hidden>✕</span>
+          </button>
+        </div>
+      )}
+
+      {confirmacio && <DialegConfirmacio key={confirmacio.titol} confirmacio={confirmacio} onTancar={onTancarConfirmacio} />}
 
       <nav
         aria-label="Seccions del panell"
