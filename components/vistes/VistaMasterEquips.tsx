@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { MapaEquip, type EstacioMapa, type MarcadorMapa } from "@/components/player/MapaEquip";
 import type { EstatUbicacio } from "@/lib/useCompartirUbicacio";
+import { PanellMissatgesMaster, type PanellMissatgesMasterProps } from "@/components/vistes/PanellMissatgesMaster";
+import { Cronometre } from "@/components/ui/Cronometre";
 
 export interface EquipMaster {
   id: string;
-  code: string;
   name: string;
+  imatge: string;
+  /** Un mòbil ha triat aquest equip. */
+  agafat: boolean;
   status: "espera" | "joc" | "final";
   resoltes: number;
   total: number;
@@ -18,10 +22,13 @@ export interface EquipMaster {
 export interface VistaMasterEquipsProps {
   /** null mentre es carrega la primera vegada. */
   equips: EquipMaster[] | null;
-  nom: string;
-  creant: boolean;
-  onNomChange: (valor: string) => void;
-  onCrear: () => void;
+  /** Inici global de la partida (ISO); null si encara no ha començat. */
+  partidaIniciadaAt: string | null;
+  /** Esperant el servidor després de tocar "Iniciar" o "Reiniciar partida". */
+  canviantPartida?: boolean;
+  onIniciarPartida: () => void;
+  onReiniciarPartida: () => void;
+  onAlliberar: (teamId: string) => void;
   onReiniciar: (teamId: string) => void;
   /** Fites (només per situar-se al mapa). */
   estacions: EstacioMapa[];
@@ -30,6 +37,8 @@ export interface VistaMasterEquipsProps {
   comparteixo: boolean;
   estatUbicacio: EstatUbicacio;
   onComparteixoChange: (valor: boolean) => void;
+  /** Panell de missatges als equips. Si no hi és, no es mostra. */
+  missatges?: Omit<PanellMissatgesMasterProps, "equips">;
 }
 
 const TEXT_ESTAT_UBICACIO: Record<EstatUbicacio, string> = {
@@ -46,22 +55,26 @@ const ESTATS: Record<EquipMaster["status"], { text: string; classe: string }> = 
   final: { text: "Al Gresol", classe: "bg-gold text-ink" },
 };
 
+const LLIURE = { text: "Lliure", classe: "bg-[#fffdf7] text-ink-soft" };
+
 function textEdat(faMinuts: number) {
   return faMinuts < 1 ? "ara" : `fa ${faMinuts} min`;
 }
 
 export function VistaMasterEquips({
   equips,
-  nom,
-  creant,
-  onNomChange,
-  onCrear,
+  partidaIniciadaAt,
+  canviantPartida = false,
+  onIniciarPartida,
+  onReiniciarPartida,
+  onAlliberar,
   onReiniciar,
   estacions,
   posicioMaster,
   comparteixo,
   estatUbicacio,
   onComparteixoChange,
+  missatges,
 }: VistaMasterEquipsProps) {
   const marcadors: MarcadorMapa[] = (equips ?? []).flatMap((equip) =>
     equip.ubicacio
@@ -69,6 +82,8 @@ export function VistaMasterEquips({
       : []
   );
   if (posicioMaster) marcadors.push({ id: "jo", tipus: "jo", ...posicioMaster });
+
+  const agafats = (equips ?? []).filter((e) => e.agafat);
 
   const errorGps = comparteixo && (estatUbicacio === "denegat" || estatUbicacio === "no-disponible");
 
@@ -84,10 +99,41 @@ export function VistaMasterEquips({
         </Link>
         {equips && (
           <p className="rounded-2xl border-[3px] border-ink bg-ink px-3 py-1 text-center font-display text-2xl font-extrabold text-gold">
-            {equips.length} <span className="etiqueta text-xs text-paper">equips</span>
+            {agafats.length}/{equips.length} <span className="etiqueta text-xs text-paper">equips</span>
           </p>
         )}
       </header>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="etiqueta text-base">partida</h2>
+        {partidaIniciadaAt ? (
+          <div className="targeta flex items-center justify-between gap-4 p-4">
+            <div>
+              <p className="etiqueta">temps de joc</p>
+              <Cronometre des={partidaIniciadaAt} className="font-display text-5xl font-extrabold leading-none" />
+            </div>
+            <button
+              type="button"
+              onClick={onReiniciarPartida}
+              disabled={canviantPartida}
+              className="min-h-12 shrink-0 rounded-xl border-[3px] border-blood px-3 text-sm font-extrabold text-blood active:bg-blood active:text-white disabled:opacity-50"
+            >
+              ↺ Reiniciar partida
+            </button>
+          </div>
+        ) : (
+          <>
+            <button type="button" onClick={onIniciarPartida} disabled={canviantPartida} className="btn btn-primari">
+              {canviantPartida ? "Iniciant..." : "▶ Iniciar partida"}
+            </button>
+            <p className="text-center text-base text-ink-soft">
+              {agafats.length === 0
+                ? "Encara no ha entrat cap equip."
+                : `${agafats.length} ${agafats.length === 1 ? "equip a punt" : "equips a punt"}. En iniciar, el cronòmetre arrenca per a tothom.`}
+            </p>
+          </>
+        )}
+      </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="etiqueta text-base">mapa</h2>
@@ -126,40 +172,25 @@ export function VistaMasterEquips({
         </label>
       </section>
 
+      {missatges && <PanellMissatgesMaster equips={equips && agafats} {...missatges} />}
+
       <section className="flex flex-col gap-4">
         <h2 className="etiqueta text-base">equips</h2>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onCrear();
-          }}
-          className="flex gap-3"
-        >
-          <input
-            value={nom}
-            onChange={(e) => onNomChange(e.target.value)}
-            placeholder="Nom de l'equip nou"
-            aria-label="Nom de l'equip nou"
-            className="camp min-w-0 flex-1 text-lg"
-          />
-          <button type="submit" disabled={creant} className="btn btn-primari w-auto shrink-0 px-5">
-            + Crear
-          </button>
-        </form>
-
         <ul className="flex flex-col gap-4">
           {equips?.map((equip) => {
-            const estat = ESTATS[equip.status];
+            const estat = equip.agafat ? ESTATS[equip.status] : LLIURE;
             return (
               <li key={equip.id} className="targeta p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-2xl font-extrabold leading-tight">{equip.name}</p>
+                  <img
+                    src={equip.imatge}
+                    alt=""
+                    className={`h-14 w-14 shrink-0 ${equip.agafat ? "" : "opacity-40 grayscale"}`}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl font-extrabold leading-tight">{equip.name}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className="rounded-lg border-2 border-ink bg-[#fffdf7] px-2 font-mono text-lg font-bold tracking-widest">
-                        {equip.code}
-                      </span>
                       <span className={`rounded-full border-2 border-ink px-2.5 text-sm font-extrabold ${estat.classe}`}>
                         {estat.text}
                       </span>
@@ -185,12 +216,22 @@ export function VistaMasterEquips({
                   <p className="text-base text-ink-soft">
                     📍 {equip.ubicacio ? textEdat(equip.ubicacio.faMinuts) : "sense ubicació"}
                   </p>
-                  <button
-                    onClick={() => onReiniciar(equip.id)}
-                    className="min-h-12 rounded-xl border-[3px] border-blood px-3 text-sm font-extrabold text-blood active:bg-blood active:text-white"
-                  >
-                    ↺ Reiniciar
-                  </button>
+                  <div className="flex gap-2">
+                    {equip.agafat && (
+                      <button
+                        onClick={() => onAlliberar(equip.id)}
+                        className="min-h-12 rounded-xl border-[3px] border-ink px-3 text-sm font-extrabold active:bg-ink active:text-paper"
+                      >
+                        🔓 Alliberar
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onReiniciar(equip.id)}
+                      className="min-h-12 rounded-xl border-[3px] border-blood px-3 text-sm font-extrabold text-blood active:bg-blood active:text-white"
+                    >
+                      ↺ Reiniciar
+                    </button>
+                  </div>
                 </div>
               </li>
             );
@@ -198,7 +239,7 @@ export function VistaMasterEquips({
         </ul>
         {equips?.length === 0 && (
           <p className="rounded-2xl border-[3px] border-dashed border-ink/30 p-6 text-center text-ink-soft">
-            Encara no hi ha equips.
+            No s&apos;han trobat els equips. Cal aplicar la migració 20260924000015.
           </p>
         )}
         {equips === null && <p className="etiqueta text-center">carregant...</p>}

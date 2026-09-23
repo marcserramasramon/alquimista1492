@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { TextNarratiu } from "@/content/public/textos";
+import { atenuarMusica } from "@/lib/so";
 
 /**
  * Botó per escoltar la veu gravada d'un text. Els mòbils no deixen reproduir
@@ -17,6 +18,13 @@ export function BotoEscoltar({ src }: { src: string }) {
   useEffect(() => {
     if (audio.current?.error) setNoDisponible(true);
   }, []);
+
+  // Mentre sona la veu, la música de fons baixa.
+  useEffect(() => {
+    if (!sonant) return;
+    atenuarMusica(true);
+    return () => atenuarMusica(false);
+  }, [sonant]);
 
   if (noDisponible) return null;
 

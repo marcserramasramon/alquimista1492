@@ -137,21 +137,16 @@ Al centre exacte del pentagrama (Pla de Masset, 41.913130, 2.229789 — coincide
 
 ### Mecànica
 
-Un ritual de combinació alquímica físic i manipulatiu: un suport de fusta amb un matràs Erlenmeyer (o tub de destil·lació) central, i cinc recipients marcats amb símbols alquímics, un per element. Els jugadors introdueixen/activen cada element seguint un ordre (⚠️ PENDENT decidir si l'ordre ve donat pels fragments de les 5 estacions, per les diagonals del pentagrama, o és lliure).
+**Ordre decidit (2026-09-24):** Aigua → Terra → Foc → Aire → Ànima. L'app el mostra a la pantalla del ritual (`content/public/gresol.ts`).
 
-| Element | Manifestació alquímica | Substància / mecanisme real | Efecte visual |
-|---|---|---|---|
-| 🪨 Terra | *Cendra de la Creació* | Bicarbonat sòdic (+ una mica de carbó actiu per textura fosca/terrosa) | Base sòlida, s'introdueix primer al matràs central |
-| 🔥 Foc | *Espurna de Rubí* | Indicador vermell de metil, o pols de col llombarda deshidratada (antocianines) | Tenyeix el fons d'un to vermellós/morat intens en contacte amb la base |
-| 🌬️ Aire | *L'Alè d'Eòl* | Vinagre / àcid cítric concentrat, en vial amb símbol d'Aire | Efervescència immediata: escuma i bombolles de CO₂ pujant pel coll del recipient |
-| 💧 Aigua | *Aigua de Lluna* | Solució fluorescent (aigua tònica amb quinina, o aigua molt diluïda amb fluoresceïna/rodamina) | Es barreja amb l'escuma, estabilitza la mescla i la torna translúcida |
-| ✨ Ànima | *La Quinta Essència* | Llum ultraviolada (365/395 nm), oculta o activada en col·locar l'últim segell | Fluorescència espectral en dipositar l'última peça — blau cel (quinina) o verd maragda (fluoresceïna) |
+**Decidit (2026-09-24):** els jugadors aboquen **5 líquids de colors**, un per element, **en un ordre determinat**, dins el gresol. A dins del gresol hi ha una **pedra amagada amb un LED a dins**. Quan hi cau **aigua salada**, aquesta fa de conductor, **tanca el circuit elèctric i el LED s'encén**: la pedra s'il·lumina dins el gresol.
 
-### Revelació del codi / desllorigador
+⚠️ PENDENT:
+- Color de cada element (quin líquid correspon a Aigua, Terra, Foc, Aire i Ànima).
+- Quin/s líquid/s porten sal (només l'últim?) i què passa si l'ordre és incorrecte (el LED s'encén abans d'hora, reset…).
+- Què fa l'app quan el LED s'encén (res, un botó per passar a la pantalla final, el màster ho activa…).
 
-- Al fons o cara posterior del matràs, un símbol/dígit pintat amb tinta invisible UV, que només es fa visible quan la reacció de l'Ànima activa el feix UV.
-- Alternativa/complement: el volum final d'escuma marca un nivell numèric en una columna graduada (p. ex. 4, 7, 2 — exemple, no definitiu).
-- Opcional per automatitzar: imant de neodimi a la base del recipient de l'Ànima + sensor *reed* sota la taula que obre un electroimant d'un calaix secret quan es col·loca correctament.
+> *Proposta anterior, descartada el 2026-09-24:* reacció química amb bicarbonat, indicador de col llombarda, vinagre, aigua tònica i llum UV que revelava un símbol amb tinta invisible.
 
 ### Seguretat i manteniment
 
@@ -161,7 +156,7 @@ Un ritual de combinació alquímica físic i manipulatiu: un suport de fusta amb
 
 ### ⚠️ PENDENT
 
-- [ ] Ordre en què s'introdueixen els 5 elements (lliure, per fragments, o per l'orde del pentagrama)
+- [x] ~~Ordre en què s'introdueixen els 5 elements~~ → Aigua → Terra → Foc → Aire → Ànima; el mostra l'app (2026-09-24)
 - [ ] Xifra/símbol final exacte i com es relaciona amb el "codi final" de 5 caràcters (veure secció següent)
 - [ ] Disseny físic exacte del calaix/mecanisme de sortida (electroimant vs. obertura manual amb el codi UV)
 - [ ] Integració amb el gir de trama: com actua "l'Inquisidor" (Fra Francesc) durant aquest ritual — els vigila, els posa a prova, intervé?

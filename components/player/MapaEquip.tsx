@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
 
 export interface EstacioMapa {
@@ -50,7 +50,10 @@ const BOUND_MAX_LON = 2.23464;
 const BOUND_MAX_LAT = 41.9166;
 const SVG_W = 800;
 const SVG_H = 600;
-const ZOOM_MAX = 3;
+const ZOOM_MAX = 5;
+const PAS_ZOOM = 1.6;
+/** Píxels que s'ha de moure el dit perquè un toc passi a ser arrossegar. */
+const LLINDAR_ARROSSEGAR = 8;
 
 const INK = "#1b1511";
 const PAPER = "#fffdf7";
@@ -61,6 +64,13 @@ function latLonToSVG(lat: number, lon: number) {
   const x = ((lon - BOUND_MIN_LON) / (BOUND_MAX_LON - BOUND_MIN_LON)) * SVG_W;
   const y = ((BOUND_MAX_LAT - lat) / (BOUND_MAX_LAT - BOUND_MIN_LAT)) * SVG_H;
   return { x, y };
+}
+
+function centre(pts: { x: number; y: number }[]) {
+  return {
+    x: pts.reduce((a, p) => a + p.x, 0) / pts.length,
+    y: pts.reduce((a, p) => a + p.y, 0) / pts.length,
+  };
 }
 
 export function MapaEquip({
@@ -88,203 +98,406 @@ export function MapaEquip({
     const darrera = darreresDins[m.id];
     return darrera ? [{ ...m, ...darrera }] : [];
   });
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const getMaxPan = (z: number) => {
-    const el = containerRef.current;
-    if (!el || z <= 1) return { maxX: 0, maxY: 0 };
-    const { width, height } = el.getBoundingClientRect();
-    return { maxX: (width * (z - 1)) / (2 * z), maxY: (height * (z - 1)) / (2 * z) };
+  const vistaRef = useRef<HTMLDivElement | null>(null);
+  const [pantallaCompleta, setPantallaCompleta] = useState(false);
+  // Mida de la finestra del mapa (px). La capa del mapa manté sempre la proporció 4:3.
+  const [mida, setMida] = useState({ w: 0, h: 0 });
+  // Transformació de la capa: posició a la pantalla = t + z · posició dins la capa.
+  const [vista, setVista] = useState({ z: 1, tx: 0, ty: 0 });
+
+  useEffect(() => {
+    const el = vistaRef.current;
+    if (!el) return;
+    const obs = new ResizeObserver(([entrada]) => {
+      const { width, height } = entrada.contentRect;
+      setMida((m) => (m.w === width && m.h === height ? m : { w: width, h: height }));
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // La capa ocupa tota l'amplada (o l'alçada, si no hi cap) sense deformar el mapa.
+  const capaW = mida.w > 0 && mida.h > 0 ? Math.min(mida.w, (mida.h * SVG_W) / SVG_H) : 0;
+  const capaH = (capaW * SVG_H) / SVG_W;
+
+  /** Limita el zoom i evita que el mapa surti de la finestra (o el centra si hi cap sencer). */
+  const ajustar = useCallback(
+    (z: number, tx: number, ty: number) => {
+      const zz = Math.min(Math.max(z, 1), ZOOM_MAX);
+      const eix = (t: number, capa: number, finestra: number) => {
+        const s = capa * zz;
+        if (s <= finestra) return (finestra - s) / 2;
+        return Math.min(Math.max(t, finestra - s), 0);
+      };
+      return { z: zz, tx: eix(tx, capaW, mida.w), ty: eix(ty, capaH, mida.h) };
+    },
+    [capaW, capaH, mida.w, mida.h]
+  );
+
+  // Recol·loca el mapa quan canvia la mida (girar el mòbil, pantalla completa...).
+  const [midaAjustada, setMidaAjustada] = useState(mida);
+  if (midaAjustada !== mida) {
+    setMidaAjustada(mida);
+    setVista((v) => ajustar(v.z, v.tx, v.ty));
+  }
+
+  /** Zoom mantenint quiet el punt (px, relatius a la finestra) indicat. */
+  const zoomAl = (zNou: number, px: number, py: number) =>
+    setVista((v) => {
+      const z = Math.min(Math.max(zNou, 1), ZOOM_MAX);
+      return ajustar(z, px - ((px - v.tx) * z) / v.z, py - ((py - v.ty) * z) / v.z);
+    });
+
+  const reiniciar = () => setVista(ajustar(1, 0, 0));
+
+  // Gestos amb pointer events: un dit arrossega, dos dits fan zoom (pessic).
+  const punters = useRef(new Map<number, { x: number; y: number }>());
+  const gest = useRef<{
+    z0: number;
+    tx0: number;
+    ty0: number;
+    x0: number;
+    y0: number;
+    dist0: number;
+    mogut: boolean;
+  } | null>(null);
+  // Després d'arrossegar, el "click" final no ha de seleccionar cap fita.
+  const clicBloquejat = useRef(false);
+
+  const posRelativa = (e: { clientX: number; clientY: number }) => {
+    const r = vistaRef.current?.getBoundingClientRect();
+    return { x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) };
   };
 
-  const clampPan = (x: number, y: number, z: number) => {
-    const { maxX, maxY } = getMaxPan(z);
-    return { x: Math.min(Math.max(x, -maxX), maxX), y: Math.min(Math.max(y, -maxY), maxY) };
-  };
-
-  function canviarZoom(z: number) {
-    const seguent = Math.min(Math.max(z, 1), ZOOM_MAX);
-    setZoom(seguent);
-    setPan((p) => clampPan(p.x, p.y, seguent));
-  }
-
-  const dragState = useRef({ mode: null as "pan" | "pinch" | null, startX: 0, startY: 0, startPanX: 0, startPanY: 0, startDist: 0, startZoom: 1 });
-
-  function handleTouchStart(e: React.TouchEvent<SVGSVGElement>) {
-    if (e.touches.length === 1) {
-      dragState.current = { ...dragState.current, mode: "pan", startX: e.touches[0].clientX, startY: e.touches[0].clientY, startPanX: pan.x, startPanY: pan.y };
-    } else if (e.touches.length === 2) {
-      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      dragState.current = { mode: "pinch", startX: 0, startY: 0, startPanX: pan.x, startPanY: pan.y, startDist: dist, startZoom: zoom };
+  /** (Re)comença el gest amb els dits que hi ha ara a la pantalla. */
+  function iniciarGest() {
+    const pts = [...punters.current.values()];
+    if (pts.length === 0) {
+      gest.current = null;
+      return;
     }
+    const { x, y } = centre(pts);
+    const dist0 = pts.length >= 2 ? Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) : 0;
+    gest.current = {
+      z0: vista.z,
+      tx0: vista.tx,
+      ty0: vista.ty,
+      x0: x,
+      y0: y,
+      dist0,
+      mogut: gest.current?.mogut ?? false,
+    };
   }
 
-  function handleTouchMove(e: React.TouchEvent<SVGSVGElement>) {
-    const s = dragState.current;
-    if (s.mode === "pan" && e.touches.length === 1) {
-      const dx = e.touches[0].clientX - s.startX;
-      const dy = e.touches[0].clientY - s.startY;
-      setPan(clampPan(s.startPanX + dx / zoom, s.startPanY + dy / zoom, zoom));
-    } else if (s.mode === "pinch" && e.touches.length === 2) {
-      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      const nextZoom = Math.min(Math.max(s.startZoom * (dist / s.startDist), 1), ZOOM_MAX);
-      setZoom(nextZoom);
-      setPan(clampPan(s.startPanX, s.startPanY, nextZoom));
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if ((e.target as HTMLElement).closest("button")) return;
+    if (punters.current.size === 0) {
+      clicBloquejat.current = false;
+      gest.current = null;
     }
+    punters.current.set(e.pointerId, posRelativa(e));
+    iniciarGest();
   }
 
-  // Els marcadors mantenen la mida a la pantalla encara que s'hi faci zoom.
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    const g = gest.current;
+    if (!g || !punters.current.has(e.pointerId)) return;
+    punters.current.set(e.pointerId, posRelativa(e));
+    const pts = [...punters.current.values()];
+    const { x, y } = centre(pts);
+
+    if (!g.mogut) {
+      if (pts.length < 2 && Math.hypot(x - g.x0, y - g.y0) < LLINDAR_ARROSSEGAR) return;
+      g.mogut = true;
+      clicBloquejat.current = true;
+      // Un cop comença el gest, el capturem perquè no es perdi si el dit surt del mapa.
+      for (const id of punters.current.keys()) {
+        try {
+          e.currentTarget.setPointerCapture(id);
+        } catch {
+          /* el punter ja no existeix */
+        }
+      }
+    }
+
+    let z = g.z0;
+    if (pts.length >= 2 && g.dist0 > 0) {
+      z = Math.min(Math.max(g.z0 * (Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) / g.dist0), 1), ZOOM_MAX);
+    }
+    // El punt del mapa que hi havia sota els dits en començar hi continua.
+    const cx = (g.x0 - g.tx0) / g.z0;
+    const cy = (g.y0 - g.ty0) / g.z0;
+    setVista(ajustar(z, x - cx * z, y - cy * z));
+  }
+
+  function onPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    if (!punters.current.delete(e.pointerId)) return;
+    // En aixecar un dels dos dits, el que queda continua arrossegant des d'on és.
+    iniciarGest();
+  }
+
+  // Roda del ratolí (ordinador): amb Ctrl, o sempre a pantalla completa.
+  // Cal un listener no passiu per poder aturar el scroll de la pàgina.
+  useEffect(() => {
+    const el = vistaRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey && !pantallaCompleta) return;
+      e.preventDefault();
+      const r = el.getBoundingClientRect();
+      const px = e.clientX - r.left;
+      const py = e.clientY - r.top;
+      setVista((v) => {
+        const z = Math.min(Math.max(v.z * Math.exp(-e.deltaY * 0.002), 1), ZOOM_MAX);
+        return ajustar(z, px - ((px - v.tx) * z) / v.z, py - ((py - v.ty) * z) / v.z);
+      });
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [ajustar, pantallaCompleta]);
+
+  // Esc tanca la pantalla completa.
+  useEffect(() => {
+    if (!pantallaCompleta) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPantallaCompleta(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [pantallaCompleta]);
+
+  const zoom = vista.z;
+  // Els marcadors creixen menys que el mapa: continuen al seu lloc però no ho tapen tot.
   const escala = 1 / Math.sqrt(zoom);
 
   return (
-    <div
-      ref={containerRef}
-      className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border-[3px] border-ink bg-paper-2 shadow-[0_6px_0_var(--ink)]"
-    >
-      <svg
-        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-        className="block h-full w-full touch-none"
-        style={{
-          transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
-          transformOrigin: "center",
-        }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onDoubleClick={() => {
-          setZoom(1);
-          setPan({ x: 0, y: 0 });
-        }}
+    <>
+      {/* Mentre el mapa és a pantalla completa, en reserva el lloc a la pàgina. */}
+      {pantallaCompleta && (
+        <div className="aspect-[4/3] w-full rounded-3xl border-[3px] border-dashed border-ink/30" aria-hidden />
+      )}
+      <div
+        className={
+          pantallaCompleta
+            ? "fixed inset-0 z-[25] flex flex-col bg-ink/90 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-[max(0.5rem,env(safe-area-inset-top))]"
+            : "relative"
+        }
+        role={pantallaCompleta ? "dialog" : undefined}
+        aria-modal={pantallaCompleta ? true : undefined}
+        aria-label={pantallaCompleta ? "Mapa de Sentfores" : undefined}
       >
-        <image href="/map-test.webp" x="0" y="0" width={SVG_W} height={SVG_H} preserveAspectRatio="none" />
-
-        {estacions
-          .filter((e) => e.tipus !== "especial" || totesResoltes)
-          .map((estacio) => {
-            const { x, y } = latLonToSVG(estacio.latitud, estacio.longitud);
-            const element = estacio.element ? ELEMENTS[estacio.element] : null;
-            const seleccionada = estacio.id === seleccionadaId;
-            const resolta = estacio.progres.resolta;
-            const color = element?.color ?? GOLD;
-            return (
-              <g
-                key={estacio.id}
-                transform={`translate(${x} ${y}) scale(${escala * (seleccionada ? 1.25 : 1)})`}
-                onClick={onSeleccionar ? () => onSeleccionar(estacio) : undefined}
-                style={{ cursor: onSeleccionar ? "pointer" : undefined }}
-                aria-label={element?.nom ?? estacio.nom}
-              >
-                {/* Zona de toc més gran que el dibuix */}
-                <circle r={44} fill="transparent" />
-                {seleccionada && (
-                  <circle r={30} fill="none" stroke={GOLD} strokeWidth={6}>
-                    <animate attributeName="r" values="30;46" dur="1.4s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="1;0" dur="1.4s" repeatCount="indefinite" />
-                  </circle>
-                )}
-                {/* Agulla: cercle amb punta cap avall */}
-                <path d="M -12 20 L 0 38 L 12 20 Z" fill={INK} />
-                <circle
-                  r={27}
-                  fill={resolta ? color : estacio.disponible ? PAPER : "#d6c7a5"}
-                  stroke={INK}
-                  strokeWidth={4}
-                />
-                {!resolta && estacio.disponible && <circle r={21} fill="none" stroke={color} strokeWidth={5} />}
-                {element && !resolta ? (
-                  <image
-                    href={element.icona}
-                    x={-15}
-                    y={-15}
-                    width={30}
-                    height={30}
-                    opacity={estacio.disponible ? 1 : 0.4}
-                  />
-                ) : (
-                  <text
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fontSize={28}
-                    fontWeight={800}
-                    fill={resolta ? "#fff" : INK}
-                  >
-                    {resolta ? "✓" : "✦"}
-                  </text>
-                )}
-              </g>
-            );
-          })}
-
-        {marcadorsVisibles.map((m) => {
-          const { x, y } = latLonToSVG(m.lat, m.lng);
-          if (m.tipus === "jo") {
-            return (
-              <g key={m.id} transform={`translate(${x} ${y}) scale(${escala})`} aria-label="La vostra posició">
-                <circle r={14} fill="#2563eb" opacity={0.25}>
-                  <animate attributeName="r" values="14;30" dur="2s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.5;0" dur="2s" repeatCount="indefinite" />
-                </circle>
-                <circle r={12} fill="#2563eb" stroke="#fff" strokeWidth={4} />
-              </g>
-            );
-          }
-          if (m.tipus === "master") {
-            return (
-              <g key={m.id} transform={`translate(${x} ${y}) scale(${escala})`} aria-label="Posició del màster">
-                <circle r={18} fill="none" stroke={BLOOD} strokeWidth={4}>
-                  <animate attributeName="r" values="18;36" dur="2s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values="0.9;0" dur="2s" repeatCount="indefinite" />
-                </circle>
-                <circle r={18} fill={BLOOD} stroke={INK} strokeWidth={4} />
-                <circle r={6} fill={PAPER} />
-              </g>
-            );
-          }
-          return (
-            <g key={m.id} transform={`translate(${x} ${y}) scale(${escala})`}>
-              <circle r={14} fill={BLOOD} stroke="#fff" strokeWidth={4} />
-              {m.etiqueta && (
-                <text
-                  y={-24}
-                  textAnchor="middle"
-                  fontSize={22}
-                  fontWeight={800}
-                  fill={INK}
-                  stroke={PAPER}
-                  strokeWidth={6}
-                  paintOrder="stroke"
-                >
-                  {m.etiqueta}
-                </text>
-              )}
-            </g>
-          );
-        })}
-      </svg>
-
-      {/* Zoom amb una mà: botons grans a la cantonada */}
-      <div className="absolute bottom-2.5 right-2.5 flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={() => canviarZoom(zoom + 0.75)}
-          disabled={zoom >= ZOOM_MAX}
-          aria-label="Apropar"
-          className="btn btn-secundari btn-rodo"
+        <div
+          ref={vistaRef}
+          className={`relative w-full touch-none select-none overflow-hidden border-[3px] border-ink bg-paper-2 ${
+            pantallaCompleta ? "min-h-0 flex-1 rounded-2xl" : "aspect-[4/3] rounded-3xl shadow-[0_6px_0_var(--ink)]"
+          }`}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          onClickCapture={(e) => {
+            if (clicBloquejat.current && !(e.target as HTMLElement).closest("button")) {
+              e.stopPropagation();
+              e.preventDefault();
+            }
+          }}
         >
-          +
-        </button>
-        {zoom > 1 && (
-          <button
-            type="button"
-            onClick={() => canviarZoom(zoom - 0.75)}
-            aria-label="Allunyar"
-            className="btn btn-secundari btn-rodo"
+          <div
+            className="absolute left-0 top-0 origin-top-left will-change-transform"
+            style={{
+              width: capaW || "100%",
+              height: capaH || "100%",
+              transform: `translate(${vista.tx}px, ${vista.ty}px) scale(${zoom})`,
+            }}
           >
-            −
-          </button>
+            <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="block h-full w-full" preserveAspectRatio="none">
+              <image href="/map-test.webp" x="0" y="0" width={SVG_W} height={SVG_H} preserveAspectRatio="none" />
+
+              {estacions
+                .filter((e) => e.tipus !== "especial" || totesResoltes)
+                // La seleccionada es pinta l'última perquè, en fer-se gran, quedi per sobre de les altres.
+                .sort((a, b) => Number(a.id === seleccionadaId) - Number(b.id === seleccionadaId))
+                .map((estacio) => {
+                  const { x, y } = latLonToSVG(estacio.latitud, estacio.longitud);
+                  const element = estacio.element ? ELEMENTS[estacio.element] : null;
+                  const seleccionada = estacio.id === seleccionadaId;
+                  const resolta = estacio.progres.resolta;
+                  const color = element?.color ?? GOLD;
+                  return (
+                    <g
+                      key={estacio.id}
+                      transform={`translate(${x} ${y}) scale(${escala * (seleccionada ? 2 : 1)})`}
+                      onClick={onSeleccionar ? () => onSeleccionar(estacio) : undefined}
+                      style={{ cursor: onSeleccionar ? "pointer" : undefined }}
+                      aria-label={element?.nom ?? estacio.nom}
+                    >
+                      {/* Zona de toc més gran que el dibuix */}
+                      <circle r={44} fill="transparent" />
+                      {seleccionada && (
+                        <circle r={30} fill="none" stroke={GOLD} strokeWidth={6}>
+                          <animate attributeName="r" values="30;46" dur="1.4s" repeatCount="indefinite" />
+                          <animate attributeName="opacity" values="1;0" dur="1.4s" repeatCount="indefinite" />
+                        </circle>
+                      )}
+                      {/* La seleccionada (el doble de gran) batega */}
+                      <g>
+                        {seleccionada && (
+                          <animateTransform
+                            attributeName="transform"
+                            type="scale"
+                            values="1;1.15;1"
+                            dur="1.4s"
+                            repeatCount="indefinite"
+                          />
+                        )}
+                        {/* Agulla: cercle amb punta cap avall */}
+                        <path d="M -12 20 L 0 38 L 12 20 Z" fill={INK} />
+                        <circle
+                          r={27}
+                          fill={resolta ? color : estacio.disponible ? PAPER : "#d6c7a5"}
+                          stroke={INK}
+                          strokeWidth={4}
+                        />
+                        {!resolta && estacio.disponible && <circle r={21} fill="none" stroke={color} strokeWidth={5} />}
+                        {element && !resolta ? (
+                          <image
+                            href={element.icona}
+                            x={-15}
+                            y={-15}
+                            width={30}
+                            height={30}
+                            opacity={estacio.disponible ? 1 : 0.4}
+                          />
+                        ) : (
+                          <text
+                            textAnchor="middle"
+                            dominantBaseline="central"
+                            fontSize={28}
+                            fontWeight={800}
+                            fill={resolta ? "#fff" : INK}
+                          >
+                            {resolta ? "✓" : "✦"}
+                          </text>
+                        )}
+                      </g>
+                    </g>
+                  );
+                })}
+
+              {marcadorsVisibles.map((m) => {
+                const { x, y } = latLonToSVG(m.lat, m.lng);
+                if (m.tipus === "jo") {
+                  return (
+                    <g key={m.id} transform={`translate(${x} ${y}) scale(${escala})`} aria-label="La vostra posició">
+                      <circle r={14} fill="#2563eb" opacity={0.25}>
+                        <animate attributeName="r" values="14;30" dur="2s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.5;0" dur="2s" repeatCount="indefinite" />
+                      </circle>
+                      <circle r={12} fill="#2563eb" stroke="#fff" strokeWidth={4} />
+                    </g>
+                  );
+                }
+                if (m.tipus === "master") {
+                  return (
+                    <g key={m.id} transform={`translate(${x} ${y}) scale(${escala})`} aria-label="Posició del màster">
+                      <circle r={18} fill="none" stroke={BLOOD} strokeWidth={4}>
+                        <animate attributeName="r" values="18;36" dur="2s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.9;0" dur="2s" repeatCount="indefinite" />
+                      </circle>
+                      <circle r={18} fill={BLOOD} stroke={INK} strokeWidth={4} />
+                      <circle r={6} fill={PAPER} />
+                    </g>
+                  );
+                }
+                return (
+                  <g key={m.id} transform={`translate(${x} ${y}) scale(${escala})`}>
+                    <circle r={14} fill={BLOOD} stroke="#fff" strokeWidth={4} />
+                    {m.etiqueta && (
+                      <text
+                        y={-24}
+                        textAnchor="middle"
+                        fontSize={22}
+                        fontWeight={800}
+                        fill={INK}
+                        stroke={PAPER}
+                        strokeWidth={6}
+                        paintOrder="stroke"
+                      >
+                        {m.etiqueta}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+
+          {/* Controls a l'abast del polze: sempre visibles, mínim 48px */}
+          <div className="absolute left-2.5 top-2.5 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setPantallaCompleta((p) => !p)}
+              aria-label={pantallaCompleta ? "Tancar el mapa gran" : "Veure el mapa en gran"}
+              className="btn btn-secundari btn-rodo text-xl"
+            >
+              {pantallaCompleta ? "✕" : <IconaAmpliar />}
+            </button>
+            {zoom > 1 && (
+              <button
+                type="button"
+                onClick={reiniciar}
+                aria-label="Tornar a veure tot el mapa"
+                className="btn btn-secundari btn-rodo text-xl"
+              >
+                <IconaReiniciar />
+              </button>
+            )}
+          </div>
+          <div className="absolute bottom-2.5 right-2.5 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => zoomAl(zoom * PAS_ZOOM, mida.w / 2, mida.h / 2)}
+              disabled={zoom >= ZOOM_MAX}
+              aria-label="Apropar"
+              className="btn btn-secundari btn-rodo disabled:opacity-40"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={() => zoomAl(zoom / PAS_ZOOM, mida.w / 2, mida.h / 2)}
+              disabled={zoom <= 1}
+              aria-label="Allunyar"
+              className="btn btn-secundari btn-rodo disabled:opacity-40"
+            >
+              −
+            </button>
+          </div>
+        </div>
+        {pantallaCompleta && (
+          <p className="pt-2 text-center text-base font-bold text-paper">
+            Pessigueu per apropar · arrossegueu per moure-us
+          </p>
         )}
       </div>
-    </div>
+    </>
+  );
+}
+
+function IconaAmpliar() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+    </svg>
+  );
+}
+
+function IconaReiniciar() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5" />
+    </svg>
   );
 }

@@ -10,7 +10,7 @@ import { estaOberta, necessitaObertura } from "@/lib/obertura";
 export async function GET(request: NextRequest) {
   const sessio = await getEquipSession(request);
   if (!sessio) {
-    return NextResponse.json({ error: "Cal entrar amb el codi d'equip" }, { status: 401 });
+    return NextResponse.json({ error: "Cal triar un equip" }, { status: 401 });
   }
 
   const db = getServiceRoleClient();

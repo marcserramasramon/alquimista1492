@@ -17,7 +17,10 @@ const PistaSchema = z.object({
 export async function POST(request: NextRequest) {
   const sessio = await getEquipSession(request);
   if (!sessio) {
-    return NextResponse.json({ error: "Cal entrar amb el codi d'equip" }, { status: 401 });
+    return NextResponse.json({ error: "Cal triar un equip" }, { status: 401 });
+  }
+  if (sessio.status === "espera") {
+    return NextResponse.json({ error: "La partida encara no ha començat" }, { status: 403 });
   }
 
   const body = await request.json().catch(() => null);

@@ -269,3 +269,125 @@ h3 {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Animacions de celebració, temps i missatge (lib/so.ts les acompanya de so).
+   Amb prefers-reduced-motion, la regla global de més amunt les deixa a l'estat
+   final: les espurnes i les ones desapareixen i els pulsos s'aturen. */
+@theme inline {
+  --animate-espurna: espurna 1.5s cubic-bezier(0.15, 0.7, 0.3, 1) both;
+  --animate-esclat: esclat 0.9s ease-out both;
+  --animate-ona: ona 1.6s ease-out both;
+  --animate-revelar: revelar 1.2s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  --animate-resplendir: resplendir 1.6s ease-in-out infinite;
+  --animate-rellotge: rellotge 2.4s ease-in-out infinite;
+  --animate-tracar: tracar 1.6s ease-out both;
+  --animate-elevar: elevar 2.2s ease-out infinite;
+}
+
+/* Cada espurna surt del centre cap a (--dx, --dy). */
+@keyframes espurna {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.15) rotate(180deg);
+  }
+}
+
+@keyframes esclat {
+  0% {
+    opacity: 0.95;
+    transform: scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(3.4);
+  }
+}
+
+@keyframes ona {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+/* El símbol de l'element passa de silueta a llum i després es posa a lloc. */
+@keyframes revelar {
+  0% {
+    opacity: 0;
+    filter: brightness(0) blur(6px);
+    transform: scale(0.4) rotate(-40deg);
+  }
+  55% {
+    opacity: 1;
+    filter: brightness(2.2) blur(0) drop-shadow(0 0 18px #fff);
+    transform: scale(1.18) rotate(6deg);
+  }
+  100% {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+}
+
+/* Halo del color de l'element (--c). */
+@keyframes resplendir {
+  0%,
+  100% {
+    box-shadow:
+      0 8px 0 var(--ink),
+      0 0 0 0 var(--c, var(--gold));
+  }
+  50% {
+    box-shadow:
+      0 8px 0 var(--ink),
+      0 0 60px 18px var(--c, var(--gold));
+  }
+}
+
+@keyframes rellotge {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 14px rgb(234 179 8 / 0.4));
+  }
+  50% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 32px rgb(179 38 30 / 0.6));
+  }
+}
+
+/* Traç d'una ploma: el camí ha de tenir pathLength="1". */
+@keyframes tracar {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes elevar {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-180px) scale(1);
+  }
+}

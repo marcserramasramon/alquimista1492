@@ -10,7 +10,10 @@ import { estaOberta, necessitaObertura } from "@/lib/obertura";
 export async function GET(request: NextRequest, { params }: { params: Promise<{ estacioId: string }> }) {
   const sessio = await getEquipSession(request);
   if (!sessio) {
-    return NextResponse.json({ error: "Cal entrar amb el codi d'equip" }, { status: 401 });
+    return NextResponse.json({ error: "Cal triar un equip" }, { status: 401 });
+  }
+  if (sessio.status === "espera") {
+    return NextResponse.json({ error: "La partida encara no ha començat" }, { status: 403 });
   }
 
   const { estacioId } = await params;

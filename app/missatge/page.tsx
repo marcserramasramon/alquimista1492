@@ -1,6 +1,6 @@
 import { MissatgeSecret } from "@/components/player/MissatgeSecret";
 
-/** Missatge secret: després del consentiment d'ubicació. Des del hub s'hi torna amb ?tornada=1. */
+/** Missatge secret: quan el màster inicia la partida. Des del hub s'hi torna amb ?tornada=1. */
 export default async function MissatgePage({
   searchParams,
 }: {

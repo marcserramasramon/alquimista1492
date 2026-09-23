@@ -30,7 +30,7 @@ function detectarModeInicial(): ModeInstallacio {
   return "no-disponible";
 }
 
-export function Benvinguda({ codi }: { codi?: string }) {
+export function Benvinguda() {
   const router = useRouter();
   // La detecció depèn del navegador; al servidor (i a la hidratació) és "no-disponible".
   const modeDetectat = useSyncExternalStore(
@@ -79,7 +79,7 @@ export function Benvinguda({ codi }: { codi?: string }) {
     (modeDetectat === "installada" ? "installada" : promptEvent ? "boto" : modeDetectat);
 
   function continuar() {
-    router.push(codi ? `/entrar?codi=${encodeURIComponent(codi)}` : "/entrar");
+    router.push("/ubicacio");
   }
 
   return (

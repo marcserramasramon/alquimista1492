@@ -9,7 +9,7 @@ export interface VistaUbicacioProps {
   onRebutjar: () => void;
 }
 
-/** Consentiment abans de demanar el permís de GPS al navegador (després del nom). */
+/** Consentiment abans de demanar el permís de GPS al navegador (abans de triar l'equip). */
 export function VistaUbicacio({ demanant, onAcceptar, onRebutjar }: VistaUbicacioProps) {
   return (
     <Pantalla>

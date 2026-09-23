@@ -37,7 +37,8 @@ export function useInputAnswerGame({ estacioId, onResolt }: InputAnswerGameProps
       setMissatge(data.missatge ?? "Error");
       setCorrecte(Boolean(data.correcte));
       if (data.correcte) {
-        setTimeout(onResolt, 2200);
+        // Temps per veure l'animació i sentir el so de CelebracioFragment abans del fragment.
+        setTimeout(onResolt, 3000);
       }
     } catch {
       setMissatge("Error de connexió. Torna-ho a provar.");

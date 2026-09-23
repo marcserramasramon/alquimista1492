@@ -18,8 +18,9 @@ import { getEstacio, getEstacionsJugables, getEstacionsOrdenades, type Estacio }
 import type { EstacioMapa, MarcadorMapa } from "@/components/player/MapaEquip";
 import { VistaUbicacio } from "@/components/vistes/VistaUbicacio";
 import { VistaBenvinguda } from "@/components/vistes/VistaBenvinguda";
-import { VistaEntradaCodi } from "@/components/vistes/VistaEntradaCodi";
-import { VistaNomEquip } from "@/components/vistes/VistaNomEquip";
+import { VistaSeleccioEquip } from "@/components/vistes/VistaSeleccioEquip";
+import { VistaEspera } from "@/components/vistes/VistaEspera";
+import { EQUIPS } from "@/content/public/equips";
 import { VistaHub } from "@/components/vistes/VistaHub";
 import { VistaCarregant } from "@/components/vistes/VistaCarregant";
 import { VistaEstacio } from "@/components/vistes/VistaEstacio";
@@ -33,6 +34,9 @@ import { VistaMasterLogin } from "@/components/vistes/VistaMasterLogin";
 import { VistaMasterEquips, type EquipMaster } from "@/components/vistes/VistaMasterEquips";
 import { VistaMasterCodis } from "@/components/vistes/VistaMasterCodis";
 import { VistaObrirFita, type VistaObrirFitaProps } from "@/components/vistes/VistaObrirFita";
+import { VistaMissatgeMaster } from "@/components/vistes/VistaMissatgeMaster";
+import { MISSATGES_MASTER, TITOL_TEXT_LLIURE } from "@/content/public/missatgesMaster";
+import type { MissatgeEnviat } from "@/components/vistes/PanellMissatgesMaster";
 
 export const GRUPS = [
   { id: "entrada", nom: "Entrada" },
@@ -63,8 +67,7 @@ export interface Pantalla {
 
 const noop = () => {};
 
-const NOM_EQUIP = "Els Salamandres";
-const CODI_EXEMPLE = "K7M2QX";
+const NOM_EQUIP = EQUIPS[0].nom;
 
 /** Estacions tal com les retorna /api/estat, amb el progrés simulat. Només són obertes les resoltes (i les d'`obertes`). */
 function estacionsAmbProgres(resoltes: string[], obertes: string[] = []): EstacioMapa[] {
@@ -157,7 +160,7 @@ function pantallesFita(estacio: Estacio): Pantalla[] {
   }
 
   const fita = (joc: Partial<VistaJocRespostaProps>) => (
-    <VistaEstacio {...JOC_BUIT} {...joc} estacio={estacio} error={null} onTornar={noop} />
+    <VistaEstacio {...JOC_BUIT} {...joc} estacio={estacio} error={null} pasInicial="prova" onTornar={noop} />
   );
 
   return [
@@ -165,7 +168,14 @@ function pantallesFita(estacio: Estacio): Pantalla[] {
       ...base,
       id: `fita-${estacio.id}`,
       titol: estacio.nom,
-      descripcio: "Estat inicial.",
+      descripcio: "Pas 1: narració de Fra Francesc amb la veu; el botó dona pas a la prova.",
+      render: () => <VistaEstacio {...JOC_BUIT} estacio={estacio} error={null} onTornar={noop} />,
+    },
+    {
+      ...base,
+      id: `fita-${estacio.id}-prova`,
+      titol: `${estacio.nom} · prova`,
+      descripcio: "Pas 2: la prova i el camp de resposta.",
       render: () => fita({}),
     },
     {
@@ -219,18 +229,29 @@ const TOTAL_MASTER = getEstacionsJugables().filter((e) => e.disponible).length;
 const EQUIPS_MASTER: EquipMaster[] = [
   {
     id: "1",
-    code: "K7M2QX",
-    name: "Els Salamandres",
+    name: EQUIPS[0].nom,
+    imatge: EQUIPS[0].imatge,
+    agafat: true,
     status: "joc",
     resoltes: 2,
     total: TOTAL_MASTER,
     ubicacio: POSICIO_EQUIP && { ...POSICIO_EQUIP, faMinuts: 0 },
   },
-  { id: "2", code: "P4R9TB", name: "Equip 2", status: "espera", resoltes: 0, total: TOTAL_MASTER, ubicacio: null },
+  {
+    id: "2",
+    name: EQUIPS[1].nom,
+    imatge: EQUIPS[1].imatge,
+    agafat: false,
+    status: "espera",
+    resoltes: 0,
+    total: TOTAL_MASTER,
+    ubicacio: null,
+  },
   {
     id: "3",
-    code: "W3HZ8N",
-    name: "Les Fènix",
+    name: EQUIPS[2].nom,
+    imatge: EQUIPS[2].imatge,
+    agafat: true,
     status: "final",
     resoltes: TOTAL_MASTER,
     total: TOTAL_MASTER,
@@ -240,15 +261,38 @@ const EQUIPS_MASTER: EquipMaster[] = [
 
 const ESTACIONS_MASTER = estacionsAmbProgres([]);
 
+// Els exemples del màster mostren la partida en marxa (fa 47 min); "master-abans-inici", l'espera.
+const INICI_PARTIDA = new Date(Date.now() - 47 * 60_000).toISOString();
+
 const MASTER_BASE = {
-  nom: "",
-  creant: false,
-  onNomChange: noop,
-  onCrear: noop,
+  partidaIniciadaAt: INICI_PARTIDA,
+  onIniciarPartida: noop,
+  onReiniciarPartida: noop,
+  onAlliberar: noop,
   onReiniciar: noop,
   estacions: ESTACIONS_MASTER,
   onComparteixoChange: noop,
 };
+
+// Missatges del màster (punt 9): enviaments recents d'exemple, un "a tots" i un a un sol equip.
+const ARA_MISSATGES = Date.parse("2026-11-14T19:40:00Z");
+const MISSATGES_RECENTS: MissatgeEnviat[] = [
+  ...EQUIPS_MASTER.map((e, i) => ({
+    id: `r1-${e.id}`,
+    team_id: e.id,
+    titol: MISSATGES_MASTER[0].titol,
+    created_at: new Date(ARA_MISSATGES).toISOString(),
+    llegit_at: i < 2 ? new Date(ARA_MISSATGES + 30_000).toISOString() : null,
+  })),
+  {
+    id: "r2",
+    team_id: "1",
+    titol: MISSATGES_MASTER[3].titol,
+    created_at: new Date(ARA_MISSATGES - 12 * 60_000).toISOString(),
+    llegit_at: new Date(ARA_MISSATGES - 11 * 60_000).toISOString(),
+  },
+];
+const enviarFals = async () => ({ ok: true, enviats: EQUIPS_MASTER.length });
 
 // ---------------------------------------------------------------------------
 // Registre
@@ -290,55 +334,6 @@ export const PANTALLES: Pantalla[] = [
     render: () => <VistaBenvinguda modeInstallacio="no-disponible" onInstallar={noop} onContinuar={noop} />,
   },
   {
-    id: "codi",
-    grup: "entrada",
-    titol: "Codi d'equip",
-    render: () => <VistaEntradaCodi codi="" error={null} enviant={false} onCodiChange={noop} onSubmit={noop} />,
-  },
-  {
-    id: "codi-qr",
-    grup: "entrada",
-    titol: "Codi · preomplert pel QR",
-    render: () => (
-      <VistaEntradaCodi codi={CODI_EXEMPLE} error={null} enviant={false} onCodiChange={noop} onSubmit={noop} />
-    ),
-  },
-  {
-    id: "codi-error",
-    grup: "entrada",
-    titol: "Codi · no existeix",
-    render: () => (
-      <VistaEntradaCodi
-        codi="ZZZ999"
-        error="Aquest codi d'equip no existeix"
-        enviant={false}
-        onCodiChange={noop}
-        onSubmit={noop}
-      />
-    ),
-  },
-  {
-    id: "nom",
-    grup: "entrada",
-    titol: "Nom de l'equip",
-    descripcio: "Preomplert amb el nom que ha posat el màster.",
-    render: () => <VistaNomEquip nom="Equip 2" error={null} enviant={false} onNomChange={noop} onSubmit={noop} />,
-  },
-  {
-    id: "nom-error",
-    grup: "entrada",
-    titol: "Nom · error",
-    render: () => (
-      <VistaNomEquip
-        nom={NOM_EQUIP}
-        error="Error de connexió. Torna-ho a provar."
-        enviant={false}
-        onNomChange={noop}
-        onSubmit={noop}
-      />
-    ),
-  },
-  {
     id: "ubicacio",
     grup: "entrada",
     titol: "Ubicació · consentiment",
@@ -353,6 +348,48 @@ export const PANTALLES: Pantalla[] = [
     render: () => <VistaUbicacio demanant onAcceptar={noop} onRebutjar={noop} />,
   },
 
+  {
+    id: "equips",
+    grup: "entrada",
+    titol: "Tria de l'equip",
+    descripcio: "Les 8 icones, totes lliures.",
+    render: () => <VistaSeleccioEquip agafats={[]} triant={null} error={null} onTriar={noop} />,
+  },
+  {
+    id: "equips-agafats",
+    grup: "entrada",
+    titol: "Tria · equips ja triats",
+    descripcio: "Tres equips bloquejats per altres mòbils.",
+    render: () => (
+      <VistaSeleccioEquip agafats={[EQUIPS[1].id, EQUIPS[4].id, EQUIPS[6].id]} triant={null} error={null} onTriar={noop} />
+    ),
+  },
+  {
+    id: "equips-triant",
+    grup: "entrada",
+    titol: "Tria · agafant l'equip",
+    render: () => <VistaSeleccioEquip agafats={[EQUIPS[1].id]} triant={EQUIPS[2].id} error={null} onTriar={noop} />,
+  },
+  {
+    id: "equips-error",
+    grup: "entrada",
+    titol: "Tria · un altre mòbil s'hi ha avançat",
+    render: () => (
+      <VistaSeleccioEquip
+        agafats={[EQUIPS[1].id, EQUIPS[2].id]}
+        triant={null}
+        error="Aquest equip ja l'ha triat un altre mòbil"
+        onTriar={noop}
+      />
+    ),
+  },
+  {
+    id: "espera",
+    grup: "entrada",
+    titol: "Espera",
+    descripcio: "Fins que el màster inicia la partida.",
+    render: () => <VistaEspera equip={EQUIPS[4]} />,
+  },
   {
     id: "missatge",
     grup: "entrada",
@@ -424,6 +461,36 @@ export const PANTALLES: Pantalla[] = [
       ]),
   },
 
+  {
+    id: "missatge-master",
+    grup: "hub",
+    titol: "Missatge del màster",
+    descripcio: "Pop-up a qualsevol pantalla de joc. Missatges d'exemple: ESBORRANY a content/public/missatgesMaster.ts.",
+    render: (dades) => (
+      <>
+        {getPantalla("hub-mitja-partida")?.render(dades)}
+        <VistaMissatgeMaster titol={MISSATGES_MASTER[3].titol} text={MISSATGES_MASTER[3].text} onAcceptar={noop} />
+      </>
+    ),
+  },
+  {
+    id: "missatge-master-lliure",
+    grup: "hub",
+    titol: "Missatge del màster · text lliure, 3 pendents",
+    descripcio: "El màster ha escrit el text; en queden més per llegir.",
+    render: (dades) => (
+      <>
+        {getPantalla("hub-mitja-partida")?.render(dades)}
+        <VistaMissatgeMaster
+          titol={TITOL_TEXT_LLIURE}
+          text="Us heu deixat una motxilla a la font. Passeu-la a buscar quan pugueu."
+          pendents={3}
+          onAcceptar={noop}
+        />
+      </>
+    ),
+  },
+
   // Fites
   {
     id: "fita-carregant",
@@ -487,15 +554,22 @@ export const PANTALLES: Pantalla[] = [
     id: "final",
     grup: "final",
     titol: "Pla de Masset · arribada",
-    descripcio: "Esperant Fra Francesc (abans del desemmascarament).",
+    descripcio: "Arribada: esperant la contrasenya (abans del desemmascarament).",
     render: () => <VistaFinal ritual={false} onComencarRitual={noop} />,
   },
   {
     id: "final-ritual",
     grup: "final",
     titol: "Pla de Masset · ritual",
-    descripcio: "El Gresol: ordre i resultat PENDENT.",
+    descripcio: "El Gresol: imatge, recipients en ordre i passos. Resultat PENDENT (content/public/gresol.ts).",
     render: () => <VistaFinal ritual onComencarRitual={noop} />,
+  },
+  {
+    id: "final-una-pantalla",
+    grup: "final",
+    titol: "Pla de Masset · tot en una pantalla",
+    descripcio: "Variant si GRESOL_CONFIG.transicio = \"una-pantalla\" (arribada i ritual sense botó).",
+    render: () => <VistaFinal ritual={false} onComencarRitual={noop} transicio="una-pantalla" />,
   },
   {
     id: "guardians",
@@ -529,6 +603,22 @@ export const PANTALLES: Pantalla[] = [
       <VistaMasterEquips
         {...MASTER_BASE}
         equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+      />
+    ),
+  },
+  {
+    id: "master-abans-inici",
+    grup: "master",
+    titol: "Màster · abans d'iniciar",
+    descripcio: "Equips entrant; el botó arrenca el cronòmetre de tothom.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        partidaIniciadaAt={null}
+        equips={EQUIPS_MASTER.map((e) => ({ ...e, status: "espera" as const, resoltes: 0 }))}
         posicioMaster={null}
         comparteixo={false}
         estatUbicacio="inactiu"
@@ -583,10 +673,50 @@ export const PANTALLES: Pantalla[] = [
   {
     id: "master-equips-buit",
     grup: "master",
-    titol: "Màster · sense equips",
-    descripcio: "Abans de crear cap equip.",
+    titol: "Màster · equips no trobats",
+    descripcio: "Només si falta la migració dels 8 equips.",
     render: () => (
       <VistaMasterEquips {...MASTER_BASE} equips={[]} posicioMaster={null} comparteixo={false} estatUbicacio="inactiu" />
+    ),
+  },
+  {
+    id: "master-missatges",
+    grup: "master",
+    titol: "Màster · enviar missatge",
+    descripcio: "Triar equip (o tots) i missatge; a sota, si els equips l'han llegit.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+        missatges={{
+          recents: MISSATGES_RECENTS,
+          onEnviar: enviarFals,
+          inicial: { desti: "1", clau: MISSATGES_MASTER[2].id },
+        }}
+      />
+    ),
+  },
+  {
+    id: "master-missatges-enviat",
+    grup: "master",
+    titol: "Màster · missatge enviat",
+    descripcio: "Confirmació després d'enviar un text lliure a tots.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+        missatges={{
+          recents: MISSATGES_RECENTS,
+          onEnviar: enviarFals,
+          inicial: { desti: "tots", resultat: { ok: true, enviats: EQUIPS_MASTER.length } },
+        }}
+      />
     ),
   },
 ];

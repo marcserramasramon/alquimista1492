@@ -76,14 +76,14 @@ export function VistaHub({
       </header>
 
       {/* Progrés: el pentagrama s'encén a mesura que es resolen les fites */}
-      <section className="targeta relative animate-entrar overflow-hidden px-4 pb-3 pt-4 [animation-delay:80ms]">
+      <section className="targeta relative -mx-1 animate-entrar overflow-hidden px-1 pb-3 pt-2 [animation-delay:80ms]">
         <Pentagrama
           nodes={nodes}
           centreActiu={totesResoltes}
           girar
           seleccionatId={seleccionadaId}
           onTriar={setSeleccionadaId}
-          className="mx-auto w-full max-w-[18rem]"
+          className="mx-auto w-full"
         />
         {/* Amb totes resoltes, just a sota ve el text de l'estrella completa. */}
         {!totesResoltes && (
@@ -93,8 +93,8 @@ export function VistaHub({
 
       {totesResoltes && <Narracio text={ESTRELLA_COMPLETA} etiqueta="fra francesc" className="animate-entrar" />}
 
-      <section className="animate-entrar [animation-delay:160ms]">
-        <h2 className="etiqueta mb-2 text-base">mapa de sentfores</h2>
+      <section className="-mx-2 animate-entrar [animation-delay:160ms]">
+        <h2 className="etiqueta mb-2 px-2 text-base">mapa de sentfores</h2>
         <MapaEquip
           estacions={estacions}
           totesResoltes={totesResoltes}
@@ -103,7 +103,7 @@ export function VistaHub({
           marcadors={marcadors}
         />
         {marcadors && marcadors.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-soft">
+          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 px-2 text-sm text-ink-soft">
             {marcadors.some((m) => m.tipus === "jo") && (
               <span className="flex items-center gap-1.5">
                 <span className="h-3 w-3 rounded-full border-2 border-white bg-[#2563eb] ring-1 ring-ink/30" /> Vosaltres
@@ -264,13 +264,23 @@ function FitxaFita({
             </p>
           )}
 
+          {/* El que cal fer en arribar-hi és el protagonista; on és, en segon pla. */}
+          <div
+            className="mt-4 rounded-2xl border-[3px] border-ink bg-[#fffdf7] px-4 py-3 shadow-[0_4px_0_var(--ink)]"
+            style={{ borderLeftWidth: 10, borderLeftColor: color }}
+          >
+            <p className="etiqueta mb-1 text-xs">què heu de fer</p>
+            <p className="text-2xl font-extrabold leading-snug">{estacio.entrada}</p>
+          </div>
           {estacio.situacio && (
-            <p className="mt-4 flex gap-2 text-lg font-bold">
+            <p className="mt-3 flex gap-1.5 text-base text-ink-soft">
               <span aria-hidden>📍</span>
-              {estacio.situacio}
+              <span>
+                <span className="sr-only">On és: </span>
+                {estacio.situacio}
+              </span>
             </p>
           )}
-          <p className="mt-2 text-lg text-ink-soft">{estacio.entrada}</p>
 
           <button onClick={onAnar} disabled={!estacio.disponible} className="btn btn-primari mt-5">
             {!estacio.disponible

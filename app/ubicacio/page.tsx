@@ -1,6 +1,6 @@
 import { ConsentimentUbicacio } from "@/components/player/ConsentimentUbicacio";
 
-/** Consentiment de GPS: després del nom (o en entrar amb un mòbil que encara no ho ha decidit). */
+/** Consentiment de GPS: després de la benvinguda i abans de triar l'equip. */
 export default function UbicacioPage() {
   return <ConsentimentUbicacio />;
 }

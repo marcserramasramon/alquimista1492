@@ -17,7 +17,7 @@ import { useCompartirUbicacio } from "@/lib/useCompartirUbicacio";
 import { desbloquejarSo, sonarArribada } from "@/lib/so";
 
 interface EstatResponse {
-  equip: { name: string };
+  equip: { name: string; status: "espera" | "joc" | "final" };
   estacions: EstacioMapa[];
   totesResoltes: boolean;
   /** Només si el màster comparteix la seva ubicació. */
@@ -58,7 +58,13 @@ export default function HubPage() {
             router.push("/");
             return;
           }
-          setEstat(await res.json());
+          const data: EstatResponse = await res.json();
+          // La partida encara no ha començat: a la sala d'espera.
+          if (data.equip?.status === "espera") {
+            router.replace("/espera");
+            return;
+          }
+          setEstat(data);
         })
         .catch(() => {}),
     [router]

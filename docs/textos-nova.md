@@ -164,7 +164,7 @@ El desemmascarament el fa el màster en directe, **abans** del ritual (`historia
 
 **Títol:** El Gresol dels Cinc Elements
 
-> Davant vostre hi ha el gresol i cinc recipients, un per cada element que heu recollit: la Cendra de la Creació, l'Espurna de Rubí, l'Alè d'Eòl, l'Aigua de Lluna i la Quinta Essència.
+> Davant vostre hi ha el gresol i cinc recipients, un per cada element que heu recollit: l'Aigua de Lluna, la Cendra de la Creació, l'Espurna de Rubí, l'Alè d'Eòl i la Quinta Essència.
 >
 > Fra Francesc us guiarà. Uniu els cinc elements tal com us indiqui i observeu bé el gresol: quan hi entri l'Ànima, la matèria parlarà.
 

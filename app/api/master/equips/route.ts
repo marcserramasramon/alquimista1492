@@ -1,17 +1,10 @@
 import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { getServiceRoleClient } from "@/lib/supabase";
 import { getMasterSession } from "@/lib/auth";
 import { getEstacionsJugables } from "@/content/public/estacions";
-
-function generaCodi(): string {
-  const alfabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sense 0/O/1/I per evitar confusions
-  let codi = "";
-  for (let i = 0; i < 6; i++) codi += alfabet[Math.floor(Math.random() * alfabet.length)];
-  return codi;
-}
+import { EQUIPS, EQUIP_IDS } from "@/content/public/equips";
 
 export async function GET(request: NextRequest) {
   const sessio = await getMasterSession(request);
@@ -20,8 +13,8 @@ export async function GET(request: NextRequest) {
   const db = getServiceRoleClient();
   const { data: equips, error: equipsError } = await db
     .from("v2_teams")
-    .select("id, code, name, status, started_at, finished_at, last_lat, last_lng, last_location_at")
-    .order("created_at", { ascending: true });
+    .select("id, slug, status, claimed_at, started_at, finished_at, last_lat, last_lng, last_location_at")
+    .in("slug", EQUIP_IDS);
 
   if (equipsError) {
     console.error("Error llegint equips:", equipsError);
@@ -32,10 +25,16 @@ export async function GET(request: NextRequest) {
 
   const total = getEstacionsJugables().filter((e) => e.disponible).length;
 
-  const resultat = (equips ?? []).map((e) => {
+  // En l'ordre de content/public/equips.ts, amb el nom d'allà.
+  const resultat = EQUIPS.flatMap((def) => {
+    const e = (equips ?? []).find((x) => x.slug === def.id);
+    if (!e) return [];
+    const { claimed_at, ...resta } = e;
     const resoltes = (progres ?? []).filter((p) => p.team_id === e.id && p.resolta).length;
-    return { ...e, resoltes, total };
+    return [{ ...resta, name: def.nom, imatge: def.imatge, agafat: claimed_at !== null, resoltes, total }];
   });
+
+  const { data: partida } = await db.from("v2_partida").select("started_at").eq("id", 1).maybeSingle();
 
   const { data: ubicacioMaster } = await db
     .from("v2_master_location")
@@ -43,37 +42,9 @@ export async function GET(request: NextRequest) {
     .eq("id", 1)
     .maybeSingle();
 
-  return NextResponse.json({ equips: resultat, master: ubicacioMaster ?? null });
-}
-
-const NouEquipSchema = z.object({ nom: z.string().trim().min(1).max(60) });
-
-export async function POST(request: NextRequest) {
-  const sessio = await getMasterSession(request);
-  if (!sessio) return NextResponse.json({ error: "No autoritzat" }, { status: 401 });
-
-  const body = await request.json().catch(() => null);
-  const validacio = NouEquipSchema.safeParse(body);
-  if (!validacio.success) {
-    return NextResponse.json({ error: "Nom invàlid" }, { status: 400 });
-  }
-
-  const db = getServiceRoleClient();
-
-  for (let intent = 0; intent < 5; intent++) {
-    const codi = generaCodi();
-    const { data, error } = await db
-      .from("v2_teams")
-      .insert({ code: codi, name: validacio.data.nom })
-      .select("id, code, name, status")
-      .single();
-
-    if (!error && data) {
-      return NextResponse.json({ equip: data });
-    }
-    console.error("Error creant equip:", error);
-    // Codi duplicat (molt improbable): torna-ho a provar amb un altre.
-  }
-
-  return NextResponse.json({ error: "No s'ha pogut crear l'equip" }, { status: 500 });
+  return NextResponse.json({
+    equips: resultat,
+    master: ubicacioMaster ?? null,
+    partidaIniciadaAt: partida?.started_at ?? null,
+  });
 }

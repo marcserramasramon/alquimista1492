@@ -1,3 +1,4 @@
+import { BotoMusica } from "@/components/ui/BotoMusica";
 import { Narracio } from "@/components/ui/Narracio";
 import { Marca, Pantalla } from "@/components/ui/Pantalla";
 import { GUARDIANS } from "@/content/public/textos";
@@ -5,10 +6,12 @@ import { GUARDIANS } from "@/content/public/textos";
 /**
  * 5. Pantalla final: l'equip esdevé Guardians del Secret i obté la Pedra Filosofal. Com s'hi
  * arriba depèn del resultat del Gresol (PENDENT a docs/fites-nova.md), així que encara no té ruta.
+ * Sona música èpica en bucle (public/audio/guardians.mp3 o, si no hi és, la sintetitzada de lib/so.ts).
  */
 export function VistaGuardians() {
   return (
     <Pantalla className="gap-5">
+      <BotoMusica className="self-end" />
       {/* Pedra a la mateixa mida que el pentagrama del Pla de Masset (VistaFinal). */}
       <img
         src="/images/pedra-filosofal.webp"

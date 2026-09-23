@@ -1,6 +1,9 @@
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { Grenze_Gotisch, Alegreya_Sans, Alegreya_Sans_SC } from "next/font/google";
 import BarraScroll from "@/components/ui/BarraScroll";
+import { MissatgesMaster } from "@/components/player/MissatgesMaster";
+import { MusicaFons } from "@/components/player/MusicaFons";
 import "./globals.css";
 
 // Títols: gòtica llegible (1472). Text: humanista amb arrel cal·ligràfica.
@@ -47,6 +50,12 @@ export default function RootLayout({
     >
       <body className="text-ink antialiased">
         {children}
+        {/* Pop-up dels missatges del màster: només actua a les pantalles de joc de l'equip. */}
+        <MissatgesMaster />
+        {/* Música de l'entrada fins a l'espera, i una altra al missatge secret. */}
+        <Suspense fallback={null}>
+          <MusicaFons />
+        </Suspense>
         <BarraScroll />
       </body>
     </html>

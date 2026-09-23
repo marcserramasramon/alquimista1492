@@ -140,19 +140,43 @@ export const TEMPS_CONSUMIT: TextNarratiu = {
 // 4a. Pla de Masset, en arribar (abans del desemmascarament; sense àudio)
 export const GRESOL_ARRIBADA: TextNarratiu = {
   titol: "El cor de l'estrella",
+  // Parteix del text de docs/textos-nova.md § 4a, sense fets nous ni desvelar qui és l'Inquisidor.
   paragrafs: [
-    "Heu arribat al centre de la Gran Obra. Espereu aquí.",
-    "Algú vindrà a trobar-vos. Recordeu què li heu de respondre.",
+    "Sou al cor de l'estrella. Aquí es creuen les cinc línies que heu seguit, de l'Aigua fins a l'Ànima. Aquí s'acaba el camí i comença la Gran Obra.",
+    "Reuniu tot l'equip, guardeu bé els fragments que porteu i espereu aquí. No marxeu.",
+    "Algú vindrà a trobar-vos: qui us ha vigilat tota la nit. Us dirà: «El temps es consumeix.»",
+    "Si sou dignes, respondreu sense dubtar: «Però el foc de l'Atanor es manté.» Llavors tot tindrà sentit.",
   ],
+};
+
+/** 4a → 4b amb GRESOL_CONFIG.transicio = "boto-equip" (PENDENT, content/public/gresol.ts). */
+export const GRESOL_BOTO_RITUAL = {
+  avis: "Premeu-lo només quan us hagin dit «El temps es consumeix» i hàgiu respost.",
+  boto: "Hem respost la contrasenya",
 };
 
 // 4b. El ritual (ordre dels elements i resultat PENDENT a docs/fites-nova.md)
 export const GRESOL_RITUAL: TextNarratiu = {
   titol: "El Gresol dels Cinc Elements",
   paragrafs: [
-    "Davant vostre hi ha el gresol i cinc recipients, un per cada element que heu recollit: la Cendra de la Creació, l'Espurna de Rubí, l'Alè d'Eòl, l'Aigua de Lluna i la Quinta Essència.",
+    "Davant vostre hi ha el gresol i cinc recipients, un per cada element que heu recollit: l'Aigua de Lluna, la Cendra de la Creació, l'Espurna de Rubí, l'Alè d'Eòl i la Quinta Essència.",
     "Fra Francesc us guiarà. Uniu els cinc elements tal com us indiqui i observeu bé el gresol: quan hi entri l'Ànima, la matèria parlarà.",
   ],
+};
+
+/**
+ * 4b. Què han de fer, pas a pas. Text provisional d'interfície (no és a docs/textos-nova.md):
+ * no diu què revela el Gresol, que és PENDENT a docs/fites-nova.md (l'ordre el mostra la llista de recipients).
+ */
+export const GRESOL_PASSOS = {
+  titol: "Què heu de fer",
+  passos: [
+    "No toqueu res fins que Fra Francesc us ho digui.",
+    "Afegiu cada element al gresol quan us l'indiqui, un darrere l'altre i sense pressa.",
+    "Quan hi entri la Quinta Essència, mireu bé el gresol: la matèria parlarà.",
+  ],
+  seguretat: "Res del que hi ha a la taula es beu ni es tasta.",
+  recipients: "Els cinc recipients",
 };
 
 // 5. Pantalla final

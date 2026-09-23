@@ -13,7 +13,7 @@ export interface VistaBenvingudaProps {
   onContinuar: () => void;
 }
 
-/** Pantalla de benvinguda: convida a instal·lar l'app i a continuar cap a l'entrada del codi. */
+/** Pantalla de benvinguda: convida a instal·lar l'app i a continuar cap a la tria de l'equip. */
 export function VistaBenvinguda({
   modeInstallacio,
   installant = false,

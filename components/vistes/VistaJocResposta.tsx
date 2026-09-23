@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PISTES } from "@/content/public/textos";
+import { precarregarSo } from "@/lib/so";
 
 /** Tres nivells: cada botó només s'activa si ja s'ha demanat l'anterior. */
 export const NOMS_PISTES = ["Pista 1", "Pista 2", "Resposta"] as const;
@@ -36,6 +37,11 @@ export function VistaJocResposta({
   // Demanar la Resposta demana una confirmació: és fàcil tocar-la sense voler.
   const [confirmantResposta, setConfirmantResposta] = useState(false);
   const incorrecte = Boolean(missatge) && !correcte;
+
+  // Si hi ha public/audio/so-fragment.mp3, que ja sigui a punt quan encertin.
+  useEffect(() => {
+    precarregarSo("so-fragment");
+  }, []);
 
   // El pop-up d'error es tanca tocant a qualsevol lloc; es torna a obrir amb cada resposta nova.
   const [errorTancat, setErrorTancat] = useState(false);

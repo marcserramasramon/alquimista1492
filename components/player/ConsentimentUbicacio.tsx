@@ -8,6 +8,7 @@ import { desarDecisioUbicacio } from "@/lib/ubicacio";
 /**
  * Demana el permís de GPS només després que l'equip hagi acceptat. Si el
  * navegador el denega (o no n'hi ha), es desa "no" i el joc continua igual.
+ * Després, la tria de l'equip.
  */
 export function ConsentimentUbicacio() {
   const router = useRouter();
@@ -15,7 +16,7 @@ export function ConsentimentUbicacio() {
 
   function acabar(decisio: "si" | "no") {
     desarDecisioUbicacio(decisio);
-    router.push("/missatge");
+    router.push("/equips");
   }
 
   function acceptar() {

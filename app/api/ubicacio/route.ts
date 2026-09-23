@@ -9,7 +9,7 @@ import { MINIM_ENTRE_UBICACIONS_MS, UbicacioSchema } from "@/lib/ubicacio";
 export async function POST(request: NextRequest) {
   const sessio = await getEquipSession(request);
   if (!sessio) {
-    return NextResponse.json({ error: "Cal entrar amb el codi d'equip" }, { status: 401 });
+    return NextResponse.json({ error: "Cal triar un equip" }, { status: 401 });
   }
 
   const body = await request.json().catch(() => null);

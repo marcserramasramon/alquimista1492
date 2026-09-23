@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { VistaJocResposta, type VistaJocRespostaProps } from "@/components/vistes/VistaJocResposta";
 import { AvisError } from "@/components/ui/Pantalla";
 import { Pentagrama } from "@/components/ui/Pentagrama";
 import { Narracio } from "@/components/ui/Narracio";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
-import { ARRIBADES, CORRECTE_PER_ELEMENT, FRAGMENTS, RESPOSTA_CORRECTA } from "@/content/public/textos";
+import { ARRIBADES, CORRECTE_PER_ELEMENT, FRAGMENTS } from "@/content/public/textos";
+import { CelebracioFragment } from "@/components/vistes/CelebracioFragment";
 
 /** Dades públiques d'una estació tal com les retorna /api/joc/[estacioId]. */
 export interface EstacioPublica {
@@ -26,12 +28,31 @@ export interface VistaEstacioProps extends VistaJocRespostaProps {
   error?: string | null;
   /** Ja resolta: es mostra el fragment en lloc de la prova. */
   resolta?: boolean;
+  /**
+   * Pas amb què s'obre la fita: primer la narració de Fra Francesc (amb la veu) i, amb el botó
+   * de sota, la prova. La galeria el fixa per ensenyar cada pas.
+   */
+  pasInicial?: "narracio" | "prova";
   onTornar: () => void;
 }
 
 const ROMANS = ["I", "II", "III", "IV", "V", "VI"];
 
-export function VistaEstacio({ estacio, error, resolta = false, onTornar, ...joc }: VistaEstacioProps) {
+export function VistaEstacio({
+  estacio,
+  error,
+  resolta = false,
+  pasInicial = "narracio",
+  onTornar,
+  ...joc
+}: VistaEstacioProps) {
+  const [pas, setPas] = useState(pasInicial);
+
+  function anarAProva() {
+    setPas("prova");
+    window.scrollTo({ top: 0 });
+  }
+
   if (error) {
     return (
       <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-6 px-5 py-8 text-center">
@@ -61,7 +82,7 @@ export function VistaEstacio({ estacio, error, resolta = false, onTornar, ...joc
   // La celebració ocupa tota la pantalla: sense la fita a sota, no hi ha res per fer scroll.
   if (joc.correcte && !resolta) {
     return (
-      <Celebracio
+      <CelebracioFragment
         nomElement={element?.nom}
         frase={estacio.element ? CORRECTE_PER_ELEMENT[estacio.element] : undefined}
         icona={element?.icona}
@@ -112,7 +133,17 @@ export function VistaEstacio({ estacio, error, resolta = false, onTornar, ...joc
           fita {estacio.ordre ? ROMANS[estacio.ordre - 1] : ""}
           {element && ` · ${element.nom}`}
         </p>
-        <h1 className="mb-5 text-5xl font-extrabold">{estacio.nom}</h1>
+        <h1 className={`text-5xl font-extrabold ${estacio.situacio ? "mb-1" : "mb-5"}`}>{estacio.nom}</h1>
+        {/* On és la fita: informació secundària, ja hi són. */}
+        {estacio.situacio && (
+          <p className="mb-5 flex gap-1.5 text-base text-ink-soft">
+            <span aria-hidden>📍</span>
+            <span>
+              <span className="sr-only">On és: </span>
+              {estacio.situacio}
+            </span>
+          </p>
+        )}
 
         {resolta ? (
           estacio.element && (
@@ -123,15 +154,30 @@ export function VistaEstacio({ estacio, error, resolta = false, onTornar, ...joc
               className="animate-entrar"
             />
           )
+        ) : pas === "narracio" && estacio.element ? (
+          <>
+            {/* Pas 1: la veu de Fra Francesc. El botó de sota dona pas a la prova. */}
+            <Narracio
+              text={ARRIBADES[estacio.element]}
+              etiqueta="fra francesc"
+              color={color}
+              className="mb-6 animate-entrar"
+            />
+            <button onClick={anarAProva} className="btn btn-primari">
+              A la prova →
+            </button>
+          </>
         ) : (
           <>
-            {estacio.element && (
-              <Narracio text={ARRIBADES[estacio.element]} etiqueta="fra francesc" color={color} className="mb-6" />
-            )}
-
-            <section className="targeta mb-8 p-5">
-              <p className="etiqueta mb-1">la prova</p>
-              <p className="text-xl leading-snug">{estacio.entrada}</p>
+            {/* Pas 2: què han de fer, el primer i el més visible de la pantalla. */}
+            <section
+              className="targeta mb-6 animate-entrar p-5"
+              style={{ borderLeftWidth: 10, borderLeftColor: color }}
+            >
+              <p className="etiqueta mb-1" style={{ color: element ? color : undefined }}>
+                la prova
+              </p>
+              <p className="text-2xl font-extrabold leading-snug">{estacio.entrada}</p>
             </section>
 
             <VistaJocResposta {...joc} />
@@ -144,55 +190,5 @@ export function VistaEstacio({ estacio, error, resolta = false, onTornar, ...joc
       </div>
 
     </main>
-  );
-}
-
-/** Pantalla d'encert: el segell de l'element cau sobre la pantalla. Després es mostra el fragment. */
-function Celebracio({
-  nomElement,
-  frase,
-  icona,
-  color,
-  missatge,
-}: {
-  nomElement?: string;
-  frase?: string;
-  icona?: string;
-  color: string;
-  missatge: string | null;
-}) {
-  return (
-    <div
-      role="status"
-      className="fixed inset-0 z-50 flex animate-entrar overflow-hidden flex-col items-center justify-center gap-6 px-6 text-center"
-      style={{ background: `radial-gradient(circle at 50% 42%, #fffdf7 0%, #fbf4e4 35%, ${color} 140%)` }}
-    >
-      <div className="relative">
-        <div
-          aria-hidden
-          className="absolute -inset-10 animate-girar rounded-full opacity-50 [animation-duration:12s]"
-          style={{
-            background: `repeating-conic-gradient(${color} 0deg 8deg, transparent 8deg 24deg)`,
-            maskImage: "radial-gradient(circle, black 30%, transparent 70%)",
-          }}
-        />
-        <div
-          className="relative flex h-44 w-44 animate-segellar items-center justify-center rounded-full border-[4px] border-ink bg-[#fffdf7] shadow-[0_8px_0_var(--ink)]"
-          style={{ outline: `10px solid ${color}`, outlineOffset: -20 }}
-        >
-          {icona ? <img src={icona} alt="" className="h-24 w-24 object-contain" /> : <span className="text-7xl">✦</span>}
-        </div>
-      </div>
-      <div className="animate-entrar [animation-delay:350ms]">
-        <p className="font-display text-6xl font-extrabold leading-none">{missatge ?? RESPOSTA_CORRECTA}</p>
-        {nomElement && (
-          <p className="etiqueta mt-3 text-lg" style={{ color }}>
-            ✦ {nomElement} ✦
-          </p>
-        )}
-        {frase && <p className="mt-4 text-2xl font-bold">{frase}</p>}
-      </div>
-      <p className="etiqueta animate-pulse">obrint el fragment...</p>
-    </div>
   );
 }

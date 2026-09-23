@@ -40,6 +40,21 @@ function vertex(i: number, r = R_NODE) {
   return { x: C + r * Math.cos(angle), y: C + r * Math.sin(angle) };
 }
 
+/** Opacitat del Gresol central amb 0 fites resoltes. */
+const OPACITAT_GRESOL_MIN = 0.15;
+/** Opacitat amb totes les fites menys una: el salt fins a 1 marca l'estrella completa. */
+const OPACITAT_GRESOL_QUASI = 0.6;
+
+/**
+ * El símbol central és gairebé transparent i guanya opacitat amb cada fita
+ * resolta; només és del tot visible quan les cinc estan resoltes.
+ */
+function opacitatGresol(resolts: number, total: number, sempreVisible: boolean) {
+  if (sempreVisible || total === 0 || resolts >= total) return 1;
+  const fraccio = resolts / Math.max(total - 1, 1);
+  return OPACITAT_GRESOL_MIN + (OPACITAT_GRESOL_QUASI - OPACITAT_GRESOL_MIN) * fraccio;
+}
+
 /**
  * El pentagrama dels cinc elements al voltant del Pla de Masset: fa de segell
  * de l'app i de marcador de progrés. Cada fita resolta pren el seu color i,
@@ -55,6 +70,8 @@ export function Pentagrama({
   className = "",
 }: PentagramaProps) {
   const punts = nodes.map((_, i) => vertex(i));
+  const resolts = nodes.filter((n) => n.resolt).length;
+  const opacitatCentre = opacitatGresol(resolts, nodes.length, vius || centreActiu);
 
   return (
     <svg
@@ -118,9 +135,17 @@ export function Pentagrama({
       })}
 
       {/* Gresol central: el símbol alquímic de la Pedra Filosofal */}
-      <g>
+      <g style={{ opacity: opacitatCentre, transition: "opacity 1.2s ease" }}>
         <circle cx={C} cy={C} r={29} fill={centreActiu ? "#eab308" : "#e9d5a6"} />
-        <image href="/images/gresol.webp" x={C - 31} y={C - 31} width={62} height={62} />
+        <image
+          href="/images/gresol.webp"
+          x={C - 31}
+          y={C - 31}
+          width={62}
+          height={62}
+          opacity={0.55}
+          style={{ filter: "sepia(0.6) brightness(1.4)" }}
+        />
       </g>
 
       {/* Puntes elementals */}
