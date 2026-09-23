@@ -66,8 +66,8 @@ export function VistaBenvinguda({
           Continuar →
         </button>
 
-        <a href="/master" className="absolute bottom-6 left-6 text-ink-disabled hover:text-ink-soft transition-colors text-2xl">
-          𖤐
+        <a href="/master" className="absolute bottom-6 left-6 text-ink-disabled hover:text-ink-soft transition-colors text-3xl">
+          ✦
         </a>
       </div>
     </Pantalla>
