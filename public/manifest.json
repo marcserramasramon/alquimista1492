@@ -4,7 +4,7 @@
   "description": "Escape room exterior a Sentfores. Un secret ens espera.",
   "start_url": "/",
   "scope": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait-primary",
   "theme_color": "#fbf4e4",
   "background_color": "#fbf4e4",
