@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
 
   const db = getServiceRoleClient();
   await db.from("v2_progres").delete().eq("team_id", validacio.data.teamId);
+  await db.from("v2_ubicacions").delete().eq("team_id", validacio.data.teamId);
   // Si la partida ja corre, l'equip hi torna des de zero (no a l'espera: ja no hi hauria cap inici que l'en tragués).
   const { data: partida } = await db.from("v2_partida").select("started_at").eq("id", 1).maybeSingle();
   const iniciada = partida?.started_at ?? null;

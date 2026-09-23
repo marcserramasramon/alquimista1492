@@ -5,6 +5,7 @@ import Link from "next/link";
 import { MapaEquip, type EstacioMapa, type MarcadorMapa } from "@/components/player/MapaEquip";
 import type { EstatUbicacio } from "@/lib/useCompartirUbicacio";
 import { PanellMissatgesMaster, type PanellMissatgesMasterProps } from "@/components/vistes/PanellMissatgesMaster";
+import { PanellRecorregut, type PanellRecorregutProps } from "@/components/vistes/PanellRecorregut";
 import { Cronometre } from "@/components/ui/Cronometre";
 import { CompteEnrere } from "@/components/ui/CompteEnrere";
 import {
@@ -60,6 +61,8 @@ export interface VistaMasterEquipsProps {
   onComparteixoChange: (valor: boolean) => void;
   /** Panell de missatges als equips. Si no hi és, no es mostra. */
   missatges?: Omit<PanellMissatgesMasterProps, "equips">;
+  /** Recorregut d'un equip al mapa, amb els temps. Si no hi és, no es mostra. */
+  recorregut?: Omit<PanellRecorregutProps, "equips">;
 }
 
 const TEXT_ESTAT_UBICACIO: Record<EstatUbicacio, string> = {
@@ -103,6 +106,7 @@ export function VistaMasterEquips({
   estatUbicacio,
   onComparteixoChange,
   missatges,
+  recorregut,
 }: VistaMasterEquipsProps) {
   const marcadors: MarcadorMapa[] = (equips ?? []).flatMap((equip) =>
     equip.ubicacio
@@ -151,7 +155,13 @@ export function VistaMasterEquips({
 
       <section className="flex flex-col gap-3">
         <h2 className="etiqueta text-base">mapa</h2>
-        <MapaEquip estacions={estacions} totesResoltes={false} marcadors={marcadors} />
+        <MapaEquip
+          estacions={estacions}
+          totesResoltes={false}
+          marcadors={marcadors}
+          recorregut={recorregut?.triatId ? recorregut.dades?.punts : undefined}
+        />
+        {recorregut && <PanellRecorregut equips={agafats} {...recorregut} />}
 
         {/* Interruptor gran: es toca amb el polze sense mirar gaire */}
         <label

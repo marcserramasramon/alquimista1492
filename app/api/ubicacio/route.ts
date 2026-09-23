@@ -22,11 +22,26 @@ export async function POST(request: NextRequest) {
   const ara = new Date();
   const limit = new Date(ara.getTime() - MINIM_ENTRE_UBICACIONS_MS).toISOString();
 
-  await getServiceRoleClient()
+  const db = getServiceRoleClient();
+  const { data: desada } = await db
     .from("v2_teams")
     .update({ last_lat: lat, last_lng: lng, last_accuracy: accuracy ?? null, last_location_at: ara.toISOString() })
     .eq("id", sessio.teamId)
-    .or(`last_location_at.is.null,last_location_at.lt.${limit}`);
+    .or(`last_location_at.is.null,last_location_at.lt.${limit}`)
+    .select("status")
+    .maybeSingle();
+
+  // Recorregut per al màster: només les posicions que han passat el límit i un cop començada la partida.
+  if (desada && desada.status !== "espera") {
+    const { error } = await db.from("v2_ubicacions").insert({
+      team_id: sessio.teamId,
+      lat,
+      lng,
+      accuracy: accuracy ?? null,
+      created_at: ara.toISOString(),
+    });
+    if (error) console.error("Error desant el recorregut:", error);
+  }
 
   return NextResponse.json({ ok: true });
 }

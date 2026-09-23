@@ -38,6 +38,7 @@ import { VistaMissatgeMaster } from "@/components/vistes/VistaMissatgeMaster";
 import { MISSATGES_MASTER, TITOL_TEXT_LLIURE } from "@/content/public/missatgesMaster";
 import type { MissatgeEnviat } from "@/components/vistes/PanellMissatgesMaster";
 import { IndicadorTemps } from "@/components/ui/IndicadorTemps";
+import type { DadesRecorregut } from "@/components/vistes/PanellRecorregut";
 
 export const GRUPS = [
   { id: "entrada", nom: "Entrada" },
@@ -302,6 +303,35 @@ const MISSATGES_RECENTS: MissatgeEnviat[] = [
   },
 ];
 const enviarFals = async () => ({ ok: true, enviats: EQUIPS_MASTER.length });
+
+// Recorregut d'exemple: del Pla de Masset a Aigua, Terra i cap a Foc, amb una mica de soroll de GPS.
+const RECORREGUT_EXEMPLE: DadesRecorregut = (() => {
+  const parades = ["gresol", "font-ferro", "planes-bones", "foc"].map((id) => getEstacio(id)!);
+  const inici = Date.parse(INICI_PARTIDA);
+  const punts: DadesRecorregut["punts"] = [];
+  parades.slice(1).forEach((desti, i) => {
+    const origen = parades[i];
+    for (let k = 0; k < 8; k++) {
+      const f = k / 8;
+      punts.push({
+        lat: origen.latitud + (desti.latitud - origen.latitud) * f + Math.sin(k * 1.7 + i) * 0.00008,
+        lng: origen.longitud + (desti.longitud - origen.longitud) * f + Math.cos(k * 1.3 + i) * 0.00008,
+        t: new Date(inici + (punts.length * 60_000)).toISOString(),
+      });
+    }
+  });
+  const minut = (m: number) => new Date(inici + m * 60_000).toISOString();
+  return {
+    iniciAt: INICI_PARTIDA,
+    guardiansAt: null,
+    punts,
+    fites: [
+      { estacioId: "font-ferro", obertaAt: minut(8), resoltaAt: minut(14) },
+      { estacioId: "planes-bones", obertaAt: minut(16), resoltaAt: minut(25) },
+      { estacioId: "foc", obertaAt: null, resoltaAt: null },
+    ],
+  };
+})();
 
 // ---------------------------------------------------------------------------
 // Registre
@@ -672,6 +702,22 @@ export const PANTALLES: Pantalla[] = [
         posicioMaster={null}
         comparteixo={false}
         estatUbicacio="inactiu"
+      />
+    ),
+  },
+  {
+    id: "master-recorregut",
+    grup: "master",
+    titol: "Màster · recorregut d'un equip",
+    descripcio: "Camí que ha fet l'equip (GPS desat cada 30 s) i hora de cada fita. Només el veu el màster.",
+    render: () => (
+      <VistaMasterEquips
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+        recorregut={{ triatId: "1", dades: RECORREGUT_EXEMPLE, onTriar: noop }}
       />
     ),
   },

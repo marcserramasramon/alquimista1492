@@ -11,6 +11,10 @@ import type {
   MissatgeEnviat,
   ResultatEnviament,
 } from "@/components/vistes/PanellMissatgesMaster";
+import type { DadesRecorregut } from "@/components/vistes/PanellRecorregut";
+
+/** Cada quant es torna a llegir el recorregut de l'equip triat (els equips envien la posició cada 30 s). */
+const INTERVAL_RECORREGUT_MS = 30_000;
 
 type Equip = EquipMaster;
 
@@ -58,6 +62,32 @@ export default function MasterPage() {
   const [comparteixo, setComparteixo] = useState(false);
   const ubicacio = useCompartirUbicacio({ actiu: comparteixo, endpoint: "/api/master/ubicacio" });
   const [missatgesRecents, setMissatgesRecents] = useState<MissatgeEnviat[]>([]);
+  const [recorregutId, setRecorregutId] = useState<string | null>(null);
+  const [recorregut, setRecorregut] = useState<DadesRecorregut | null>(null);
+
+  useEffect(() => {
+    if (!recorregutId) return;
+    let cancelat = false;
+    const llegir = () =>
+      fetch(`/api/master/recorregut?teamId=${encodeURIComponent(recorregutId)}`, { cache: "no-store" })
+        .then(async (res) => {
+          if (!res.ok || cancelat) return;
+          const data: DadesRecorregut = await res.json();
+          if (!cancelat) setRecorregut(data);
+        })
+        .catch(() => {});
+    llegir();
+    const interval = setInterval(llegir, INTERVAL_RECORREGUT_MS);
+    return () => {
+      cancelat = true;
+      clearInterval(interval);
+    };
+  }, [recorregutId]);
+
+  function triarRecorregut(teamId: string | null) {
+    setRecorregut(null);
+    setRecorregutId(teamId);
+  }
 
   const llegirEquips = useCallback(async (): Promise<EquipsResponse | null> => {
     const res = await fetch("/api/master/equips");
@@ -243,6 +273,7 @@ export default function MasterPage() {
       estatUbicacio={ubicacio.estat}
       onComparteixoChange={canviarComparteixo}
       missatges={{ recents: missatgesRecents, onEnviar: enviarMissatge }}
+      recorregut={{ triatId: recorregutId, dades: recorregut, onTriar: triarRecorregut }}
     />
   );
 }

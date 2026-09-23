@@ -28,6 +28,8 @@ export interface MapaEquipProps {
   onSeleccionar?: (estacio: EstacioMapa) => void;
   /** Posicions en viu (màster, equips, el propi mòbil). */
   marcadors?: MarcadorMapa[];
+  /** Camí que ha seguit un equip (només al mapa del màster), en ordre. */
+  recorregut?: { lat: number; lng: number }[];
 }
 
 export interface MarcadorMapa {
@@ -79,6 +81,7 @@ export function MapaEquip({
   seleccionadaId = null,
   onSeleccionar,
   marcadors = [],
+  recorregut = [],
 }: MapaEquipProps) {
   // Fora dels límits del mapa il·lustrat, un marcador es queda a l'última
   // posició coneguda de dins (app-nova.md §7ter.3).
@@ -315,6 +318,8 @@ export function MapaEquip({
             <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="block h-full w-full" preserveAspectRatio="none">
               <image href="/map-test.webp" x="0" y="0" width={SVG_W} height={SVG_H} preserveAspectRatio="none" />
 
+              {recorregut.length > 0 && <Cami punts={recorregut} escala={escala} />}
+
               {estacions
                 .filter((e) => e.tipus !== "especial" || totesResoltes)
                 // La seleccionada es pinta l'última perquè, en fer-se gran, quedi per sobre de les altres.
@@ -499,5 +504,39 @@ function IconaReiniciar() {
     <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5" />
     </svg>
+  );
+}
+
+/** Camí d'un equip: línia vermella amb vora fosca (es veu sobre el mapa il·lustrat) i l'inici marcat. */
+function Cami({ punts, escala }: { punts: { lat: number; lng: number }[]; escala: number }) {
+  const svg = punts.map((p) => latLonToSVG(p.lat, p.lng));
+  const traca = svg.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const inici = svg[0];
+  const final = svg[svg.length - 1];
+  return (
+    <g aria-label="Recorregut de l'equip" pointerEvents="none">
+      <polyline points={traca} fill="none" stroke={INK} strokeWidth={10 * escala} strokeLinejoin="round" strokeLinecap="round" />
+      <polyline
+        points={traca}
+        fill="none"
+        stroke={BLOOD}
+        strokeWidth={5 * escala}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      {svg.length > 1 &&
+        svg.slice(1, -1).map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={3.5 * escala} fill={PAPER} />)}
+      <g transform={`translate(${inici.x} ${inici.y}) scale(${escala})`}>
+        <circle r={13} fill={PAPER} stroke={INK} strokeWidth={4} />
+        <text textAnchor="middle" dominantBaseline="central" fontSize={14} fontWeight={800} fill={INK}>
+          ▶
+        </text>
+      </g>
+      {svg.length > 1 && (
+        <g transform={`translate(${final.x} ${final.y}) scale(${escala})`}>
+          <circle r={11} fill={BLOOD} stroke={INK} strokeWidth={4} />
+        </g>
+      )}
+    </g>
   );
 }

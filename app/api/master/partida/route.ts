@@ -93,6 +93,7 @@ export async function POST(request: NextRequest) {
   const ids = (equips ?? []).map((e) => e.id);
   await db.from("v2_progres").delete().in("team_id", ids);
   await db.from("v2_missatges").delete().in("team_id", ids);
+  await db.from("v2_ubicacions").delete().in("team_id", ids);
   await db
     .from("v2_teams")
     .update({
