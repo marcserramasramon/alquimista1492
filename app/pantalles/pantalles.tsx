@@ -41,7 +41,8 @@ import { IndicadorTemps } from "@/components/ui/IndicadorTemps";
 import type { DadesRecorregut } from "@/components/vistes/PanellRecorregut";
 import type { FetPartida } from "@/components/vistes/PanellFetsMaster";
 import { VistaAlquimia } from "@/components/vistes/VistaAlquimia";
-import { ELEMENTS_INICIALS, type ResultatMescla } from "@/content/public/alquimia";
+import { VistaReceptesAlquimia } from "@/components/vistes/VistaReceptesAlquimia";
+import { ELEMENTS_INICIALS, type ReceptaAlquimia, type ResultatMescla } from "@/content/public/alquimia";
 
 export const GRUPS = [
   { id: "entrada", nom: "Entrada" },
@@ -1026,8 +1027,15 @@ export const PANTALLES: Pantalla[] = [
     titol: "Gresol d'alquímia · inici",
     descripcio: "Ou de Pasqua a /gresol: taula buida i els cinc elements.",
     render: () => (
-      <VistaAlquimia descoberts={ELEMENTS_INICIALS} total={57} onCombinar={mesclaFalsa} />
+      <VistaAlquimia descoberts={ELEMENTS_INICIALS} total={117} onCombinar={mesclaFalsa} />
     ),
+  },
+  {
+    id: "alquimia-receptes",
+    grup: "extra",
+    titol: "Gresol d'alquímia · receptes",
+    descripcio: "Llibre de receptes (botó «i» de la taula), amb receptes de mostra.",
+    render: () => <VistaReceptesAlquimia receptes={RECEPTES_MOSTRA} onTancar={noop} />,
   },
   {
     id: "alquimia-partida",
@@ -1037,7 +1045,7 @@ export const PANTALLES: Pantalla[] = [
     render: () => (
       <VistaAlquimia
         descoberts={[...ELEMENTS_INICIALS, ...ALQUIMIA_DESCOBERTS]}
-        total={57}
+        total={117}
         onCombinar={mesclaFalsa}
         pecesInicials={[
           { id: 1, element: ELEMENTS_INICIALS[0], x: 0.36, y: 0.32 },
@@ -1051,6 +1059,17 @@ export const PANTALLES: Pantalla[] = [
 ];
 
 const mesclaFalsa = async (): Promise<ResultatMescla> => ({ tipus: "res" });
+
+// Receptes de mostra: la galeria no llegeix content/private.
+const [AIGUA, TERRA, FOC, AIRE] = ELEMENTS_INICIALS;
+const RECEPTES_MOSTRA: ReceptaAlquimia[] = [
+  { a: AIGUA, b: FOC, resultat: { nom: "Vapor", emoji: "♨️" } },
+  { a: AIGUA, b: AIRE, resultat: { nom: "Núvol", emoji: "☁️" } },
+  { a: AIGUA, b: TERRA, resultat: { nom: "Fang", emoji: "🟤" } },
+  { a: TERRA, b: FOC, resultat: { nom: "Lava", emoji: "🌋" } },
+  { a: { nom: "Núvol", emoji: "☁️" }, b: AIGUA, resultat: { nom: "Pluja", emoji: "🌧️" } },
+  { a: { nom: "Pluja", emoji: "🌧️" }, b: { nom: "Sol", emoji: "☀️" }, resultat: { nom: "Arc de Sant Martí", emoji: "🌈" } },
+];
 
 const ALQUIMIA_DESCOBERTS = [
   { nom: "Vapor", emoji: "♨️" },

@@ -1,3 +1,7 @@
+"use client";
+
+import { useRef } from "react";
+import { useRouter } from "next/navigation";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
 
 export interface NodePentagrama {
@@ -40,6 +44,10 @@ function vertex(i: number, r = R_NODE) {
   return { x: C + r * Math.cos(angle), y: C + r * Math.sin(angle) };
 }
 
+// Ou de Pasqua: cinc tocs seguits (un per element) al centre obren el joc d'alquímia (/gresol).
+const TOCS_OU_DE_PASQUA = 5;
+const MAX_ENTRE_TOCS_MS = 800;
+
 /** Opacitat del Gresol central amb 0 fites resoltes. */
 const OPACITAT_GRESOL_MIN = 0.15;
 /** Opacitat amb totes les fites menys una: el salt fins a 1 marca l'estrella completa. */
@@ -72,6 +80,19 @@ export function Pentagrama({
   const punts = nodes.map((_, i) => vertex(i));
   const resolts = nodes.filter((n) => n.resolt).length;
   const opacitatCentre = opacitatGresol(resolts, nodes.length, vius || centreActiu);
+  const router = useRouter();
+  const tocs = useRef({ n: 0, darrer: 0 });
+
+  function tocarCentre() {
+    const ara = Date.now();
+    const t = tocs.current;
+    t.n = ara - t.darrer <= MAX_ENTRE_TOCS_MS ? t.n + 1 : 1;
+    t.darrer = ara;
+    if (t.n >= TOCS_OU_DE_PASQUA) {
+      t.n = 0;
+      router.push("/gresol");
+    }
+  }
 
   return (
     <svg
@@ -134,19 +155,14 @@ export function Pentagrama({
         );
       })}
 
-      {/* Gresol central: el símbol alquímic de la Pedra Filosofal */}
+      {/* Gresol central: la Pedra Filosofal girant */}
       <g style={{ opacity: opacitatCentre, transition: "opacity 1.2s ease" }}>
         <circle cx={C} cy={C} r={29} fill={centreActiu ? "#eab308" : "#e9d5a6"} />
-        <image
-          href="/images/gresol.webp"
-          x={C - 31}
-          y={C - 31}
-          width={62}
-          height={62}
-          opacity={0.55}
-          style={{ filter: "sepia(0.6) brightness(1.4)" }}
-        />
+        <image href="/images/pedra-gresol.gif" x={C - 33.85} y={C - 33.85} width={67.7} height={67.7} />
       </g>
+      {/* Zona de toc del centre, més gran que el gresol perquè s'encerti amb el dit. */}
+      <circle cx={C} cy={C} r={42} fill="transparent" onClick={tocarCentre} />
+
 
       {/* Puntes elementals */}
       {nodes.map((node, i) => {

@@ -1,3 +1,9 @@
+/**
+ * Si és true, els equips esperen a la sala d'espera fins que el màster inicia la partida.
+ * Si és false, en triar l'equip ja entren a jugar (sense compte enrere fins que el màster l'iniciï).
+ */
+export const ESPERAR_INICI_MASTER = false;
+
 /** Durada de la partida: límits i opcions ràpides del selector del màster (com a l'app antiga). */
 export const DURADA_MINIMA_MIN = 5;
 export const DURADA_MAXIMA_MIN = 300;

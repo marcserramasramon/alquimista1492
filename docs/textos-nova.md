@@ -249,7 +249,8 @@ Botons: **No, seguim buscant** · **Sí, mostra-la**
 Decidit: l'app mostra el text d'arribada de cada fita i també el reprodueix amb àudio. El text sempre es veu en pantalla, perquè al carrer hi pot haver soroll i no tothom el sentirà.
 
 **Decidit:**
-- **Veu:** generada amb Gemini AI (text a veu), fora de l'app. Els fitxers es generen un cop i es desen a `public/audio/`. L'app només els reprodueix amb l'etiqueta `<audio>` de l'HTML, sense cap dependència ni crida a Gemini durant la partida.
+- **Veu (2026-09-23):** generada amb **Matxa-TTS v2** del BSC/AINA (`BSC-LT/matxa-tts-v2-ca-multiaccent-graphemes`, veu 12 "CM", català central, masculina), fora de l'app, amb `python scripts/generate-audio.py --force`. L'script llegeix els textos de `content/public/textos.ts` i desa els MP3 a `public/audio/`. Hi aplica una reverberació mínima i normalitza el volum. L'app només reprodueix els fitxers: cap dependència ni crida externa durant la partida.
+- ⚠️ **Llicència del model:** gratuït només per a ús no comercial. Si la partida és de pagament, cal llicència (bsc-lt@bsc.es, lafrescaproduccions@gmail.com).
 - **Quins textos:** tots els que diu Fra Francesc, amb la mateixa veu a tots.
 
 | Text | Fitxer |
@@ -263,13 +264,16 @@ Decidit: l'app mostra el text d'arribada de cada fita i també el reprodueix amb
 En total són 13 àudios. **No tenen àudio** el 4a, el 4b, el 5 ni els textos d'interfície (§ 6): no els diu Fra Francesc, i al Pla de Masset ja hi és ell en persona.
 
 **Com es reprodueix:**
-- **Botó "▶ Escoltar"** ben gran. Els mòbils bloquegen l'àudio automàtic si l'usuari no ha tocat res abans, així que no es pot confiar que soni sol.
+- **Un sol botó rodó i discret** a la cantonada del text, que pausa i reprèn la veu (`components/ui/Narracio.tsx`).
+- La primera vegada que s'obre cada text a la sessió, **la veu sona sola** si el mòbil ja ha rebut algun toc. Si no (p. ex. s'obre la fita des del QR), cal tocar el botó.
+- **Les pantalles amb veu no porten música de fons.** La música només sona a l'entrada (benvinguda → espera) i a la pantalla final.
 - Els àudios no contenen solucions i poden ser públics.
 
 **Criteris per generar-los:**
 - L'àudio ha de dir **exactament** el text de la pantalla. Si es canvia un text, cal tornar a generar el seu àudio.
 - A la introducció, la signatura "— Fra F." no es llegeix. La data sí.
-- Veu d'home gran, pausada, en **català central**. Cal revisar que Gemini pronunciï bé els noms propis: Sentfores, Atanor, Planes Bones, Pla de Masset, Pujolar.
+- Veu d'home gran, pausada, en **català central**. Cal revisar que es pronunciïn bé els noms propis: Sentfores, Atanor, Planes Bones, Pla de Masset, Pujolar.
+- El model no llegeix xifres: els números s'escriuen en lletres a `NUMBERS` de l'script (p. ex. 1472).
 - Com que és una veu sintètica i no la del màster, no hi ha risc que els equips reconeguin l'Inquisidor per la veu.
 
 ---

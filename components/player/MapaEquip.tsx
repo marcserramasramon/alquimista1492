@@ -53,7 +53,6 @@ const BOUND_MAX_LAT = 41.9166;
 const SVG_W = 800;
 const SVG_H = 600;
 const ZOOM_MAX = 5;
-const PAS_ZOOM = 1.6;
 /** Píxels que s'ha de moure el dit perquè un toc passi a ser arrossegar. */
 const LLINDAR_ARROSSEGAR = 8;
 
@@ -144,13 +143,6 @@ export function MapaEquip({
     setMidaAjustada(mida);
     setVista((v) => ajustar(v.z, v.tx, v.ty));
   }
-
-  /** Zoom mantenint quiet el punt (px, relatius a la finestra) indicat. */
-  const zoomAl = (zNou: number, px: number, py: number) =>
-    setVista((v) => {
-      const z = Math.min(Math.max(zNou, 1), ZOOM_MAX);
-      return ajustar(z, px - ((px - v.tx) * z) / v.z, py - ((py - v.ty) * z) / v.z);
-    });
 
   const reiniciar = () => setVista(ajustar(1, 0, 0));
 
@@ -459,26 +451,6 @@ export function MapaEquip({
                 <IconaReiniciar />
               </button>
             )}
-          </div>
-          <div className="absolute bottom-2.5 right-2.5 flex flex-col gap-2">
-            <button
-              type="button"
-              onClick={() => zoomAl(zoom * PAS_ZOOM, mida.w / 2, mida.h / 2)}
-              disabled={zoom >= ZOOM_MAX}
-              aria-label="Apropar"
-              className="btn btn-secundari btn-rodo disabled:opacity-40"
-            >
-              +
-            </button>
-            <button
-              type="button"
-              onClick={() => zoomAl(zoom / PAS_ZOOM, mida.w / 2, mida.h / 2)}
-              disabled={zoom <= 1}
-              aria-label="Allunyar"
-              className="btn btn-secundari btn-rodo disabled:opacity-40"
-            >
-              −
-            </button>
           </div>
         </div>
         {pantallaCompleta && (

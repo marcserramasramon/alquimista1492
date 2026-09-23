@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { VistaAlquimia } from "@/components/vistes/VistaAlquimia";
-import type { ElementAlquimia, ResultatMescla } from "@/content/public/alquimia";
+import { VistaReceptesAlquimia } from "@/components/vistes/VistaReceptesAlquimia";
+import type { ElementAlquimia, ReceptaAlquimia, ResultatMescla } from "@/content/public/alquimia";
 
 // Ou de Pasqua fora de la partida: el progrés només es guarda en aquest navegador.
 const CLAU = "sentfores:alquimia:v1";
@@ -63,5 +65,43 @@ export function Alquimia({ inicials, total }: { inicials: readonly ElementAlquim
     }
   }, []);
 
-  return <VistaAlquimia descoberts={descoberts} total={total} onCombinar={combinar} />;
+  const router = useRouter();
+  const tornar = useCallback(() => {
+    // Si s'hi ha arribat pel pentagrama, enrere torna a la pantalla del joc; si no, a l'inici.
+    if (window.history.length > 1) router.back();
+    else router.push("/");
+  }, [router]);
+
+  // El llibre de receptes s'obre per sobre del joc perquè les peces de la taula no es perdin.
+  const [llibreObert, setLlibreObert] = useState(false);
+  const [receptes, setReceptes] = useState<ReceptaAlquimia[] | null>(null);
+  const [errorReceptes, setErrorReceptes] = useState(false);
+
+  const obrirLlibre = useCallback(async () => {
+    setLlibreObert(true);
+    if (receptes) return;
+    setErrorReceptes(false);
+    try {
+      const resposta = await fetch("/api/alquimia/receptes");
+      if (!resposta.ok) throw new Error();
+      setReceptes(((await resposta.json()) as { receptes: ReceptaAlquimia[] }).receptes);
+    } catch {
+      setErrorReceptes(true);
+    }
+  }, [receptes]);
+
+  return (
+    <>
+      <VistaAlquimia
+        descoberts={descoberts}
+        total={total}
+        onCombinar={combinar}
+        onTornar={tornar}
+        onReceptes={obrirLlibre}
+      />
+      {llibreObert && (
+        <VistaReceptesAlquimia receptes={receptes} error={errorReceptes} onTancar={() => setLlibreObert(false)} />
+      )}
+    </>
+  );
 }

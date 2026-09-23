@@ -14,10 +14,10 @@
  *                                 que cal que el final enllaci net amb el principi.
  *   public/audio/musica-entrada.mp3   música de l'entrada (benvinguda, ubicació, equips,
  *                                     espera). En bucle.
- *   public/audio/musica-missatge.mp3  música del missatge secret. En bucle.
  *
- * (Els altres fitxers de public/audio/ són les veus de Fra Francesc: vegeu
- * content/public/textos.ts.)
+ * Els altres fitxers de public/audio/ són les veus de Fra Francesc (content/public/textos.ts,
+ * generades amb scripts/generate-audio.py) i sonen amb `sonarVeu`. Les pantalles amb veu no
+ * porten música.
  *
  * Els navegadors mòbils no deixen sonar res fins que l'usuari ha tocat la
  * pàgina. En carregar aquest mòdul s'escolta el primer toc de qualsevol
@@ -28,7 +28,7 @@
  * congela la pàgina i no sona res.
  */
 
-export type NomMusica = "guardians" | "musica-entrada" | "musica-missatge";
+export type NomMusica = "guardians" | "musica-entrada";
 export type NomSo = "so-arribada" | "so-fragment" | "so-temps" | NomMusica;
 
 type Sintesi = (ctx: AudioContext, desti: AudioNode, t: number) => void;
@@ -460,33 +460,6 @@ function pad(ctx: AudioContext, desti: AudioNode, t: number, notes: number[], du
   }
 }
 
-/** Nota d'orgue de capella: uns quants harmònics purs amb atac lent. */
-function orgue(ctx: AudioContext, desti: AudioNode, t: number, freq: number, durada: number, volum: number) {
-  const fi = t + durada + 0.9;
-  const guany = ctx.createGain();
-  guany.gain.setValueAtTime(0.0001, t);
-  guany.gain.exponentialRampToValueAtTime(volum, t + 0.5);
-  guany.gain.setValueAtTime(volum, t + durada);
-  guany.gain.exponentialRampToValueAtTime(0.0001, fi);
-  guany.connect(desti);
-  const harmonics: [number, number][] = [
-    [1, 1],
-    [2, 0.45],
-    [3, 0.18],
-    [4, 0.1],
-  ];
-  for (const [ratio, amplitud] of harmonics) {
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.value = freq * ratio;
-    g.gain.value = amplitud;
-    osc.connect(g).connect(guany);
-    osc.start(t);
-    osc.stop(fi);
-  }
-}
-
 /** Dron continu amb un filtre que respira. Retorna la funció d'aturar-lo. */
 function dron(ctx: AudioContext, desti: AudioNode, t0: number, freqs: number[], volum: number, tall: number) {
   const filtre = ctx.createBiquadFilter();
@@ -566,48 +539,10 @@ function sintesiEntrada(ctx: AudioContext, desti: AudioNode, t0: number): () => 
   };
 }
 
-// Música del missatge secret (re menor: i - iv - V - i), orgue solemne, per si no hi ha musica-missatge.mp3.
-const ACORDS_MISSATGE: { baix: number; notes: number[] }[] = [
-  { baix: 73.42, notes: [146.83, 220, 293.66, 349.23] }, // Re m
-  { baix: 98, notes: [196, 233.08, 293.66, 392] }, // Sol m
-  { baix: 110, notes: [220, 277.18, 329.63, 440] }, // La
-  { baix: 73.42, notes: [146.83, 220, 293.66, 349.23] }, // Re m
-];
-const DURADA_MISSATGE = 6;
-
-function sintesiMissatge(ctx: AudioContext, desti: AudioNode, t0: number): () => void {
-  return programarBucle(ctx, t0 + 0.2, DURADA_MISSATGE, (t, index) => {
-    const pas = index % ACORDS_MISSATGE.length;
-    const { baix, notes } = ACORDS_MISSATGE[pas];
-    orgue(ctx, desti, t, baix, DURADA_MISSATGE - 0.3, 0.07);
-    for (const freq of notes) orgue(ctx, desti, t, freq, DURADA_MISSATGE - 0.3, 0.025);
-    // Una campana greu a cada volta, com el toc d'una capella llunyana.
-    if (pas === 0) campana(ctx, desti, t, 146.83, 7, 0.12);
-  });
-}
-
 const SINTESI_MUSICA: Record<NomMusica, (ctx: AudioContext, desti: AudioNode, t0: number) => () => void> = {
   guardians: sintesiGuardians,
   "musica-entrada": sintesiEntrada,
-  "musica-missatge": sintesiMissatge,
 };
-
-// Mentre sona una veu gravada, la música baixa perquè s'entengui.
-const VOLUM_ATENUAT = 0.2;
-let atenuada = false;
-const atenuadors = new Set<GainNode>();
-
-/** Baixa (o torna a pujar) la música mentre sona una veu. */
-export function atenuarMusica(si: boolean) {
-  atenuada = si;
-  if (!context) return;
-  const ara = context.currentTime;
-  for (const g of atenuadors) {
-    g.gain.cancelScheduledValues(ara);
-    g.gain.setValueAtTime(g.gain.value, ara);
-    g.gain.linearRampToValueAtTime(si ? VOLUM_ATENUAT : 1, ara + 0.6);
-  }
-}
 
 // ---------------------------------------------------------------------------
 // API
@@ -630,33 +565,57 @@ export function sonarTemps() {
   void sonarEfecte("so-temps", sintesiTemps);
 }
 
+const DURADA_MUSICA = 15;
+const FOS_FINAL = 4;
+
 /**
- * Engega la música en bucle (el fitxer si hi és; si no, la sintetitzada) amb una
- * entrada suau. Si l'àudio encara no està desbloquejat, començarà al primer toc.
- * Retorna la funció per aturar-la (amb una sortida suau).
+ * Engega la música (el fitxer si hi és; si no, la sintetitzada) amb una entrada suau.
+ * Dura com a màxim DURADA_MUSICA segons i s'apaga amb un fos; llavors avisa `enAcabar`.
+ * Si l'àudio encara no està desbloquejat, començarà al primer toc (el rellotge de
+ * l'àudio no corre fins llavors, així que els 15 s són sempre de música sonant).
+ * Retorna la funció per aturar-la abans (amb una sortida suau, sense avisar `enAcabar`).
  */
-export function iniciarMusica(nom: NomMusica = "guardians"): () => void {
+export function iniciarMusica(nom: NomMusica = "guardians", enAcabar?: () => void): () => void {
   const ctx = obtenirContext();
   if (!ctx) return () => {};
   if (ctx.state !== "running") ctx.resume().catch(() => {});
 
   const volum = ctx.createGain();
   const t0 = ctx.currentTime;
+  const fi = t0 + DURADA_MUSICA;
   volum.gain.setValueAtTime(0.0001, t0);
   volum.gain.exponentialRampToValueAtTime(1, t0 + 2);
-  const atenua = ctx.createGain();
-  atenua.gain.value = atenuada ? VOLUM_ATENUAT : 1;
-  volum.connect(atenua);
-  atenuadors.add(atenua);
+  volum.gain.setValueAtTime(1, fi - FOS_FINAL);
+  volum.gain.exponentialRampToValueAtTime(0.0001, fi);
 
   let aturada = false;
   let aturarFont: (() => void) | null = null;
+
+  // Rellotge silenciós en temps d'àudio: marca el final encara que el context hagi estat suspès.
+  const rellotge = ctx.createConstantSource();
+  const mut = ctx.createGain();
+  mut.gain.value = 0;
+  rellotge.connect(mut).connect(ctx.destination);
+  rellotge.onended = () => {
+    mut.disconnect();
+    if (aturada) return;
+    aturada = true;
+    try {
+      aturarFont?.();
+    } catch {
+      // Ja aturat.
+    }
+    setTimeout(() => volum.disconnect(), 1600);
+    enAcabar?.();
+  };
+  rellotge.start(t0);
+  rellotge.stop(fi);
 
   void Promise.race([obtenirBuffer(ctx, nom), esperar(1500)]).then((buffer) => {
     if (aturada) return;
     try {
       if (buffer) {
-        atenua.connect(ctx.destination);
+        volum.connect(ctx.destination);
         const font = ctx.createBufferSource();
         font.buffer = buffer;
         font.loop = true;
@@ -664,7 +623,7 @@ export function iniciarMusica(nom: NomMusica = "guardians"): () => void {
         font.start();
         aturarFont = () => font.stop(ctx.currentTime + 1.5);
       } else {
-        atenua.connect(sortida(ctx));
+        volum.connect(sortida(ctx));
         aturarFont = SINTESI_MUSICA[nom](ctx, volum, ctx.currentTime + 0.05);
       }
     } catch {
@@ -675,6 +634,11 @@ export function iniciarMusica(nom: NomMusica = "guardians"): () => void {
   return () => {
     if (aturada) return;
     aturada = true;
+    try {
+      rellotge.stop();
+    } catch {
+      // Ja aturat.
+    }
     const ara = ctx.currentTime;
     try {
       volum.gain.cancelScheduledValues(ara);
@@ -688,10 +652,82 @@ export function iniciarMusica(nom: NomMusica = "guardians"): () => void {
     } catch {
       // Ja aturat.
     }
-    setTimeout(() => {
-      volum.disconnect();
-      atenua.disconnect();
-      atenuadors.delete(atenua);
-    }, 1600);
+    setTimeout(() => volum.disconnect(), 1600);
   };
+}
+
+// ---------------------------------------------------------------------------
+// Veu de Fra Francesc
+
+const veus = new Map<string, Promise<AudioBuffer | null>>();
+
+function bufferVeu(ctx: AudioContext, src: string): Promise<AudioBuffer | null> {
+  let promesa = veus.get(src);
+  if (!promesa) {
+    promesa = fetch(src)
+      .then((res) => {
+        if (!res.ok || !(res.headers.get("content-type") ?? "").startsWith("audio")) return null;
+        return res.arrayBuffer();
+      })
+      .then((dades) => (dades ? ctx.decodeAudioData(dades) : null))
+      .catch(() => null);
+    veus.set(src, promesa);
+  }
+  return promesa;
+}
+
+/** Descarrega i descodifica una veu. Resol a false si el fitxer no existeix o no es pot llegir. */
+export async function carregarVeu(src: string): Promise<boolean> {
+  const ctx = obtenirContext();
+  return ctx ? (await bufferVeu(ctx, src)) !== null : false;
+}
+
+export interface Reproduccio {
+  /** Atura la veu i torna el segon on s'ha quedat (per reprendre-la). */
+  aturar(): number;
+}
+
+let veuActual: Reproduccio | null = null;
+
+/**
+ * Fa sonar una veu des de `desDe` segons. Només en sona una alhora: la que sonava s'atura.
+ * `enAcabar` s'avisa quan arriba al final (no quan s'atura a mà).
+ */
+export async function sonarVeu(src: string, desDe: number, enAcabar: () => void): Promise<Reproduccio | null> {
+  const ctx = obtenirContext();
+  if (!ctx) return null;
+  if (ctx.state !== "running") ctx.resume().catch(() => {});
+  const buffer = await bufferVeu(ctx, src);
+  if (!buffer) return null;
+
+  veuActual?.aturar();
+  const font = ctx.createBufferSource();
+  font.buffer = buffer;
+  font.connect(ctx.destination);
+  const inici = ctx.currentTime - desDe;
+  let aturada = false;
+  font.onended = () => {
+    if (aturada) return;
+    aturada = true;
+    if (veuActual === reproduccio) veuActual = null;
+    enAcabar();
+  };
+  font.start(0, Math.min(desDe, buffer.duration));
+
+  const reproduccio: Reproduccio = {
+    aturar() {
+      if (!aturada) {
+        aturada = true;
+        try {
+          font.stop();
+        } catch {
+          // Ja aturada.
+        }
+      }
+      if (veuActual === reproduccio) veuActual = null;
+      return Math.min(ctx.currentTime - inici, buffer.duration);
+    },
+  };
+  veuActual = reproduccio;
+  return reproduccio;
 }

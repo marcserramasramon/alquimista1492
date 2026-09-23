@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { Grenze_Gotisch, Alegreya_Sans, Alegreya_Sans_SC } from "next/font/google";
 import BarraScroll from "@/components/ui/BarraScroll";
@@ -60,10 +59,8 @@ export default function RootLayout({
         {children}
         {/* Pop-up dels missatges del màster: només actua a les pantalles de joc de l'equip. */}
         <MissatgesMaster />
-        {/* Música de l'entrada fins a l'espera, i una altra al missatge secret. */}
-        <Suspense fallback={null}>
-          <MusicaFons />
-        </Suspense>
+        {/* Música de l'entrada fins a l'espera. */}
+        <MusicaFons />
         <BarraScroll />
       </body>
     </html>

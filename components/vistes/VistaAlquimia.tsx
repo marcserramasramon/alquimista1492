@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { BANDA_RUNES_PX, MarcRunes } from "@/components/ui/MarcRunes";
+import { estilPapir, FiltresPapir } from "@/components/ui/papir";
 import { MAX_PECES, type ElementAlquimia, type ResultatMescla } from "@/content/public/alquimia";
 
 export interface PecaAlquimia {
@@ -17,6 +19,10 @@ export interface VistaAlquimiaProps {
   onCombinar: (a: ElementAlquimia, b: ElementAlquimia) => Promise<ResultatMescla>;
   /** La galeria hi posa peces per veure la taula plena. */
   pecesInicials?: PecaAlquimia[];
+  /** Tornar a on era (l'app instal·lada no té botó enrere). */
+  onTornar?: () => void;
+  /** Obre el llibre de receptes (botó "i" de la taula). */
+  onReceptes?: () => void;
 }
 
 type Origen = { tipus: "menu" } | { tipus: "taula"; id: number };
@@ -27,16 +33,24 @@ const LLINDAR_PX = 8;
 const MIDA_PECA_PX = 64;
 // N'hi ha prou que les dues peces es toquin una mica per barrejar-se.
 const RADI_MESCLA_PX = 58;
-// Les peces poden tapar l'anell interior de runes, però no l'exterior (vora interior a 418/500).
-const ABAST = 0.84;
-
+// Les peces no tapen la banda de runes.
+const MARGE_PX = MIDA_PECA_PX / 2 + BANDA_RUNES_PX;
+// Al menú, la banda de runes és més prima per deixar lloc a les etiquetes.
+const RUNES_MENU_PX = 9;
 /**
- * Taula rodona on es barregen els elements (només emojis), envoltada de dos anells de runes que
- * giren, i a sota el menú amb tots els descoberts (emoji i nom). S'arrossega amb Pointer Events
+ * Taula on es barregen els elements (només emojis), amb una inscripció de runes que en dona la
+ * volta, i a sota el menú amb tots els descoberts (emoji i nom). S'arrossega amb Pointer Events
  * perquè funcioni igual amb el dit que amb el ratolí: al menú, `touch-action: pan-x` deixa que
  * el navegador faci l'scroll horitzontal i només ens arriba el gest quan el dit puja cap a la taula.
  */
-export function VistaAlquimia({ descoberts, total, onCombinar, pecesInicials = [] }: VistaAlquimiaProps) {
+export function VistaAlquimia({
+  descoberts,
+  total,
+  onCombinar,
+  pecesInicials = [],
+  onTornar,
+  onReceptes,
+}: VistaAlquimiaProps) {
   const [peces, setPeces] = useState<PecaAlquimia[]>(pecesInicials);
   const [estats, setEstats] = useState<Record<number, EstatPeca>>({});
   const [fantasma, setFantasma] = useState<{
@@ -48,6 +62,7 @@ export function VistaAlquimia({ descoberts, total, onCombinar, pecesInicials = [
     objectiu: number | null;
   } | null>(null);
   const [destacat, setDestacat] = useState<string | null>(null);
+  const [rotul, setRotul] = useState<{ id: number; nom: string; segons: 3 | 4 } | null>(null);
   const [senseConnexio, setSenseConnexio] = useState(false);
 
   const taulaRef = useRef<HTMLDivElement>(null);
@@ -81,6 +96,13 @@ export function VistaAlquimia({ descoberts, total, onCombinar, pecesInicials = [
 
   const nouId = () => seguentId.current++;
 
+  /** Mostra el nom a la taula: 1 s d'entrada, `segons` visible i 1 s de sortida. */
+  function mostrarNom(nom: string, segons: 3 | 4) {
+    const id = nouId();
+    setRotul({ id, nom, segons });
+    setTimeout(() => setRotul((r) => (r?.id === id ? null : r)), (segons + 2) * 1000);
+  }
+
   function marcar(ids: number[], estat: EstatPeca | null, duradaMs?: number) {
     setEstats((prev) => {
       const seg = { ...prev };
@@ -111,7 +133,7 @@ export function VistaAlquimia({ descoberts, total, onCombinar, pecesInicials = [
     const taula = taulaRef.current;
     if (!taula) return;
     const r = taula.getBoundingClientRect();
-    const dins = Math.hypot(cx - (r.left + r.width / 2), cy - (r.top + r.height / 2)) <= r.width / 2;
+    const dins = cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
     const idOrigen = origen.tipus === "taula" ? origen.id : null;
     const desti = dins ? pecaSota(r, cx, cy, idOrigen) : null;
     const pos = posicio(r, (cx - r.left) / r.width, (cy - r.top) / r.height);
@@ -121,6 +143,7 @@ export function VistaAlquimia({ descoberts, total, onCombinar, pecesInicials = [
         if (dins) {
           const id = nouId();
           setPeces((p) => retallar([...p, { id, element, ...pos }], [id]));
+          mostrarNom(element.nom, 3);
         }
       } else if (dins) {
         setPeces((p) => p.map((q) => (q.id === idOrigen ? { ...q, ...pos } : q)));
@@ -143,6 +166,7 @@ export function VistaAlquimia({ descoberts, total, onCombinar, pecesInicials = [
       const nova = { id: nouId(), element: resultat.element, x: desti.x, y: desti.y };
       setPeces((p) => [...p.filter((q) => q.id !== id && q.id !== desti.id), nova]);
       marcar([id, desti.id], null);
+      mostrarNom(resultat.element.nom, 4);
       if (resultat.tipus === "nou") {
         marcar([nova.id], "descobert", 1600);
         setDestacat(resultat.element.nom);
@@ -162,6 +186,8 @@ export function VistaAlquimia({ descoberts, total, onCombinar, pecesInicials = [
     );
     marcar([id, desti.id], "error", 450);
     if (resultat.tipus === "error") setSenseConnexio(true);
+    // Si venia del grimori, l'element acaba de posar-se a la taula.
+    if (idOrigen === null) mostrarNom(element.nom, 3);
   }
 
   /** Un toc al menú (sense arrossegar) posa l'element en un lloc lliure de la taula. */
@@ -172,6 +198,7 @@ export function VistaAlquimia({ descoberts, total, onCombinar, pecesInicials = [
     const id = nouId();
     setPeces((p) => retallar([...p, { id, element, ...llocLliure(r, p) }], [id]));
     marcar([id], "nou", 700);
+    mostrarNom(element.nom, 3);
   }
 
   function iniciar(e: React.PointerEvent, element: ElementAlquimia, origen: Origen) {
@@ -220,8 +247,14 @@ export function VistaAlquimia({ descoberts, total, onCombinar, pecesInicials = [
       className="mx-auto flex h-dvh w-full max-w-md select-none flex-col overflow-hidden [-webkit-touch-callout:none]"
       onContextMenu={(e) => e.preventDefault()}
     >
+      <FiltresPapir />
       <header className="flex items-center justify-between gap-3 px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-2">
-        <div>
+        {onTornar && (
+          <button type="button" onClick={onTornar} className="btn btn-secundari btn-rodo shrink-0" aria-label="Torna al joc">
+            ←
+          </button>
+        )}
+        <div className="mr-auto">
           <h1 className="font-display text-4xl font-extrabold">El Gresol</h1>
           <p className={`etiqueta ${complet ? "text-gold-deep" : ""}`} aria-live="polite">
             {senseConnexio ? (
@@ -244,45 +277,46 @@ export function VistaAlquimia({ descoberts, total, onCombinar, pecesInicials = [
         </button>
       </header>
 
-      <div className="flex min-h-0 flex-1 items-center justify-center px-3 py-2 [container-type:size]">
+      <div
+        ref={taulaRef}
+        className="relative mx-4 mb-2 flex-1 touch-none overflow-hidden rounded-3xl border-[3px] border-ink bg-paper-2 shadow-[inset_0_4px_0_rgb(27_21_17/0.08)]"
+        style={{
+          backgroundImage: "var(--gra), radial-gradient(ellipse at center, #f8eed6 0%, var(--paper-2) 60%, var(--paper-3) 100%)",
+        }}
+      >
+        <MarcRunes brillant={celebrant} />
         <div
-          ref={taulaRef}
-          className="relative aspect-square touch-none rounded-full border-[3px] border-ink shadow-[0_6px_0_var(--ink),0_0_70px_12px_rgb(234_179_8/0.22)]"
-          style={{
-            width: "min(100cqw, 100cqh)",
-            background: "radial-gradient(circle, #f8eed6 0%, var(--paper-2) 55%, var(--paper-3) 100%)",
-          }}
-        >
-          <div
-            className={`pointer-events-none absolute inset-0 transition-[filter] duration-500 ${
-              celebrant ? "drop-shadow-[0_0_6px_rgb(234_179_8)] brightness-125" : ""
-            }`}
+          className="pointer-events-none absolute rounded-2xl border-2 border-gold-deep/40"
+          style={{ inset: BANDA_RUNES_PX }}
+        />
+        {onReceptes && (
+          // Just a dins de la línia daurada, perquè no tapi les runes; la zona de toc fa 44 px.
+          <button
+            type="button"
+            onClick={onReceptes}
+            aria-label="Receptes"
+            className="absolute z-20 flex size-11 items-center justify-center"
+            style={{ top: BANDA_RUNES_PX, right: BANDA_RUNES_PX }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/runes-exterior.svg" alt="" draggable={false} className="absolute inset-0 size-full animate-girar" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/runes-interior.svg"
-              alt=""
-              draggable={false}
-              className="absolute inset-0 size-full animate-girar"
-              style={{ animationDuration: "100s", animationDirection: "reverse" }}
-            />
-          </div>
+            <span className="flex size-7 items-center justify-center rounded-full border-2 border-gold-deep bg-paper font-display text-lg leading-none font-extrabold text-gold-deep">
+              i
+            </span>
+          </button>
+        )}
 
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/gresol.webp"
-            alt=""
-            draggable={false}
-            className="pointer-events-none absolute inset-0 m-auto size-[58%] object-contain opacity-30"
-          />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/gresol.webp"
+          alt=""
+          draggable={false}
+          className="pointer-events-none absolute inset-0 m-auto h-[70%] w-[70%] object-contain opacity-30"
+        />
 
-          {peces.length === 0 && !fantasma && (
-            <p className="pointer-events-none absolute top-[66%] left-1/2 w-3/5 -translate-x-1/2 text-center text-base leading-tight font-bold text-ink-soft">
-              Arrossega aquí dos elements i ajunta&apos;ls
-            </p>
-          )}
+        {peces.length === 0 && !fantasma && (
+          <p className="pointer-events-none absolute inset-x-10 bottom-10 text-center leading-tight font-bold text-ink-soft">
+            Arrossega aquí dos elements i ajunta&apos;ls
+          </p>
+        )}
 
           {peces.map((p) => {
             const estat = estats[p.id];
@@ -299,8 +333,9 @@ export function VistaAlquimia({ descoberts, total, onCombinar, pecesInicials = [
                   role="img"
                   aria-label={p.element.nom}
                   onPointerDown={(e) => iniciar(e, p.element, { tipus: "taula", id: p.id })}
-                  className={`relative flex size-[64px] cursor-grab items-center justify-center rounded-full border-[3px] border-ink text-[2.3rem] leading-none shadow-[0_4px_0_var(--ink)] transition-transform ${
-                    fantasma?.objectiu === p.id ? "scale-125 bg-[#fde68a] ring-4 ring-gold" : "bg-paper"
+                  style={estilPapir(p.element.nom)}
+                  className={`fitxa-papir w-16 cursor-grab text-[2.3rem] transition-[scale] ${
+                    fantasma?.objectiu === p.id ? "scale-125 brightness-110 outline-4 outline-offset-2 outline-gold" : ""
                   } ${
                     estat === "mesclant"
                       ? "animate-bategar"
@@ -311,51 +346,73 @@ export function VistaAlquimia({ descoberts, total, onCombinar, pecesInicials = [
                           : ""
                   }`}
                 >
-                  {p.element.emoji}
+                  <span>{p.element.emoji}</span>
                 </div>
               </div>
             );
           })}
-        </div>
+
+        {rotul && (
+          <p
+            key={rotul.id}
+            aria-live="polite"
+            className="pointer-events-none absolute inset-x-8 top-[75%] -translate-y-1/2 text-center font-display text-5xl leading-none font-extrabold text-ink [text-shadow:0_0_10px_var(--paper),0_0_4px_var(--paper),0_0_2px_var(--paper)]"
+            style={{ animation: `rotul-${rotul.segons} ${rotul.segons + 2}s ease-in-out both` }}
+          >
+            {rotul.nom}
+          </p>
+        )}
       </div>
 
-      <nav
-        ref={menuRef}
-        aria-label="Elements descoberts"
-        onWheel={(e) => {
-          if (menuRef.current && Math.abs(e.deltaY) > Math.abs(e.deltaX)) menuRef.current.scrollLeft += e.deltaY;
-        }}
-        className="overflow-x-auto border-t-[3px] border-ink bg-paper px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      <div
+        className="pergami relative mx-4 mb-[max(0.75rem,env(safe-area-inset-bottom))] rounded-3xl border-[3px] border-ink shadow-[inset_0_3px_0_rgb(255_255_255/0.45)]"
+        style={{ backgroundColor: "var(--paper-3)" }}
       >
-        <ul className="grid auto-cols-[calc((100%-2rem)/5)] grid-flow-col grid-rows-2 gap-2">
-          {descoberts.map((el) => (
-            <li key={el.nom}>
-              <button
-                type="button"
-                data-nom={el.nom}
-                onPointerDown={(e) => iniciar(e, el, { tipus: "menu" })}
-                onClick={() => {
-                  if (Date.now() - fiArrossegament.current > 400) posarLliure(el);
-                }}
-                className={`flex h-[4.75rem] w-full touch-pan-x cursor-grab flex-col items-center justify-center gap-0.5 rounded-xl border-2 border-ink bg-paper-2 px-0.5 ${
-                  destacat === el.nom ? "animate-bategar border-gold-deep bg-gold/30" : ""
-                }`}
-              >
-                <span className="text-3xl leading-none">{el.emoji}</span>
-                <span className="line-clamp-2 text-center text-[0.7rem] leading-tight font-bold">{el.nom}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </nav>
+        <MarcRunes alcada={11} distanciaVora={RUNES_MENU_PX} invers brillant={celebrant} />
+        <div
+          className="pointer-events-none absolute rounded-2xl border-2 border-gold-deep/40"
+          style={{ inset: RUNES_MENU_PX * 2 }}
+        />
+        <nav
+          ref={menuRef}
+          aria-label="Elements descoberts"
+          onWheel={(e) => {
+            if (menuRef.current && Math.abs(e.deltaY) > Math.abs(e.deltaX)) menuRef.current.scrollLeft += e.deltaY;
+          }}
+          className="relative overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          style={{ margin: RUNES_MENU_PX * 2 + 4 }}
+        >
+          <ul className="grid auto-cols-[calc((100%-1.5rem)/3.2)] grid-flow-col grid-rows-2 gap-2">
+            {descoberts.map((el) => (
+              <li key={el.nom} className="flex justify-center">
+                <button
+                  type="button"
+                  data-nom={el.nom}
+                  aria-label={el.nom}
+                  onPointerDown={(e) => iniciar(e, el, { tipus: "menu" })}
+                  onClick={() => {
+                    if (Date.now() - fiArrossegament.current > 400) posarLliure(el);
+                  }}
+                  style={estilPapir(el.nom)}
+                  className={`fitxa-papir h-[4.6rem] touch-pan-x cursor-grab text-[2.4rem] ${
+                    destacat === el.nom ? "animate-bategar" : ""
+                  }`}
+                >
+                  <span>{el.emoji}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
 
       {fantasma && (
         <div
           className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-1/2"
           style={{ left: fantasma.x, top: fantasma.y }}
         >
-          <div className="flex size-[64px] scale-110 items-center justify-center rounded-full border-[3px] border-ink bg-paper text-[2.3rem] leading-none shadow-[0_10px_0_var(--ink)]">
-            {fantasma.element.emoji}
+          <div className="fitxa-papir w-16 scale-110 text-[2.3rem]" style={estilPapir(fantasma.element.nom)}>
+            <span>{fantasma.element.emoji}</span>
           </div>
         </div>
       )}
@@ -363,19 +420,11 @@ export function VistaAlquimia({ descoberts, total, onCombinar, pecesInicials = [
   );
 }
 
-/** Distància màxima del centre de la taula al centre d'una peça, en fracció del costat. */
-function radiMaxim(r: DOMRect) {
-  return (ABAST * r.width) / 2 / r.width - MIDA_PECA_PX / 2 / r.width;
-}
-
-/** Porta el punt (fracció del costat) dins del cercle on hi caben les peces. */
+/** Porta el punt (fracció de l'amplada i de l'alçada) a la zona on caben les peces, dins les runes. */
 function posicio(r: DOMRect, fx: number, fy: number) {
-  const dx = fx - 0.5;
-  const dy = fy - 0.5;
-  const d = Math.hypot(dx, dy);
-  const max = radiMaxim(r);
-  const k = d > max ? max / d : 1;
-  return { x: 0.5 + dx * k, y: 0.5 + dy * k };
+  const mx = Math.min(MARGE_PX / r.width, 0.5);
+  const my = Math.min(MARGE_PX / r.height, 0.5);
+  return { x: Math.min(Math.max(fx, mx), 1 - mx), y: Math.min(Math.max(fy, my), 1 - my) };
 }
 
 /** D'entre els candidats, el més allunyat de les peces que ja hi ha. */
@@ -383,7 +432,10 @@ function mesLliure(r: DOMRect, candidats: { x: number; y: number }[], peces: Pec
   let millor = candidats[0];
   let espaiMillor = -1;
   for (const c of candidats) {
-    const espai = Math.min(Infinity, ...peces.map((p) => Math.hypot(p.x - c.x, p.y - c.y) * r.width));
+    const espai = Math.min(
+      Infinity,
+      ...peces.map((p) => Math.hypot((p.x - c.x) * r.width, (p.y - c.y) * r.height)),
+    );
     if (espai > espaiMillor) {
       millor = c;
       espaiMillor = espai;
@@ -393,20 +445,19 @@ function mesLliure(r: DOMRect, candidats: { x: number; y: number }[], peces: Pec
 }
 
 function llocLliure(r: DOMRect, peces: PecaAlquimia[]) {
-  const max = radiMaxim(r);
-  const candidats = Array.from({ length: 24 }, () => {
-    const angle = Math.random() * 2 * Math.PI;
-    const radi = Math.sqrt(Math.random()) * max;
-    return { x: 0.5 + Math.cos(angle) * radi, y: 0.5 + Math.sin(angle) * radi };
-  });
+  const candidats = Array.from({ length: 24 }, () => posicio(r, Math.random(), Math.random()));
   return mesLliure(r, candidats, peces);
 }
 
 /** On deixar la peça que no s'ha pogut barrejar: al voltant de la de destí, on hi hagi més lloc. */
 function alCostat(r: DOMRect, desti: PecaAlquimia, altres: PecaAlquimia[]) {
-  const pas = (MIDA_PECA_PX + 10) / r.width;
+  const pas = MIDA_PECA_PX + 10;
   const candidats = Array.from({ length: 8 }, (_, i) =>
-    posicio(r, desti.x + Math.cos((i * Math.PI) / 4) * pas, desti.y + Math.sin((i * Math.PI) / 4) * pas),
+    posicio(
+      r,
+      desti.x + (Math.cos((i * Math.PI) / 4) * pas) / r.width,
+      desti.y + (Math.sin((i * Math.PI) / 4) * pas) / r.height,
+    ),
   );
   return mesLliure(r, candidats, altres);
 }

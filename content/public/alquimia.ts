@@ -9,6 +9,12 @@ export interface ElementAlquimia {
   emoji: string;
 }
 
+export interface ReceptaAlquimia {
+  a: ElementAlquimia;
+  b: ElementAlquimia;
+  resultat: ElementAlquimia;
+}
+
 export type ResultatMescla =
   | { tipus: "nou" | "conegut"; element: ElementAlquimia }
   | { tipus: "res" }

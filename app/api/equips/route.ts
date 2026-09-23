@@ -5,6 +5,7 @@ import { z } from "zod";
 import { getServiceRoleClient } from "@/lib/supabase";
 import { getEquipSession, signEquipToken, EQUIP_COOKIE_NAME, EQUIP_COOKIE_MAX_AGE } from "@/lib/auth";
 import { EQUIP_IDS } from "@/content/public/equips";
+import { ESPERAR_INICI_MASTER } from "@/lib/partida";
 
 /** Quins equips estan lliures (per a la pantalla de les icones). */
 export async function GET(request: NextRequest) {
@@ -38,15 +39,17 @@ export async function POST(request: NextRequest) {
 
   const db = getServiceRoleClient();
   const { data: partida } = await db.from("v2_partida").select("started_at").eq("id", 1).maybeSingle();
-  const iniciada = partida?.started_at ?? null;
+  const ara = new Date().toISOString();
+  // Si la partida ja ha començat (p.ex. el màster ha alliberat l'equip), s'hi entra directament.
+  // Sense esperar el màster, l'equip comença a jugar ara mateix.
+  const iniciada = partida?.started_at ?? (ESPERAR_INICI_MASTER ? null : ara);
 
   // UPDATE atòmic: només guanya el primer mòbil que el troba lliure.
   const { data: equip, error } = await db
     .from("v2_teams")
     .update({
-      claimed_at: new Date().toISOString(),
+      claimed_at: ara,
       session_nonce: crypto.randomUUID(),
-      // Si la partida ja ha començat (p.ex. el màster ha alliberat l'equip), s'hi entra directament.
       ...(iniciada ? { status: "joc", started_at: iniciada } : {}),
     })
     .eq("slug", validacio.data.equip)
