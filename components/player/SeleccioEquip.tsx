@@ -4,13 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { VistaSeleccioEquip } from "@/components/vistes/VistaSeleccioEquip";
 
-/** Cada quant es refresca quins equips ja estan agafats per altres mòbils. */
+/** Cada quant es refresca quins equips ja tenen jugadors. */
 const INTERVAL_MS = 3000;
 
 export function SeleccioEquip() {
   const router = useRouter();
-  const [agafats, setAgafats] = useState<string[]>([]);
+  const [ambJugadors, setAmbJugadors] = useState<string[]>([]);
   const [triant, setTriant] = useState<string | null>(null);
+  const [confirmant, setConfirmant] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const carregar = useCallback(
@@ -18,10 +19,10 @@ export function SeleccioEquip() {
       fetch("/api/equips", { cache: "no-store" })
         .then(async (res) => {
           if (!res.ok) return;
-          const data: { agafats: string[]; meu: string | null } = await res.json();
+          const data: { ambJugadors: string[]; meu: string | null } = await res.json();
           // Aquest mòbil ja té equip (p.ex. ha tornat enrere): a l'espera.
           if (data.meu) router.replace("/espera");
-          else setAgafats(data.agafats);
+          else setAmbJugadors(data.ambJugadors);
         })
         .catch(() => {}),
     [router]
@@ -36,8 +37,16 @@ export function SeleccioEquip() {
     };
   }, [carregar]);
 
-  async function triar(equipId: string) {
+  function triar(equipId: string) {
     if (triant) return;
+    // Si ja hi ha jugadors, primer es confirma (no fos cas que sigui l'equip d'uns altres).
+    if (ambJugadors.includes(equipId)) setConfirmant(equipId);
+    else void entrar(equipId);
+  }
+
+  async function entrar(equipId: string) {
+    if (triant) return;
+    setConfirmant(null);
     setTriant(equipId);
     setError(null);
     try {
@@ -60,5 +69,15 @@ export function SeleccioEquip() {
     }
   }
 
-  return <VistaSeleccioEquip agafats={agafats} triant={triant} error={error} onTriar={triar} />;
+  return (
+    <VistaSeleccioEquip
+      ambJugadors={ambJugadors}
+      triant={triant}
+      confirmant={confirmant}
+      error={error}
+      onTriar={triar}
+      onConfirmar={entrar}
+      onCancelar={() => setConfirmant(null)}
+    />
+  );
 }

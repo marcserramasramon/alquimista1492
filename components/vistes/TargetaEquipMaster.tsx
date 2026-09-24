@@ -151,7 +151,7 @@ export function TargetaEquipMaster({
               onClick={() => fer(() => onAlliberar(equip.id))}
               className={`${BOTO_SECUNDARI} border-ink bg-[#fffdf7] active:bg-ink active:text-paper`}
             >
-              🔓 Alliberar el mòbil
+              🔓 Alliberar els mòbils
             </button>
           )}
           {potReiniciar && (

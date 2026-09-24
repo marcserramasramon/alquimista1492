@@ -27,7 +27,7 @@ No afegeixis dependències noves sense dir-ho i justificar-ho.
 2. **El servidor és l'autoritat**: progrés, pistes, estat de la partida. El client només mostra.
 3. **Interfície 100% en català.** Codi, noms de taules i commits en anglès.
 4. **Mobile-first.** Es juga a ple sol amb una mà: contrast alt, text gran, botons mínim 48px, res important només amb hover.
-5. **Un mòbil per equip.** L'equip entra amb un codi de 6 caràcters i queda identificat per cookie.
+5. **Un o més mòbils per equip.** Cada mòbil tria la icona del seu equip i queda identificat per cookie. Tots els mòbils d'un equip comparteixen el mateix `session_nonce`; si un perd la cookie, torna a tocar la icona.
 6. Tot input validat amb zod al servidor.
 7. **Cap client parla directament amb Supabase.** Tot passa per `app/api/`. RLS activat a totes les taules sense policies (denegació per defecte).
 

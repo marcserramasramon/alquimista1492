@@ -409,32 +409,47 @@ export const PANTALLES: Pantalla[] = [
     grup: "entrada",
     titol: "Tria de l'equip",
     descripcio: "Les 8 icones, totes lliures.",
-    render: () => <VistaSeleccioEquip agafats={[]} triant={null} error={null} onTriar={noop} />,
+    render: () => <VistaSeleccioEquip ambJugadors={[]} triant={null} error={null} onTriar={noop} />,
   },
   {
     id: "equips-agafats",
     grup: "entrada",
-    titol: "Tria · equips ja triats",
-    descripcio: "Tres equips bloquejats per altres mòbils.",
+    titol: "Tria · equips amb jugadors",
+    descripcio: "Tres equips que ja tenen algun mòbil (s'hi pot entrar igualment).",
     render: () => (
-      <VistaSeleccioEquip agafats={[EQUIPS[1].id, EQUIPS[4].id, EQUIPS[6].id]} triant={null} error={null} onTriar={noop} />
+      <VistaSeleccioEquip ambJugadors={[EQUIPS[1].id, EQUIPS[4].id, EQUIPS[6].id]} triant={null} error={null} onTriar={noop} />
+    ),
+  },
+  {
+    id: "equips-confirmar",
+    grup: "entrada",
+    titol: "Tria · confirmar entrar a un equip amb jugadors",
+    render: () => (
+      <VistaSeleccioEquip
+        ambJugadors={[EQUIPS[1].id]}
+        triant={null}
+        confirmant={EQUIPS[1].id}
+        error={null}
+        onTriar={noop}
+        onCancelar={noop}
+      />
     ),
   },
   {
     id: "equips-triant",
     grup: "entrada",
     titol: "Tria · agafant l'equip",
-    render: () => <VistaSeleccioEquip agafats={[EQUIPS[1].id]} triant={EQUIPS[2].id} error={null} onTriar={noop} />,
+    render: () => <VistaSeleccioEquip ambJugadors={[EQUIPS[1].id]} triant={EQUIPS[2].id} error={null} onTriar={noop} />,
   },
   {
     id: "equips-error",
     grup: "entrada",
-    titol: "Tria · un altre mòbil s'hi ha avançat",
+    titol: "Tria · error en entrar",
     render: () => (
       <VistaSeleccioEquip
-        agafats={[EQUIPS[1].id, EQUIPS[2].id]}
+        ambJugadors={[EQUIPS[1].id, EQUIPS[2].id]}
         triant={null}
-        error="Aquest equip ja l'ha triat un altre mòbil"
+        error="No s'ha pogut triar l'equip. Torna-ho a provar."
         onTriar={noop}
       />
     ),

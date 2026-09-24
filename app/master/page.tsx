@@ -351,7 +351,7 @@ export default function MasterPage() {
   function alliberar(teamId: string) {
     setConfirmacio({
       titol: `Alliberar ${nomEquip(teamId)}?`,
-      text: "El mòbil que el té en perdrà l'accés i l'equip quedarà lliure perquè l'agafi un altre mòbil. El progrés es conserva.",
+      text: "Tots els mòbils de l'equip en perdran l'accés i hauran de tornar a triar la icona. El progrés es conserva.",
       boto: "🔓 Alliberar",
       perill: true,
       accio: () => crida("/api/master/alliberar", { teamId }),

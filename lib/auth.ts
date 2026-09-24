@@ -25,7 +25,7 @@ export interface EquipSession {
 }
 
 /**
- * Signa una cookie de sessió d'equip (1 mòbil = 1 equip). El `nonce` és el
+ * Signa una cookie de sessió d'equip (un equip pot tenir diversos mòbils). El `nonce` és el
  * `session_nonce` de l'equip en el moment d'agafar-lo: si el màster l'allibera,
  * canvia i aquesta cookie deixa de valer.
  */

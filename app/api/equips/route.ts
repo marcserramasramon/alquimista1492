@@ -7,7 +7,7 @@ import { getEquipSession, signEquipToken, EQUIP_COOKIE_NAME, EQUIP_COOKIE_MAX_AG
 import { EQUIP_IDS } from "@/content/public/equips";
 import { ESPERAR_INICI_MASTER } from "@/lib/partida";
 
-/** Quins equips estan lliures (per a la pantalla de les icones). */
+/** Quins equips ja tenen algun mòbil (per a la pantalla de les icones). */
 export async function GET(request: NextRequest) {
   const db = getServiceRoleClient();
   const { data, error } = await db.from("v2_teams").select("id, slug, claimed_at").in("slug", EQUIP_IDS);
@@ -17,15 +17,18 @@ export async function GET(request: NextRequest) {
   }
 
   const sessio = await getEquipSession(request);
-  const agafats = (data ?? []).filter((e) => e.claimed_at !== null && e.id !== sessio?.teamId);
+  const ambJugadors = (data ?? []).filter((e) => e.claimed_at !== null);
   const meu = (data ?? []).find((e) => e.id === sessio?.teamId)?.slug ?? null;
 
-  return NextResponse.json({ agafats: agafats.map((e) => e.slug), meu });
+  return NextResponse.json({ ambJugadors: ambJugadors.map((e) => e.slug), meu });
 }
 
 const AgafarSchema = z.object({ equip: z.enum(EQUIP_IDS) });
 
-/** Aquest mòbil agafa un equip. Si un altre mòbil ja l'ha agafat, 409. */
+/**
+ * Aquest mòbil entra en un equip. El primer mòbil l'agafa (i genera el `session_nonce`);
+ * els següents s'hi uneixen amb el mateix nonce, així ningú fa fora ningú.
+ */
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
   const validacio = AgafarSchema.safeParse(body);
@@ -44,8 +47,8 @@ export async function POST(request: NextRequest) {
   // Sense esperar el màster, l'equip comença a jugar ara mateix.
   const iniciada = partida?.started_at ?? (ESPERAR_INICI_MASTER ? null : ara);
 
-  // UPDATE atòmic: només guanya el primer mòbil que el troba lliure.
-  const { data: equip, error } = await db
+  // UPDATE atòmic: només el primer mòbil que el troba lliure genera el nonce.
+  const { data: agafat, error } = await db
     .from("v2_teams")
     .update({
       claimed_at: ara,
@@ -61,8 +64,25 @@ export async function POST(request: NextRequest) {
     console.error("Error agafant equip:", error);
     return NextResponse.json({ error: "No s'ha pogut triar l'equip" }, { status: 500 });
   }
+
+  // Ja tenia jugadors: aquest mòbil s'hi afegeix amb el nonce que ja hi ha.
+  let equip = agafat;
   if (!equip) {
-    return NextResponse.json({ error: "Aquest equip ja l'ha triat un altre mòbil" }, { status: 409 });
+    const { data: existent, error: errorLectura } = await db
+      .from("v2_teams")
+      .select("id, session_nonce")
+      .eq("slug", validacio.data.equip)
+      .not("claimed_at", "is", null)
+      .not("session_nonce", "is", null)
+      .maybeSingle();
+    if (errorLectura) {
+      console.error("Error unint-se a l'equip:", errorLectura);
+      return NextResponse.json({ error: "No s'ha pogut triar l'equip" }, { status: 500 });
+    }
+    equip = existent;
+  }
+  if (!equip?.session_nonce) {
+    return NextResponse.json({ error: "No s'ha pogut triar l'equip. Torna-ho a provar." }, { status: 409 });
   }
 
   const token = await signEquipToken({ teamId: equip.id, nonce: equip.session_nonce });
