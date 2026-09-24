@@ -1,6 +1,6 @@
 import { Narracio } from "@/components/ui/Narracio";
 import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
-import { Pantalla } from "@/components/ui/Pantalla";
+import { MARGE_MARC_FINAL_PX, MarcFinal } from "@/components/ui/MarcFinal";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
 import { GRESOL_CONFIG, LIQUIDS, RECIPIENTS, type TransicioGresol } from "@/content/public/gresol";
 import { GRESOL_ARRIBADA, GRESOL_BOTO_RITUAL, GRESOL_PASSOS, GRESOL_RITUAL } from "@/content/public/textos";
@@ -11,6 +11,8 @@ export interface VistaFinalProps {
   /** false: esperant Fra Francesc (4a). true: el ritual (4b). Amb "una-pantalla" s'ignora. */
   ritual: boolean;
   onComencarRitual: () => void;
+  /** Botó ← de la capçalera, com a les fites. Si no hi és, no surt. */
+  onTornar?: () => void;
   /** Per defecte, GRESOL_CONFIG (content/public/gresol.ts). La galeria els sobreescriu. */
   transicio?: TransicioGresol;
   ordreElements?: Element[];
@@ -30,6 +32,7 @@ export interface VistaFinalProps {
 export function VistaFinal({
   ritual,
   onComencarRitual,
+  onTornar,
   transicio = GRESOL_CONFIG.transicio,
   ordreElements = GRESOL_CONFIG.ordreElements,
   aconseguits = TOTS_ELS_ELEMENTS,
@@ -45,44 +48,91 @@ export function VistaFinal({
   const unaPantalla = transicio === "una-pantalla";
   const mostrarArribada = unaPantalla || !ritual;
   const mostrarRitual = unaPantalla || ritual;
+  const titol = mostrarArribada ? GRESOL_ARRIBADA.titol : GRESOL_RITUAL.titol;
 
   return (
-    <Pantalla className="gap-5">
-      {mostrarRitual && !unaPantalla ? (
-        <ImatgeGresol />
-      ) : (
-        <Pentagrama nodes={nodes} centreActiu={complet} girar className="mx-auto w-64 max-w-full animate-segellar" />
-      )}
-      <p className="etiqueta animate-entrar text-center text-gold-deep">pla de masset</p>
-
-      {mostrarArribada && (
-        <Narracio key="arribada" text={GRESOL_ARRIBADA} className="animate-entrar [animation-delay:300ms]" />
-      )}
-
-      {!unaPantalla && !ritual && (
-        <div className="flex flex-col gap-3 animate-entrar [animation-delay:450ms]">
-          <p className="text-center text-lg font-bold text-ink-soft">{GRESOL_BOTO_RITUAL.avis}</p>
-          <button type="button" onClick={onComencarRitual} className="btn btn-fosc">
-            ⚗️ {GRESOL_BOTO_RITUAL.boto}
-          </button>
+    <>
+      <MarcFinal />
+      {/* Mateixa estructura que una fita (VistaEstacio), però dins el marc de runes i en or. */}
+      <main
+        className="mx-auto min-h-dvh w-full max-w-md"
+        style={{
+          paddingTop: `calc(env(safe-area-inset-top) + ${MARGE_MARC_FINAL_PX}px)`,
+          paddingBottom: `calc(env(safe-area-inset-bottom) + ${MARGE_MARC_FINAL_PX + 16}px)`,
+          paddingLeft: MARGE_MARC_FINAL_PX,
+          paddingRight: MARGE_MARC_FINAL_PX,
+        }}
+      >
+        {/* Capçalera: el pentagrama a l'arribada, el Gresol al ritual, sobre fons daurat */}
+        <div
+          className="relative flex h-60 items-center justify-center overflow-hidden rounded-[1.75rem] border-[3px] border-ink"
+          style={{ background: "radial-gradient(circle at 50% 45%, #fff8e1 0%, #f5d77a 45%, var(--gold-deep) 110%)" }}
+        >
+          {mostrarRitual && !unaPantalla ? (
+            <ImatgeGresol className="h-full py-3" />
+          ) : (
+            <Pentagrama nodes={nodes} centreActiu={complet} girar className="h-full max-w-full animate-segellar py-3" />
+          )}
+          {onTornar && (
+            <button
+              type="button"
+              onClick={onTornar}
+              aria-label="Tornar al mapa"
+              className="btn btn-secundari btn-rodo absolute left-3 top-3"
+            >
+              ←
+            </button>
+          )}
         </div>
-      )}
 
-      {mostrarRitual && (
-        <>
-          {unaPantalla && <ImatgeGresol />}
-          <Narracio key="ritual" text={GRESOL_RITUAL} className="animate-entrar [animation-delay:150ms]" />
-          {recipients.length > 0 && <Recipients ordre={recipients} />}
-          <Passos />
-        </>
-      )}
-    </Pantalla>
+        <div className="relative mt-5 px-2">
+          <p className="etiqueta text-gold-deep">✦ la fita final · pla de masset ✦</p>
+          <h1 className="mb-5 text-5xl font-extrabold">{titol}</h1>
+
+          <div className="flex flex-col gap-5">
+            {mostrarArribada && (
+              <Narracio
+                key="arribada"
+                text={{ ...GRESOL_ARRIBADA, titol: undefined }}
+                etiqueta="fra francesc"
+                color="var(--gold-deep)"
+                className="animate-entrar"
+              />
+            )}
+
+            {!unaPantalla && !ritual && (
+              <div className="flex flex-col gap-3 animate-entrar [animation-delay:150ms]">
+                <p className="text-center text-lg font-bold text-ink-soft">{GRESOL_BOTO_RITUAL.avis}</p>
+                <button type="button" onClick={onComencarRitual} className="btn btn-fosc">
+                  ⚗️ {GRESOL_BOTO_RITUAL.boto}
+                </button>
+              </div>
+            )}
+
+            {mostrarRitual && (
+              <>
+                {unaPantalla && <ImatgeGresol className="mx-auto w-64 max-w-full" />}
+                <Narracio
+                  key="ritual"
+                  text={unaPantalla ? GRESOL_RITUAL : { ...GRESOL_RITUAL, titol: undefined }}
+                  etiqueta="fra francesc"
+                  color="var(--gold-deep)"
+                  className="animate-entrar [animation-delay:150ms]"
+                />
+                {recipients.length > 0 && <Recipients ordre={recipients} />}
+                <Passos />
+              </>
+            )}
+          </div>
+        </div>
+      </main>
+    </>
   );
 }
 
-function ImatgeGresol() {
+function ImatgeGresol({ className = "" }: { className?: string }) {
   return (
-    <div className="relative mx-auto w-64 max-w-full">
+    <div className={`relative ${className}`}>
       {/* Halo daurat que batega darrere el gresol (s'atura amb prefers-reduced-motion). */}
       <div
         aria-hidden
@@ -91,7 +141,7 @@ function ImatgeGresol() {
       <img
         src="/images/gresol.webp"
         alt="El Gresol dels Cinc Elements"
-        className="relative w-full animate-revelar drop-shadow-[0_0_20px_rgb(234_179_8/0.55)]"
+        className="relative h-full w-full animate-revelar object-contain drop-shadow-[0_0_20px_rgb(234_179_8/0.55)]"
       />
     </div>
   );

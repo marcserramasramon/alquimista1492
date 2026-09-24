@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 import { VistaFinal } from "@/components/vistes/VistaFinal";
 import { VistaGuardians } from "@/components/vistes/VistaGuardians";
 import { VistaCarregant } from "@/components/vistes/VistaCarregant";
@@ -24,6 +25,7 @@ function llegirRitualGuardat(): boolean {
 const senseSubscripcio = () => () => {};
 
 export function Gresol() {
+  const router = useRouter();
   const guardat = useSyncExternalStore(senseSubscripcio, llegirRitualGuardat, () => false);
   const [comencat, setComencat] = useState(false);
   const [guardians, setGuardians] = useState(false);
@@ -87,6 +89,7 @@ export function Gresol() {
     <VistaFinal
       ritual={comencat || guardat}
       onComencarRitual={comencarRitual}
+      onTornar={() => router.push("/joc")}
       aconseguits={aconseguits ?? undefined}
     />
   );

@@ -156,9 +156,15 @@ export function Narracio({
         capcalera
       )}
       <div className="flex flex-col gap-3 text-xl leading-snug">
-        {text.paragrafs.map((p) => (
-          <p key={p}>{p}</p>
-        ))}
+        {text.paragrafs.map((p) =>
+          p.startsWith("«") && p.endsWith("»") ? (
+            <p key={p} className="text-center font-extrabold">
+              {p}
+            </p>
+          ) : (
+            <p key={p}>{p}</p>
+          )
+        )}
       </div>
       {children}
     </section>

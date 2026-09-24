@@ -11,6 +11,7 @@ import type { Element } from "@/content/public/estacions";
 export interface TextNarratiu {
   /** Les arribades no en porten: la pantalla ja mostra el nom de la fita. */
   titol?: string;
+  /** Un paràgraf que és tot una frase entre «» (una contrasenya) es mostra en negreta i centrat. */
   paragrafs: string[];
   audio?: string;
 }
@@ -144,8 +145,11 @@ export const GRESOL_ARRIBADA: TextNarratiu = {
   paragrafs: [
     "Sou al cor de l'estrella. Aquí es creuen les cinc línies que heu seguit, de l'Aigua fins a l'Ànima. Aquí s'acaba el camí i comença la Gran Obra.",
     "Reuniu tot l'equip, guardeu bé els fragments que porteu i espereu aquí. No marxeu.",
-    "Algú vindrà a trobar-vos: qui us ha vigilat tota la nit. Us dirà: «El temps es consumeix.»",
-    "Si sou dignes, respondreu sense dubtar: «Però el foc de l'Atanor es manté.» Llavors tot tindrà sentit.",
+    "Algú vindrà a trobar-vos: qui us ha vigilat tota la nit. Us dirà:",
+    "«El temps es consumeix.»",
+    "Si sou dignes, respondreu sense dubtar:",
+    "«Però el foc de l'Atanor es manté.»",
+    "Llavors tot tindrà sentit.",
   ],
 };
 
@@ -189,6 +193,12 @@ export const GUARDIANS: TextNarratiu & { lema: string; traduccioLema: string } =
   ],
   lema: "Veritas et Materia in unum vertuntur.",
   traduccioLema: "La Veritat i la Matèria es fan una de sola.",
+};
+
+/** Enllaç de la pantalla final al joc amagat (/gresol). TEXT PROVISIONAL */
+export const LABORATORI = {
+  frase: "Ara sou alquimistes: el laboratori de l'Orde és vostre.",
+  boto: "Entrar al laboratori",
 };
 
 // 6. Textos d'interfície
