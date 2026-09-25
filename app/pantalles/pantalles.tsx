@@ -533,7 +533,7 @@ export const PANTALLES: Pantalla[] = [
     grup: "hub",
     titol: "Hub · heu arribat a una fita",
     descripcio: SEGUENT_FITA
-      ? `El GPS situa l'equip a menys de 20 m de ${SEGUENT_FITA.nom}: sona el so i se n'obre la fitxa.`
+      ? `El GPS situa l'equip a menys de 50 m de ${SEGUENT_FITA.nom}: sona el so i se n'obre la fitxa.`
       : undefined,
     render: () => hub(RESOLTES_MITJA_PARTIDA, null, [], SEGUENT_FITA?.id ?? null),
   },

@@ -10,7 +10,7 @@ export const MINIM_ENTRE_UBICACIONS_MS = 10_000;
 export const MAXIMA_EDAT_UBICACIO_MASTER_MS = 10 * 60_000;
 
 /** A menys d'aquesta distància d'una fita, la fita s'obre sola. */
-export const RADI_OBERTURA_M = 20;
+export const RADI_OBERTURA_M = 50;
 
 /** Distància en metres entre dos punts (fórmula del semiverset). */
 export function distanciaMetres(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
