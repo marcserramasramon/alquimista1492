@@ -10,17 +10,20 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+/** Modes en què s'obre la PWA instal·lada (el manifest demana fullscreen). */
+const MODES_INSTALLADA = ["(display-mode: fullscreen)", "(display-mode: standalone)"];
+
 /** Canvis de display-mode (p.ex. si l'app s'obre instal·lada). */
 function subscriureDisplayMode(onChange: () => void) {
-  const mq = window.matchMedia?.("(display-mode: standalone)");
-  mq?.addEventListener("change", onChange);
-  return () => mq?.removeEventListener("change", onChange);
+  const mqs = MODES_INSTALLADA.map((m) => window.matchMedia?.(m));
+  mqs.forEach((mq) => mq?.addEventListener("change", onChange));
+  return () => mqs.forEach((mq) => mq?.removeEventListener("change", onChange));
 }
 
 function detectarModeInicial(): ModeInstallacio {
   if (typeof window === "undefined") return "no-disponible";
   const standalone =
-    window.matchMedia?.("(display-mode: standalone)").matches ||
+    MODES_INSTALLADA.some((m) => window.matchMedia?.(m).matches) ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true;
   if (standalone) return "installada";
   const ua = navigator.userAgent;
