@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { Alegreya } from "next/font/google";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
 import type { PoemaCartell } from "@/content/public/cartells";
 import type { Soroll } from "@/lib/sorollFoc";
 import { SorollFocSvg } from "@/components/cartells/SorollFocSvg";
 import { MarcRunesCartell } from "@/components/cartells/MarcRunesCartell";
+
+// Text dels cartells: serif cal·ligràfica, germana de l'Alegreya Sans de l'app. En recta i
+// de pes mitjà, perquè es llegeixi a l'exterior i plastificada (la cursiva s'empastava).
+const alegreya = Alegreya({ variable: "--font-alegreya", weight: ["500"], subsets: ["latin"] });
 
 export interface DadesCartell {
   id: string;
@@ -41,7 +46,7 @@ function midaPoema(poema: PoemaCartell, ambSoroll: boolean, fons: boolean) {
   const lletres = poema.paragrafs.join(" ").length;
   if (ambSoroll) return fons ? 11 : 16;
   if (lletres > 650) return fons ? 14.5 : 16;
-  return fons ? 16 : 16.5;
+  return 16;
 }
 
 function Cartell({ c, estil }: { c: DadesCartell; estil: EstilCartell }) {
@@ -86,7 +91,7 @@ function Cartell({ c, estil }: { c: DadesCartell; estil: EstilCartell }) {
             </div>
           )}
 
-          <div className={`${panell}cartell-text flex flex-col gap-[0.7em] text-pretty italic leading-[1.4]`} style={{ fontSize: `${mida}pt` }}>
+          <div className={`${panell}cartell-text flex flex-col gap-[0.7em] text-pretty leading-[1.4]`} style={{ fontSize: `${mida}pt` }}>
             {c.poema.paragrafs.map((paragraf, i) => (
               <p key={i}>{paragraf}</p>
             ))}
@@ -130,7 +135,7 @@ export function VistaCartells({ cartells, estil = "imatge" }: { cartells: DadesC
   const pendents = cartells.filter((c) => c.poema.pendent);
 
   return (
-    <main className="vista-cartells flex flex-col items-center gap-8 px-4 py-6">
+    <main className={`${alegreya.variable} vista-cartells flex flex-col items-center gap-8 px-4 py-6`}>
       <style>{`
         @page { size: A4; margin: 0; }
         .cartell {
@@ -144,6 +149,7 @@ export function VistaCartells({ cartells, estil = "imatge" }: { cartells: DadesC
           position: relative; display: flex; flex-direction: column; gap: 5mm; height: 100%;
           padding: 12mm;
         }
+        .cartell-text { font-family: var(--font-alegreya), serif; font-weight: 500; }
         .cartell-text > p:first-child::first-letter {
           float: left; margin: 0.08em 0.12em 0 0; font-family: var(--font-grenze-gotisch), serif;
           font-style: normal; font-weight: 800; font-size: 3.1em; line-height: 0.8; color: var(--el);

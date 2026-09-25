@@ -82,6 +82,8 @@ const classesHtml = html.match(/<html[^>]*class="([^"]*)"/)?.[1] ?? "";
 // Separa els cartells i hi posa el QR amb l'adreça pública.
 const cartells = [...main.matchAll(/<section data-fita="([^"]+)"[\s\S]*?<\/footer><\/div><\/section>/g)];
 const estil = main.match(/<style>[\s\S]*?<\/style>/)?.[0] ?? "";
+// L'etiqueta <main> original porta la classe de la tipografia del text (next/font).
+const obertura = main.match(/<main[^>]*>/)?.[0] ?? "<main>";
 const netBase = base.replace(/\/$/, "");
 
 const pagina = (titol, seccions) => `<!doctype html>
@@ -92,7 +94,7 @@ const pagina = (titol, seccions) => `<!doctype html>
 <style>${css}</style>
 </head>
 <body class="text-ink antialiased">
-<main class="vista-cartells flex flex-col items-center gap-8 px-4 py-6">
+${obertura}
 ${estil}
 <div class="flex w-full flex-col items-center gap-8 print:block">
 ${seccions.join("\n")}
