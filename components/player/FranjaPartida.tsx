@@ -31,7 +31,11 @@ export function FranjaPartidaProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** La barra fina enganxada a dalt de tot on van el rellotge i la peça de la pantalla. */
+/**
+ * La barra fina enganxada a dalt de tot. Ocupa la mateixa franja que la càmera (safe area) en
+ * lloc d'afegir-s'hi a sota: el rellotge va a la cantonada esquerra i la peça de la pantalla a
+ * la dreta, i la càmera, si és al mig, queda entre els dos.
+ */
 export function BarraFranja({
   alerta = false,
   className = "",
@@ -43,7 +47,7 @@ export function BarraFranja({
 }) {
   return (
     <div
-      className={`sticky top-0 z-30 flex items-center justify-center gap-3 border-b-2 px-4 pb-0.5 pt-[max(0.125rem,env(safe-area-inset-top))] transition-colors ${
+      className={`sticky top-0 z-30 flex min-h-[max(1.5rem,env(safe-area-inset-top))] items-center gap-3 border-b-2 py-0.5 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] transition-colors ${
         alerta ? "border-ink bg-blood text-white" : "border-ink bg-gold text-ink"
       } ${className}`}
     >

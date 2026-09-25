@@ -70,7 +70,9 @@ export function VistaHub({
     >
       {/* Sense compte enrere, la casella dels elements fa ella sola la franja de dalt. */}
       {rellotge === "no" && (
-        <BarraFranja className="-mx-4 -mt-2">{casella}</BarraFranja>
+        <BarraFranja className="-mx-4 -mt-2">
+          <div className="ml-auto">{casella}</div>
+        </BarraFranja>
       )}
 
       {/* Progrés: el pentagrama s'encén a mesura que es resolen les fites. La fitxa de la fita

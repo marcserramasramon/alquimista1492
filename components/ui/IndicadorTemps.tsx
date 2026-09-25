@@ -14,7 +14,8 @@ export interface IndicadorTempsProps {
 /**
  * Barra fina amb el temps que queda, enganxada a dalt de les pantalles de joc de l'equip. Va
  * en el flux (sticky): empeny la pantalla avall en lloc de tapar-ne el títol. En vermell i
- * bategant els últims minuts. Al costat hi pot anar la peça que hi posi la pantalla (FranjaPartida).
+ * bategant els últims minuts. A l'altra cantonada hi pot anar la peça que hi posi la pantalla
+ * (FranjaPartida).
  */
 export function IndicadorTemps({ acabaAt, desfasamentMs = 0, onZero }: IndicadorTempsProps) {
   // Es calcula ja d'entrada: si comencés a false, la barra sortiria daurada un moment.
@@ -44,12 +45,7 @@ export function IndicadorTemps({ acabaAt, desfasamentMs = 0, onZero }: Indicador
         <span aria-hidden className="text-sm">⏳</span>
         <CompteEnrere acabaAt={acabaAt} desfasamentMs={desfasamentMs} onZero={onZero} />
       </p>
-      {extra && (
-        <>
-          <span aria-hidden className="leading-5 opacity-50">·</span>
-          {extra}
-        </>
-      )}
+      {extra && <div className="ml-auto">{extra}</div>}
     </BarraFranja>
   );
 }
