@@ -42,7 +42,9 @@ export interface MarcadorMapa {
 }
 
 /**
- * Fons: ortofoto PNOA (public/ortofoto-pentagrama.webp), 2048×2048 px, 1040 m de costat,
+ * Fons: mapa il·lustrat (public/mapa-sentfores.webp, 1024×1024 px) dibuixat a sobre de
+ * l'ortofoto i amb el mateix enquadrament; es pinta a MIDA×MIDA.
+ * Ortofoto PNOA (public/ortofoto-pentagrama.webp), 2048×2048 px, 1040 m de costat,
  * centrada al Pla del Masset i girada 29,846° en sentit antihorari (el nord queda cap
  * amunt-esquerra). Es va demanar al WMS aquesta BBOX (EPSG:4326) a ORIGINAL×ORIGINAL px,
  * es va girar i se'n va retallar el quadrat central. Detall a docs/mapa-proposta-definitiva.md.
@@ -323,7 +325,7 @@ export function MapaEquip({
             }}
           >
             <svg viewBox={`0 0 ${MIDA} ${MIDA}`} className="block h-full w-full">
-              <image href="/ortofoto-pentagrama.webp" x={0} y={0} width={MIDA} height={MIDA} />
+              <image href="/mapa-sentfores.webp" x={0} y={0} width={MIDA} height={MIDA} />
 
               {recorregut.length > 0 && <Cami punts={recorregut} escala={escala} />}
 
