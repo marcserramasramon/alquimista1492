@@ -20,16 +20,16 @@ export function Pantalla({
 }
 
 /** Rètol del joc: "Els Guardians del Secret de / Sentfores / 1472". */
-export function Marca({ petita = false }: { petita?: boolean }) {
+export function Marca({ petita = false, sobreFosc = false }: { petita?: boolean; sobreFosc?: boolean }) {
   return (
     <div className="text-center">
-      <p className="etiqueta">els guardians del secret de</p>
+      <p className={`etiqueta ${sobreFosc ? "text-paper-3!" : ""}`}>els guardians del secret de</p>
       <p
-        className={`font-display font-extrabold leading-none text-ink ${petita ? "text-4xl" : "text-6xl"}`}
+        className={`font-display font-extrabold leading-none ${sobreFosc ? "text-paper" : "text-ink"} ${petita ? "text-4xl" : "text-6xl"}`}
       >
         Sentfores
       </p>
-      <p className="etiqueta mt-1 text-gold-deep">✦ mcdlxxii ✦</p>
+      <p className={`etiqueta mt-1 ${sobreFosc ? "text-gold!" : "text-gold-deep"}`}>✦ mcdlxxii ✦</p>
     </div>
   );
 }

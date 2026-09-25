@@ -5,8 +5,10 @@ import { Marca } from "@/components/ui/Pantalla";
 import { MARGE_MARC_FINAL_PX, MarcFinal } from "@/components/ui/MarcFinal";
 import { GUARDIANS, LABORATORI } from "@/content/public/textos";
 
-/** Pergamí més fosc que la resta de pantalles: és el final de la nit. */
+/** Pergamí més fosc que la resta de pantalles per al marc: és el final de la nit. */
 const FONS = "#d9bd84";
+/** Dins del marc, negre sòlid: la Pedra hi brilla. */
+const FONS_CENTRAL = "#000";
 
 /**
  * 5. Pantalla final: l'equip esdevé Guardians del Secret i obté la Pedra Filosofal. Surt a /final
@@ -20,7 +22,7 @@ export function VistaGuardians() {
       <div
         aria-hidden
         className="fixed inset-0"
-        style={{ background: `radial-gradient(ellipse at 50% 25%, #ecd7a6 0%, ${FONS} 55%, #b8955a 100%)` }}
+        style={{ background: FONS_CENTRAL }}
       />
       <MarcFinal fons={FONS} />
       <main
@@ -40,7 +42,7 @@ export function VistaGuardians() {
           className="mx-auto w-64 max-w-full animate-segellar drop-shadow-[0_0_20px_rgb(234_179_8/0.55)]"
         />
         <div className="animate-entrar [animation-delay:200ms]">
-          <Marca petita />
+          <Marca petita sobreFosc />
         </div>
         <Narracio text={GUARDIANS} className="animate-entrar [animation-delay:350ms]">
           <div className="mt-5 border-t-2 border-dashed border-ink/20 pt-4 text-center">
@@ -51,8 +53,8 @@ export function VistaGuardians() {
 
         {/* El joc amagat (ou de pasqua): ara que són alquimistes, tenen el seu propi laboratori. */}
         <section className="flex animate-entrar flex-col gap-3 text-center [animation-delay:500ms]">
-          <p className="text-lg font-bold">{LABORATORI.frase}</p>
-          <Link href="/gresol" className="btn btn-fosc">
+          <p className="text-lg font-bold text-paper">{LABORATORI.frase}</p>
+          <Link href="/gresol" className="btn btn-primari">
             ⚗️ {LABORATORI.boto}
           </Link>
         </section>
