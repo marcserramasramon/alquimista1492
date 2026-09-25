@@ -64,7 +64,7 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 
 | Camp | Valor |
 |------|-------|
-| Ubicació | **Entrada del poble** — coordenades confirmades: **41.915765, 2.231385** (es manté, confirmat) |
+| Ubicació | **Entrada del poble** — coordenades confirmades: **41.915419, 2.231577** (moguda 42 m al sud el 2026-09-25 perquè el pentagrama quadri millor; el cartell físic s'ha de posar aquí — veure `docs/mapa-proposta-definitiva.md`) |
 | Tècnica | **"Paper de foc" — cel·lofana vermella com a lent decodificadora, amb nom narratiu propi.** En la ficció, es presenta com un **vidre alquímic especial que té el foc atrapat a dins**. Full imprès amb números de tots colors barrejats (soroll visual); el missatge real hi és escrit en **verd**. Mirant el full a través del "paper de foc" (la cel·lofana vermella), el verd es fa fosc/llegible i la resta de colors es dissolen en el vermell del filtre |
 | Material del jugador/equip | Un tros de **"paper de foc" (cel·lofana vermella)** per equip + el full imprès amb el missatge camuflat en verd |
 | Acció física | Els jugadors miren el full a través del "paper de foc" fins que el número en verd es distingeix de la resta |
@@ -100,7 +100,7 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 
 | Camp | Valor |
 |------|-------|
-| Ubicació | **Pista skate (Camí Antic de Malla)** — coordenades confirmades: **41.910340, 2.230023**. Punt nou, no reutilitza cap estació existent. Sembla la fita de tancament de l'Acte I (o pont cap a l'Acte II) |
+| Ubicació | **Pista skate (Camí Antic de Malla)** — coordenades confirmades: **41.910355, 2.230083** (ajustada 5 m el 2026-09-25). Punt nou, no reutilitza cap estació existent. Sembla la fita de tancament de l'Acte I (o pont cap a l'Acte II) |
 | Tècnica | **Tinta invisible UV pintada al punt més alt de la pista** (dalt de la rampa/turó més alt), **un sol número, sense punts cardinals**. Cada equip porta una **llanterna UV** física (no és un truc de l'app: no cal càmera ni processament d'imatge) |
 | Material del jugador/equip | Una **llanterna UV per equip** (material físic a preparar/comprar, no digital) |
 | Acció física | Els jugadors pugen fins al **punt més alt** de la pista (la rampa/turó més elevat) i hi passen la llanterna UV pel terra fins a fer aparèixer el número |
@@ -114,17 +114,17 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 
 ## 🔯 Geometria del pentagrama (confirmada 2026-09-21)
 
-Els 5 punts físics, units en l'ordre del seu angle respecte al centroide, dibuixen un **pentàgon gairebé regular** (desviació màxima ~11° respecte als 72° ideals) — prou net per llegir-s'hi un pentagrama si es tracen les diagonals:
+Els 5 punts físics, units en l'ordre del seu angle respecte al centroide, dibuixen un **pentàgon gairebé regular** (desviació màxima ~10° respecte als 72° ideals) — prou net per llegir-s'hi un pentagrama si es tracen les diagonals:
 
 | Element | Ubicació | Coordenades | Angle respecte al centroide |
 |---|---|---|---|
-| 🔥 FOC | Entrada del poble | 41.915765, 2.231385 | 63° |
+| 🔥 FOC | Entrada del poble | 41.915419, 2.231577 | 59° |
 | 💧 AIGUA | Font del Ferro (Carrer del Call) | 41.914816, 2.227479 | 125° |
-| 🌬️ AIRE | Creu del Pujolar | 41.910894, 2.224434 | 208° |
-| ✨ ÀNIMA | Pista skate (Camí Antic de Malla) | 41.910340, 2.230023 | 281° |
-| 🪨 TERRA | Planes Bones | 41.912256, 2.233469 | 350° |
+| 🌬️ AIRE | Creu del Pujolar | 41.910894, 2.224434 | 207° |
+| ✨ ÀNIMA | Pista skate (Camí Antic de Malla) | 41.910355, 2.230083 | 282° |
+| 🪨 TERRA | Planes Bones | 41.912256, 2.233469 | 351° |
 
-**Centroide:** 41.912814, 2.229358 — cau pràcticament al mig del nucli on ja passen els Actes II–III (Rectòria, Escola, Pla de Masset, Campanar, tots entre 41.9131–41.9135 / 2.2281–2.2293). És a dir, **el pentagrama que tracen les 5 estacions "assenyala" literalment el cor del poble on es resol la trama**.
+**Centroide:** 41.912748, 2.229408 — cau pràcticament al mig del nucli on ja passen els Actes II–III (Rectòria, Escola, Pla de Masset, Campanar, tots entre 41.9131–41.9135 / 2.2281–2.2293). És a dir, **el pentagrama que tracen les 5 estacions "assenyala" literalment el cor del poble on es resol la trama**.
 
 ⚠️ **PENDENT — decisió narrativa, no inventar-la aquí:**
 - Té significat dins la ficció (algú l'ha dibuixat expressament — ward alquímic/hermètic, senyal dels conjurats, mapa amagat) o és una troballa metajoc que només veuen els jugadors en marcar els 5 punts al mapa/quadern?
