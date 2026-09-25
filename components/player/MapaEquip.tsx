@@ -464,11 +464,6 @@ export function MapaEquip({
             </g>
           </svg>
 
-          {/* Llicència CC-BY 4.0 de l'ortofoto: el text de l'atribució és l'oficial. */}
-          <p className="pointer-events-none absolute bottom-0 right-0 rounded-tl-lg bg-paper/80 px-1.5 py-0.5 text-[10px] leading-tight text-ink">
-            © PNOA cedido por © Instituto Geográfico Nacional
-          </p>
-
           {/* Controls a l'abast del polze: sempre visibles, mínim 48px */}
           <div className="absolute left-2.5 top-2.5 flex gap-2">
             <button
