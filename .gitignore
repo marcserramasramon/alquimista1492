@@ -42,3 +42,6 @@ next-env.d.ts
 
 # supabase cli (local)
 supabase/.temp/
+
+# cartells exportats (porten els codis de les fites)
+/cartells-html/

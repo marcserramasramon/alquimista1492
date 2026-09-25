@@ -23,6 +23,9 @@ export function VistaMasterCodis({ fites }: { fites: CodiFita[] }) {
         <p className="mt-2 text-lg text-ink-soft">
           Cada cartell porta un QR amb l&apos;enllaç i, a sota, el codi escrit per entrar-lo a mà. No els ensenyeu als equips.
         </p>
+        <Link href="/master/cartells" className="btn btn-primari mt-4">
+          Cartells per imprimir
+        </Link>
       </header>
 
       <ul className="flex flex-col gap-4">

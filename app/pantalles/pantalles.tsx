@@ -33,6 +33,9 @@ import { RESPOSTA_CORRECTA, RESPOSTES_INCORRECTES } from "@/content/public/texto
 import { VistaMasterLogin } from "@/components/vistes/VistaMasterLogin";
 import { VistaMasterEquips, type EquipMaster } from "@/components/vistes/VistaMasterEquips";
 import { VistaMasterCodis } from "@/components/vistes/VistaMasterCodis";
+import { VistaCartells, type DadesCartell } from "@/components/vistes/VistaCartells";
+import { POEMES_CARTELLS } from "@/content/public/cartells";
+import { generaSoroll, opcionsSoroll } from "@/lib/sorollFoc";
 import { VistaObrirFita, type VistaObrirFitaProps } from "@/components/vistes/VistaObrirFita";
 import { VistaMissatgeMaster } from "@/components/vistes/VistaMissatgeMaster";
 import { MISSATGES_MASTER, TITOL_TEXT_LLIURE } from "@/content/public/missatgesMaster";
@@ -980,6 +983,57 @@ export const PANTALLES: Pantalla[] = [
             const codi = ["AAAAA", "BBBBB", "CCCCC", "DDDDD", "EEEEE"][i] ?? "XXXXX";
             return { id: e.id, nom: e.nom, element: e.element, codi, url: `https://exemple.cat/s/${e.id}?c=${codi}` };
           })}
+      />
+    ),
+  },
+  {
+    id: "master-cartells",
+    grup: "master",
+    titol: "Cartells de les fites (A4)",
+    descripcio: "Codis d'exemple i sense QR: els reals només es veuen a /master/cartells.",
+    render: (dades) => (
+      <VistaCartells
+        cartells={getEstacionsOrdenades().flatMap((e, i): DadesCartell[] => {
+          const poema = POEMES_CARTELLS[e.id];
+          if (!poema || !e.element) return [];
+          const resposta = dades.fites[e.id]?.resposta;
+          return [
+            {
+              id: e.id,
+              nom: e.nom,
+              element: e.element,
+              poema,
+              codi: ["AAAAA", "BBBBB", "CCCCC", "DDDDD", "EEEEE"][i] ?? "XXXXX",
+              soroll: e.element === "foc" && resposta ? generaSoroll({ resposta, ...opcionsSoroll("imatge") }) : undefined,
+            },
+          ];
+        })}
+      />
+    ),
+  },
+  {
+    id: "master-cartells-fons",
+    grup: "master",
+    titol: "Cartells de les fites (A4, imatge de fons)",
+    descripcio: "Codis d'exemple i sense QR: els reals només es veuen a /master/cartells.",
+    render: (dades) => (
+      <VistaCartells
+        estil="fons"
+        cartells={getEstacionsOrdenades().flatMap((e, i): DadesCartell[] => {
+          const poema = POEMES_CARTELLS[e.id];
+          if (!poema || !e.element) return [];
+          const resposta = dades.fites[e.id]?.resposta;
+          return [
+            {
+              id: e.id,
+              nom: e.nom,
+              element: e.element,
+              poema,
+              codi: ["AAAAA", "BBBBB", "CCCCC", "DDDDD", "EEEEE"][i] ?? "XXXXX",
+              soroll: e.element === "foc" && resposta ? generaSoroll({ resposta, ...opcionsSoroll("fons") }) : undefined,
+            },
+          ];
+        })}
       />
     ),
   },
