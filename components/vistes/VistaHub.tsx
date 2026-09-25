@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { MapaEquip, type EstacioMapa, type MarcadorMapa } from "@/components/player/MapaEquip";
-import { useMostrarAFranja } from "@/components/player/FranjaPartida";
+import { BarraFranja, useMostrarAFranja } from "@/components/player/FranjaPartida";
 import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
 import { Narracio } from "@/components/ui/Narracio";
 import { ELEMENTS } from "@/content/public/estacions";
@@ -54,7 +54,7 @@ export function VistaHub({
 
   // Els elements aconseguits van a la franja de dalt, al costat del compte enrere.
   const casella = <CasellaElements resoltes={resoltes} total={elementals.length} />;
-  const hiHaRellotge = useMostrarAFranja(casella, [resoltes, elementals.length]);
+  const rellotge = useMostrarAFranja(casella, [resoltes, elementals.length]);
 
   return (
     <main
@@ -63,8 +63,8 @@ export function VistaHub({
       }`}
     >
       {/* Sense compte enrere, la casella dels elements fa ella sola la franja de dalt. */}
-      {!hiHaRellotge && (
-        <div className="flex justify-center pt-[max(0.5rem,env(safe-area-inset-top))]">{casella}</div>
+      {rellotge === "no" && (
+        <BarraFranja className="-mx-4 -mt-2">{casella}</BarraFranja>
       )}
 
       {/* Progrés: el pentagrama s'encén a mesura que es resolen les fites */}
@@ -199,14 +199,11 @@ export function VistaHub({
 /** Elements aconseguits sobre el total: mateixa alçada i forma que el compte enrere. */
 function CasellaElements({ resoltes, total }: { resoltes: number; total: number }) {
   return (
-    <p
-      aria-label={`${resoltes} de ${total} elements`}
-      className="flex items-center gap-1.5 rounded-full border-[3px] border-ink bg-gold px-3.5 py-0.5 shadow-[0_3px_0_var(--ink)]"
-    >
-      <span className="font-display text-[1.3rem] font-extrabold leading-8">
+    <p aria-label={`${resoltes} de ${total} elements`} className="flex items-baseline gap-1.5 leading-5">
+      <span className="font-display text-lg font-extrabold leading-5 tabular-nums">
         {resoltes}/{total}
       </span>
-      <span className="etiqueta text-[0.8rem] leading-8 text-ink">elements</span>
+      <span className="etiqueta text-[0.7rem] leading-5 text-current opacity-80">elements</span>
     </p>
   );
 }

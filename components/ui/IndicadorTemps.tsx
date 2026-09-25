@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CompteEnrere } from "@/components/ui/CompteEnrere";
-import { useExtraFranja, useRegistrarRellotge } from "@/components/player/FranjaPartida";
+import { BarraFranja, useExtraFranja, useRegistrarRellotge } from "@/components/player/FranjaPartida";
 import { MINUTS_ALERTA, tempsRestantMs } from "@/lib/partida";
 
 export interface IndicadorTempsProps {
@@ -12,12 +12,13 @@ export interface IndicadorTempsProps {
 }
 
 /**
- * Píndola amb el temps que queda, a dalt de les pantalles de joc de l'equip. Va en el flux
- * (sticky): empeny la pantalla avall en lloc de tapar-ne el títol. En vermell i bategant
- * els últims minuts. Al costat hi pot anar la peça que hi posi la pantalla (FranjaPartida).
+ * Barra fina amb el temps que queda, enganxada a dalt de les pantalles de joc de l'equip. Va
+ * en el flux (sticky): empeny la pantalla avall en lloc de tapar-ne el títol. En vermell i
+ * bategant els últims minuts. Al costat hi pot anar la peça que hi posi la pantalla (FranjaPartida).
  */
 export function IndicadorTemps({ acabaAt, desfasamentMs = 0, onZero }: IndicadorTempsProps) {
-  const [alerta, setAlerta] = useState(false);
+  // Es calcula ja d'entrada: si comencés a false, la barra sortiria daurada un moment.
+  const [alerta, setAlerta] = useState(() => tempsRestantMs(acabaAt, desfasamentMs) < MINUTS_ALERTA * 60_000);
   const extra = useExtraFranja();
   useRegistrarRellotge();
 
@@ -32,18 +33,23 @@ export function IndicadorTemps({ acabaAt, desfasamentMs = 0, onZero }: Indicador
   }, [acabaAt, desfasamentMs]);
 
   return (
-    <div className="sticky top-0 z-30 flex items-center justify-center gap-3 pb-1 pt-[max(0.5rem,env(safe-area-inset-top))] [background:linear-gradient(to_bottom,var(--paper)_70%,transparent)]">
+    <BarraFranja alerta={alerta}>
       <p
         role="timer"
         aria-label="Temps que queda"
-        className={`flex items-center gap-2 rounded-full border-[3px] border-ink px-4 py-0.5 font-display text-2xl font-extrabold shadow-[0_3px_0_var(--ink)] ${
-          alerta ? "bg-blood text-white motion-safe:animate-bategar" : "bg-ink text-gold"
+        className={`flex items-center gap-1.5 font-display text-lg font-extrabold leading-5 tabular-nums ${
+          alerta ? "motion-safe:animate-pulse" : ""
         }`}
       >
-        <span aria-hidden>⏳</span>
+        <span aria-hidden className="text-sm">⏳</span>
         <CompteEnrere acabaAt={acabaAt} desfasamentMs={desfasamentMs} onZero={onZero} />
       </p>
-      {extra}
-    </div>
+      {extra && (
+        <>
+          <span aria-hidden className="leading-5 opacity-50">·</span>
+          {extra}
+        </>
+      )}
+    </BarraFranja>
   );
 }

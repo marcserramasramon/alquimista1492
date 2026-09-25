@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { IndicadorTemps } from "@/components/ui/IndicadorTemps";
 import { VistaTempsConsumit } from "@/components/vistes/VistaTempsConsumit";
+import { useMarcarSenseRellotge } from "@/components/player/FranjaPartida";
 import { tempsRestantMs } from "@/lib/partida";
 
 interface EstatPartida {
@@ -45,21 +46,27 @@ export function TempsPartida() {
   const aLaFinal = ruta === "/final";
   const [estat, setEstat] = useState<EstatPartida | null>(null);
   const [esgotat, setEsgotat] = useState(false);
+  const marcarSenseRellotge = useMarcarSenseRellotge();
 
   const consultar = useCallback(async () => {
     if (document.visibilityState === "hidden") return;
     const res = await fetch("/api/partida", { cache: "no-store" }).catch(() => null);
-    if (!res?.ok) return;
-    const data: { acabaAt: string | null; guardians: boolean; ara: string } | null = await res.json().catch(() => null);
+    const data: { acabaAt: string | null; guardians: boolean; ara: string } | null = res?.ok
+      ? await res.json().catch(() => null)
+      : null;
+    if (!data?.acabaAt || data.guardians) marcarSenseRellotge();
     if (!data) return;
     const desfasamentMs = Date.parse(data.ara) - Date.now();
     setEstat({ acabaAt: data.acabaAt, guardians: data.guardians, desfasamentMs });
     // El màster ha afegit temps: es torna a jugar.
     if (data.acabaAt && tempsRestantMs(data.acabaAt, desfasamentMs) > 0) setEsgotat(false);
-  }, []);
+  }, [marcarSenseRellotge]);
 
   useEffect(() => {
-    if (!actiu) return;
+    if (!actiu) {
+      marcarSenseRellotge();
+      return;
+    }
     const inicial = setTimeout(consultar, 0);
     const interval = setInterval(consultar, INTERVAL_MS);
     const enTornar = () => {
@@ -71,7 +78,7 @@ export function TempsPartida() {
       clearInterval(interval);
       document.removeEventListener("visibilitychange", enTornar);
     };
-  }, [actiu, consultar]);
+  }, [actiu, consultar, marcarSenseRellotge]);
 
   // Consagrats: la partida s'ha acabat per a ells, vagin on vagin.
   const guardians = estat?.guardians ?? false;
