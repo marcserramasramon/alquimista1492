@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapaEquip, type EstacioMapa, type MarcadorMapa } from "@/components/player/MapaEquip";
 import { BarraFranja, useMostrarAFranja } from "@/components/player/FranjaPartida";
 import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
@@ -52,6 +52,12 @@ export function VistaHub({
   const visibles = estacions.filter((e) => e.tipus !== "especial" || totesResoltes);
   const seleccionada = estacions.find((e) => e.id === seleccionadaId) ?? null;
 
+  // La fitxa surt on hi ha el pentagrama: si es tria una fita des de més avall, s'hi torna.
+  const zonaRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (seleccionadaId) zonaRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [seleccionadaId]);
+
   // Els elements aconseguits van a la franja de dalt, al costat del compte enrere.
   const casella = <CasellaElements resoltes={resoltes} total={elementals.length} />;
   const rellotge = useMostrarAFranja(casella, [resoltes, elementals.length]);
@@ -67,19 +73,34 @@ export function VistaHub({
         <BarraFranja className="-mx-4 -mt-2">{casella}</BarraFranja>
       )}
 
-      {/* Progrés: el pentagrama s'encén a mesura que es resolen les fites */}
-      <section className="targeta relative -mx-1 animate-entrar overflow-hidden px-1 pb-2 pt-0 [animation-delay:80ms]">
-        <Pentagrama
-          nodes={nodes}
-          centreActiu={totesResoltes}
-          girar
-          seleccionatId={seleccionadaId}
-          onTriar={setSeleccionadaId}
-          className="mx-auto w-[92%]"
-        />
-        {/* Amb totes resoltes, just a sota ve el text de l'estrella completa. */}
-        {!totesResoltes && (
-          <p className="text-center text-[0.95rem] text-ink-soft">Toqueu un element per veure on és.</p>
+      {/* Progrés: el pentagrama s'encén a mesura que es resolen les fites. La fitxa de la fita
+          triada n'ocupa el lloc, amb la mateixa alçada. */}
+      <section
+        ref={zonaRef}
+        className="targeta relative -mx-1 animate-entrar scroll-mt-10 overflow-hidden px-1 pb-2 pt-0 [animation-delay:80ms]"
+      >
+        <div className={seleccionada ? "invisible" : undefined}>
+          <Pentagrama
+            nodes={nodes}
+            centreActiu={totesResoltes}
+            girar
+            seleccionatId={seleccionadaId}
+            onTriar={setSeleccionadaId}
+            className="mx-auto w-[92%]"
+          />
+          {/* Amb totes resoltes, just a sota ve el text de l'estrella completa. */}
+          {!totesResoltes && (
+            <p className="text-center text-[0.95rem] text-ink-soft">Toqueu un element per veure on és.</p>
+          )}
+        </div>
+        {seleccionada && (
+          <FitxaFita
+            key={seleccionada.id}
+            estacio={seleccionada}
+            acabadaDarribar={seleccionada.id === fitaArribadaId}
+            onTancar={() => setSeleccionadaId(null)}
+            onAnar={() => onAnarEstacio(seleccionada)}
+          />
         )}
       </section>
 
@@ -183,15 +204,6 @@ export function VistaHub({
           </div>
         </div>
       )}
-
-      {seleccionada && (
-        <FitxaFita
-          estacio={seleccionada}
-          acabadaDarribar={seleccionada.id === fitaArribadaId}
-          onTancar={() => setSeleccionadaId(null)}
-          onAnar={() => onAnarEstacio(seleccionada)}
-        />
-      )}
     </main>
   );
 }
@@ -208,7 +220,10 @@ function CasellaElements({ resoltes, total }: { resoltes: number; total: number 
   );
 }
 
-/** Fitxa de la fita triada: baixa des de dalt de la pantalla. */
+/**
+ * Fitxa de la fita triada, al lloc del pentagrama. El nom i el botó hi són sempre; si el text
+ * del mig no hi cap, es desplaça per dins.
+ */
 function FitxaFita({
   estacio,
   acabadaDarribar,
@@ -225,74 +240,74 @@ function FitxaFita({
   const resolta = estacio.progres.resolta;
 
   return (
-    <div className="fixed inset-0 z-30 flex items-start justify-center" role="dialog" aria-modal="true" aria-label={estacio.nom}>
-      <button type="button" aria-label="Tancar" onClick={onTancar} className="absolute inset-0 animate-entrar bg-ink/45" />
-      <div className="relative max-h-dvh w-full max-w-md animate-baixar overflow-y-auto rounded-b-[2rem] border-x-[3px] border-b-[3px] border-ink bg-paper">
-        <div className="h-[max(0.75rem,env(safe-area-inset-top))]" style={{ background: color }} />
-        <div className="px-5 pb-4 pt-4">
-          <div className="flex items-start gap-4">
-            <span
-              className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-[3px] border-ink bg-[#fffdf7] shadow-[0_4px_0_var(--ink)]"
-              style={{ borderColor: resolta ? color : undefined }}
-            >
-              {element ? (
-                <img src={element.icona} alt="" className="h-10 w-10 object-contain" />
-              ) : (
-                <span className="text-3xl">⚗️</span>
-              )}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="etiqueta" style={{ color: element ? color : undefined }}>
-                {element?.nom ?? "Ritual final"}
-              </p>
-              <h3 className="text-4xl font-extrabold">{estacio.nom}</h3>
-            </div>
-            <button type="button" onClick={onTancar} aria-label="Tancar" className="btn btn-secundari btn-rodo shrink-0 text-xl">
-              ✕
-            </button>
-          </div>
-
-          {acabadaDarribar && !resolta && (
-            <p
-              role="status"
-              className="mt-4 animate-bategar rounded-2xl border-[3px] border-ink px-4 py-3 text-lg font-extrabold text-white"
-              style={{ background: color }}
-            >
-              📍 Heu arribat! La fita s&apos;ha obert.
-            </p>
+    <div role="region" aria-label={estacio.nom} className="absolute inset-0 flex animate-entrar flex-col bg-paper">
+      {/* La franja de color de dalt fa d'avís quan el GPS acaba d'obrir la fita. */}
+      {acabadaDarribar && !resolta ? (
+        <p
+          role="status"
+          className="shrink-0 px-4 py-0.5 text-center text-base font-extrabold leading-6 text-white"
+          style={{ background: color }}
+        >
+          <span aria-hidden className="inline-block motion-safe:animate-bounce">📍</span> Heu arribat! La fita s&apos;ha obert.
+        </p>
+      ) : (
+        <div className="h-3 shrink-0" style={{ background: color }} />
+      )}
+      <div className="flex shrink-0 items-start gap-3 px-4 pt-2.5">
+        <span
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-[3px] border-ink bg-[#fffdf7] shadow-[0_4px_0_var(--ink)]"
+          style={{ borderColor: resolta ? color : undefined }}
+        >
+          {element ? (
+            <img src={element.icona} alt="" className="h-10 w-10 object-contain" />
+          ) : (
+            <span className="text-3xl">⚗️</span>
           )}
-
-          {/* El que cal fer en arribar-hi és el protagonista; on és, en segon pla. */}
-          <div
-            className="mt-4 rounded-2xl border-[3px] border-ink bg-[#fffdf7] px-4 py-3 shadow-[0_4px_0_var(--ink)]"
-            style={{ borderLeftWidth: 10, borderLeftColor: color }}
-          >
-            <p className="etiqueta mb-1 text-xs">què heu de fer</p>
-            <p className="text-2xl font-extrabold leading-snug">{estacio.entrada}</p>
-          </div>
-          {estacio.situacio && (
-            <p className="mt-3 flex gap-1.5 text-base text-ink-soft">
-              <span aria-hidden>📍</span>
-              <span>
-                <span className="sr-only">On és: </span>
-                {estacio.situacio}
-              </span>
-            </p>
-          )}
-
-          <button onClick={onAnar} disabled={!estacio.disponible} className="btn btn-primari mt-5">
-            {!estacio.disponible
-              ? "🔒 Properament"
-              : resolta
-                ? "✓ Ja resolta · Tornar-hi"
-                : estacio.tipus === "especial"
-                  ? "Començar el ritual →"
-                  : estacio.oberta === false
-                    ? "Hi som! Obrir la fita →"
-                    : "Entrar a la fita →"}
-          </button>
-          <div className="mx-auto mt-4 h-1.5 w-12 rounded-full bg-ink/20" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="etiqueta" style={{ color: element ? color : undefined }}>
+            {element?.nom ?? "Ritual final"}
+          </p>
+          <h3 className="text-[1.75rem] font-extrabold leading-[1.1]">{estacio.nom}</h3>
         </div>
+        <button type="button" onClick={onTancar} aria-label="Tancar" className="btn btn-secundari btn-rodo shrink-0 text-xl">
+          ✕
+        </button>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-1">
+        {/* El que cal fer en arribar-hi és el protagonista; on és, en segon pla. */}
+        <div
+          className="mt-2 rounded-2xl border-[3px] border-ink bg-[#fffdf7] px-3.5 py-2 shadow-[0_3px_0_var(--ink)]"
+          style={{ borderLeftWidth: 10, borderLeftColor: color }}
+        >
+          <p className="etiqueta mb-0.5 text-xs">què heu de fer</p>
+          <p className="text-xl font-extrabold leading-snug">{estacio.entrada}</p>
+        </div>
+        {estacio.situacio && (
+          <p className="mt-2 flex gap-1.5 text-base leading-snug text-ink-soft">
+            <span aria-hidden>📍</span>
+            <span>
+              <span className="sr-only">On és: </span>
+              {estacio.situacio}
+            </span>
+          </p>
+        )}
+      </div>
+
+      {/* El botó, sempre a la vista. */}
+      <div className="shrink-0 px-4 pb-3 pt-1.5">
+        <button onClick={onAnar} disabled={!estacio.disponible} className="btn btn-primari">
+          {!estacio.disponible
+            ? "🔒 Properament"
+            : resolta
+              ? "✓ Ja resolta · Tornar-hi"
+              : estacio.tipus === "especial"
+                ? "Començar el ritual →"
+                : estacio.oberta === false
+                  ? "Hi som! Obrir la fita →"
+                  : "Entrar a la fita →"}
+        </button>
       </div>
     </div>
   );
