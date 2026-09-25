@@ -109,7 +109,7 @@ export function VistaHub({
       {totesResoltes && <Narracio text={ESTRELLA_COMPLETA} etiqueta="fra francesc" className="animate-entrar" />}
 
       <section className="-mx-2 animate-entrar [animation-delay:160ms]">
-        <h2 className="etiqueta mb-1 px-2 text-base normal-case">Mapa de Sentfores</h2>
+        <h2 className="etiqueta mb-1 px-2 text-center text-base normal-case">Mapa de Sentfores</h2>
         <MapaEquip
           estacions={estacions}
           totesResoltes={totesResoltes}
