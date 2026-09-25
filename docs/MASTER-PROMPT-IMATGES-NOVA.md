@@ -141,7 +141,9 @@ aged parchment background. Square canvas, 1024×1024px."
 
 ## 8. MAPA IL·LUSTRAT DEL POBLE
 
-`v2/public/map-test.webp` és la base tècnica actual (bounds i `latLonToSVG` ja calibrats — no tocar la geometria). **Cal refer només l'estil visual**, no les coordenades:
+> ⚠️ **Actualització 2026-09-25:** l'app ja no fa servir `map-test.webp`. El fons del mapa és l'ortofoto PNOA `public/ortofoto-pentagrama.webp` (2048×2048 px, 1040 m de costat, centrada al Pla del Masset i girada 29,846° en sentit antihorari). Si mai es fa una versió il·lustrada, ha de tenir **exactament el mateix enquadrament i gir** que l'ortofoto perquè `aPixel` (`components/player/MapaEquip.tsx`) no es desquadri — veure `docs/mapa-proposta-definitiva.md`. El prompt de sota és de quan el mapa era horitzontal i sense girar.
+
+Prompt original (mapa horitzontal, ja no vigent):
 
 ```
 "Illustrated top-down map of a small Catalan medieval village
@@ -155,7 +157,7 @@ labels (labels are added separately in the app). Landscape
 orientation, high resolution for pan/zoom use."
 ```
 
-⚠️ Mantenir els mateixos bounds geogràfics que `map-test.webp` actual perquè `latLonToSVG` no es desquadri — donar aquest fitxer com a referència de composició/enquadrament a qui generi la imatge nova, no només el prompt de text.
+⚠️ Donar `public/ortofoto-pentagrama.webp` com a referència de composició/enquadrament a qui generi la imatge nova (quadrada i girada), no només el prompt de text.
 
 ---
 
@@ -177,7 +179,7 @@ orientation, high resolution for pan/zoom use."
 | Il·lustració d'estació (hub, targeta) | 1024×1024px |
 | Icona d'element / pin de mapa | 512×512px, fons transparent |
 | Oroborus / emblema de l'Orde | 512–1024px, fons transparent quan sigui icona |
-| Mapa il·lustrat | mida gran horitzontal, mantenir proporció de `map-test.webp` actual |
+| Mapa il·lustrat | 2048×2048px, mateix enquadrament i gir que `ortofoto-pentagrama.webp` |
 | Icones d'app (PWA) | ja existents (`icon-192.png`, `icon-512.png`) — revisar si cal actualitzar l'estil quan es tanqui la resta |
 
 ---

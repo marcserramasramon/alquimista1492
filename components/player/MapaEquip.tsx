@@ -41,17 +41,23 @@ export interface MarcadorMapa {
   etiqueta?: string;
 }
 
-function dinsDelMapa(lat: number, lng: number) {
-  return lat >= BOUND_MIN_LAT && lat <= BOUND_MAX_LAT && lng >= BOUND_MIN_LON && lng <= BOUND_MAX_LON;
-}
-
-// Límits geogràfics del mapa il·lustrat (mateixos que l'app v1, "esta bé")
-const BOUND_MIN_LON = 2.22288;
-const BOUND_MIN_LAT = 41.90974;
-const BOUND_MAX_LON = 2.23464;
-const BOUND_MAX_LAT = 41.9166;
-const SVG_W = 800;
-const SVG_H = 600;
+/**
+ * Fons: ortofoto PNOA (public/ortofoto-pentagrama.webp), 2048×2048 px, 1040 m de costat,
+ * centrada al Pla del Masset i girada 29,846° en sentit antihorari (el nord queda cap
+ * amunt-esquerra). Es va demanar al WMS aquesta BBOX (EPSG:4326) a ORIGINAL×ORIGINAL px,
+ * es va girar i se'n va retallar el quadrat central. Detall a docs/mapa-proposta-definitiva.md.
+ */
+const MIN_LAT = 41.906727;
+const MAX_LAT = 41.919533;
+const MIN_LON = 2.221185;
+const MAX_LON = 2.238393;
+const ORIGINAL = 2804;
+/** Costat de la imatge i del viewBox. */
+const MIDA = 2048;
+const ANGLE_GRAUS = 29.846;
+const ANGLE = (ANGLE_GRAUS * Math.PI) / 180;
+/** Els marcadors es van dibuixar per a un viewBox de 800 px d'ample. */
+const MIDA_MARCADORS = MIDA / 800;
 const ZOOM_MAX = 5;
 /** Píxels que s'ha de moure el dit perquè un toc passi a ser arrossegar. */
 const LLINDAR_ARROSSEGAR = 8;
@@ -61,10 +67,19 @@ const PAPER = "#fffdf7";
 const GOLD = "#eab308";
 const BLOOD = "#b3261e";
 
-function latLonToSVG(lat: number, lon: number) {
-  const x = ((lon - BOUND_MIN_LON) / (BOUND_MAX_LON - BOUND_MIN_LON)) * SVG_W;
-  const y = ((BOUND_MAX_LAT - lat) / (BOUND_MAX_LAT - BOUND_MIN_LAT)) * SVG_H;
-  return { x, y };
+/** lat/lon → píxel de la imatge girada (0..MIDA). */
+function aPixel(lat: number, lon: number) {
+  const u = ((lon - MIN_LON) / (MAX_LON - MIN_LON)) * ORIGINAL - ORIGINAL / 2;
+  const v = ((MAX_LAT - lat) / (MAX_LAT - MIN_LAT)) * ORIGINAL - ORIGINAL / 2;
+  // Gir antihorari a la pantalla (eix y cap avall).
+  const c = Math.cos(ANGLE);
+  const s = Math.sin(ANGLE);
+  return { x: MIDA / 2 + u * c + v * s, y: MIDA / 2 - u * s + v * c };
+}
+
+function dinsDelMapa(lat: number, lng: number) {
+  const { x, y } = aPixel(lat, lng);
+  return x >= 0 && x <= MIDA && y >= 0 && y <= MIDA;
 }
 
 function centre(pts: { x: number; y: number }[]) {
@@ -82,7 +97,7 @@ export function MapaEquip({
   marcadors = [],
   recorregut = [],
 }: MapaEquipProps) {
-  // Fora dels límits del mapa il·lustrat, un marcador es queda a l'última
+  // Fora de la imatge del mapa, un marcador es queda a l'última
   // posició coneguda de dins (app-nova.md §7ter.3).
   const [darreresDins, setDarreresDins] = useState<Record<string, { lat: number; lng: number }>>({});
   const nousDins = marcadors.filter(
@@ -103,7 +118,7 @@ export function MapaEquip({
 
   const vistaRef = useRef<HTMLDivElement | null>(null);
   const [pantallaCompleta, setPantallaCompleta] = useState(false);
-  // Mida de la finestra del mapa (px). La capa del mapa manté sempre la proporció 4:3.
+  // Mida de la finestra del mapa (px). La capa del mapa és sempre quadrada.
   const [mida, setMida] = useState({ w: 0, h: 0 });
   // Transformació de la capa: posició a la pantalla = t + z · posició dins la capa.
   const [vista, setVista] = useState({ z: 1, tx: 0, ty: 0 });
@@ -120,8 +135,8 @@ export function MapaEquip({
   }, []);
 
   // La capa ocupa tota l'amplada (o l'alçada, si no hi cap) sense deformar el mapa.
-  const capaW = mida.w > 0 && mida.h > 0 ? Math.min(mida.w, (mida.h * SVG_W) / SVG_H) : 0;
-  const capaH = (capaW * SVG_H) / SVG_W;
+  const capaW = mida.w > 0 && mida.h > 0 ? Math.min(mida.w, mida.h) : 0;
+  const capaH = capaW;
 
   /** Limita el zoom i evita que el mapa surti de la finestra (o el centra si hi cap sencer). */
   const ajustar = useCallback(
@@ -265,13 +280,13 @@ export function MapaEquip({
 
   const zoom = vista.z;
   // Els marcadors creixen menys que el mapa: continuen al seu lloc però no ho tapen tot.
-  const escala = 1 / Math.sqrt(zoom);
+  const escala = MIDA_MARCADORS / Math.sqrt(zoom);
 
   return (
     <>
       {/* Mentre el mapa és a pantalla completa, en reserva el lloc a la pàgina. */}
       {pantallaCompleta && (
-        <div className="aspect-[4/3] w-full rounded-3xl border-[3px] border-dashed border-ink/30" aria-hidden />
+        <div className="aspect-square w-full rounded-3xl border-[3px] border-dashed border-ink/30" aria-hidden />
       )}
       <div
         className={
@@ -286,7 +301,7 @@ export function MapaEquip({
         <div
           ref={vistaRef}
           className={`relative w-full touch-none select-none overflow-hidden border-[3px] border-ink bg-paper-2 ${
-            pantallaCompleta ? "min-h-0 flex-1 rounded-2xl" : "aspect-[4/3] rounded-3xl shadow-[0_6px_0_var(--ink)]"
+            pantallaCompleta ? "min-h-0 flex-1 rounded-2xl" : "aspect-square rounded-3xl shadow-[0_6px_0_var(--ink)]"
           }`}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -307,8 +322,8 @@ export function MapaEquip({
               transform: `translate(${vista.tx}px, ${vista.ty}px) scale(${zoom})`,
             }}
           >
-            <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="block h-full w-full" preserveAspectRatio="none">
-              <image href="/map-test.webp" x="0" y="0" width={SVG_W} height={SVG_H} preserveAspectRatio="none" />
+            <svg viewBox={`0 0 ${MIDA} ${MIDA}`} className="block h-full w-full">
+              <image href="/ortofoto-pentagrama.webp" x={0} y={0} width={MIDA} height={MIDA} />
 
               {recorregut.length > 0 && <Cami punts={recorregut} escala={escala} />}
 
@@ -317,7 +332,7 @@ export function MapaEquip({
                 // La seleccionada es pinta l'última perquè, en fer-se gran, quedi per sobre de les altres.
                 .sort((a, b) => Number(a.id === seleccionadaId) - Number(b.id === seleccionadaId))
                 .map((estacio) => {
-                  const { x, y } = latLonToSVG(estacio.latitud, estacio.longitud);
+                  const { x, y } = aPixel(estacio.latitud, estacio.longitud);
                   const element = estacio.element ? ELEMENTS[estacio.element] : null;
                   const seleccionada = estacio.id === seleccionadaId;
                   const resolta = estacio.progres.resolta;
@@ -384,7 +399,7 @@ export function MapaEquip({
                 })}
 
               {marcadorsVisibles.map((m) => {
-                const { x, y } = latLonToSVG(m.lat, m.lng);
+                const { x, y } = aPixel(m.lat, m.lng);
                 if (m.tipus === "jo") {
                   return (
                     <g key={m.id} transform={`translate(${x} ${y}) scale(${escala})`} aria-label="La vostra posició">
@@ -399,12 +414,14 @@ export function MapaEquip({
                 if (m.tipus === "master") {
                   return (
                     <g key={m.id} transform={`translate(${x} ${y}) scale(${escala})`} aria-label="Posició del màster">
-                      <circle r={18} fill="none" stroke={BLOOD} strokeWidth={4}>
-                        <animate attributeName="r" values="18;36" dur="2s" repeatCount="indefinite" />
+                      <circle r={22} fill="none" stroke="#000" strokeWidth={4}>
+                        <animate attributeName="r" values="22;40" dur="2s" repeatCount="indefinite" />
                         <animate attributeName="opacity" values="0.9;0" dur="2s" repeatCount="indefinite" />
                       </circle>
-                      <circle r={18} fill={BLOOD} stroke={INK} strokeWidth={4} />
-                      <circle r={6} fill={PAPER} />
+                      <circle r={22} fill="#000" stroke="#fff" strokeWidth={3} />
+                      <text textAnchor="middle" dominantBaseline="central" fontSize={26} y={1}>
+                        🧙
+                      </text>
                     </g>
                   );
                 }
@@ -430,6 +447,27 @@ export function MapaEquip({
               })}
             </svg>
           </div>
+
+          {/* Rosa del nord: fixa a la cantonada, no fa zoom. La imatge està girada. */}
+          <svg
+            viewBox="-80 -80 160 160"
+            className="pointer-events-none absolute right-2.5 top-2.5 h-12 w-12"
+            role="img"
+            aria-label="Nord"
+          >
+            <g transform={`rotate(${-ANGLE_GRAUS})`}>
+              <circle r={70} fill={PAPER} stroke={INK} strokeWidth={8} opacity={0.9} />
+              <path d="M 0 -52 L 22 20 L 0 8 L -22 20 Z" fill={INK} />
+              <text y={48} textAnchor="middle" fontSize={34} fontWeight={800} fill={INK}>
+                N
+              </text>
+            </g>
+          </svg>
+
+          {/* Llicència CC-BY 4.0 de l'ortofoto: el text de l'atribució és l'oficial. */}
+          <p className="pointer-events-none absolute bottom-0 right-0 rounded-tl-lg bg-paper/80 px-1.5 py-0.5 text-[10px] leading-tight text-ink">
+            © PNOA cedido por © Instituto Geográfico Nacional
+          </p>
 
           {/* Controls a l'abast del polze: sempre visibles, mínim 48px */}
           <div className="absolute left-2.5 top-2.5 flex gap-2">
@@ -479,9 +517,9 @@ function IconaReiniciar() {
   );
 }
 
-/** Camí d'un equip: línia vermella amb vora fosca (es veu sobre el mapa il·lustrat) i l'inici marcat. */
+/** Camí d'un equip: línia vermella amb vora fosca (es veu sobre l'ortofoto) i l'inici marcat. */
 function Cami({ punts, escala }: { punts: { lat: number; lng: number }[]; escala: number }) {
-  const svg = punts.map((p) => latLonToSVG(p.lat, p.lng));
+  const svg = punts.map((p) => aPixel(p.lat, p.lng));
   const traca = svg.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
   const inici = svg[0];
   const final = svg[svg.length - 1];

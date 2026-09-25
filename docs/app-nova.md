@@ -142,7 +142,7 @@ Els QR d'estació **tampoc** s'escanegen amb un escàner intern: cada cartell d'
 
 | Pestanya | Substitueix | Contingut |
 |---|---|---|
-| **MAPA** (amb "La Gran Obra" integrada) | Mapa + Quadern (sospitosos) fusionats | ⚠️ Correcció respecte a una versió anterior d'aquest document: el mapa **no** fa servir Leaflet (no està ni instal·lat — `package.json` no en té). La implementació real és `components/player/StaticMap.tsx`: SVG propi amb la imatge il·lustrada `/map-test.webp`, conversió `latLonToSVG(lat, lon)` sobre uns bounds fixos, i pan/zoom clampat (commit `d3f9359`). A sobre: llegenda de colors (ja existent). Al mig: el mapa amb les 5 fites elementals com a pins — clicar un pin ja descobert/resolt mostra info. A sota, en lloc de la graella plana de botons actual: **"La Gran Obra"**, veure §7bis.2bis. **No hi ha llista de sospitosos** (regla 1 de `historia-nova.md`). Les estacions es descobreixen escanejant el QR físic, no des del mapa. També hi pinta la posició en viu del personatge i (si escau) la pròpia — veure §7ter. |
+| **MAPA** (amb "La Gran Obra" integrada) | Mapa + Quadern (sospitosos) fusionats | ⚠️ Correcció respecte a una versió anterior d'aquest document: el mapa **no** fa servir Leaflet (no està ni instal·lat — `package.json` no en té). La implementació real és `components/player/MapaEquip.tsx`: SVG propi amb l'ortofoto PNOA girada `/ortofoto-pentagrama.webp` (2048×2048, centrada al Pla del Masset, nord cap amunt-esquerra), conversió `aPixel(lat, lon)` i pan/zoom clampat. Detall de la imatge i de la conversió a `docs/mapa-proposta-definitiva.md`. A sobre: llegenda de colors (ja existent). Al mig: el mapa amb les 5 fites elementals com a pins — clicar un pin ja descobert/resolt mostra info. A sota, en lloc de la graella plana de botons actual: **"La Gran Obra"**, veure §7bis.2bis. **No hi ha llista de sospitosos** (regla 1 de `historia-nova.md`). Les estacions es descobreixen escanejant el QR físic, no des del mapa. També hi pinta la posició en viu del personatge i (si escau) la pròpia — veure §7ter. |
 | **HISTÒRIA** | Història (igual) | Es manté igual que `interficie.md`: missatge inicial + fragments narratius que es desbloquegen per estació, scroll, no interactiu. |
 | **XAT** (nom provisional) | Salvos (es treu) | Xat en directe amb el personatge, veure §7bis.3. Substitueix la pestanya SALVOS — pendent confirmar a `historia-nova.md` si la mecànica de salconduits/control se salva d'alguna altra forma; si es manté, necessitarà una pestanya pròpia o integrar-se dins XAT. |
 
@@ -214,7 +214,7 @@ Els QR d'estació **tampoc** s'escanegen amb un escàner intern: cada cartell d'
 
 ### 7ter.1 Tecnologia
 
-No cal cap llibreria nova: `navigator.geolocation` (API nativa del navegador). Es reutilitza el `StaticMap` existent (§7bis.2) i la seva funció `latLonToSVG` per pintar-hi punts en viu — les fites ja fan servir exactament aquesta conversió, així que un marcador de posició és el mateix patró amb coordenades que canvien.
+No cal cap llibreria nova: `navigator.geolocation` (API nativa del navegador). Es reutilitza el `StaticMap` existent (§7bis.2) i la seva funció `aPixel` (avui a `MapaEquip.tsx`) per pintar-hi punts en viu — les fites ja fan servir exactament aquesta conversió, així que un marcador de posició és el mateix patró amb coordenades que canvien.
 
 - Client: `watchPosition` (o `getCurrentPosition` en interval) — **throttle obligatori** (p.ex. cada 10–15 s o llindar de moviment ~10 m) per bateria i per no saturar Realtime.
 - Enviament: sempre via ruta API pròpia, mai directe a Supabase des del client (regla ja establerta al CLAUDE.md i reforçada a §7bis.3).
@@ -233,8 +233,8 @@ No cal cap llibreria nova: `navigator.geolocation` (API nativa del navegador). E
 - **Model de dades:** taula singleton `character_location`, mateix patró que `game_config` (§ ja existent al schema): `id=1`, `lat`, `lng`, `sharing boolean not null default false`, `updated_at`. RLS: `USING (true)` en lectura per a tothom (com `game_config`), escriptura només service role.
 - **Configuració (nova, a `game_config`):** `location_interval_minutes integer` (interval d'enviament, editable pel màster) i `location_consent_message text` (missatge de consentiment mostrat als jugadors, editable pel màster, amb frase predefinida per defecte) — veure §7ter.4.
 - El màster té un interruptor "Comparteixo la meva ubicació" al seu dashboard/mòbil (`sharing`). Quan és actiu, el seu propi mòbil envia posició cada X segons a `app/api/master/location/route.ts`; quan l'apaga, els equips deixen de veure el marcador (no cal esborrar la fila, només no renderitzar-lo o marcar-lo "desconegut").
-- A la pestanya MAPA de l'equip (`StaticMap`): un marcador diferenciat (icona pròpia del personatge, no una fita) es pinta a `latLonToSVG(character_location.lat, character_location.lng)`, actualitzat en viu via Realtime.
-- Si la posició cau fora dels bounds del mapa il·lustrat (`boundMinLon/Lat`–`boundMaxLon/Lat` a `StaticMap.tsx`): **decidit** — no s'espera que passi a la pràctica (el recorregut del personatge es manté dins el poble), així que el marcador simplement **reté l'última posició coneguda dins els bounds** en lloc de desaparèixer o clampar-se a la vora amb una fletxa. No cal lògica especial de "fora de mapa".
+- A la pestanya MAPA de l'equip (`StaticMap`): un marcador diferenciat (icona pròpia del personatge, no una fita) es pinta a `aPixel(character_location.lat, character_location.lng)`, actualitzat en viu via Realtime.
+- Si la posició cau fora de la imatge del mapa (`dinsDelMapa` a `MapaEquip.tsx`: fora del quadrat girat de l'ortofoto): **decidit** — no s'espera que passi a la pràctica (el recorregut del personatge es manté dins el poble), així que el marcador simplement **reté l'última posició coneguda dins els bounds** en lloc de desaparèixer o clampar-se a la vora amb una fletxa. No cal lògica especial de "fora de mapa".
 
 ### 7ter.4 Privacitat i UX
 
@@ -285,7 +285,7 @@ Hi ha una carpeta `v2/` a l'arrel del repo (Next.js complet, propi `node_modules
 
 ## Obertura de les fites (GPS + QR) — implementat 2026-09-23
 
-- Les 5 fites elementals comencen **tancades**. S'obren soles quan el GPS situa l'equip a **20 m** o menys (`RADI_OBERTURA_M` a `lib/ubicacio.ts`); el servidor recalcula la distància (`POST /api/obrir`). En obrir-se sona una campaneta (Web Audio) i vibra (Android), i s'obre la fitxa de la fita al hub.
+- Les 5 fites elementals comencen **tancades**. S'obren soles quan el GPS situa l'equip a **50 m** o menys (`RADI_OBERTURA_M` a `lib/ubicacio.ts`); el servidor recalcula la distància (`POST /api/obrir`). En obrir-se sona una campaneta (Web Audio) i vibra (Android), i s'obre la fitxa de la fita al hub.
 - **Límit conegut:** amb el mòbil bloquejat el navegador congela la pàgina: no hi ha so ni detecció fins que el tornen a obrir. Es va decidir no fer servir Wake Lock.
 - El botó "Hi som! Obrir la fita" obre l'escàner de QR (`@yudiel/react-qr-scanner`) amb l'opció "Entreu el codi manualment" a sota (equips sense GPS o sense càmera).
 - Cada cartell porta un QR amb `{APP_URL}/s/{id}?c={codi}` i el codi escrit a sota. Els codis viuen a `content/private/codisFites.ts`; el màster els veu a `/master/codis`.

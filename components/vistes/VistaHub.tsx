@@ -103,7 +103,10 @@ export function VistaHub({
             )}
             {marcadors.some((m) => m.tipus === "master") && (
               <span className="flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded-full bg-blood ring-2 ring-ink" /> L&apos;organització
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black text-[11px] leading-none" aria-hidden>
+                  🧙
+                </span>{" "}
+                L&apos;organització
               </span>
             )}
           </div>
