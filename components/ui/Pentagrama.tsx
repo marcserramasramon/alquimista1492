@@ -12,7 +12,7 @@ export interface NodePentagrama {
 }
 
 export interface PentagramaProps {
-  /** Les cinc fites elementals, en l'ordre del recorregut. */
+  /** Les cinc fites elementals, en qualsevol ordre: es col·loquen segons ORDRE. */
   nodes?: NodePentagrama[];
   /** El Gresol del centre s'encén quan totes les fites estan resoltes. */
   centreActiu?: boolean;
@@ -31,7 +31,8 @@ const R_NODE = 100;
 const R_ANELL = 136;
 const MIDA_NODE = 27;
 
-const ORDRE: Element[] = ["aigua", "terra", "foc", "aire", "anima"];
+/** Posició de cada element a l'estrella: comença per la punta de dalt i va en sentit horari. */
+const ORDRE: Element[] = ["foc", "terra", "anima", "aire", "aigua"];
 const DECORATIU: NodePentagrama[] = ORDRE.map((element) => ({
   id: element,
   element,
@@ -69,7 +70,7 @@ function opacitatGresol(resolts: number, total: number, sempreVisible: boolean) 
  * quan dues puntes veïnes de l'estrella estan resoltes, la línia s'encén d'or.
  */
 export function Pentagrama({
-  nodes = DECORATIU,
+  nodes: nodesDonats = DECORATIU,
   centreActiu = false,
   girar = false,
   seleccionatId = null,
@@ -77,6 +78,7 @@ export function Pentagrama({
   vius = false,
   className = "",
 }: PentagramaProps) {
+  const nodes = [...nodesDonats].sort((a, b) => ORDRE.indexOf(a.element) - ORDRE.indexOf(b.element));
   const punts = nodes.map((_, i) => vertex(i));
   const resolts = nodes.filter((n) => n.resolt).length;
   const opacitatCentre = opacitatGresol(resolts, nodes.length, vius || centreActiu);
