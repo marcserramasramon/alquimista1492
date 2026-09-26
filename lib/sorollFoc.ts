@@ -1,6 +1,10 @@
 /**
- * Composició de "soroll" del cartell de Foc: molts números i símbols
- * alquímics de colors i un sol número en vermell (la resposta de la fita).
+ * Composició de "soroll" del cartell de Foc: un mar saturat de números i
+ * símbols alquímics en vermell, sobreposats entre ells i per sobre d'un
+ * número blau gran i centrat (la resposta de la fita). Sense el "paper de
+ * foc" (cel·lofana vermella) el blau ha de quedar prou camuflat sota el
+ * vermell que li passa per sobre; mirant-ho a través del filtre, el vermell
+ * es dissol i el blau hi destaca sencer.
  *
  * És determinista: la mateixa llavor dona sempre el mateix full, així el que
  * s'imprimeix es pot tornar a generar igual. No importa res de
@@ -21,12 +25,24 @@ export interface PecaSoroll {
   simbol?: FormaSimbol;
   /** Només la peça de la resposta. */
   objectiu?: boolean;
+  /** Només peces de soroll: si va per sota de la resposta (la resposta la tapa a ella) en lloc de per sobre. */
+  sotaObjectiu?: boolean;
+}
+
+/** Un punt de la trama halftone del número de la resposta. */
+export interface PuntHalftone {
+  x: number;
+  y: number;
+  r: number;
+  color: string;
 }
 
 export interface Soroll {
   amplada: number;
   alcada: number;
   peces: PecaSoroll[];
+  /** Trama de punts (halftone) del número de la resposta (components/cartells/SorollFocSvg.tsx la clipa a la seva forma). */
+  puntsObjectiu: PuntHalftone[];
 }
 
 /**
@@ -40,22 +56,26 @@ export function alcadaSoroll(estil: "imatge" | "fons"): number {
 
 /** Opcions de generaSoroll segons l'estil del cartell. */
 export function opcionsSoroll(estil: "imatge" | "fons") {
-  return estil === "imatge" ? { alcada: alcadaSoroll(estil), espai: 26 } : { alcada: alcadaSoroll(estil) };
+  return { alcada: alcadaSoroll(estil), quantitat: estil === "imatge" ? 680 : 520 };
 }
 
-export const VERMELL_OBJECTIU = "#d0021b";
+/** Proporció de l'alçada del cartell que ocupa el número de la resposta (es retalla per les vores del cartell). */
+const PROPORCIO_MIDA_OBJECTIU = 1.9;
 
-/** Colors del soroll: variats i vius, però cap que es pugui confondre amb el vermell. */
+/** Color de la resposta: el mateix blau que "Aigua" a la resta de l'app (`content/public/gresol.ts`). */
+export const BLAU_OBJECTIU = "#1d6fd6";
+
+/** Colors del soroll: variants de vermell (les que es dissolen a través del "paper de foc"), cap que es pugui confondre amb el blau de la resposta. */
 const COLORS_SOROLL = [
-  "#1d6fd6", // blau
-  "#0e9bb8", // turquesa
-  "#1f7a3a", // verd fosc
-  "#5b8a1e", // verd oliva
-  "#8b3fb5", // lila
-  "#d4a106", // daurat
-  "#1b1511", // tinta
-  "#6b4a2b", // marró
-  "#2b3a8c", // indi
+  "#c8231b", // vermell (el "vermell foc" de l'app)
+  "#d0021b", // vermell viu
+  "#8f1c14", // vermell fosc
+  "#a8321f", // teula
+  "#e13c2b", // vermell taronja
+  "#7a1010", // granat
+  "#c4432c", // òxid
+  "#961b24", // carmesí
+  "#b5291b", // vermell terracota
 ];
 
 const SIMBOLS: FormaSimbol[] = ["foc", "aigua", "aire", "terra", "sol", "lluna", "sofre", "sal", "estrella"];
@@ -77,62 +97,87 @@ export function generaSoroll({
   llavor = 1472,
   amplada = 1000,
   alcada = 440,
-  espai = 4,
+  quantitat = 300,
 }: {
   resposta: string;
   llavor?: number;
   amplada?: number;
   alcada?: number;
-  /** Separació mínima entre peces: més gran, menys dens (a sobre d'una il·lustració, que s'hi vegi). */
-  espai?: number;
+  /** Nombre aproximat de peces de soroll: com més, més saturat i sobreposat (i més ben tapada la resposta). */
+  quantitat?: number;
 }): Soroll {
   const r = prng(llavor);
   const entre = (min: number, max: number) => min + r() * (max - min);
   const tria = <T,>(llista: T[]) => llista[Math.floor(r() * llista.length)];
 
   const peces: PecaSoroll[] = [];
-  const marge = 40;
 
-  // Radi aproximat que ocupa una peça, per no encavalcar-les.
-  const radi = (p: Pick<PecaSoroll, "mida">) => p.mida * 0.42;
-  const hiCap = (p: PecaSoroll) =>
-    peces.every((q) => Math.hypot(p.x - q.x, p.y - q.y) > radi(p) + radi(q) + espai);
-
-  // Primer la resposta: mida normal i lluny de les vores, perquè no destaqui
-  // per la posició ni per la mida, només pel color.
+  // La resposta va primera: en SVG, qui es dibuixa abans queda per sota de
+  // qui ve després, així el soroll vermell la va tapant per sobre. Gran i
+  // centrada perquè ni la posició ni la mida ajudin a distingir-la a ull nu.
+  const xObjectiu = amplada / 2;
+  const yObjectiu = alcada / 2 - 50;
+  const midaObjectiu = alcada * PROPORCIO_MIDA_OBJECTIU;
   peces.push({
-    x: entre(amplada * 0.25, amplada * 0.75),
-    y: entre(alcada * 0.25, alcada * 0.75),
-    mida: 78,
-    rotacio: entre(-18, 18),
-    color: VERMELL_OBJECTIU,
+    x: xObjectiu,
+    y: yObjectiu,
+    mida: midaObjectiu,
+    rotacio: 0,
+    color: BLAU_OBJECTIU,
     xifra: resposta,
     objectiu: true,
   });
 
-  // Després el soroll, de més gran a més petit, amb mostreig per rebuig:
-  // omple el full dens però sense que res tapi res.
-  const mides = [96, 84, 72, 62, 52, 44, 36, 30, 24];
-  for (const mida of mides) {
-    let fallades = 0;
-    while (fallades < 400) {
-      const esXifra = r() < 0.62;
-      const peca: PecaSoroll = {
-        x: entre(marge, amplada - marge),
-        y: entre(marge, alcada - marge),
-        mida: mida * entre(0.9, 1.1),
-        rotacio: entre(-35, 35),
-        color: tria(COLORS_SOROLL),
-        ...(esXifra ? { xifra: String(Math.floor(r() * 10)) } : { simbol: tria(SIMBOLS) }),
-      };
-      if (hiCap(peca)) {
-        peces.push(peca);
-        fallades = 0;
-      } else {
-        fallades++;
-      }
+  // Trama de punts (halftone) de la resposta: graella de cercles (clipats a
+  // la seva forma pel component), tots de la mateixa mida i del blau de la
+  // resposta.
+  const pasHalftone = 9;
+  const radiHalftone = 3.6;
+  const margeHalftone = midaObjectiu * 0.65;
+  const minXHalftone = Math.max(0, xObjectiu - margeHalftone);
+  const maxXHalftone = Math.min(amplada, xObjectiu + margeHalftone);
+  const minYHalftone = Math.max(0, yObjectiu - margeHalftone);
+  const maxYHalftone = Math.min(alcada, yObjectiu + margeHalftone);
+  const puntsObjectiu: PuntHalftone[] = [];
+  for (let y = minYHalftone; y <= maxYHalftone; y += pasHalftone) {
+    for (let x = minXHalftone; x <= maxXHalftone; x += pasHalftone) {
+      puntsObjectiu.push({ x, y, r: radiHalftone, color: BLAU_OBJECTIU });
     }
   }
 
-  return { amplada, alcada, peces };
+  // Soroll: una quadrícula amb gasiva (jitter) per cel·la, en lloc de punts
+  // purament aleatoris — el mostreig uniforme pur tendeix a deixar clústers
+  // (masses de peces juntes) i buits (espais en blanc) perquè no reparteix
+  // l'atzar de manera uniforme per l'espai. Cada cel·la aporta una peça
+  // desplaçada prou lluny del seu centre perquè es sobreposi amb les veïnes
+  // (i amb la resposta, si la cel·la hi cau a sobre), però sense els forats
+  // ni les acumulacions del mostreig uniforme.
+  const columnes = Math.max(1, Math.round(Math.sqrt((quantitat * amplada) / alcada)));
+  const files = Math.max(1, Math.round(quantitat / columnes));
+  const ampladaCella = amplada / columnes;
+  const alcadaCella = alcada / files;
+  const mides = [90, 78, 68, 58, 50, 42, 36, 30, 25, 20];
+  for (let fila = 0; fila < files; fila++) {
+    for (let columna = 0; columna < columnes; columna++) {
+      const cx = (columna + 0.5) * ampladaCella;
+      const cy = (fila + 0.5) * alcadaCella;
+      const esXifra = r() < 0.62;
+      // Les xifres es queden vermelles (soroll); tots els símbols surten del
+      // blau de la resposta, perquè el blau no delati el "2" per si sol.
+      const color = esXifra ? tria(COLORS_SOROLL) : BLAU_OBJECTIU;
+      peces.push({
+        x: cx + entre(-ampladaCella * 0.7, ampladaCella * 0.7),
+        y: cy + entre(-alcadaCella * 0.7, alcadaCella * 0.7),
+        mida: tria(mides) * entre(0.9, 1.1),
+        rotacio: entre(-35, 35),
+        color,
+        // Un 30% queda per sota de la resposta (la resposta la tapa a ells) en
+        // lloc de per sobre, perquè el camuflatge no sigui una simple pila plana.
+        sotaObjectiu: r() < 0.3,
+        ...(esXifra ? { xifra: String(Math.floor(r() * 10)) } : { simbol: tria(SIMBOLS) }),
+      });
+    }
+  }
+
+  return { amplada, alcada, peces, puntsObjectiu };
 }

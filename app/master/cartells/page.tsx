@@ -12,15 +12,21 @@ import { VistaCartells, type DadesCartell } from "@/components/vistes/VistaCarte
  * Cartells físics per imprimir. Porten el codi de cada fita i el número del
  * Foc, per això només els veu el màster.
  * `?llavor=N` genera una altra composició de soroll per al cartell de Foc.
+ * `?quantitat=N` canvia la densitat del soroll (per defecte, la de `opcionsSoroll`): més gran, més sobreposat i més tapada la resposta.
  * `?estil=fons` posa la il·lustració vertical de fons a tot el full.
  * `?estil=propaganda` fa els cartells per anunciar el joc: sense QR, codi ni soroll.
  * `?estil=lema` és igual, però amb una sola frase per element en lloc del text.
  */
-export default async function CartellsPage({ searchParams }: { searchParams: Promise<{ llavor?: string; estil?: string }> }) {
+export default async function CartellsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ llavor?: string; quantitat?: string; estil?: string }>;
+}) {
   if (!(await getMasterSessionFromCookies())) redirect("/master/login");
 
-  const { llavor, estil } = await searchParams;
+  const { llavor, quantitat, estil } = await searchParams;
   const llavorNum = Number.parseInt(llavor ?? "", 10);
+  const quantitatNum = Number.parseInt(quantitat ?? "", 10);
   const estilCartell = estil === "fons" || estil === "propaganda" || estil === "lema" ? estil : "imatge";
   const propaganda = estilCartell === "propaganda" || estilCartell === "lema";
   const base = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
@@ -41,7 +47,12 @@ export default async function CartellsPage({ searchParams }: { searchParams: Pro
       codi: propaganda ? "" : codi,
       qrSvg: propaganda ? undefined : await qrSvg(`${base}/s/${e.id}?c=${codi}`),
       soroll: resposta
-        ? generaSoroll({ resposta, ...opcionsSoroll(estilCartell === "fons" ? "fons" : "imatge"), ...(Number.isFinite(llavorNum) ? { llavor: llavorNum } : {}) })
+        ? generaSoroll({
+            resposta,
+            ...opcionsSoroll(estilCartell === "fons" ? "fons" : "imatge"),
+            ...(Number.isFinite(llavorNum) ? { llavor: llavorNum } : {}),
+            ...(Number.isFinite(quantitatNum) ? { quantitat: quantitatNum } : {}),
+          })
         : undefined,
     });
   }

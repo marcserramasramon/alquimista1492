@@ -36,8 +36,9 @@ export const SOLUCIONS: Record<string, Solucio> = {
     ],
   },
 
-  // FOC — Entrada del poble. El "paper de foc" (cel·lofana vermella) deixa
-  // llegir el número escrit en verd enmig del soroll de colors.
+  // FOC — Entrada del poble. Enmig d'un mar de xifres i símbols vermells,
+  // el "paper de foc" (cel·lofana vermella) els dissol i hi destaca el
+  // número blau: la resposta.
   foc: {
     respostesAcceptades: ["2"],
     pistes: [

@@ -52,7 +52,8 @@ const PROPORCIO_IMATGE = "1500 / 837";
 function midaPoema(poema: PoemaCartell, ambSoroll: boolean, fons: boolean) {
   const lletres = poema.paragrafs.join(" ").length;
   if (ambSoroll) return fons ? 11 : 16;
-  if (lletres > 650) return fons ? 14.5 : 16;
+  if (lletres > 850) return fons ? 13 : 12.5;
+  if (lletres > 650) return fons ? 14.5 : 13.5;
   return 16;
 }
 
@@ -94,7 +95,7 @@ function Cartell({ c, estil }: { c: DadesCartell; estil: EstilCartell }) {
             <div className="relative w-full shrink-0" style={{ aspectRatio: PROPORCIO_IMATGE }}>
               {/* eslint-disable-next-line @next/next/no-img-element -- s'imprimeix: sense optimització d'imatge */}
               <img src={c.poema.imatge} alt="" className="absolute inset-0 h-full w-full" />
-              {c.soroll && <SorollFocSvg soroll={c.soroll} halo className="absolute inset-0 h-full w-full" />}
+              {c.soroll && <SorollFocSvg soroll={c.soroll} className="absolute inset-0 h-full w-full" />}
             </div>
           )}
 
@@ -279,7 +280,7 @@ function CartellPortadaImatge({ id, fons, ambQr = false, qrSvg }: { id: string; 
         </div>
         {ambQr ? (
           <>
-            {/* Amb QR: el títol i què és a dalt; a baix només el QR, amb un degradat curt. */}
+            {/* Amb QR: el títol i què és a dalt; a baix només el QR, sense degradat. */}
             <header className="portada-dalt flex flex-col items-center gap-[2mm] text-center">
               <h1 className="text-[40pt] font-extrabold leading-[1] text-balance" style={{ color: or }}>
                 Els Guardians del Secret de Sentfores · 1472
@@ -369,16 +370,13 @@ export function VistaCartells({
           background: linear-gradient(to bottom, rgb(243 229 196 / 0), rgb(243 229 196 / 0.25));
         }
         .propaganda-peu header p { text-shadow: 0 0 1mm #f3e5c4, 0 0 2mm #f3e5c4, 0 0 3mm #f3e5c4; }
-        /* Portades amb QR: vel de paper a dalt (títol) i un degradat curt a baix (QR). */
+        /* Portades amb QR: vel de paper a dalt (títol); a baix el QR va directament sobre la il·lustració. */
         .portada-dalt {
           margin: -2mm -4mm 0; padding: 4mm 24mm 16mm; border-radius: 3mm 3mm 0 0;
           background: linear-gradient(to bottom, rgb(243 229 196 / 0.94), rgb(243 229 196 / 0.86) 60%, rgb(243 229 196 / 0));
         }
-        .propaganda-peu.peu-qr {
-          padding: 10mm 6mm 7.5mm;
-          background: linear-gradient(to bottom, rgb(243 229 196 / 0.25), rgb(243 229 196 / 0.9) 12mm, rgb(243 229 196 / 0.95));
-        }
-        .propaganda-peu.peu-qr::before { height: 22mm; }
+        .propaganda-peu.peu-qr { padding: 10mm 6mm 7.5mm; background: none; }
+        .propaganda-peu.peu-qr::before { content: none; }
         .propaganda-lema { font-family: var(--font-balthazar), serif; text-wrap: balance; white-space: pre-line; }
         .propaganda-peu .cartell-text { font-family: var(--font-balthazar), serif; font-weight: normal; }
         .propaganda-peu h1 { text-shadow: 0 0 1.2mm #f3e5c4, 0 0 2.4mm #f3e5c4, 0 0 4mm #f3e5c4; }

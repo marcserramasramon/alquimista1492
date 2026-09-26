@@ -1,4 +1,5 @@
-import type { FormaSimbol, Soroll } from "@/lib/sorollFoc";
+import { useId } from "react";
+import type { FormaSimbol, PecaSoroll, Soroll } from "@/lib/sorollFoc";
 
 /**
  * Símbols alquímics dibuixats amb traços (no amb fonts, que no sempre tenen
@@ -39,13 +40,48 @@ function Simbol({ forma }: { forma: FormaSimbol }) {
   }
 }
 
-const PAPER = "#fbf4e4";
+/** Una xifra o un símbol del soroll, sense cap vora ni efecte afegit. */
+function PecaNoise({ p }: { p: PecaSoroll }) {
+  return p.xifra ? (
+    <text
+      x={p.x}
+      y={p.y}
+      fill={p.color}
+      fontSize={p.mida}
+      fontWeight={800}
+      textAnchor="middle"
+      dominantBaseline="central"
+      transform={`rotate(${p.rotacio.toFixed(1)} ${p.x.toFixed(1)} ${p.y.toFixed(1)})`}
+      style={{ fontFamily: "var(--font-alegreya-sans), sans-serif" }}
+    >
+      {p.xifra}
+    </text>
+  ) : (
+    <g
+      transform={`translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${p.rotacio.toFixed(1)}) scale(${(p.mida * 0.85).toFixed(1)})`}
+      strokeLinejoin="round"
+      strokeLinecap="round"
+      fill="none"
+    >
+      <g color={p.color} stroke="currentColor" strokeWidth={0.1}>
+        <Simbol forma={p.simbol!} />
+      </g>
+    </g>
+  );
+}
 
 /**
  * La composició de números i símbols del cartell de Foc (lib/sorollFoc.ts).
- * `halo`: vora de paper al voltant de cada peça, perquè es llegeixi a sobre d'una il·lustració.
+ * Un 30% del soroll (`sotaObjectiu`) es dibuixa abans que la resposta, per
+ * quedar-hi per sota en lloc de per sobre.
  */
-export function SorollFocSvg({ soroll, className, halo }: { soroll: Soroll; className?: string; halo?: boolean }) {
+export function SorollFocSvg({ soroll, className }: { soroll: Soroll; className?: string }) {
+  const idBase = useId().replace(/:/g, "");
+  const clipObjectiu = `${idBase}-clip-objectiu`;
+  const objectiu = soroll.peces.find((p) => p.objectiu);
+  const sotaObjectiu = soroll.peces.filter((p) => !p.objectiu && p.sotaObjectiu);
+  const sobreObjectiu = soroll.peces.filter((p) => !p.objectiu && !p.sotaObjectiu);
+
   return (
     <svg
       viewBox={`0 0 ${soroll.amplada} ${soroll.alcada}`}
@@ -53,42 +89,37 @@ export function SorollFocSvg({ soroll, className, halo }: { soroll: Soroll; clas
       role="img"
       aria-label="Composició de números i símbols de colors"
     >
-      {soroll.peces.map((p, i) =>
-        p.xifra ? (
-          <text
-            key={i}
-            x={p.x}
-            y={p.y}
-            fill={p.color}
-            fontSize={p.mida}
-            fontWeight={800}
-            textAnchor="middle"
-            dominantBaseline="central"
-            {...(halo ? { stroke: PAPER, strokeWidth: p.mida * 0.08, strokeLinejoin: "round" as const, paintOrder: "stroke" } : {})}
-            transform={`rotate(${p.rotacio.toFixed(1)} ${p.x.toFixed(1)} ${p.y.toFixed(1)})`}
-            style={{ fontFamily: "var(--font-alegreya-sans), sans-serif" }}
-          >
-            {p.xifra}
-          </text>
-        ) : (
-          <g
-            key={i}
-            transform={`translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${p.rotacio.toFixed(1)}) scale(${(p.mida * 0.85).toFixed(1)})`}
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            fill="none"
-          >
-            {halo && (
-              <g color={PAPER} stroke="currentColor" strokeWidth={0.18}>
-                <Simbol forma={p.simbol!} />
-              </g>
-            )}
-            <g color={p.color} stroke="currentColor" strokeWidth={0.1}>
-              <Simbol forma={p.simbol!} />
-            </g>
-          </g>
-        ),
+      {objectiu && (
+        <defs>
+          <clipPath id={clipObjectiu}>
+            <text
+              x={objectiu.x}
+              y={objectiu.y}
+              fontSize={objectiu.mida}
+              fontWeight={400}
+              textAnchor="middle"
+              dominantBaseline="central"
+              transform={`rotate(${objectiu.rotacio.toFixed(1)} ${objectiu.x.toFixed(1)} ${objectiu.y.toFixed(1)})`}
+              style={{ fontFamily: "var(--font-alegreya-sans), sans-serif" }}
+            >
+              {objectiu.xifra}
+            </text>
+          </clipPath>
+        </defs>
       )}
+      {sotaObjectiu.map((p, i) => (
+        <PecaNoise key={`sota-${i}`} p={p} />
+      ))}
+      {objectiu && soroll.puntsObjectiu.length > 0 && (
+        <g clipPath={`url(#${clipObjectiu})`} opacity={0.85}>
+          {soroll.puntsObjectiu.map((p, i) => (
+            <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={p.r.toFixed(2)} fill={p.color} />
+          ))}
+        </g>
+      )}
+      {sobreObjectiu.map((p, i) => (
+        <PecaNoise key={`sobre-${i}`} p={p} />
+      ))}
     </svg>
   );
 }
