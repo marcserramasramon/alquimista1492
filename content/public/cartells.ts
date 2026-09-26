@@ -51,7 +51,7 @@ export const POEMES_CARTELLS: Record<string, PoemaCartell> = {
     lema: "Hi ha un foc que no crema:\nnomés revela.",
     imatge: "/images/cartells/foc.jpg",
     fons: "/images/cartells/fons/foc.jpg",
-    pendent: "El text porta al número del \"brot naixent\" (verd), però el cartell el posa en vermell.",
+    pendent: "El text porta al número del \"brot naixent\" (verd), però la resposta al cartell és el número blau enmig del soroll vermell.",
     paragrafs: [
       "Un alè incandescent dorm empresonat en el vidre, foc que no crema la pell ni desprèn cendra. A les portes del recinte s'estén un mar de confusions cromàtiques, on les ombres i les llums lluiten per enganyar la mirada ingènua.",
       "Interposa la gemma carmesí entre els teus ulls i el laberint vibrant. Quan la flama domi el miratge i devori el fals reflex, només el rastre del brot naixent s'alçarà victoriós entre la tenebra.",
@@ -63,7 +63,7 @@ export const POEMES_CARTELLS: Record<string, PoemaCartell> = {
     fons: "/images/cartells/fons/aire.jpg",
     pendent: "El text demana restar el número del vidre del gravat de la creu, però la resposta és 4, el número del vidre, sense resta.",
     paragrafs: [
-      "Al cim ventós, el ferro immòbil sosté la memòria dels segles, custodiant quatre marques a la seva base. Però l'esperit volàtil requereix quelcom més subtil: una mirada sobre la transparència freda que roman muda a la llum ordinària.",
+      "Els devots de l'Orde em perseguien. Em vaig amagar rere els murs de pedra d'una masia oblidada, però cap pedra és prou forta per contenir l'essència de l'aire. Vaig fugir fins al cim del turó, allà on el vent en fa el seu element. No t'aturis: segueix amunt, cap a la creu vella, fins on la terra ja no pugui alçar-se més.",
       "Ofrena el caliu del teu propi alè sobre la làmina gelada perquè l'efímer es faci visible. Resta el missatge que la boira desvetlli d'allò gravat a la soca; la diferència serà el tribut que l'aire et concedeix.",
     ],
   },

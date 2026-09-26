@@ -17,7 +17,7 @@
 | 1 | `font-ferro` | Font del Ferro | 41.914816 | 2.227479 | cap |
 | 2 | `planes-bones` | Planes Bones | 41.912256 | 2.233469 | cap |
 | 3 | `foc` | Entrada del poble | **41.915419** | **2.231577** | **NOVA**: abans 41.915765, 2.231385 (**42 m** cap al sud) |
-| 4 | `aire` | Creu del Pujolar | 41.910894 | 2.224434 | cap |
+| 4 | `aire` | Al turó sobre la Creu del Pujolar | **41.91154** | **2.226323** | **NOVA (2026-09-26, v2):** abans 41.910894, 2.224434. El punt real de joc no és a la creu (que és un monument fix i no es mou): la creu queda ~105 m més a l'oest, seguint el pujol amunt. Text del cartell actualitzat amb l'excusa (`content/public/cartells.ts`) perquè els jugadors continuïn fins al cim |
 | 5 | `anima` | Dunes d'asfalt | **41.910355** | **2.230083** | **NOVA**: abans 41.91034, 2.230023 (5 m) |
 | 6 | `gresol` | Pla del Masset (centre) | 41.91313 | 2.229789 | cap |
 
@@ -25,23 +25,39 @@
 pentagrama regular que millor s'ajusta a l'1, el 2 i el 3 (la "proposta B"). El 5
 s'ha triat a mà. El 6 queda al centre del pentagrama i al centre exacte de la imatge.
 
-Mides de l'estrella que resulta. No és regular, perquè la Creu del Pujolar (4)
+Mides de l'estrella que resulta (amb la coordenada de l'Aire d'abans del
+2026-09-26: 41.910894, 2.224434). No és regular, perquè la Creu del Pujolar (4)
 queda ~200 m fora del lloc ideal i s'ha acceptat així:
 
 - Costats (3→2→5→4→1→3): 385, 351, 471, 504, 346 m
 - Diagonals, que són les línies de l'estrella (3→4→2→1→5→3): 776, 763, 572, 541, 577 m
 
+⚠️ **Pendent de recalcular (2026-09-26):** amb la nova coordenada de l'Aire
+(v2) aquestes mides, els angles respecte al centroide a `docs/fites-nova.md` i
+els píxels de comprovació de la secció 3 queden desactualitzats. No hi ha
+prou informació per refer el càlcul aquí sense decidir-ho expressament —
+recalcular quan es tanqui la nova ubicació.
+
 ### Què s'ha de canviar
 
-1. **`content/public/estacions.ts`**: actualitzar `latitud`/`longitud` de `foc` (3)
-   i `anima` (5) amb els valors de la taula.
-2. **`docs/fites-nova.md`**: la taula d'ubicacions i la dels angles des del
-   centroide encara porten les coordenades velles de la 3 i la 5. Cal posar-les al dia.
+1. **`content/public/estacions.ts`**: ✅ fet — `foc` (3), `anima` (5) i, des del
+   2026-09-26, `aire` (4, v2) amb els valors de la taula.
+2. **`docs/fites-nova.md`**: ✅ coordenades de la 3, la 5 i (2026-09-26) la 4
+   actualitzades, poema del cartell de l'Aire actualitzat amb l'excusa
+   narrativa. Pendent: recalcular els angles respecte al centroide (veure
+   nota més amunt).
 3. **⚠️ Cartell físic de la fita 3:** l'obertura per GPS és a
    `RADI_OBERTURA_M = 50` m (`lib/ubicacio.ts`, `app/api/obrir/route.ts`,
    `app/joc/page.tsx`). Moure la coordenada 42 m sense moure el cartell deixaria
    el cartell just a la vora del radi. **El cartell s'ha de posar a la coordenada
    nova.** La 5 només es mou 5 m i no afecta.
+4. **⚠️ Cartell físic de la fita 4 (Aire):** decidit (2026-09-26): la creu física
+   (monument real, no es mou) queda fora del radi de 50 m del punt de joc nou.
+   En comptes de moure el cartell a la creu, **es manté a la creu i es puja
+   el punt de joc (i el truc del vidre) al cim del turó**, seguint la
+   coordenada nova (41.91154, 2.226323). El text del cartell ja explica
+   (2026-09-26, `content/public/cartells.ts`) que cal continuar pujant fins
+   al cim en comptes d'aturar-se a la creu.
 
 ---
 

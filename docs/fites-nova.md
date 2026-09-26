@@ -65,14 +65,14 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 | Camp | Valor |
 |------|-------|
 | Ubicació | **Entrada del poble** — coordenades confirmades: **41.915419, 2.231577** (moguda 42 m al sud el 2026-09-25 perquè el pentagrama quadri millor; el cartell físic s'ha de posar aquí — veure `docs/mapa-proposta-definitiva.md`) |
-| Tècnica | **"Paper de foc" — cel·lofana vermella com a lent decodificadora, amb nom narratiu propi.** En la ficció, es presenta com un **vidre alquímic especial que té el foc atrapat a dins**. Full imprès amb números de tots colors barrejats (soroll visual); el missatge real hi és escrit en **verd**. Mirant el full a través del "paper de foc" (la cel·lofana vermella), el verd es fa fosc/llegible i la resta de colors es dissolen en el vermell del filtre |
-| Material del jugador/equip | Un tros de **"paper de foc" (cel·lofana vermella)** per equip + el full imprès amb el missatge camuflat en verd |
-| Acció física | Els jugadors miren el full a través del "paper de foc" fins que el número en verd es distingeix de la resta |
+| Tècnica | **"Paper de foc" — cel·lofana vermella com a lent decodificadora, amb nom narratiu propi.** En la ficció, es presenta com un **vidre alquímic especial que té el foc atrapat a dins**. Full imprès amb un mar de xifres i símbols alquímics **vermells** (soroll visual); el missatge real hi és escrit en **blau**, un sol número enmig de tots els vermells. Mirant el full a través del "paper de foc" (la cel·lofana vermella), els vermells es dissolen/desapareixen en el filtre i el blau hi destaca fosc i llegible |
+| Material del jugador/equip | Un tros de **"paper de foc" (cel·lofana vermella)** per equip + el full imprès amb el número blau camuflat entre el soroll vermell |
+| Acció física | Els jugadors miren el full a través del "paper de foc" fins que el número en blau es distingeix de la resta |
 | Element físic real aprofitat | Cap — el **pal vell de telèfon** del lloc queda només com a referència visual/logística (ja no hi ha encenedor a penjar-hi, en desaparèixer el foc) |
-| Poema/context | **Text del cartell (2026-09-26, prosa):**<br>*Un alè incandescent dorm empresonat en el vidre, foc que no crema la pell ni desprèn cendra. A les portes del recinte s'estén un mar de confusions cromàtiques, on les ombres i les llums lluiten per enganyar la mirada ingènua.*<br><br>*Interposa la gemma carmesí entre els teus ulls i el laberint vibrant. Quan la flama domi el miratge i devori el fals reflex, només el rastre del brot naixent s'alçarà victoriós entre la tenebra.*<br><br>⚠️ Contradicció: el "brot naixent" apunta al número **verd**, però el cartell (2026-09-25) el posa en **vermell**, que desapareix a través de la cel·lofana vermella. |
-| Resposta esperada | **Actualitzat (2026-09-23):** el número verd és **2** (posició del Foc a la recepta). El full imprès l'ha de dur en verd |
+| Poema/context | **Text del cartell (2026-09-26, prosa):**<br>*Un alè incandescent dorm empresonat en el vidre, foc que no crema la pell ni desprèn cendra. A les portes del recinte s'estén un mar de confusions cromàtiques, on les ombres i les llums lluiten per enganyar la mirada ingènua.*<br><br>*Interposa la gemma carmesí entre els teus ulls i el laberint vibrant. Quan la flama domi el miratge i devori el fals reflex, només el rastre del brot naixent s'alçarà victoriós entre la tenebra.*<br><br>⚠️ Pendent: **el codi ara fa servir un número blau com a resposta (2026-09-26)**, però el poema encara diu "brot naixent" (imatge de color verd). Cal decidir si es reescriu aquest vers per parlar de blau (p.ex. una imatge d'aigua/cel) o si es deixa així com a mer floreig poètic — no ho decideixo jo, veure `content/public/cartells.ts` (`pendent` de `foc`) |
+| Resposta esperada | El número blau és **2** (posició del Foc a la recepta). El full imprès l'ha de dur en blau, enmig d'un mar de xifres i símbols vermells |
 | Pistes | 1. "El vidre de foc desvela el secret." · 2. "Posa el paper vermell davant." · 3. "El número és el 2." |
-| Notes de seguretat/logística | Ja NO cal supervisió de foc obert. Cal preparar un tros de cel·lofana vermella per equip (resistent, que no es trenqui) i imprimir/pintar el full amb prou contrast de "soroll" de colors perquè el verd no es llegeixi a ull nu sense el filtre |
+| Notes de seguretat/logística | Ja NO cal supervisió de foc obert. Cal preparar un tros de cel·lofana vermella per equip (resistent, que no es trenqui) i imprimir/pintar el full amb prou densitat de soroll vermell perquè el blau no es distingeixi de seguida a ull nu sense el filtre |
 
 ---
 
@@ -82,12 +82,12 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 
 | Camp | Valor |
 |------|-------|
-| Ubicació | **Creu del Pujolar** — coordenades confirmades: **41.910894, 2.224434**. (Pràcticament el mateix punt físic que l'antic Serrat de les Bruixes: 41.910887, 2.224452 — probablement el mateix indret amb nom/element canviat) |
+| Ubicació | **Al turó sobre la Creu del Pujolar** — coordenades confirmades (2026-09-26, v2, verificades al mapa): **41.91154, 2.226323**. La creu física (monument real) queda ~105 m més a l'oest del punt de joc; el poema hi fa referència com a punt d'orientació ("cap a la creu vella") mentre els jugadors pugen cap al cim, on és realment el truc del vidre. (Historial: abans 41.910894, 2.224434; un pas intermedi el 2026-09-26 va provar 41.91153374677273, 2.2250516502454163, descartat) |
 | Tècnica | Sabó (mans o plats, transparent) sobre vidre/mirall + alè (baf) |
 | Element físic real aprofitat | Cap (des del 2026-09-23 el número de la base de la creu ja no es fa servir) |
 | Material del jugador | Vidre o mirall amb una capa finíssima de sabó dibuixant **el número 4** (invisible en sec) |
 | Acció física | Els jugadors bufen (alè calent) sobre el vidre; s'entela tot excepte el número de sabó (4), que queda net i llegible un instant |
-| Poema/context | **Text del cartell (2026-09-26, prosa):**<br>*Al cim ventós, el ferro immòbil sosté la memòria dels segles, custodiant quatre marques a la seva base. Però l'esperit volàtil requereix quelcom més subtil: una mirada sobre la transparència freda que roman muda a la llum ordinària.*<br><br>*Ofrena el caliu del teu propi alè sobre la làmina gelada perquè l'efímer es faci visible. Resta el missatge que la boira desvetlli d'allò gravat a la soca; la diferència serà el tribut que l'aire et concedeix.*<br><br>⚠️ Contradicció: demana restar el número del vidre del gravat de la creu, però la resposta és **4** (el número del vidre, sense resta). |
+| Poema/context | **Text del cartell (2026-09-26, prosa, actualitzat amb l'excusa narrativa per pujar fins al turó; el paràgraf de context antic sobre "el ferro immòbil... quatre marques a la seva base" s'ha tret perquè ja no s'aprofita cap element físic de la base de la creu):**<br>*Els devots de l'Orde em perseguien. Em vaig amagar rere els murs de pedra d'una masia oblidada, però cap pedra és prou forta per contenir l'essència de l'aire. Vaig fugir fins al cim del turó, allà on el vent en fa el seu element. No t'aturis: segueix amunt, cap a la creu vella, fins on la terra ja no pugui alçar-se més.*<br><br>*Ofrena el caliu del teu propi alè sobre la làmina gelada perquè l'efímer es faci visible. Resta el missatge que la boira desvetlli d'allò gravat a la soca; la diferència serà el tribut que l'aire et concedeix.*<br><br>⚠️ Contradicció sense resoldre (independent de la ubicació): demana restar el número del vidre del gravat de la creu, però la resposta és **4** (el número del vidre, sense resta). |
 | Resposta esperada | **Actualitzat (2026-09-23):** el número del vidre, **4** (posició de l'Aire a la recepta) |
 | Pistes | 1. "El secret es desvelarà amb l'aire del teu alè." · 2. "Bufa l'alè calent sobre el vidre." · 3. "El número és 4." |
 | Notes de seguretat/logística | El baf es dissipa ràpid — potser cal poder repetir l'acció diverses vegades; vidre ben fixat perquè no es trenqui/caigui; neteja entre partides (el sabó es pot esborrar amb l'ús) |
@@ -120,7 +120,7 @@ Els 5 punts físics, units en l'ordre del seu angle respecte al centroide, dibui
 |---|---|---|---|
 | 🔥 FOC | Entrada del poble | 41.915419, 2.231577 | 59° |
 | 💧 AIGUA | Font del Ferro (Carrer del Call) | 41.914816, 2.227479 | 125° |
-| 🌬️ AIRE | Creu del Pujolar | 41.910894, 2.224434 | 207° |
+| 🌬️ AIRE | Al turó sobre la Creu del Pujolar | 41.91154, 2.226323 | ⚠️ angle pendent de recalcular (2026-09-26: coordenada moguda, veure secció AIRE) |
 | ✨ ÀNIMA | Pista skate (Camí Antic de Malla) | 41.910355, 2.230083 | 282° |
 | 🪨 TERRA | Planes Bones | 41.912256, 2.233469 | 351° |
 

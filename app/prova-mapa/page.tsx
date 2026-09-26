@@ -34,16 +34,16 @@ const PENTAGRAMES: { id: string; nom: string; mogudes: Vertex[]; punts: Record<V
     ) as Record<Vertex, [number, number]>,
   },
   {
-    // 1, 2 i 4 actuals · 3 del pentagrama regular ajustat a 1, 2 i 3 · 5 triada a mà.
+    // 1, 2, 4 i 5 actuals · 3 del pentagrama regular ajustat a 1, 2 i 3.
     // Detall a docs/mapa-proposta-definitiva.md.
     id: "definitiva",
     nom: "Proposta definitiva",
-    mogudes: [3, 5],
+    mogudes: [3],
     punts: {
       1: [41.914816, 2.227479],
       2: [41.912256, 2.233469],
       3: [41.915419, 2.231577],
-      4: [41.910894, 2.224434],
+      4: [41.91154, 2.226323],
       5: [41.910355, 2.230083],
     },
   },

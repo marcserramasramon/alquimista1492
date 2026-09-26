@@ -34,6 +34,7 @@ import { VistaMasterLogin } from "@/components/vistes/VistaMasterLogin";
 import { VistaMasterEquips, type EquipMaster } from "@/components/vistes/VistaMasterEquips";
 import { VistaMasterCodis } from "@/components/vistes/VistaMasterCodis";
 import { VistaCartells, type DadesCartell } from "@/components/vistes/VistaCartells";
+import { VistaTextosEditats } from "@/components/vistes/VistaTextosEditats";
 import { POEMES_CARTELLS } from "@/content/public/cartells";
 import { generaSoroll, opcionsSoroll } from "@/lib/sorollFoc";
 import { VistaObrirFita, type VistaObrirFitaProps } from "@/components/vistes/VistaObrirFita";
@@ -1172,6 +1173,13 @@ export const PANTALLES: Pantalla[] = [
         ]}
       />
     ),
+  },
+  {
+    id: "textos-editats-aire",
+    grup: "extra",
+    titol: "Revisió · textos editats (Aire)",
+    descripcio: "Tots els textos que van canviar en moure la fita de l'Aire al cim del turó (2026-09-26).",
+    render: () => <VistaTextosEditats />,
   },
 ];
 
