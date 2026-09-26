@@ -59,8 +59,8 @@ export function opcionsSoroll(estil: "imatge" | "fons") {
   return { alcada: alcadaSoroll(estil), quantitat: estil === "imatge" ? 680 : 520 };
 }
 
-/** Proporció de l'alçada del cartell que ocupa el número de la resposta (es retalla per les vores del cartell). */
-const PROPORCIO_MIDA_OBJECTIU = 1.9;
+/** Proporció de l'alçada del cartell que ocupa el número de la resposta (60% de l'1,9 original). */
+const PROPORCIO_MIDA_OBJECTIU = 1.14;
 
 /** Color de la resposta: el mateix blau que "Aigua" a la resta de l'app (`content/public/gresol.ts`). */
 export const BLAU_OBJECTIU = "#1d6fd6";
