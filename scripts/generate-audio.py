@@ -22,12 +22,12 @@ ROOT = Path(__file__).resolve().parent.parent
 MODEL_REPO = "BSC-LT/matxa-tts-v2-ca-multiaccent-graphemes"
 MODEL_FILE = "matxa_v2_multiaccent_graphemes_20_steps_wavenext.onnx"
 SPEAKER = 12  # CM, central Catalan male (EnVeuAlta)
-TEMPERATURE = 0.55
+TEMPERATURE = 0.80
 LENGTH_SCALE = 1.08
 SAMPLE_RATE = 22050
 SENTENCE_GAP = 0.35
 PARAGRAPH_GAP = 0.7
-POST_FILTER = "highpass=f=70,aecho=0.95:0.9:35:0.07,loudnorm=I=-16:TP=-1.5"
+POST_FILTER = "highpass=f=70,loudnorm=I=-16:TP=-1.5"
 
 # The model reads graphemes only: numbers must be written out.
 NUMBERS = {"1472": "mil quatre-cents setanta-dos"}
