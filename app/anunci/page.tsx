@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 /** Color de la cinta a les pantalles que no són d'un element. */
 const DAURAT = "#eab308";
 
-/** Cada element amb el seu cartell de propaganda (content/public/cartells.ts): il·lustració de fons i poema. */
+/** Cada element amb el seu cartell de propaganda (content/public/cartells.ts): il·lustració de fons i lema. */
 const ELEMENT_CARTELL: Record<Element, string> = {
   aigua: "font-ferro",
   terra: "planes-bones",
@@ -50,9 +50,8 @@ const ELEMENTS_ORDRE: Element[] = ["aigua", "terra", "foc", "aire", "anima"];
 
 /** Vels sobre la imatge perquè el text es llegeixi: fosc (text clar) o de paper com el peu dels cartells (text fosc). */
 const VELS = {
-  fosc: "bg-gradient-to-t from-ink via-ink/65 to-ink/10",
-  paper:
-    "bg-[linear-gradient(to_bottom,transparent_25%,rgb(243_229_196/0.7)_50%,rgb(243_229_196/0.93)_70%,rgb(243_229_196/0.97))]",
+  fosc: "linear-gradient(to top, rgb(27 21 17), rgb(27 21 17 / 0.65) 50%, rgb(27 21 17 / 0.1))",
+  paper: "linear-gradient(to bottom, rgb(243 229 196 / 0) 50%, rgb(243 229 196 / 0.8) 66%, rgb(243 229 196 / 0.95) 78%)",
 };
 
 /** Una pantalla de la successió: imatge a tot el fons, vel i contingut a baix. */
@@ -79,7 +78,7 @@ function Pantalla({
         style={posicio ? { objectPosition: posicio } : undefined}
         className="object-cover"
       />
-      <div className={`absolute inset-0 ${VELS[vel]}`} />
+      <div className="absolute inset-0" style={{ background: VELS[vel] }} />
       <div className="relative z-10 mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-5 pb-14 pt-40 text-center">
         {children}
       </div>
@@ -145,7 +144,7 @@ const PANTALLES: { color: string; contingut: ReactNode }[] = [
       </Pantalla>
     ),
   },
-  // Un element per pantalla: la il·lustració i el poema del seu cartell de propaganda.
+  // Un element per pantalla: la il·lustració i el lema del seu cartell de propaganda.
   ...ELEMENTS_ORDRE.map((el) => {
     const element = ELEMENTS[el];
     const cartell = POEMES_CARTELLS[ELEMENT_CARTELL[el]];
@@ -167,11 +166,9 @@ const PANTALLES: { color: string; contingut: ReactNode }[] = [
               {element.nom}
             </h2>
           </div>
-          <div className="flex flex-col gap-3 text-justify text-lg leading-snug text-ink" style={VITRINA}>
-            {cartell.paragrafs.map((paragraf, i) => (
-              <p key={i}>{paragraf}</p>
-            ))}
-          </div>
+          <p className="whitespace-pre-line text-balance text-3xl leading-tight text-ink" style={VITRINA}>
+            {cartell.lema}
+          </p>
         </Pantalla>
       ),
     };
