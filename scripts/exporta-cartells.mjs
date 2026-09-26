@@ -143,12 +143,18 @@ const VERSIONS = [
   { carpeta: "propaganda", nom: "Propaganda", nota: "sense codis, amb el text" },
   { carpeta: "lema", nom: "Propaganda amb lema", nota: "sense codis, una sola frase" },
 ];
-const FITES = ["portada", "font-ferro", "planes-bones", "foc", "aire", "anima"];
+const FITES = ["portada", "portada-cami-lluny", "portada-frare", "portada-cami-buit", "font-ferro", "planes-bones", "foc", "aire", "anima"];
+const NOMS_PORTADES = {
+  portada: "Portada · mapa i pentagrama",
+  "portada-cami-lluny": "Portada · el camí amb el frare lluny",
+  "portada-frare": "Portada · el frare de prop",
+  "portada-cami-buit": "Portada · el camí buit",
+};
 const esc = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 
 /** Nom de l'element, lloc i color de cada fita, llegits del cartell de joc exportat. */
 function infoFita(id) {
-  if (id === "portada") return { titol: "Portada", lloc: "Els Guardians del Secret de Sentfores", color: "#8a6300" };
+  if (NOMS_PORTADES[id]) return { titol: NOMS_PORTADES[id], lloc: "Els Guardians del Secret de Sentfores", color: "#8a6300" };
   for (const v of VERSIONS) {
     const fitxer = `cartells-html/${v.carpeta}/cartell-${id}.html`;
     if (!existsSync(fitxer)) continue;

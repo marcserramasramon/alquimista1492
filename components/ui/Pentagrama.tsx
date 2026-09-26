@@ -23,6 +23,8 @@ export interface PentagramaProps {
   /** Elements amb color encara que no estiguin resolts (ús decoratiu). */
   vius?: boolean;
   className?: string;
+  /** Per als cartells impresos: estrella contínua d'aquest color i gruix, i text de l'anell més gran i fosc. */
+  imprès?: { colorLinies: string; gruixLinies: number; midaText: number };
 }
 
 const MIDA = 300;
@@ -77,6 +79,7 @@ export function Pentagrama({
   onTriar,
   vius = false,
   className = "",
+  imprès,
 }: PentagramaProps) {
   const nodes = [...nodesDonats].sort((a, b) => ORDRE.indexOf(a.element) - ORDRE.indexOf(b.element));
   const punts = nodes.map((_, i) => vertex(i));
@@ -124,9 +127,9 @@ export function Pentagrama({
         <text
           fontFamily="var(--font-alegreya-sans-sc), sans-serif"
           fontWeight={700}
-          fontSize={13}
+          fontSize={imprès?.midaText ?? 13}
           letterSpacing={3}
-          fill="#5a4a3c"
+          fill={imprès ? "#1b1511" : "#5a4a3c"}
         >
           <textPath href="#anell-text" textLength={2 * Math.PI * (R_ANELL - 12) - 6}>
             sentfores ✦ mcdlxxii ✦ sentfores ✦ mcdlxxii ✦
@@ -148,10 +151,10 @@ export function Pentagrama({
             y1={p.y}
             x2={q.x}
             y2={q.y}
-            stroke={encesa ? "#eab308" : "#1b1511"}
-            strokeWidth={encesa ? 6 : 2}
-            strokeOpacity={encesa ? 1 : 0.35}
-            strokeDasharray={encesa ? undefined : "6 6"}
+            stroke={encesa ? "#eab308" : (imprès?.colorLinies ?? "#1b1511")}
+            strokeWidth={encesa ? 6 : (imprès?.gruixLinies ?? 2)}
+            strokeOpacity={encesa || imprès ? 1 : 0.35}
+            strokeDasharray={encesa || imprès ? undefined : "6 6"}
             strokeLinecap="round"
           />
         );

@@ -8,6 +8,8 @@
 
 /** Dia i hora de la partida, per als cartells de propaganda. */
 export const DATA_ESDEVENIMENT = "Diumenge 8 de novembre de 2026 · 18 h";
+/** Què és, sota la data als cartells de propaganda. */
+export const TIPUS_ESDEVENIMENT = "Gimcana digital – Escape room al carrer";
 
 export interface PoemaCartell {
   /** Text en prosa poètica, un element per paràgraf. */

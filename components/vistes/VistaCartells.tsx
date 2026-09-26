@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Alegreya, Balthazar } from "next/font/google";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
-import { DATA_ESDEVENIMENT, type PoemaCartell } from "@/content/public/cartells";
+import { DATA_ESDEVENIMENT, TIPUS_ESDEVENIMENT, type PoemaCartell } from "@/content/public/cartells";
 import type { Soroll } from "@/lib/sorollFoc";
 import { SorollFocSvg } from "@/components/cartells/SorollFocSvg";
 import { MarcRunesCartell } from "@/components/cartells/MarcRunesCartell";
@@ -131,6 +131,12 @@ function Cartell({ c, estil }: { c: DadesCartell; estil: EstilCartell }) {
               {c.codi}
             </p>
           </div>
+          {/* eslint-disable-next-line @next/next/no-img-element -- s'imprimeix: sense optimització d'imatge */}
+          <img
+            src="/images/logo-associacio-sentfores.png"
+            alt="Sentfores · Associació de Veïns de la Guixa"
+            className="ml-auto h-[34mm] w-auto shrink-0"
+          />
         </footer>
       </div>
     </section>
@@ -161,7 +167,7 @@ function CartellPropaganda({ c, lema = false }: { c: DadesCartell; lema?: boolea
 
         {/* Alçada fixa (la del cartell amb més text) perquè el títol quedi a la mateixa altura a tots;
             el text va alineat a baix i l'espai que sobra queda entre el títol i el text. */}
-        <div className={`propaganda-peu flex flex-col gap-[4mm] ${lema ? "h-[120.5mm]" : "h-[168.5mm]"}`}>
+        <div className={`propaganda-peu flex flex-col gap-[4mm] ${lema ? "h-[128mm]" : "h-[176mm]"}`}>
           {/* 10 pt més amunt que on el posaria el flux, sense moure el text. */}
           <header className="relative -top-[10pt] flex flex-col items-center text-center">
             <div className="flex items-center gap-[4mm]">
@@ -175,6 +181,7 @@ function CartellPropaganda({ c, lema = false }: { c: DadesCartell; lema?: boolea
             <p className="mt-[1.5mm] font-display text-[20pt] font-bold leading-tight" style={{ color: element.color }}>
               {DATA_ESDEVENIMENT}
             </p>
+            <p className="etiqueta mt-[1mm] !text-[13pt] !text-ink">{TIPUS_ESDEVENIMENT}</p>
           </header>
 
           {lema ? (
@@ -232,10 +239,54 @@ function CartellPortada() {
           <p className="font-display text-[22pt] font-bold leading-tight" style={{ color: or }}>
             {DATA_ESDEVENIMENT}
           </p>
+          <p className="etiqueta !text-[14pt] !text-ink">{TIPUS_ESDEVENIMENT}</p>
         </div>
 
         {/* Decoratiu: elements en color i el Gresol encès (sense les marques de fita resolta de l'app). */}
-        <Pentagrama vius centreActiu className="my-auto h-[150mm] w-[150mm] shrink-0" />
+        <Pentagrama
+          vius
+          centreActiu
+          imprès={{ colorLinies: "#f3e5c4", gruixLinies: 5, midaText: 18 }}
+          className="my-auto h-[150mm] w-[150mm] shrink-0"
+        />
+      </div>
+    </section>
+  );
+}
+
+/** Il·lustracions verticals per a les portades alternatives (public/images/cartells/portada/). */
+const PORTADES_IMATGE = [
+  { id: "portada-cami-lluny", fons: "/images/cartells/portada/cami-lluny.jpg" },
+  { id: "portada-frare", fons: "/images/cartells/portada/frare.jpg" },
+  { id: "portada-cami-buit", fons: "/images/cartells/portada/cami-buit.jpg" },
+];
+
+/**
+ * Portada alternativa: com els cartells dels elements (il·lustració a tot el full i el text a baix
+ * sobre el degradat), amb el títol del joc, la frase, la data i què és.
+ */
+function CartellPortadaImatge({ id, fons }: { id: string; fons: string }) {
+  const or = "#8a6300";
+  return (
+    <section data-fita={id} className="cartell cartell-fons" style={{ ["--el" as string]: or, backgroundImage: `url(${fons})` }}>
+      <div className="pointer-events-none absolute inset-0 z-10">
+        <MarcRunesCartell color={or} fons />
+      </div>
+      <div className="cartell-marc !justify-end !p-[8mm]">
+        <div className="absolute top-[10.5mm] right-[10.5mm]">
+          {/* eslint-disable-next-line @next/next/no-img-element -- s'imprimeix: sense optimització d'imatge */}
+          <img src="/images/logo-associacio-sentfores.png" alt="Sentfores · Associació de Veïns de la Guixa" className="block h-[21.5mm] w-auto" />
+        </div>
+        <div className="propaganda-peu flex flex-col items-center gap-[2mm] !pb-[15mm] text-center">
+          <h1 className="text-[40pt] font-extrabold leading-[1] text-balance" style={{ color: or }}>
+            Els Guardians del Secret de Sentfores · 1472
+          </h1>
+          <p className="propaganda-lema mt-[2mm] text-[26pt] leading-[1.2]">El secret està ocult, vine a descobrir-lo.</p>
+          <p className="font-display text-[22pt] font-bold leading-tight" style={{ color: or }}>
+            {DATA_ESDEVENIMENT}
+          </p>
+          <p className="etiqueta !text-[14pt] !text-ink">{TIPUS_ESDEVENIMENT}</p>
+        </div>
       </div>
     </section>
   );
@@ -344,6 +395,7 @@ export function VistaCartells({ cartells, estil = "imatge" }: { cartells: DadesC
 
       <div className="flex w-full flex-col items-center gap-8 overflow-x-auto print:block print:overflow-visible">
         {propaganda && <CartellPortada />}
+        {propaganda && PORTADES_IMATGE.map((p) => <CartellPortadaImatge key={p.id} id={p.id} fons={p.fons} />)}
         {cartells.map((c) => (
           propaganda ? <CartellPropaganda key={c.id} c={c} lema={estil === "lema"} /> : <Cartell key={c.id} c={c} estil={estil} />
         ))}
