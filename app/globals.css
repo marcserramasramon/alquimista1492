@@ -51,6 +51,7 @@
   --animate-girar: girar 60s linear infinite;
   --animate-segellar: segellar 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both;
   --animate-bategar: bategar 1.6s ease-in-out infinite;
+  --animate-fusionar: fusionar 0.9s cubic-bezier(0.4, 0, 0.2, 1) both;
   --animate-pujar: pujar 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   --animate-baixar: baixar 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
@@ -338,6 +339,24 @@ h3 {
   }
   50% {
     box-shadow: 0 0 0 10px rgb(234 179 8 / 0);
+  }
+}
+
+/* Un element volant en espiral cap al centre del Gresol (offset-path el porta pel camí). */
+@keyframes fusionar {
+  0% {
+    offset-distance: 0%;
+    opacity: 1;
+    transform: scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+    transform: scale(0.2);
   }
 }
 
