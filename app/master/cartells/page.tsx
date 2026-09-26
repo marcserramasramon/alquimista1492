@@ -46,5 +46,8 @@ export default async function CartellsPage({ searchParams }: { searchParams: Pro
     });
   }
 
-  return <VistaCartells cartells={cartells} estil={estilCartell} />;
+  // La portada amb QR porta a la web de l'app (sense codi de cap fita).
+  const qrApp = propaganda ? await qrSvg(`${base}/`) : undefined;
+
+  return <VistaCartells cartells={cartells} estil={estilCartell} qrApp={qrApp} />;
 }

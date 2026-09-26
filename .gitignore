@@ -45,3 +45,4 @@ supabase/.temp/
 
 # cartells exportats (porten els codis de les fites)
 /cartells-html/
+/cartells-pdf/

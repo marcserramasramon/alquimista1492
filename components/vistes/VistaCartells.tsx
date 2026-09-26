@@ -265,35 +265,66 @@ const PORTADES_IMATGE = [
  * Portada alternativa: com els cartells dels elements (il·lustració a tot el full i el text a baix
  * sobre el degradat), amb el títol del joc, la frase, la data i què és.
  */
-function CartellPortadaImatge({ id, fons }: { id: string; fons: string }) {
+function CartellPortadaImatge({ id, fons, ambQr = false, qrSvg }: { id: string; fons: string; ambQr?: boolean; qrSvg?: string }) {
   const or = "#8a6300";
   return (
-    <section data-fita={id} className="cartell cartell-fons" style={{ ["--el" as string]: or, backgroundImage: `url(${fons})` }}>
+    <section data-fita={ambQr ? `${id}-qr` : id} className="cartell cartell-fons" style={{ ["--el" as string]: or, backgroundImage: `url(${fons})` }}>
       <div className="pointer-events-none absolute inset-0 z-10">
         <MarcRunesCartell color={or} fons />
       </div>
-      <div className="cartell-marc !justify-end !p-[8mm]">
+      <div className={`cartell-marc !p-[8mm] ${ambQr ? "!justify-between" : "!justify-end"}`}>
         <div className="absolute top-[10.5mm] right-[10.5mm]">
           {/* eslint-disable-next-line @next/next/no-img-element -- s'imprimeix: sense optimització d'imatge */}
           <img src="/images/logo-associacio-sentfores.png" alt="Sentfores · Associació de Veïns de la Guixa" className="block h-[21.5mm] w-auto" />
         </div>
-        <div className="propaganda-peu flex flex-col items-center gap-[2mm] !pb-[15mm] text-center">
-          <h1 className="text-[40pt] font-extrabold leading-[1] text-balance" style={{ color: or }}>
-            Els Guardians del Secret de Sentfores · 1472
-          </h1>
-          <p className="propaganda-lema mt-[2mm] text-[26pt] leading-[1.2]">El secret està ocult, vine a descobrir-lo.</p>
-          <p className="font-display text-[22pt] font-bold leading-tight" style={{ color: or }}>
-            {DATA_ESDEVENIMENT}
-          </p>
-          <p className="etiqueta !text-[14pt] !text-ink">{TIPUS_ESDEVENIMENT}</p>
-        </div>
+        {ambQr ? (
+          <>
+            {/* Amb QR: el títol i què és a dalt; a baix només el QR, amb un degradat curt. */}
+            <header className="portada-dalt flex flex-col items-center gap-[2mm] text-center">
+              <h1 className="text-[40pt] font-extrabold leading-[1] text-balance" style={{ color: or }}>
+                Els Guardians del Secret de Sentfores · 1472
+              </h1>
+              <p className="etiqueta !text-[14pt] !text-ink">{TIPUS_ESDEVENIMENT}</p>
+            </header>
+            <div className="propaganda-peu peu-qr flex flex-col items-center gap-[1.5mm] text-center">
+              <div className="h-[68mm] w-[68mm] overflow-hidden rounded-[2mm] border-[0.8mm] border-ink bg-white">
+                {qrSvg ? (
+                  <div className="h-full w-full [&>svg]:h-full [&>svg]:w-full" dangerouslySetInnerHTML={{ __html: qrSvg }} />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-[12pt] text-ink-soft">QR</div>
+                )}
+              </div>
+              <p className="font-display text-[20pt] font-bold leading-tight">Descarrega i instal·la l&apos;app</p>
+            </div>
+          </>
+        ) : (
+          <div className="propaganda-peu flex flex-col items-center gap-[2mm] !pb-[15mm] text-center">
+            <h1 className="text-[40pt] font-extrabold leading-[1] text-balance" style={{ color: or }}>
+              Els Guardians del Secret de Sentfores · 1472
+            </h1>
+            <p className="propaganda-lema mt-[2mm] text-[26pt] leading-[1.2]">El secret està ocult, vine a descobrir-lo.</p>
+            <p className="font-display text-[22pt] font-bold leading-tight" style={{ color: or }}>
+              {DATA_ESDEVENIMENT}
+            </p>
+            <p className="etiqueta !text-[14pt] !text-ink">{TIPUS_ESDEVENIMENT}</p>
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
 /** Cartells físics de les fites, un per full A4, per imprimir (o desar en PDF) des del navegador. */
-export function VistaCartells({ cartells, estil = "imatge" }: { cartells: DadesCartell[]; estil?: EstilCartell }) {
+export function VistaCartells({
+  cartells,
+  estil = "imatge",
+  qrApp,
+}: {
+  cartells: DadesCartell[];
+  estil?: EstilCartell;
+  /** QR de la web de l'app, per a les portades amb QR (només propaganda). */
+  qrApp?: string;
+}) {
   const propaganda = estil === "propaganda" || estil === "lema";
   const pendents = propaganda ? [] : cartells.filter((c) => c.poema.pendent);
 
@@ -338,6 +369,16 @@ export function VistaCartells({ cartells, estil = "imatge" }: { cartells: DadesC
           background: linear-gradient(to bottom, rgb(243 229 196 / 0), rgb(243 229 196 / 0.25));
         }
         .propaganda-peu header p { text-shadow: 0 0 1mm #f3e5c4, 0 0 2mm #f3e5c4, 0 0 3mm #f3e5c4; }
+        /* Portades amb QR: vel de paper a dalt (títol) i un degradat curt a baix (QR). */
+        .portada-dalt {
+          margin: -2mm -4mm 0; padding: 4mm 24mm 16mm; border-radius: 3mm 3mm 0 0;
+          background: linear-gradient(to bottom, rgb(243 229 196 / 0.94), rgb(243 229 196 / 0.86) 60%, rgb(243 229 196 / 0));
+        }
+        .propaganda-peu.peu-qr {
+          padding: 10mm 6mm 7.5mm;
+          background: linear-gradient(to bottom, rgb(243 229 196 / 0.25), rgb(243 229 196 / 0.9) 12mm, rgb(243 229 196 / 0.95));
+        }
+        .propaganda-peu.peu-qr::before { height: 22mm; }
         .propaganda-lema { font-family: var(--font-balthazar), serif; text-wrap: balance; white-space: pre-line; }
         .propaganda-peu .cartell-text { font-family: var(--font-balthazar), serif; font-weight: normal; }
         .propaganda-peu h1 { text-shadow: 0 0 1.2mm #f3e5c4, 0 0 2.4mm #f3e5c4, 0 0 4mm #f3e5c4; }
@@ -396,6 +437,8 @@ export function VistaCartells({ cartells, estil = "imatge" }: { cartells: DadesC
       <div className="flex w-full flex-col items-center gap-8 overflow-x-auto print:block print:overflow-visible">
         {propaganda && <CartellPortada />}
         {propaganda && PORTADES_IMATGE.map((p) => <CartellPortadaImatge key={p.id} id={p.id} fons={p.fons} />)}
+        {propaganda &&
+          PORTADES_IMATGE.map((p) => <CartellPortadaImatge key={`${p.id}-qr`} id={p.id} fons={p.fons} ambQr qrSvg={qrApp} />)}
         {cartells.map((c) => (
           propaganda ? <CartellPropaganda key={c.id} c={c} lema={estil === "lema"} /> : <Cartell key={c.id} c={c} estil={estil} />
         ))}

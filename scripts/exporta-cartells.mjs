@@ -119,7 +119,16 @@ for (const [seccio, id] of cartells) {
   // Els de propaganda no porten codi ni QR.
   const codi = seccio.match(/font-mono[^>]*>([A-Z0-9]+)</)?.[1];
   let ambQr = seccio;
-  if (codi) {
+  if (id.endsWith("-qr")) {
+    // Portades amb el QR de la web de l'app.
+    const qr = await QRCode.toString(`${netBase}/`, {
+      type: "svg",
+      errorCorrectionLevel: "Q",
+      margin: 2,
+      color: { dark: "#1b1511", light: "#ffffff" },
+    });
+    ambQr = seccio.replace(/(<div class="h-full w-full[^"]*">)<svg[\s\S]*?<\/svg>/, `$1${qr}`);
+  } else if (codi) {
     const qr = await QRCode.toString(`${netBase}/s/${id}?c=${codi}`, {
       type: "svg",
       errorCorrectionLevel: "Q",
@@ -143,12 +152,16 @@ const VERSIONS = [
   { carpeta: "propaganda", nom: "Propaganda", nota: "sense codis, amb el text" },
   { carpeta: "lema", nom: "Propaganda amb lema", nota: "sense codis, una sola frase" },
 ];
-const FITES = ["portada", "portada-cami-lluny", "portada-frare", "portada-cami-buit", "font-ferro", "planes-bones", "foc", "aire", "anima"];
+const FITES = ["portada", "portada-cami-lluny", "portada-frare", "portada-cami-buit", "portada-cami-lluny-qr", "portada-frare-qr", "portada-cami-buit-qr", "font-ferro", "planes-bones", "foc", "aire", "anima"];
 const NOMS_PORTADES = {
   portada: "Portada · mapa i pentagrama",
+
   "portada-cami-lluny": "Portada · el camí amb el frare lluny",
   "portada-frare": "Portada · el frare de prop",
   "portada-cami-buit": "Portada · el camí buit",
+  "portada-cami-lluny-qr": "Portada amb QR · el camí amb el frare lluny",
+  "portada-frare-qr": "Portada amb QR · el frare de prop",
+  "portada-cami-buit-qr": "Portada amb QR · el camí buit",
 };
 const esc = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 
