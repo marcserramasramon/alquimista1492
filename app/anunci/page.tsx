@@ -5,7 +5,7 @@ import Image from "next/image";
 import { AMPLE_CINTA, CintaRunes, CintaRunesEstils } from "@/components/anunci/CintaRunes";
 import { MapaPlaMasset } from "@/components/anunci/MapaPlaMasset";
 import { MiniJocElements } from "@/components/anunci/MiniJocElements";
-import { ELEMENTS, ESTACIONS, type Element } from "@/content/public/estacions";
+import { ELEMENTS, type Element } from "@/content/public/estacions";
 import { POEMES_CARTELLS, DATA_ESDEVENIMENT, TIPUS_ESDEVENIMENT } from "@/content/public/cartells";
 
 /**
@@ -40,11 +40,6 @@ const ELEMENT_CARTELL: Record<Element, string> = {
   aire: "aire",
   anima: "anima",
 };
-
-/** La mateixa foto que ja fa servir la pantalla de la fita a l'app (`components/vistes/VistaEstacio.tsx`), en petit. */
-const ELEMENT_IMATGE: Record<Element, string | undefined> = Object.fromEntries(
-  ESTACIONS.filter((e) => e.element).map((e) => [e.element as Element, e.imatge]),
-) as Record<Element, string | undefined>;
 
 const ELEMENTS_ORDRE: Element[] = ["aigua", "terra", "foc", "aire", "anima"];
 
@@ -148,24 +143,16 @@ const PANTALLES: { color: string; contingut: ReactNode }[] = [
   ...ELEMENTS_ORDRE.map((el) => {
     const element = ELEMENTS[el];
     const cartell = POEMES_CARTELLS[ELEMENT_CARTELL[el]];
-    const imatge = ELEMENT_IMATGE[el];
     return {
       color: element.color,
       contingut: (
         <Pantalla imatge={cartell.fons} posicio={cartell.fonsPosicio} vel="paper">
-          <div className="flex items-center gap-3">
-            {imatge && (
-              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border-4 border-ink shadow-[0_2px_0_var(--ink)]">
-                <Image src={imatge} alt="" fill sizes="64px" className="object-cover" />
-              </div>
-            )}
-            <h2
-              className="text-5xl font-extrabold leading-none"
-              style={{ color: element.color, textShadow: "0 0 5px #f3e5c4, 0 0 10px #f3e5c4, 0 0 16px #f3e5c4" }}
-            >
-              {element.nom}
-            </h2>
-          </div>
+          <h2
+            className="text-5xl font-extrabold leading-none"
+            style={{ color: element.color, textShadow: "0 0 5px #f3e5c4, 0 0 10px #f3e5c4, 0 0 16px #f3e5c4" }}
+          >
+            {element.nom}
+          </h2>
           <p className="whitespace-pre-line text-balance text-3xl leading-tight text-ink" style={VITRINA}>
             {cartell.lema}
           </p>
