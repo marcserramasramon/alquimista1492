@@ -157,12 +157,12 @@ const PANTALLES: { color: string; contingut: ReactNode }[] = [
       contingut: (
         <Pantalla imatge={cartell.fons} posicio={cartell.fonsPosicio} vel="paper">
           <h2
-            className="text-8xl font-extrabold leading-none"
+            className="text-5xl font-extrabold leading-none"
             style={{ color: element.color, textShadow: "0 0 5px #f3e5c4, 0 0 10px #f3e5c4, 0 0 16px #f3e5c4" }}
           >
             {element.nom}
           </h2>
-          <p className="whitespace-pre-line text-balance text-6xl leading-tight text-ink" style={VITRINA}>
+          <p className="whitespace-pre-line text-balance text-3xl leading-tight text-ink" style={VITRINA}>
             {cartell.lema}
           </p>
         </Pantalla>
