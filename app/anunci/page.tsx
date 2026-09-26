@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Balthazar } from "next/font/google";
 import Image from "next/image";
+import { AMPLE_CINTA, CintaRunes, CintaRunesEstils } from "@/components/anunci/CintaRunes";
 import { MapaPlaMasset } from "@/components/anunci/MapaPlaMasset";
 import { MiniJocElements } from "@/components/anunci/MiniJocElements";
-import { MarcRunesCartell } from "@/components/cartells/MarcRunesCartell";
 import { ELEMENTS, ESTACIONS, type Element } from "@/content/public/estacions";
 import { POEMES_CARTELLS, DATA_ESDEVENIMENT, TIPUS_ESDEVENIMENT } from "@/content/public/cartells";
 
@@ -13,36 +14,219 @@ import { POEMES_CARTELLS, DATA_ESDEVENIMENT, TIPUS_ESDEVENIMENT } from "@/conten
  * disseny amb la Benvinguda (`components/player/Benvinguda.tsx`) i no hi enllaça
  * enlloc (ni a `/`, ni a l'app). Contingut 100% públic: no revela cap prova ni
  * cap resposta, i no destapa el gir final de la trama (qui és l'Inquisidor).
+ *
+ * Després de la portada, la pàgina és una successió de pantalles amb una imatge de fons,
+ * amb un marge a cada costat per on corre la cinta de runes (`components/anunci/CintaRunes.tsx`),
+ * del color de l'element de cada imatge.
  */
 
 // Text de vitrina: mateixa família humanista que fan servir els cartells de propaganda impresos.
 const balthazar = Balthazar({ variable: "--font-balthazar", weight: ["400"], subsets: ["latin"] });
+const VITRINA = { fontFamily: "var(--font-balthazar), serif" };
 
 export const metadata: Metadata = {
   title: "Els Guardians del Secret de Sentfores",
   description: `${TIPUS_ESDEVENIMENT} a Sentfores (Osona). ${DATA_ESDEVENIMENT}.`,
 };
 
-/** El text llarg de cada element: el mateix que porten els cartells de propaganda (content/public/cartells.ts). */
-const ELEMENT_PARAGRAFS: Record<Element, string[]> = {
-  aigua: POEMES_CARTELLS["font-ferro"].paragrafs,
-  terra: POEMES_CARTELLS["planes-bones"].paragrafs,
-  foc: POEMES_CARTELLS["foc"].paragrafs,
-  aire: POEMES_CARTELLS["aire"].paragrafs,
-  anima: POEMES_CARTELLS["anima"].paragrafs,
+/** Color de la cinta a les pantalles que no són d'un element. */
+const DAURAT = "#eab308";
+
+/** Cada element amb el seu cartell de propaganda (content/public/cartells.ts): il·lustració de fons i poema. */
+const ELEMENT_CARTELL: Record<Element, string> = {
+  aigua: "font-ferro",
+  terra: "planes-bones",
+  foc: "foc",
+  aire: "aire",
+  anima: "anima",
 };
 
-/** La mateixa foto de capçalera que ja fa servir la pantalla de la fita a l'app (`components/vistes/VistaEstacio.tsx`). */
+/** La mateixa foto que ja fa servir la pantalla de la fita a l'app (`components/vistes/VistaEstacio.tsx`), en petit. */
 const ELEMENT_IMATGE: Record<Element, string | undefined> = Object.fromEntries(
   ESTACIONS.filter((e) => e.element).map((e) => [e.element as Element, e.imatge]),
 ) as Record<Element, string | undefined>;
 
 const ELEMENTS_ORDRE: Element[] = ["aigua", "terra", "foc", "aire", "anima"];
 
-export default function AnunciPage() {
+/** Vels sobre la imatge perquè el text es llegeixi: fosc (text clar) o de paper com el peu dels cartells (text fosc). */
+const VELS = {
+  fosc: "bg-gradient-to-t from-ink via-ink/65 to-ink/10",
+  paper:
+    "bg-[linear-gradient(to_bottom,transparent_25%,rgb(243_229_196/0.7)_50%,rgb(243_229_196/0.93)_70%,rgb(243_229_196/0.97))]",
+};
+
+/** Una pantalla de la successió: imatge a tot el fons, vel i contingut a baix. */
+function Pantalla({
+  imatge,
+  alt = "",
+  posicio,
+  vel,
+  children,
+}: {
+  imatge: string;
+  alt?: string;
+  posicio?: string;
+  vel: keyof typeof VELS;
+  children: ReactNode;
+}) {
   return (
-    <main className={`${balthazar.variable} flex flex-col`}>
-      {/* Portada: fotografia a tota la pantalla amb el títol, el lema i quan és. */}
+    <section className="relative flex min-h-[100svh] flex-col justify-end overflow-hidden">
+      <Image
+        src={imatge}
+        alt={alt}
+        fill
+        sizes={`calc(100vw - ${2 * AMPLE_CINTA}px)`}
+        style={posicio ? { objectPosition: posicio } : undefined}
+        className="object-cover"
+      />
+      <div className={`absolute inset-0 ${VELS[vel]}`} />
+      <div className="relative z-10 mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-5 pb-14 pt-40 text-center">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function Etiqueta({ children }: { children: ReactNode }) {
+  return <p className="text-sm font-bold uppercase tracking-[0.25em] text-gold">{children}</p>;
+}
+
+function TitolFosc({ children }: { children: ReactNode }) {
+  return (
+    <h2 className="text-balance text-4xl font-extrabold leading-tight text-paper drop-shadow-[0_3px_8px_rgb(0_0_0_/_0.6)]">
+      {children}
+    </h2>
+  );
+}
+
+/** Les pantalles després de la portada, amb el color de cinta de cadascuna. */
+const PANTALLES: { color: string; contingut: ReactNode }[] = [
+  {
+    // La llegenda: el context de la trama, sense donar cap detall de trama posterior.
+    color: DAURAT,
+    contingut: (
+      <Pantalla
+        imatge="/images/entrada-poble.webp"
+        alt="Sentfores al capvespre, amb una figura encaputxada vigilant el camí d'entrada"
+        vel="fosc"
+      >
+        <Etiqueta>L&apos;any 1472</Etiqueta>
+        <TitolFosc>Un secret que ni la guerra no ha pogut destruir</TitolFosc>
+        <div className="flex flex-col gap-4 text-left text-lg leading-relaxed text-paper">
+          <p>
+            Sentfores crema. La Guerra dels Remences assola el país i el castell del poble cau en runes. Abans que
+            tot s&apos;ensorri, algú amaga pel terme els fragments d&apos;un secret que no pot caure en mans
+            equivocades.
+          </p>
+          <p>
+            No sou els únics que el busqueu. Algú ronda els carrers i els camins, vigilant qui s&apos;hi acosta massa
+            &mdash; i no dubtarà a aturar-vos.
+          </p>
+        </div>
+      </Pantalla>
+    ),
+  },
+  {
+    // El format: què fan els equips, sense entrar en com es resol cada prova.
+    color: DAURAT,
+    contingut: (
+      <Pantalla
+        imatge="/images/cartells/portada/cami-lluny.jpg"
+        alt="Una figura camina per un camí de pedra cap a un portal ple de símbols alquímics"
+        vel="fosc"
+      >
+        <Etiqueta>El joc</Etiqueta>
+        <TitolFosc>Formeu equip i sortiu a buscar-lo</TitolFosc>
+        <p className="text-left text-lg leading-relaxed text-paper">
+          El dia de la partida, sortiu a recórrer Sentfores a peu, mòbil en mà. Pel poble i el seu entorn hi ha cinc
+          punts amagats, un per cada element: Aigua, Terra, Foc, Aire i Ànima. A cadascun us espera una prova diferent
+          a l&apos;aire lliure &mdash; supereu-la en equip per guanyar el vostre fragment del secret.
+        </p>
+      </Pantalla>
+    ),
+  },
+  // Un element per pantalla: la il·lustració i el poema del seu cartell de propaganda.
+  ...ELEMENTS_ORDRE.map((el) => {
+    const element = ELEMENTS[el];
+    const cartell = POEMES_CARTELLS[ELEMENT_CARTELL[el]];
+    const imatge = ELEMENT_IMATGE[el];
+    return {
+      color: element.color,
+      contingut: (
+        <Pantalla imatge={cartell.fons} posicio={cartell.fonsPosicio} vel="paper">
+          <div className="flex items-center gap-3">
+            {imatge && (
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border-4 border-ink shadow-[0_2px_0_var(--ink)]">
+                <Image src={imatge} alt="" fill sizes="64px" className="object-cover" />
+              </div>
+            )}
+            <h2
+              className="text-5xl font-extrabold leading-none"
+              style={{ color: element.color, textShadow: "0 0 5px #f3e5c4, 0 0 10px #f3e5c4, 0 0 16px #f3e5c4" }}
+            >
+              {element.nom}
+            </h2>
+          </div>
+          <div className="flex flex-col gap-3 text-justify text-lg leading-snug text-ink" style={VITRINA}>
+            {cartell.paragrafs.map((paragraf, i) => (
+              <p key={i}>{paragraf}</p>
+            ))}
+          </div>
+        </Pantalla>
+      ),
+    };
+  }),
+  {
+    // El final: el ritual que tanca la partida, sense explicar-ne la mecànica.
+    color: DAURAT,
+    contingut: (
+      <Pantalla imatge="/images/cartells/portada/cami-buit.jpg" vel="fosc">
+        <Etiqueta>El final</Etiqueta>
+        <TitolFosc>El Gresol dels Cinc Elements</TitolFosc>
+        <div className="w-full rounded-3xl bg-paper/90 py-4 shadow-[0_6px_0_var(--ink)]">
+          <MiniJocElements />
+        </div>
+        <p className="text-left text-lg leading-relaxed text-paper">
+          Quan tingueu els cinc fragments, tot us porta de tornada al cor del poble, al Pla de Masset. Allà els cinc
+          elements s&apos;ajunten en un darrer ritual que ho decidirà tot.
+        </p>
+        <p className="text-pretty text-xl italic leading-snug text-gold" style={VITRINA}>
+          Sigueu els Guardians del Secret i conjureu la fórmula de l&apos;alquímia secreta.
+        </p>
+      </Pantalla>
+    ),
+  },
+  {
+    // Tancament: on i quan, i qui ho organitza. Sense cap enllaç ni botó.
+    color: DAURAT,
+    contingut: (
+      <Pantalla imatge="/mapa-sentfores.webp" vel="fosc">
+        <TitolFosc>Apunteu-vos la data</TitolFosc>
+        <div className="w-full max-w-sm">
+          <MapaPlaMasset />
+        </div>
+        <ul className="flex flex-col gap-3 text-lg font-bold text-paper">
+          <li>📅 {DATA_ESDEVENIMENT}</li>
+          <li>📍 Pla del Masset · Sentfores (la Guixa), Osona</li>
+          <li>👥 En equip, a l&apos;exterior, amb el mòbil</li>
+        </ul>
+        <div className="rounded-2xl bg-paper px-5 py-4">
+          {/* eslint-disable-next-line @next/next/no-img-element -- logo estàtic, sense necessitat d'optimització */}
+          <img src="/images/logo-associacio-sentfores.png" alt="Sentfores · Associació de Veïns de la Guixa" className="h-16 w-auto" />
+        </div>
+        <p className="max-w-xs text-pretty italic text-paper/80" style={VITRINA}>
+          Que tingueu sort. Algú altre també el busca.
+        </p>
+      </Pantalla>
+    ),
+  },
+];
+
+export default function AnunciPage() {
+  const colors = PANTALLES.map((p) => p.color);
+  return (
+    <main className={`${balthazar.variable} flex flex-col bg-ink`}>
+      {/* Portada: fotografia a tota la pantalla amb el títol, el lema i quan és. Sense cinta de runes. */}
       <section className="relative flex min-h-[100svh] w-full flex-col justify-end overflow-hidden">
         <Image
           src="/images/cartells/portada/frare.jpg"
@@ -58,7 +242,7 @@ export default function AnunciPage() {
           <h1 className="max-w-3xl text-balance text-5xl font-extrabold leading-[0.95] text-paper drop-shadow-[0_3px_8px_rgb(0_0_0_/_0.6)] sm:text-6xl">
             Els Guardians del Secret de Sentfores
           </h1>
-          <p className="max-w-md text-pretty text-xl italic leading-snug text-paper/90" style={{ fontFamily: "var(--font-balthazar), serif" }}>
+          <p className="max-w-md text-pretty text-xl italic leading-snug text-paper/90" style={VITRINA}>
             El secret està ocult, vine a descobrir-lo.
           </p>
           <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
@@ -73,147 +257,17 @@ export default function AnunciPage() {
         </div>
       </section>
 
-      {/* La llegenda: el context de la trama, sense donar cap detall de trama posterior. */}
-      <section className="bg-paper px-6 py-16 sm:py-20">
-        <div className="mx-auto flex max-w-xl flex-col items-center gap-6">
-          <p className="etiqueta">L&apos;any 1472</p>
-          <h2 className="text-balance text-center text-3xl font-extrabold text-ink sm:text-4xl">
-            Un secret que ni la guerra no ha pogut destruir
-          </h2>
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border-[3px] border-ink shadow-[0_6px_0_var(--ink)]">
-            <Image
-              src="/images/entrada-poble.webp"
-              alt="Sentfores al capvespre, amb una figura encaputxada vigilant el camí d'entrada"
-              fill
-              sizes="(min-width: 640px) 576px, 100vw"
-              className="object-cover"
-            />
+      {/* Graella: cinta · pantalla · cinta. Cada fila és una pantalla; les cintes les recorren totes. */}
+      <CintaRunesEstils />
+      <div className="grid" style={{ gridTemplateColumns: `${AMPLE_CINTA}px minmax(0, 1fr) ${AMPLE_CINTA}px` }}>
+        {PANTALLES.map((p, i) => (
+          <div key={i} style={{ gridColumn: 2, gridRow: i + 1 }}>
+            {p.contingut}
           </div>
-          <div className="flex flex-col gap-4 text-left text-lg leading-relaxed text-ink">
-            <p>
-              Sentfores crema. La Guerra dels Remences assola el país i el castell del poble cau en runes. Abans
-              que tot s&apos;ensorri, algú amaga pel terme els fragments d&apos;un secret que no pot caure en mans
-              equivocades.
-            </p>
-            <p>
-              No sou els únics que el busqueu. Algú ronda els carrers i els camins, vigilant qui s&apos;hi acosta
-              massa &mdash; i no dubtarà a aturar-vos.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* El format: què fan els equips, sense entrar en com es resol cada prova. */}
-      <section className="pergami py-16 sm:py-20">
-        <div className="mx-auto flex max-w-xl flex-col items-center gap-6 px-6">
-          <p className="etiqueta">El joc</p>
-          <h2 className="text-balance text-center text-3xl font-extrabold text-ink sm:text-4xl">
-            Formeu equip i sortiu a buscar-lo
-          </h2>
-          <p className="text-left text-lg leading-relaxed text-ink">
-            El dia de la partida, sortiu a recórrer Sentfores a peu, mòbil en mà. Pel poble i el seu entorn hi ha
-            cinc punts amagats, un per cada element: Aigua, Terra, Foc, Aire i Ànima. A cadascun us espera una
-            prova diferent a l&apos;aire lliure &mdash; supereu-la en equip per guanyar el vostre fragment del
-            secret.
-          </p>
-        </div>
-
-        {/* Mateix vel de paper que "propaganda-peu" a components/vistes/VistaCartells.tsx (cartells-html/propaganda/). */}
-        <style>{`
-          .anunci-peu {
-            position: relative; margin: 0 -4mm -2mm; padding: 24mm 6mm 4mm;
-            background: linear-gradient(to bottom,
-              rgb(243 229 196 / 0.25), rgb(243 229 196 / 0.45) 14mm, rgb(243 229 196 / 0.66) 32mm,
-              rgb(243 229 196 / 0.9) 46mm, rgb(243 229 196 / 0.95));
-          }
-          .anunci-peu::before {
-            content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 60mm;
-            background: linear-gradient(to bottom, rgb(243 229 196 / 0), rgb(243 229 196 / 0.25));
-          }
-          .anunci-peu-titol { text-shadow: 0 0 1.2mm #f3e5c4, 0 0 2.4mm #f3e5c4, 0 0 4mm #f3e5c4; }
-          .anunci-peu-text { font-family: var(--font-balthazar), serif; }
-        `}</style>
-
-        <div className="mx-auto flex w-full max-w-[540px] flex-col gap-10 px-6">
-          {ELEMENTS_ORDRE.map((el) => {
-            const element = ELEMENTS[el];
-            const imatge = ELEMENT_IMATGE[el];
-            return (
-              <div key={el} className="relative w-full overflow-hidden rounded-[3mm]" style={{ aspectRatio: "210 / 297" }}>
-                {imatge && <Image src={imatge} alt="" fill sizes="(min-width: 640px) 540px, 100vw" className="object-cover" />}
-                <MarcRunesCartell color={element.color} fons />
-                <div className="absolute inset-0 flex flex-col justify-end p-[12mm]">
-                  <div className="anunci-peu flex flex-col items-center gap-[4mm] text-center">
-                    <div className="flex items-center gap-[3mm]">
-                      {/* eslint-disable-next-line @next/next/no-img-element -- icona petita, sense necessitat d'optimització */}
-                      <img src={element.icona} alt="" className="h-[9mm] w-[9mm] object-contain" />
-                      <h3 className="anunci-peu-titol text-[34pt] font-extrabold leading-[0.95]" style={{ color: element.color }}>
-                        {element.nom}
-                      </h3>
-                    </div>
-                    <div className="anunci-peu-text flex flex-col gap-[0.6em] text-justify leading-[1.38]" style={{ fontSize: "13pt" }}>
-                      {ELEMENT_PARAGRAFS[el].map((paragraf, i) => (
-                        <p key={i}>{paragraf}</p>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* El final: el ritual que tanca la partida, sense explicar-ne la mecànica. */}
-      <section className="bg-paper py-16 sm:py-20">
-        <div className="mx-auto flex max-w-xl flex-col items-center gap-6 px-6 text-center">
-          <p className="etiqueta">El final</p>
-          <h2 className="text-balance text-3xl font-extrabold text-ink sm:text-4xl">El Gresol dels Cinc Elements</h2>
-        </div>
-
-        <MiniJocElements />
-
-        <div className="mx-auto flex max-w-xl flex-col items-center gap-6 px-6 text-center">
-          <p className="text-left text-lg leading-relaxed text-ink">
-            Quan tingueu els cinc fragments, tot us porta de tornada al cor del poble, al Pla de Masset. Allà els
-            cinc elements s&apos;ajunten en un darrer ritual que ho decidirà tot.
-          </p>
-          <p className="text-pretty text-xl italic leading-snug text-gold-deep" style={{ fontFamily: "var(--font-balthazar), serif" }}>
-            Sigueu els Guardians del Secret i conjureu la fórmula de l&apos;alquímia secreta.
-          </p>
-        </div>
-      </section>
-
-      {/* Tancament: informació pràctica i qui ho organitza. Sense cap enllaç ni botó. */}
-      <section className="bg-ink px-6 py-16 text-center sm:py-20">
-        <div className="mx-auto flex max-w-md flex-col items-center gap-6">
-          <h2 className="text-balance text-3xl font-extrabold text-paper sm:text-4xl">Apunteu-vos la data</h2>
-          <ul className="flex flex-col gap-3 text-lg font-bold text-paper">
-            <li>📅 {DATA_ESDEVENIMENT}</li>
-            <li>📍 Sentfores (la Guixa), Osona</li>
-            <li>👥 En equip, a l&apos;exterior, amb el mòbil</li>
-          </ul>
-          <div className="mt-2 h-px w-24 bg-paper/30" aria-hidden />
-          <div className="rounded-2xl bg-paper px-5 py-4">
-            {/* eslint-disable-next-line @next/next/no-img-element -- logo estàtic, sense necessitat d'optimització */}
-            <img src="/images/logo-associacio-sentfores.png" alt="Sentfores · Associació de Veïns de la Guixa" className="h-16 w-auto" />
-          </div>
-          <p className="max-w-xs text-pretty italic text-paper/70" style={{ fontFamily: "var(--font-balthazar), serif" }}>
-            Que tingueu sort. Algú altre també el busca.
-          </p>
-        </div>
-      </section>
-
-      {/* El mapa: on és exactament el Pla del Masset, sense revelar les fites del joc. */}
-      <section className="bg-paper px-6 py-16 text-center sm:py-20">
-        <div className="mx-auto flex max-w-md flex-col items-center gap-6">
-          <MapaPlaMasset />
-          <p className="text-xl font-extrabold text-ink">Pla del Masset · Sentfores</p>
-          <p className="rounded-full border-2 border-ink bg-ink/5 px-4 py-2 text-base font-bold text-ink">
-            {DATA_ESDEVENIMENT}
-          </p>
-        </div>
-      </section>
+        ))}
+        <CintaRunes costat="esquerra" colors={colors} />
+        <CintaRunes costat="dreta" colors={colors} />
+      </div>
     </main>
   );
 }
