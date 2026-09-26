@@ -46,7 +46,7 @@ const ELEMENTS_ORDRE: Element[] = ["aigua", "terra", "foc", "aire", "anima"];
 /** Vels sobre la imatge perquè el text es llegeixi: fosc (text clar) o de paper com el peu dels cartells (text fosc). */
 const VELS = {
   fosc: "linear-gradient(to top, rgb(27 21 17) 0%, rgb(27 21 17 / 0.88) 45%, rgb(27 21 17 / 0.55) 75%, rgb(27 21 17 / 0.15) 100%)",
-  paper: "linear-gradient(to bottom, rgb(243 229 196 / 0) 50%, rgb(243 229 196 / 0.8) 66%, rgb(243 229 196 / 0.95) 78%)",
+  paper: "linear-gradient(to bottom, rgb(243 229 196 / 0), rgb(243 229 196 / 0.8) 7rem, rgb(243 229 196 / 0.95) 10rem)",
 };
 
 /** Una pantalla de la successió: imatge a tot el fons (si en té), vel i contingut a baix. */
@@ -72,16 +72,19 @@ function Pantalla({
           src={imatge}
           alt={alt}
           fill
-          sizes={`calc(100vw - ${2 * AMPLE_CINTA}px)`}
+          sizes="100vw"
           style={posicio ? { objectPosition: posicio } : undefined}
           className="object-cover"
         />
       )}
-      {vel && <div className="absolute inset-0" style={{ background: VELS[vel] }} />}
-      <div
-        className={`relative z-10 mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-5 pb-14 text-center ${imatge ? "pt-40" : "pt-14"}`}
-      >
-        {children}
+      {vel === "fosc" && <div className="absolute inset-0" style={{ background: VELS.fosc }} />}
+      {/* El vel de paper va enganxat al bloc de text: el cobreix sempre, sigui quina sigui la seva alçada. */}
+      <div className="relative z-10 w-full" style={vel === "paper" ? { background: VELS.paper } : undefined}>
+        <div
+          className={`mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-5 pb-14 text-center ${imatge ? "pt-40" : "pt-14"}`}
+        >
+          {children}
+        </div>
       </div>
     </section>
   );
@@ -154,12 +157,12 @@ const PANTALLES: { color: string; contingut: ReactNode }[] = [
       contingut: (
         <Pantalla imatge={cartell.fons} posicio={cartell.fonsPosicio} vel="paper">
           <h2
-            className="text-5xl font-extrabold leading-none"
+            className="text-8xl font-extrabold leading-none"
             style={{ color: element.color, textShadow: "0 0 5px #f3e5c4, 0 0 10px #f3e5c4, 0 0 16px #f3e5c4" }}
           >
             {element.nom}
           </h2>
-          <p className="whitespace-pre-line text-balance text-3xl leading-tight text-ink" style={VITRINA}>
+          <p className="whitespace-pre-line text-balance text-6xl leading-tight text-ink" style={VITRINA}>
             {cartell.lema}
           </p>
         </Pantalla>
