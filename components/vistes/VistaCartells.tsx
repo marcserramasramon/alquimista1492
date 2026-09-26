@@ -1,16 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { Alegreya } from "next/font/google";
+import { Alegreya, Balthazar } from "next/font/google";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
-import type { PoemaCartell } from "@/content/public/cartells";
+import { DATA_ESDEVENIMENT, type PoemaCartell } from "@/content/public/cartells";
 import type { Soroll } from "@/lib/sorollFoc";
 import { SorollFocSvg } from "@/components/cartells/SorollFocSvg";
 import { MarcRunesCartell } from "@/components/cartells/MarcRunesCartell";
+import { Pentagrama } from "@/components/ui/Pentagrama";
 
 // Text dels cartells: serif cal·ligràfica, germana de l'Alegreya Sans de l'app. En recta i
 // de pes mitjà, perquè es llegeixi a l'exterior i plastificada (la cursiva s'empastava).
 const alegreya = Alegreya({ variable: "--font-alegreya", weight: ["500"], subsets: ["latin"] });
+
+// Text dels cartells de propaganda: humanista d'aire antic, lliure (OFL).
+const balthazar = Balthazar({ variable: "--font-balthazar", weight: ["400"], subsets: ["latin"] });
 
 export interface DadesCartell {
   id: string;
@@ -35,8 +39,11 @@ const ARTICLE: Record<Element, string> = {
 /**
  * `imatge`: il·lustració horitzontal entre la capçalera i el text.
  * `fons`: il·lustració vertical a tot el full i el contingut en panells de paper.
+ * `propaganda`: com `fons`, però per anunciar el joc: sense QR, codi ni soroll (el Foc
+ * portaria la resposta), el títol és només l'element i el fons es veu més.
+ * `lema`: com `propaganda`, però amb una sola frase (el lema de l'element) en lloc del text.
  */
-export type EstilCartell = "imatge" | "fons";
+export type EstilCartell = "imatge" | "fons" | "propaganda" | "lema";
 
 /** Proporció de les il·lustracions horitzontals (public/images/cartells/, 1500×837 i 2000×1116). */
 const PROPORCIO_IMATGE = "1500 / 837";
@@ -130,12 +137,117 @@ function Cartell({ c, estil }: { c: DadesCartell; estil: EstilCartell }) {
   );
 }
 
-/** Cartells físics de les fites, un per full A4, per imprimir (o desar en PDF) des del navegador. */
-export function VistaCartells({ cartells, estil = "imatge" }: { cartells: DadesCartell[]; estil?: EstilCartell }) {
-  const pendents = cartells.filter((c) => c.poema.pendent);
+/** Cartell de propaganda: el fons és el protagonista; el títol i el text, a baix sobre un degradat de paper. */
+function CartellPropaganda({ c, lema = false }: { c: DadesCartell; lema?: boolean }) {
+  const element = ELEMENTS[c.element];
 
   return (
-    <main className={`${alegreya.variable} vista-cartells flex flex-col items-center gap-8 px-4 py-6`}>
+    <section
+      data-fita={c.id}
+      className="cartell cartell-fons"
+      style={{ ["--el" as string]: element.color, backgroundImage: `url(${c.poema.fons})`, backgroundPosition: c.poema.fonsPosicio }}
+    >
+      {/* La sanefa per sobre de tot: el degradat del text no l'ha de tapar. */}
+      <div className="pointer-events-none absolute inset-0 z-10">
+        <MarcRunesCartell color={element.color} fons />
+      </div>
+      {/* Tota la part de dalt és per a la il·lustració; el títol i el text, junts a baix. */}
+      <div className="cartell-marc !justify-end !p-[8mm]">
+        {/* Logo de l'Associació de Veïns de la Guixa, petit a dalt a la dreta. */}
+        <div className="absolute top-[10.5mm] right-[10.5mm]">
+          {/* eslint-disable-next-line @next/next/no-img-element -- s'imprimeix: sense optimització d'imatge */}
+          <img src="/images/logo-associacio-sentfores.png" alt="Sentfores · Associació de Veïns de la Guixa" className="block h-[21.5mm] w-auto" />
+        </div>
+
+        {/* Alçada fixa (la del cartell amb més text) perquè el títol quedi a la mateixa altura a tots;
+            el text va alineat a baix i l'espai que sobra queda entre el títol i el text. */}
+        <div className={`propaganda-peu flex flex-col gap-[4mm] ${lema ? "h-[120.5mm]" : "h-[168.5mm]"}`}>
+          {/* 10 pt més amunt que on el posaria el flux, sense moure el text. */}
+          <header className="relative -top-[10pt] flex flex-col items-center text-center">
+            <div className="flex items-center gap-[4mm]">
+              {/* eslint-disable-next-line @next/next/no-img-element -- s'imprimeix: sense optimització d'imatge */}
+              <img src={element.icona} alt="" className="h-[24mm] w-[24mm] shrink-0 object-contain" />
+              <h1 className="text-[84pt] font-extrabold leading-[0.9]" style={{ color: element.color }}>
+                {element.nom}
+              </h1>
+            </div>
+            <p className="font-display text-[22pt] font-bold leading-tight">Els Guardians del Secret de Sentfores · 1472</p>
+            <p className="mt-[1.5mm] font-display text-[20pt] font-bold leading-tight" style={{ color: element.color }}>
+              {DATA_ESDEVENIMENT}
+            </p>
+          </header>
+
+          {lema ? (
+            <p className="propaganda-lema mt-auto px-[5mm] pb-[15mm] text-center text-[28pt] leading-[1.3]">{c.poema.lema}</p>
+          ) : (
+            <div className="cartell-text mt-auto flex flex-col gap-[0.6em] px-[5mm] pb-[15mm] text-justify leading-[1.38]" style={{ fontSize: "18pt" }}>
+              {c.poema.paragrafs.map((paragraf, i) => (
+                <p key={i}>{paragraf}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Primer cartell de propaganda (portada): títol, el pentagrama del joc, el mapa de Sentfores sense
+ * les fites, la data i una frase. Mateixa estètica que els cartells dels elements.
+ */
+function CartellPortada() {
+  const or = "#8a6300";
+  return (
+    <section
+      data-fita="portada"
+      className="cartell"
+      style={{
+        ["--el" as string]: or,
+        // El mapa de fons, a tota l'amplada i alineat a baix; a dalt s'esvaeix cap al pergamí.
+        backgroundColor: "var(--paper-2)",
+        backgroundImage:
+          "var(--gra), linear-gradient(to bottom, var(--paper-2) 87mm, rgb(243 229 196 / 0) 150mm), url(/mapa-sentfores.webp)",
+        backgroundSize: "auto, 100% 100%, 100% auto",
+        backgroundPosition: "top, top, bottom",
+        backgroundRepeat: "repeat, no-repeat, no-repeat",
+      }}
+    >
+      <div className="pointer-events-none absolute inset-0 z-10">
+        <MarcRunesCartell color={or} fons />
+      </div>
+      <div className="cartell-marc !gap-[5mm] !p-[8mm] items-center text-center">
+        <div className="absolute top-[10.5mm] right-[10.5mm]">
+          {/* eslint-disable-next-line @next/next/no-img-element -- s'imprimeix: sense optimització d'imatge */}
+          <img src="/images/logo-associacio-sentfores.png" alt="Sentfores · Associació de Veïns de la Guixa" className="block h-[21.5mm] w-auto" />
+        </div>
+
+        {/* Títol tot d'un sol color i mida; marge lateral perquè no toqui el logo. */}
+        <h1 className="mt-[4mm] px-[24mm] text-[36pt] font-extrabold leading-[1] text-balance" style={{ color: or }}>
+          Els Guardians del Secret de Sentfores · 1472
+        </h1>
+
+        <div className="flex flex-col items-center gap-[1.5mm]">
+          <p className="propaganda-lema text-[26pt] leading-[1.2]">El secret està ocult, vine a descobrir-lo.</p>
+          <p className="font-display text-[22pt] font-bold leading-tight" style={{ color: or }}>
+            {DATA_ESDEVENIMENT}
+          </p>
+        </div>
+
+        {/* Decoratiu: elements en color i el Gresol encès (sense les marques de fita resolta de l'app). */}
+        <Pentagrama vius centreActiu className="my-auto h-[150mm] w-[150mm] shrink-0" />
+      </div>
+    </section>
+  );
+}
+
+/** Cartells físics de les fites, un per full A4, per imprimir (o desar en PDF) des del navegador. */
+export function VistaCartells({ cartells, estil = "imatge" }: { cartells: DadesCartell[]; estil?: EstilCartell }) {
+  const propaganda = estil === "propaganda" || estil === "lema";
+  const pendents = propaganda ? [] : cartells.filter((c) => c.poema.pendent);
+
+  return (
+    <main className={`${alegreya.variable} ${balthazar.variable} vista-cartells flex flex-col items-center gap-8 px-4 py-6`}>
       <style>{`
         @page { size: A4; margin: 0; }
         .cartell {
@@ -161,6 +273,23 @@ export function VistaCartells({ cartells, estil = "imatge" }: { cartells: DadesC
           padding: 4mm 5mm; border: 0.6mm solid var(--ink); border-radius: 3mm;
           background: rgb(251 244 228 / 0.9);
         }
+        /* Propaganda: sense caixes, un vel de paper que s'esvaeix cap a la il·lustració. */
+        /* El vel comença per sobre del bloc (::before) i és molt transparent darrere el títol,
+           perquè s'hi vegi el fons; només es fa gairebé opac a l'altura del text. */
+        .propaganda-peu {
+          position: relative; margin: 0 -4mm -2mm; padding: 24mm 6mm 4mm; border-radius: 0 0 3mm 3mm;
+          background: linear-gradient(to bottom,
+            rgb(243 229 196 / 0.25), rgb(243 229 196 / 0.45) 14mm, rgb(243 229 196 / 0.66) 32mm,
+            rgb(243 229 196 / 0.9) 46mm, rgb(243 229 196 / 0.95));
+        }
+        .propaganda-peu::before {
+          content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 60mm;
+          background: linear-gradient(to bottom, rgb(243 229 196 / 0), rgb(243 229 196 / 0.25));
+        }
+        .propaganda-peu header p { text-shadow: 0 0 1mm #f3e5c4, 0 0 2mm #f3e5c4, 0 0 3mm #f3e5c4; }
+        .propaganda-lema { font-family: var(--font-balthazar), serif; text-wrap: balance; white-space: pre-line; }
+        .propaganda-peu .cartell-text { font-family: var(--font-balthazar), serif; font-weight: normal; }
+        .propaganda-peu h1 { text-shadow: 0 0 1.2mm #f3e5c4, 0 0 2.4mm #f3e5c4, 0 0 4mm #f3e5c4; }
         .cartell-filet {
           height: 0.9mm; border-radius: 1mm;
           background: linear-gradient(90deg, transparent, var(--el) 15%, var(--el) 85%, transparent);
@@ -176,10 +305,11 @@ export function VistaCartells({ cartells, estil = "imatge" }: { cartells: DadesC
         <Link href="/master/codis" className="btn btn-secundari w-auto self-start px-4 text-base">
           ← Codis
         </Link>
-        <h1 className="text-5xl font-extrabold">Cartells de les fites</h1>
+        <h1 className="text-5xl font-extrabold">{propaganda ? "Cartells de propaganda" : "Cartells de les fites"}</h1>
         <p className="text-lg text-ink-soft">
-          Un cartell per full A4. Imprimiu-los en color, sense marges i amb els gràfics de fons activats, i plastifiqueu-los. Porten el codi
-          de la fita: no els deixeu a la vista abans de la partida.
+          {propaganda
+            ? "Un cartell per full A4 per anunciar el joc. No porten cap codi ni cap resposta: es poden penjar on sigui."
+            : "Un cartell per full A4. Imprimiu-los en color, sense marges i amb els gràfics de fons activats, i plastifiqueu-los. Porten el codi de la fita: no els deixeu a la vista abans de la partida."}
         </p>
         {pendents.length > 0 && (
           <div className="rounded-2xl border-[3px] border-blood bg-blood/10 p-4">
@@ -200,6 +330,12 @@ export function VistaCartells({ cartells, estil = "imatge" }: { cartells: DadesC
           <Link href="?estil=fons" className={`btn ${estil === "fons" ? "btn-fosc" : "btn-secundari"} text-base`}>
             Amb imatge de fons
           </Link>
+          <Link href="?estil=propaganda" className={`btn ${estil === "propaganda" ? "btn-fosc" : "btn-secundari"} text-base`}>
+            Propaganda
+          </Link>
+          <Link href="?estil=lema" className={`btn ${estil === "lema" ? "btn-fosc" : "btn-secundari"} text-base`}>
+            Propaganda amb lema
+          </Link>
         </div>
         <button type="button" onClick={() => window.print()} className="btn btn-primari">
           Imprimir / desar en PDF
@@ -207,8 +343,9 @@ export function VistaCartells({ cartells, estil = "imatge" }: { cartells: DadesC
       </header>
 
       <div className="flex w-full flex-col items-center gap-8 overflow-x-auto print:block print:overflow-visible">
+        {propaganda && <CartellPortada />}
         {cartells.map((c) => (
-          <Cartell key={c.id} c={c} estil={estil} />
+          propaganda ? <CartellPropaganda key={c.id} c={c} lema={estil === "lema"} /> : <Cartell key={c.id} c={c} estil={estil} />
         ))}
       </div>
     </main>

@@ -1038,6 +1038,56 @@ export const PANTALLES: Pantalla[] = [
     ),
   },
   {
+    id: "master-cartells-propaganda",
+    grup: "master",
+    titol: "Cartells de propaganda (A4)",
+    descripcio: "Sense QR, codi ni soroll: per anunciar el joc.",
+    render: () => (
+      <VistaCartells
+        estil="propaganda"
+        cartells={getEstacionsOrdenades().flatMap((e, i): DadesCartell[] => {
+          const poema = POEMES_CARTELLS[e.id];
+          if (!poema || !e.element) return [];
+          return [
+            {
+              id: e.id,
+              nom: e.nom,
+              element: e.element,
+              poema,
+              codi: ["AAAAA", "BBBBB", "CCCCC", "DDDDD", "EEEEE"][i] ?? "XXXXX",
+              soroll: undefined,
+            },
+          ];
+        })}
+      />
+    ),
+  },
+  {
+    id: "master-cartells-lema",
+    grup: "master",
+    titol: "Cartells de propaganda amb lema (A4)",
+    descripcio: "Com els de propaganda, amb una sola frase per element.",
+    render: () => (
+      <VistaCartells
+        estil="lema"
+        cartells={getEstacionsOrdenades().flatMap((e, i): DadesCartell[] => {
+          const poema = POEMES_CARTELLS[e.id];
+          if (!poema || !e.element) return [];
+          return [
+            {
+              id: e.id,
+              nom: e.nom,
+              element: e.element,
+              poema,
+              codi: ["AAAAA", "BBBBB", "CCCCC", "DDDDD", "EEEEE"][i] ?? "XXXXX",
+              soroll: undefined,
+            },
+          ];
+        })}
+      />
+    ),
+  },
+  {
     id: "master-equips-buit",
     grup: "master",
     titol: "Màster · equips no trobats",

@@ -36,6 +36,7 @@ const CENTRES = {
   "pentagon-vermell": { nom: "Pentàgon (vora vermella)", src: "/images/logo/pentagon-vermell.webp" },
   "pentagon-blau": { nom: "Pentàgon blau (sense vora)", src: "/images/logo/pentagon-blau.webp" },
   "pentagon-blau-vermell": { nom: "Pentàgon blau (vora vermella)", src: "/images/logo/pentagon-blau-vermell.webp" },
+  "pentagon-robi": { nom: "Pentàgon robí (sense vora)", src: "/images/logo/pentagon-robi.webp" },
   "cristall-iris-vora": { nom: "Cristall iris (amb vora)", src: "/images/logo/cristall-iris-vora.webp" },
   "cristall-iris": { nom: "Cristall iris (sense vora)", src: "/images/logo/cristall-iris.webp" },
   cap: { nom: "Sense gemma", src: null },
@@ -49,12 +50,14 @@ const R_NODE = 100;
 const R_ANELL = 136;
 const R_ANELL_INTERIOR = R_ANELL - 24;
 const ORDRE: Element[] = ["aigua", "terra", "foc", "aire", "anima"];
-/** A l'app, el cercle beix de la pedra fa 29 de radi per a una imatge de 67.7. */
-const PROPORCIO_CERCLE_PEDRA = 29 / 67.7;
+/** A l'app, el cercle beix del centre fa 29 de radi. */
+const R_CERCLE_CENTRE = 29;
 
 interface Config {
   centre: Centre;
   midaGemma: number;
+  /** Cercle beix darrere la gemma, com a l'app. */
+  cercleCentre: boolean;
   /** "cercle": boles de color; "icona": com a l'app (cercle blanc, vora de color i icona). */
   estilElements: "cercle" | "icona";
   radiElements: number;
@@ -74,8 +77,9 @@ const VERSIONS = {
   logo: {
     nom: "Logo simplificat",
     config: {
-      centre: "gemma-blava",
+      centre: "pentagon-robi",
       midaGemma: 84,
+      cercleCentre: false,
       estilElements: "cercle",
       radiElements: 27,
       ambText: false,
@@ -91,8 +95,9 @@ const VERSIONS = {
   app: {
     nom: "Pentagrama de l'app",
     config: {
-      centre: "pedra",
-      midaGemma: 67.7,
+      centre: "pentagon-robi",
+      midaGemma: 56,
+      cercleCentre: true,
       estilElements: "icona",
       radiElements: 27,
       ambText: true,
@@ -211,8 +216,8 @@ function LogoSvg({ c }: { c: Config }) {
         })}
       </g>
 
-      {c.centre === "pedra" && (
-        <circle cx={C} cy={C} r={c.midaGemma * PROPORCIO_CERCLE_PEDRA} fill="#e9d5a6" />
+      {c.cercleCentre && (
+        <circle cx={C} cy={C} r={R_CERCLE_CENTRE} fill="#e9d5a6" />
       )}
       {src && (
         <image
@@ -394,6 +399,7 @@ export function LogoPentagrama() {
           {config.centre !== "cap" && (
             <Slider titol="Mida" min={20} max={200} valor={config.midaGemma} onCanvi={(v) => canviar("midaGemma", v)} />
           )}
+          <Casella titol="Cercle beix al darrere" valor={config.cercleCentre} onCanvi={(v) => canviar("cercleCentre", v)} />
         </Seccio>
 
         <Seccio titol="Elements">

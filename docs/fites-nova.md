@@ -32,7 +32,7 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 | Tècnica | Cera d'espelma + aigua tintada |
 | Material del jugador | Full amb un poema imprès; sota el text, un número dibuixat amb cera d'espelma (invisible fins que es mulla) |
 | Acció física | Els jugadors giren la manovella perquè brolli aigua (idealment tenyida amb colorant/aquarel·la) i mullen el paper. La cera repel·leix la tinta/aigua i el número apareix en blanc net sobre el fons mullat |
-| Poema | **Text del cartell (2026-09-26, prosa):**<br>*Tres puntes governen el curs del misteri, el batec sagrat que obre la senda. On la bèstia de bronze guarda el corrent i la roda desafia el repòs, l'origen es desvetlla davant d'aquell qui sap aturar el pas i escoltar la primera vibració.*<br><br>*El pergamí roman cec sota la volta celeste, esperant la carícia del bateig. Deixa que el raig del guardià amari el buit silenciós: allò que s'havia ocultat doblarà la seva força quan la humitat trenqui el vel.*<br><br>⚠️ Contradicció: "doblarà la seva força" parla d'un doble, però la resposta és **1**. |
+| Poema | **Text del cartell (2026-09-26, prosa):**<br>*Quatre puntes governen el curs del misteri, el batec sagrat que obre la senda. On la bèstia de bronze guarda el corrent i la roda desafia el repòs, l'origen es desvetlla davant d'aquell qui sap aturar el pas i escoltar la primera vibració.*<br><br>*El pergamí roman cec sota la volta celeste, esperant la carícia del bateig. Deixa que el raig del guardià amari el buit silenciós: allò que s'havia ocultat mostrarà la seva força primigènia quan la humitat trenqui el vel.*<br><br>(2026-09-26: "doblarà la seva força" → "mostrarà la seva força primigènia", perquè no faci pensar en un doble; la resposta és **1**.) |
 | Element físic real aprofitat | Cap per a la resposta (des del 2026-09-23). La manovella té 4 radis, però ja no entren al càlcul |
 | Resposta esperada | **Actualitzat (2026-09-23):** el número dibuixat amb cera, un cop revelat amb l'aigua, és **1** (posició de l'Aigua a la recepta). Resposta final a validar al servidor: **1** |
 | Pistes | 1. "El que brolla revela el secret." · 2. "Mulla el paper amb aigua per desvelar el número." · 3. "El número és 1." |
@@ -50,11 +50,11 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 | Tècnica | Observació: buscar i comptar les àmfores del lloc (ja no es fa servir el full amb cola blanca + fang) |
 | Material del jugador | Cap: només el cartell amb el poema |
 | Acció física | Els jugadors busquen les àmfores de Planes Bones i les compten |
-| Element físic real aprofitat | **3 àmfores** a Planes Bones (confirmat) — cal comptar-les in situ. **El recompte és directament la resposta** (i coincideix amb la posició de la Terra a la recepta: 3) |
-| Poema/context | **Text del cartell (2026-09-26, prosa):**<br>*El fang ancestral reposa en l'obaga, bressol dels tres principis de la Gran Obra. Entre la sal que fixa, el sofre que crema sense flama i el mercuri volàtil, la matèria jeu silent esperant l'ull atent de l'iniciat.*<br><br>*Oblida els vells tractats i cerca el testimoni dels cossos d'argila. Quants recipients custodien el recer? Compta cada alè de terra que vetlla el racó; en la totalitat dels seus guardians trobaràs la clau mineral.* |
-| Resposta esperada | **Confirmat:** comptar les àmfores. Resposta final a validar al servidor: **3** |
-| Pistes | 1. "Busca on guarda els elixirs l'alquimista." · 2. "Compta les àmfores." · 3. "El número és el 3." |
-| Notes de seguretat/logística | Comprovar abans de la partida que les 3 àmfores hi són i es veuen bé |
+| Element físic real aprofitat | **6 àmfores** a Planes Bones (recompte real al lloc, 2026-09-26 — abans es pensava que n'hi havia 3). **El recompte ja no és directament la resposta**: cal comptar-les totes i dividir-les per la meitat, 6 ÷ 2 = 3 (coincideix amb la posició de la Terra a la recepta) |
+| Poema/context | **Text del cartell (2026-09-26, prosa, actualitzat per reflectir les 6 àmfores):**<br>*El fang ancestral reposa en l'obaga, bressol dels tres principis de la Gran Obra. Entre la sal que fixa, el sofre que crema sense flama i el mercuri volàtil, la matèria jeu silent esperant l'ull atent de l'iniciat.*<br><br>*Oblida els vells tractats i cerca el testimoni dels cossos d'argila. Quants recipients custodien el recer? Aparella'ls de dos en dos, com bessons que es reflecteixen; la meitat del seu nombre serà la clau mineral.* |
+| Resposta esperada | **Confirmat:** comptar les 6 àmfores i dividir per 2. Resposta final a validar al servidor: **3** |
+| Pistes | 1. "Busca on guarda els elixirs l'alquimista." · 2. "Compta les àmfores i parteix-les per la meitat." · 3. "El número és el 3." |
+| Notes de seguretat/logística | Comprovar abans de la partida que les 6 àmfores hi són i es veuen bé |
 
 ---
 

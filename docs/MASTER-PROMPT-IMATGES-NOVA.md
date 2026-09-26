@@ -161,14 +161,14 @@ orientation, high resolution for pan/zoom use."
 
 ---
 
-## 9. PERSONATGE — Fra Francesc / "l'Inquisidor" ⚠️ BLOQUEJAT, NO GENERAR ENCARA
+## 9. PERSONATGE — Fra Francesc / "l'Inquisidor" ⚠️ PARCIALMENT DESBLOQUEJAT (només silueta)
 
 `docs/fitxes-personatges/11-fra-francesc-de-sentfores.md` marca explícitament com a **PENDENT, no inventar sense confirmar**:
 - Aparença física (edat concreta representada, cara, complexió)
 - Vestuari de la disfressa de comissari inquisitorial
 - Vestuari/aparença quan es desemmascara com a Fra Francesc
 
-**No generis cap prompt de personatge fins que això es tanqui explícitament** (regla del CLAUDE.md: "No improvisis trama ni solucions"). Quan es decideixi, aquesta secció s'ompliria seguint el mateix format que `docs/arxiu/MASTER-PROMPT-IMATGES.md` §4 (edat, roba, cabells, detalls, expressió) però amb l'estil visual d'aquest document (§3), no el barroc antic.
+⚠️ **Actualització 2026-09-26 (confirmat per l'usuari, material de difusió):** es permet mostrar una **figura encaputxada amb capa fosca, cara sempre oculta** (d'esquena, de tres quarts, o en ombra sota la caputxa) — veure `docs/difusio-cartell.md`. Això **no** tanca l'aparença real del personatge (edat, cara, vestuari detallat de la disfressa) — segueix PENDENT per a qualsevol imatge que li mostri la cara o detalls de vestuari. Per a material de joc/app que necessiti més que una silueta, cal confirmar-ho explícitament abans (regla del CLAUDE.md: "No improvisis trama ni solucions").
 
 ---
 

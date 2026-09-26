@@ -157,10 +157,10 @@ export function Pentagrama({
         );
       })}
 
-      {/* Gresol central: la Pedra Filosofal girant */}
+      {/* Gresol central: la gemma del logo (pentàgon robí, app/pantalles/logo/LogoPentagrama.tsx) */}
       <g style={{ opacity: opacitatCentre, transition: "opacity 1.2s ease" }}>
         <circle cx={C} cy={C} r={29} fill={centreActiu ? "#eab308" : "#e9d5a6"} />
-        <image href="/images/pedra-gresol.gif" x={C - 33.85} y={C - 33.85} width={67.7} height={67.7} />
+        <image href="/images/logo/pentagon-robi.webp" x={C - 28} y={C - 28} width={56} height={56} />
       </g>
       {/* Zona de toc del centre, més gran que el gresol perquè s'encerti amb el dit. */}
       <circle cx={C} cy={C} r={42} fill="transparent" onClick={tocarCentre} />

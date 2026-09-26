@@ -25,13 +25,13 @@ export const SOLUCIONS: Record<string, Solucio> = {
     ],
   },
 
-  // TERRA — Planes Bones. Cal buscar i comptar les àmfores del lloc; el
-  // recompte és directament la resposta.
+  // TERRA — Planes Bones. Hi ha 6 àmfores al lloc; cal comptar-les totes i
+  // dividir-les per la meitat (6 ÷ 2 = 3) per arribar a la resposta.
   "planes-bones": {
     respostesAcceptades: ["3"],
     pistes: [
       "Busca on guarda els elixirs l'alquimista.",
-      "Compta les àmfores.",
+      "Compta les àmfores i parteix-les per la meitat.",
       "El número és el 3.",
     ],
   },

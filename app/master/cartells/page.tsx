@@ -13,13 +13,16 @@ import { VistaCartells, type DadesCartell } from "@/components/vistes/VistaCarte
  * Foc, per això només els veu el màster.
  * `?llavor=N` genera una altra composició de soroll per al cartell de Foc.
  * `?estil=fons` posa la il·lustració vertical de fons a tot el full.
+ * `?estil=propaganda` fa els cartells per anunciar el joc: sense QR, codi ni soroll.
+ * `?estil=lema` és igual, però amb una sola frase per element en lloc del text.
  */
 export default async function CartellsPage({ searchParams }: { searchParams: Promise<{ llavor?: string; estil?: string }> }) {
   if (!(await getMasterSessionFromCookies())) redirect("/master/login");
 
   const { llavor, estil } = await searchParams;
   const llavorNum = Number.parseInt(llavor ?? "", 10);
-  const estilCartell = estil === "fons" ? "fons" : "imatge";
+  const estilCartell = estil === "fons" || estil === "propaganda" || estil === "lema" ? estil : "imatge";
+  const propaganda = estilCartell === "propaganda" || estilCartell === "lema";
   const base = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 
   const cartells: DadesCartell[] = [];
@@ -28,16 +31,17 @@ export default async function CartellsPage({ searchParams }: { searchParams: Pro
     const poema = POEMES_CARTELLS[e.id];
     if (!codi || !poema || !e.element) continue;
 
-    const resposta = e.element === "foc" ? getSolucio(e.id)?.respostesAcceptades[0] : undefined;
+    const resposta = e.element === "foc" && !propaganda ? getSolucio(e.id)?.respostesAcceptades[0] : undefined;
     cartells.push({
       id: e.id,
       nom: e.nom,
       element: e.element,
       poema,
-      codi,
-      qrSvg: await qrSvg(`${base}/s/${e.id}?c=${codi}`),
+      // Els de propaganda no porten res que obri la fita.
+      codi: propaganda ? "" : codi,
+      qrSvg: propaganda ? undefined : await qrSvg(`${base}/s/${e.id}?c=${codi}`),
       soroll: resposta
-        ? generaSoroll({ resposta, ...opcionsSoroll(estilCartell), ...(Number.isFinite(llavorNum) ? { llavor: llavorNum } : {}) })
+        ? generaSoroll({ resposta, ...opcionsSoroll(estilCartell === "fons" ? "fons" : "imatge"), ...(Number.isFinite(llavorNum) ? { llavor: llavorNum } : {}) })
         : undefined,
     });
   }
