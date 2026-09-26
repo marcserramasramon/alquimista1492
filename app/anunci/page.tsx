@@ -45,11 +45,11 @@ const ELEMENTS_ORDRE: Element[] = ["aigua", "terra", "foc", "aire", "anima"];
 
 /** Vels sobre la imatge perquè el text es llegeixi: fosc (text clar) o de paper com el peu dels cartells (text fosc). */
 const VELS = {
-  fosc: "linear-gradient(to top, rgb(27 21 17), rgb(27 21 17 / 0.65) 50%, rgb(27 21 17 / 0.1))",
+  fosc: "linear-gradient(to top, rgb(27 21 17) 0%, rgb(27 21 17 / 0.88) 45%, rgb(27 21 17 / 0.55) 75%, rgb(27 21 17 / 0.15) 100%)",
   paper: "linear-gradient(to bottom, rgb(243 229 196 / 0) 50%, rgb(243 229 196 / 0.8) 66%, rgb(243 229 196 / 0.95) 78%)",
 };
 
-/** Una pantalla de la successió: imatge a tot el fons, vel i contingut a baix. */
+/** Una pantalla de la successió: imatge a tot el fons (si en té), vel i contingut a baix. */
 function Pantalla({
   imatge,
   alt = "",
@@ -57,24 +57,30 @@ function Pantalla({
   vel,
   children,
 }: {
-  imatge: string;
+  imatge?: string;
   alt?: string;
   posicio?: string;
-  vel: keyof typeof VELS;
+  vel?: keyof typeof VELS;
   children: ReactNode;
 }) {
   return (
-    <section className="relative flex min-h-[100svh] flex-col justify-end overflow-hidden">
-      <Image
-        src={imatge}
-        alt={alt}
-        fill
-        sizes={`calc(100vw - ${2 * AMPLE_CINTA}px)`}
-        style={posicio ? { objectPosition: posicio } : undefined}
-        className="object-cover"
-      />
-      <div className="absolute inset-0" style={{ background: VELS[vel] }} />
-      <div className="relative z-10 mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-5 pb-14 pt-40 text-center">
+    <section
+      className={`relative flex min-h-[100svh] snap-start flex-col overflow-hidden ${imatge ? "justify-end" : "justify-center"}`}
+    >
+      {imatge && (
+        <Image
+          src={imatge}
+          alt={alt}
+          fill
+          sizes={`calc(100vw - ${2 * AMPLE_CINTA}px)`}
+          style={posicio ? { objectPosition: posicio } : undefined}
+          className="object-cover"
+        />
+      )}
+      {vel && <div className="absolute inset-0" style={{ background: VELS[vel] }} />}
+      <div
+        className={`relative z-10 mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-5 pb-14 text-center ${imatge ? "pt-40" : "pt-14"}`}
+      >
         {children}
       </div>
     </section>
@@ -184,7 +190,7 @@ const PANTALLES: { color: string; contingut: ReactNode }[] = [
     // Tancament: on i quan, i qui ho organitza. Sense cap enllaç ni botó.
     color: DAURAT,
     contingut: (
-      <Pantalla imatge="/mapa-sentfores.webp" vel="fosc">
+      <Pantalla>
         <TitolFosc>Apunteu-vos la data</TitolFosc>
         <div className="w-full max-w-sm">
           <MapaPlaMasset />
@@ -211,7 +217,7 @@ export default function AnunciPage() {
   return (
     <main className={`${balthazar.variable} flex flex-col bg-ink`}>
       {/* Portada: fotografia a tota la pantalla amb el títol, el lema i quan és. Sense cinta de runes. */}
-      <section className="relative flex min-h-[100svh] w-full flex-col justify-end overflow-hidden">
+      <section className="relative flex min-h-[100svh] w-full snap-start flex-col justify-end overflow-hidden">
         <Image
           src="/images/cartells/portada/frare.jpg"
           alt="Un frare encaputxat davant d'un portal ple de símbols alquímics"
@@ -242,6 +248,8 @@ export default function AnunciPage() {
       </section>
 
       {/* Graella: cinta · pantalla · cinta. Cada fila és una pantalla; les cintes les recorren totes. */}
+      {/* Cada pantalla s'encaixa a la vista en fer scroll: salta d'una a la següent. */}
+      <style>{`html { scroll-snap-type: y mandatory; }`}</style>
       <CintaRunesEstils />
       <div className="grid" style={{ gridTemplateColumns: `${AMPLE_CINTA}px minmax(0, 1fr) ${AMPLE_CINTA}px` }}>
         {PANTALLES.map((p, i) => (
