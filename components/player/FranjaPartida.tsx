@@ -1,6 +1,15 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 /**
  * Franja de dalt de les pantalles de joc. El compte enrere hi és sempre; una pantalla hi pot
@@ -12,20 +21,26 @@ export type EstatRellotge = "pendent" | "si" | "no";
 interface Accions {
   setExtra: (node: ReactNode) => void;
   setRellotge: (fn: (actual: EstatRellotge) => EstatRellotge) => void;
+  setAlcada: (px: number) => void;
 }
 
 const ExtraCtx = createContext<ReactNode>(null);
 const RellotgeCtx = createContext<EstatRellotge>("pendent");
+/** Alçada real (px) de la franja de dalt muntada ara (rellotge o substituta). */
+const AlcadaCtx = createContext<number>(0);
 const AccionsCtx = createContext<Accions | null>(null);
 
 export function FranjaPartidaProvider({ children }: { children: ReactNode }) {
   const [extra, setExtra] = useState<ReactNode>(null);
   const [rellotge, setRellotge] = useState<EstatRellotge>("pendent");
-  const accions = useMemo(() => ({ setExtra, setRellotge }), []);
+  const [alcada, setAlcada] = useState(0);
+  const accions = useMemo(() => ({ setExtra, setRellotge, setAlcada }), []);
   return (
     <AccionsCtx value={accions}>
       <RellotgeCtx value={rellotge}>
-        <ExtraCtx value={extra}>{children}</ExtraCtx>
+        <AlcadaCtx value={alcada}>
+          <ExtraCtx value={extra}>{children}</ExtraCtx>
+        </AlcadaCtx>
       </RellotgeCtx>
     </AccionsCtx>
   );
@@ -45,8 +60,37 @@ export function BarraFranja({
   className?: string;
   children: ReactNode;
 }) {
+  const accions = useContext(AccionsCtx);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  // Mesura la seva pròpia alçada real (inclou vora i padding) perquè les pantalles
+  // que no volen scroll de pàgina (p. ex. el hub) puguin descomptar-la del 100dvh.
+  // Cap amunt: és millor descomptar un punt de més que deixar-ne un escletxa de scroll.
+  const mesurar = useCallback(() => {
+    const el = ref.current;
+    if (el && accions) accions.setAlcada(Math.ceil(el.getBoundingClientRect().height));
+  }, [accions]);
+
+  // El ResizeObserver cobreix canvis externs (orientació, safe area); com que `children` és
+  // nou a cada render, aquest efecte també torna a mesurar quan la barra en rep de nous (p.
+  // ex. quan el hub hi afegeix la casella d'elements just després de muntar-se el rellotge).
+  useEffect(mesurar);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new ResizeObserver(mesurar);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [mesurar]);
+
+  // Sense barra muntada no hi ha d'haver res a descomptar: altrament una pantalla que no en
+  // té (el "pendent" d'entre dues, p. ex.) heretaria l'alçada de l'anterior i deixaria un buit.
+  useEffect(() => () => accions?.setAlcada(0), [accions]);
+
   return (
     <div
+      ref={ref}
       className={`sticky top-0 z-30 flex min-h-[max(1.5rem,env(safe-area-inset-top))] items-center gap-3 border-b-2 py-0.5 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] transition-colors ${
         alerta ? "border-ink bg-blood text-white" : "border-ink bg-gold text-ink"
       } ${className}`}
@@ -59,6 +103,15 @@ export function BarraFranja({
 /** El que la pantalla actual vol al costat del rellotge. */
 export function useExtraFranja(): ReactNode {
   return useContext(ExtraCtx);
+}
+
+/**
+ * Alçada real (px) de la franja de dalt muntada ara (el rellotge o la substituta d'una
+ * pantalla). Permet a una pantalla sense scroll (p. ex. el hub) encabir-se exactament a
+ * `calc(100dvh - alçada)` sense haver de conèixer per endavant la mida de la franja.
+ */
+export function useAlcadaFranja(): number {
+  return useContext(AlcadaCtx);
 }
 
 /** El rellotge avisa que és a la franja mentre està muntat. */
