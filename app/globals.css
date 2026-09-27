@@ -5,7 +5,7 @@
    contrast alt per llegir a ple sol (CLAUDE.md). Les vores gruixudes i les
    ombres dures fan que els botons semblin peces físiques que s'enfonsen. */
 :root {
-  --paper: #1d4ed8;      /* DEBUG TEMPORAL: fons blau per localitzar els forats. Fons principal */
+  --paper: #fbf4e4;      /* Fons principal */
   --paper-2: #f3e5c4;    /* Targetes, panells */
   --paper-3: #e9d5a6;    /* Separadors, estats buits */
   --ink: #1b1511;        /* Text principal, vores, ombres */

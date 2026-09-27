@@ -45,6 +45,10 @@ export function VistaHub({
   // precedeix (content/public/estacions.ts, PasPrevi.element) — no compta com a punta del pentagrama.
   const elementals = estacions.filter((e) => e.element && e.tipus !== "pas");
   const resoltes = elementals.filter((e) => e.progres.resolta).length;
+  // Total fix de 5, no `elementals.length`: mentre una fita és amagada (p. ex. l'Aire fins
+  // que s'obre el seu pas previ), encara no surt a `estacions` i el total semblaria més
+  // petit — el pentagrama, però, sempre hi dibuixa les cinc puntes (components/ui/Pentagrama).
+  const totalElements = Object.keys(ELEMENTS).length;
   const nodes: NodePentagrama[] = elementals.map((e) => ({
     id: e.id,
     element: e.element!,
@@ -61,8 +65,8 @@ export function VistaHub({
   }, [seleccionadaId]);
 
   // Els elements aconseguits van a la franja de dalt, al costat del compte enrere.
-  const casella = <CasellaElements resoltes={resoltes} total={elementals.length} />;
-  const rellotge = useMostrarAFranja(casella, [resoltes, elementals.length]);
+  const casella = <CasellaElements resoltes={resoltes} total={totalElements} />;
+  const rellotge = useMostrarAFranja(casella, [resoltes, totalElements]);
   // Sense això la pantalla del hub s'allargaria més que la finestra i tota la pàgina
   // faria scroll: es descompta l'alçada real de la franja de dalt (rellotge o substituta)
   // perquè el hub ocupi exactament la resta i sigui una pantalla fixa.
@@ -98,8 +102,6 @@ export function VistaHub({
       // contenidor de sota (overflow-y-auto) ja reté tot el que pugui sobrar.
       className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 pt-2"
     >
-      {/* DEBUG TEMPORAL: números per localitzar el forat de baix, treure després. */}
-      <DebugOverlay alcadaFranja={alcadaFranja} />
       {/* Sense compte enrere, la casella dels elements fa ella sola la franja de dalt. */}
       {rellotge === "no" && (
         <BarraFranja className="-mx-4 -mt-2 shrink-0">
@@ -251,47 +253,6 @@ export function VistaHub({
         </div>
       )}
     </main>
-  );
-}
-
-/** DEBUG TEMPORAL: mostra a la pantalla els números reals per localitzar el forat de baix. Treure després. */
-function DebugOverlay({ alcadaFranja }: { alcadaFranja: number }) {
-  const [info, setInfo] = useState("");
-  const refSafe = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const actualitzar = () => {
-      const vv = window.visualViewport;
-      const main = document.querySelector("main");
-      const rect = main?.getBoundingClientRect();
-      const safeB = refSafe.current ? getComputedStyle(refSafe.current).paddingBottom : "?";
-      setInfo(
-        `vv:${vv ? Math.round(vv.height) : "-"} ih:${window.innerHeight} sh:${window.screen.height} ` +
-          `dpr:${window.devicePixelRatio} fr:${alcadaFranja} safeB:${safeB} ` +
-          `mainH:${rect ? Math.round(rect.height) : "-"} mainBottom:${rect ? Math.round(rect.bottom) : "-"}`,
-      );
-    };
-    actualitzar();
-    window.visualViewport?.addEventListener("resize", actualitzar);
-    window.addEventListener("resize", actualitzar);
-    const id = setInterval(actualitzar, 500);
-    return () => {
-      window.visualViewport?.removeEventListener("resize", actualitzar);
-      window.removeEventListener("resize", actualitzar);
-      clearInterval(id);
-    };
-  }, [alcadaFranja]);
-
-  return (
-    <>
-      <div ref={refSafe} style={{ paddingBottom: "env(safe-area-inset-bottom)", position: "fixed", top: -9999 }} />
-      <div
-        className="fixed inset-x-0 bottom-0 z-[999] bg-black/90 px-2 py-1 font-mono text-[10px] leading-tight text-red-400"
-        style={{ pointerEvents: "none" }}
-      >
-        {info}
-      </div>
-    </>
   );
 }
 
