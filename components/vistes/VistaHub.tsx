@@ -100,11 +100,11 @@ export function VistaHub({
       // a iOS, deixaria de comptar com a arrel de la pàgina — l'espai de la càmera (safe
       // area, viewport-fit=cover) hi tornaria encara que la barra el descompti bé. El
       // contenidor de sota (overflow-y-auto) ja reté tot el que pugui sobrar.
-      className="mx-auto flex w-full max-w-md flex-col"
+      className="mx-auto flex w-full max-w-md flex-col px-4 pt-2"
     >
       {/* Sense compte enrere, la casella dels elements fa ella sola la franja de dalt. */}
       {rellotge === "no" && (
-        <BarraFranja className="shrink-0">
+        <BarraFranja className="-mx-4 -mt-2 shrink-0">
           <div className="ml-auto">{casella}</div>
         </BarraFranja>
       )}
