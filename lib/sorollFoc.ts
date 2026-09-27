@@ -98,6 +98,7 @@ export function generaSoroll({
   amplada = 1000,
   alcada = 440,
   quantitat = 300,
+  midaObjectiu,
 }: {
   resposta: string;
   llavor?: number;
@@ -105,6 +106,8 @@ export function generaSoroll({
   alcada?: number;
   /** Nombre aproximat de peces de soroll: com més, més saturat i sobreposat (i més ben tapada la resposta). */
   quantitat?: number;
+  /** Mida de la resposta (per defecte proporcional a `alcada`, veure PROPORCIO_MIDA_OBJECTIU). */
+  midaObjectiu?: number;
 }): Soroll {
   const r = prng(llavor);
   const entre = (min: number, max: number) => min + r() * (max - min);
@@ -117,11 +120,11 @@ export function generaSoroll({
   // centrada perquè ni la posició ni la mida ajudin a distingir-la a ull nu.
   const xObjectiu = amplada / 2;
   const yObjectiu = alcada / 2 - 50;
-  const midaObjectiu = alcada * PROPORCIO_MIDA_OBJECTIU;
+  const midaObjectiuFinal = midaObjectiu ?? alcada * PROPORCIO_MIDA_OBJECTIU;
   peces.push({
     x: xObjectiu,
     y: yObjectiu,
-    mida: midaObjectiu,
+    mida: midaObjectiuFinal,
     rotacio: 0,
     color: BLAU_OBJECTIU,
     xifra: resposta,
@@ -133,7 +136,7 @@ export function generaSoroll({
   // resposta.
   const pasHalftone = 9;
   const radiHalftone = 3.6;
-  const margeHalftone = midaObjectiu * 0.65;
+  const margeHalftone = midaObjectiuFinal * 0.65;
   const minXHalftone = Math.max(0, xObjectiu - margeHalftone);
   const maxXHalftone = Math.min(amplada, xObjectiu + margeHalftone);
   const minYHalftone = Math.max(0, yObjectiu - margeHalftone);
