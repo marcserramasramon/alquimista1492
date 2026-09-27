@@ -44,7 +44,7 @@ Cada fita té dos textos:
 
 ### 2.1 Arribada
 
-**💧 Aigua — Font del Ferro**
+**💧 Aigua — Font del Lleó**
 
 > Escolteu. Sentiu l'aigua? Aquesta font ha donat de beure al poble des de sempre, i ningú no s'ha preguntat mai què més hi porta. Busqueu el meu escrit: és mut fins que l'Aigua el toca.
 
@@ -68,7 +68,7 @@ Cada fita té dos textos:
 
 Es desbloquegen en **resoldre** cada fita (encaixa amb `app-nova.md` § HISTÒRIA: "fragments narratius que es desbloquegen per estació"). El poema del cartell físic és una altra cosa i no es repeteix aquí. Com que l'ordre és lliure, cap fragment dona per fet que n'hi ha d'altres de resolts.
 
-### 💧 Aigua — Font del Ferro
+### 💧 Aigua — Font del Lleó
 
 **Títol:** El fragment de l'Aigua
 

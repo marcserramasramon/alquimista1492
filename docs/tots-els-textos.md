@@ -34,7 +34,7 @@
 
 ### 2.1 Arribada (es mostra en obrir la fita + àudio)
 
-**💧 Aigua — Font del Ferro**
+**💧 Aigua — Font del Lleó**
 
 > Escolteu. Sentiu l'aigua? Aquesta font ha donat de beure al poble des de sempre, i ningú no s'ha preguntat mai què més hi porta. Busqueu el meu escrit: és mut fins que l'Aigua el toca.
 
@@ -90,7 +90,7 @@
 
 ## 3. Poemes dels cartells físics (i lemes de propaganda)
 
-### 💧 Aigua — Font del Ferro
+### 💧 Aigua — Font del Lleó
 
 **Lema (propaganda):** *Allò que l'aigua amaga, només l'aigua ho pot revelar.*
 

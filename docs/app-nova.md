@@ -20,7 +20,7 @@
 - `components/player/HintPanel.tsx`: UI compartida (botó `[PISTA (−X)]` → confirmació → text), seguint el layout ja especificat a `docs/arxiu/pantalles-i-mecaniques-compartides.md`.
 - Ampliar `GameProps` (`components/gameTypes/index.ts`) amb el que calgui perquè els jocs puguin muntar el `HintPanel` (probablement només cal `stationId`, que ja hi és).
 
-**Abast d'aquesta fase:** connectar-ho només al joc d'AIGUA (Font del Ferro) primer. Els altres jocs (existents i els 4 elements nous) l'adopten després sense refer la infraestructura.
+**Abast d'aquesta fase:** connectar-ho només al joc d'AIGUA (Font del Lleó) primer. Els altres jocs (existents i els 4 elements nous) l'adopten després sense refer la infraestructura.
 
 ---
 
@@ -76,9 +76,9 @@ Les 4 fites elementals comparteixen la mateixa forma: text/poema + instrucció d
 
 ## 4. Codi de validació (`app/api/game/validate-answer/route.ts`)
 
-- Treure la lògica específica de Font del Ferro basada en dies (`stationType.includes('font')` amb `expDay`, línies ~160-168 actuals) i substituir-la per validació genèrica de dígit/xifra (igual que la resta d'estacions ja fan amb `normExpected`).
+- Treure la lògica específica de Font del Lleó basada en dies (`stationType.includes('font')` amb `expDay`, línies ~160-168 actuals) i substituir-la per validació genèrica de dígit/xifra (igual que la resta d'estacions ja fan amb `normExpected`).
 - `STATION_EVIDENCE` i `CANONICAL_STATION_IDS` (línies ~29-68) necessiten entrades noves per a les estacions terra/foc/aire/ànima quan tinguin ID definitiu.
-- Els camps `evidence` lligats a "cantirs"/"ink" per Font del Ferro probablement ja no tenen sentit si es treu la narrativa de sospitosos — revisar juntament amb `evidencies.md`.
+- Els camps `evidence` lligats a "cantirs"/"ink" per Font del Lleó probablement ja no tenen sentit si es treu la narrativa de sospitosos — revisar juntament amb `evidencies.md`.
 
 ---
 

@@ -71,7 +71,7 @@ Autumn/winter Catalan daylight, slightly overcast.
 
 | Estació | Element | Detalls específics a incloure al prompt |
 |---|---|---|
-| Font del Ferro (Carrer del Call) | 💧 Aigua | Font de pedra amb sortidor en forma de cap de lleó, manovella de ferro amb **4 braços/radis visibles** (detall real, ha de comptar-se), aigua rajant |
+| Font del Lleó (Carrer del Call) | 💧 Aigua | Font de pedra amb sortidor en forma de cap de lleó, manovella de ferro amb **4 braços/radis visibles** (detall real, ha de comptar-se), aigua rajant |
 | Planes Bones | 🪨 Terra | Terreny obert, **3 àmfores/gerres d'argila** disposades a la vista (detall real i comptable), herba i pedra seca |
 | Entrada del poble | 🔥 Foc | Portal/entrada del nucli, un vell **pal de fusta de telèfon** com a element de referència, sense flama oberta (ja no hi ha foc real a l'estació — evitar-hi qualsevol flama visible per no confondre) |
 | Creu del Pujolar | 🌬️ Aire | Creu de ferro sobre pedestal, situada en un serrat/turó obert |

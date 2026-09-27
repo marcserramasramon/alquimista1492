@@ -37,7 +37,7 @@ export const ESTACIONS: Estacio[] = [
   {
     id: "font-ferro",
     ordre: 1,
-    nom: "Font del Ferro",
+    nom: "Font del Lleó",
     situacio: "Al Carrer del Call.",
     entrada: "Desveleu el secret ocult en el paper.",
     imatge: "/images/font-ferro.webp",

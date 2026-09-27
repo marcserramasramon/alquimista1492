@@ -15,7 +15,7 @@ export const SOLUCIONS: Record<string, Solucio> = {
   // Cada número és la posició de l'element a la recepta del Gresol:
   // Aigua 1 · Foc 2 · Terra 3 · Aire 4 · Ànima 5.
 
-  // AIGUA — Font del Ferro. Cera d'espelma + aigua tintada revela el número.
+  // AIGUA — Font del Lleó. Cera d'espelma + aigua tintada revela el número.
   "font-ferro": {
     respostesAcceptades: ["1"],
     pistes: [

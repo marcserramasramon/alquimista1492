@@ -2,7 +2,7 @@
 
 > **Estat:** ESBORRANY DE TREBALL. Aquest document substituirà `docs/arxiu/historia.md` quan es tanqui, però mentre es treballa (en un xat separat) **`docs/arxiu/historia.md` segueix sent la font de veritat**. No barregis els dos durant el desenvolupament.
 >
-> Origen del canvi: conversa de disseny del 2026-09-21 (redisseny de l'estació Font del Ferro que va escalar a tota la trama). **Gir de trama del mateix dia:** s'abandona la trama del traïdor/carta del delator en favor d'una trama nova, "L'Alquimista de Sentfores".
+> Origen del canvi: conversa de disseny del 2026-09-21 (redisseny de l'estació Font del Lleó que va escalar a tota la trama). **Gir de trama del mateix dia:** s'abandona la trama del traïdor/carta del delator en favor d'una trama nova, "L'Alquimista de Sentfores".
 
 ---
 

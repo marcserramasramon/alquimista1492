@@ -21,7 +21,7 @@ const STATIONS: Station[] = [
     color: "bg-red-500",
   },
   {
-    name: "Font del Ferro",
+    name: "Font del Lleó",
     element: "Aigua",
     coords: [41.914816, 2.227479],
     angle: 125,

@@ -22,13 +22,13 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 
 ---
 
-## 💧 AIGUA — Font del Ferro
+## 💧 AIGUA — Font del Lleó
 
 **Estat: DISSENYAT (aprovat en aquesta conversa)**
 
 | Camp | Valor |
 |------|-------|
-| Ubicació | Font del Ferro (Carrer del Call) — font real amb manovella i sortidor en forma de cap de lleó. Coordenades confirmades: **41.914816, 2.227479** (⚠️ difereixen lleugerament de les ja carregades a `content/public/stations.ts` per `font-ferro`: 41.915501, 2.227690 — cal actualitzar quan es tanqui aquest document) |
+| Ubicació | Font del Lleó (Carrer del Call) — font real amb manovella i sortidor en forma de cap de lleó. Coordenades confirmades: **41.914816, 2.227479** (⚠️ difereixen lleugerament de les ja carregades a `content/public/stations.ts` per `font-ferro`: 41.915501, 2.227690 — cal actualitzar quan es tanqui aquest document) |
 | Tècnica | Cera d'espelma + aigua tintada |
 | Material del jugador | Full amb un poema imprès; sota el text, un número dibuixat amb cera d'espelma (invisible fins que es mulla) |
 | Acció física | Els jugadors giren la manovella perquè brolli aigua (idealment tenyida amb colorant/aquarel·la) i mullen el paper. La cera repel·leix la tinta/aigua i el número apareix en blanc net sobre el fons mullat |
@@ -122,7 +122,7 @@ Els 5 punts físics, units en l'ordre del seu angle respecte al centroide, dibui
 | Element | Ubicació | Coordenades | Angle respecte al centroide |
 |---|---|---|---|
 | 🔥 FOC | Entrada del poble | 41.915419, 2.231577 | 59° |
-| 💧 AIGUA | Font del Ferro (Carrer del Call) | 41.914816, 2.227479 | 125° |
+| 💧 AIGUA | Font del Lleó (Carrer del Call) | 41.914816, 2.227479 | 125° |
 | 🌬️ AIRE | Serrat de la Creu (punt de l'enigma; el pas previ `aire-pas` és a 41.911628, 2.226846) | 41.910894, 2.224438 | ⚠️ angle pendent de recalcular (2026-09-27: coordenada canviada un altre cop, veure secció AIRE) |
 | ✨ ÀNIMA | Pista skate (Camí Antic de Malla) | 41.910355, 2.230083 | 282° |
 | 🪨 TERRA | Planes Bones | 41.912256, 2.233469 | 351° |
