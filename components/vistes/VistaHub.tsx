@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MapaEquip, type EstacioMapa, type MarcadorMapa } from "@/components/player/MapaEquip";
-import { BarraFranja, useAlcadaFranja, useMostrarAFranja } from "@/components/player/FranjaPartida";
+import { BarraFranja, useMostrarAFranja } from "@/components/player/FranjaPartida";
 import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
 import { Narracio } from "@/components/ui/Narracio";
 import { ELEMENTS } from "@/content/public/estacions";
@@ -67,40 +67,19 @@ export function VistaHub({
   // Els elements aconseguits van a la franja de dalt, al costat del compte enrere.
   const casella = <CasellaElements resoltes={resoltes} total={totalElements} />;
   const rellotge = useMostrarAFranja(casella, [resoltes, totalElements]);
-  // Sense això la pantalla del hub s'allargaria més que la finestra i tota la pàgina
-  // faria scroll: es descompta l'alçada real de la franja de dalt (rellotge o substituta)
-  // perquè el hub ocupi exactament la resta i sigui una pantalla fixa.
-  const alcadaFranja = useAlcadaFranja();
-
-  // Com que aquesta pantalla no fa scroll de pàgina, `100dvh` es queda desactualitzat a
-  // Chrome/Android quan la barra d'adreces o la d'eines apareix o s'amaga (només es
-  // recalcula si el document arrel fa scroll, cosa que aquí no passa mai): deixa un buit
-  // del color de fons a dalt o a baix. `document.documentElement.clientHeight` és la
-  // mateixa font que `dvh` (per això les altres pantalles, que sí fan scroll, no ho
-  // pateixen); es torna a mesurar als events de resize perquè no depengui del scroll.
-  // Mentre no s'ha mesurat es fa servir el `100dvh` de CSS (primer render / sense JS).
-  const [alcadaVisible, setAlcadaVisible] = useState<number | null>(null);
-  useEffect(() => {
-    const actualitzar = () => setAlcadaVisible(document.documentElement.clientHeight);
-    actualitzar();
-    window.addEventListener("resize", actualitzar);
-    window.visualViewport?.addEventListener("resize", actualitzar);
-    return () => {
-      window.removeEventListener("resize", actualitzar);
-      window.visualViewport?.removeEventListener("resize", actualitzar);
-    };
-  }, []);
 
   return (
+    // Pàgina normal amb scroll natiu, com la resta de pantalles (Pantalla.tsx): res de
+    // mesurar l'alçada per JavaScript. Provar-ho amb una alçada fixa calculada (100dvh,
+    // visualViewport, documentElement...) sempre deixava algun cas mòbil (barra del
+    // navegador, revelar la barra de sistema en mode fullscreen...) amb un buit o un
+    // solapament — cap font coincidia amb totes les situacions. La roda i el mapa són
+    // quadrats de mida fixa, així que en una pantalla molt alta hi pot quedar espai
+    // sobrant a sota; és el mateix compromís que accepten totes les altres pantalles.
     <main
-      style={{
-        height: alcadaVisible != null ? `${alcadaVisible - alcadaFranja}px` : `calc(100dvh - ${alcadaFranja}px)`,
-      }}
-      // Sense overflow-hidden aquí: convertiria el <main> en el seu propi "scrollport" i,
-      // a iOS, deixaria de comptar com a arrel de la pàgina — l'espai de la càmera (safe
-      // area, viewport-fit=cover) hi tornaria encara que la barra el descompti bé. El
-      // contenidor de sota (overflow-y-auto) ja reté tot el que pugui sobrar.
-      className="mx-auto flex w-full max-w-md flex-col gap-7 px-4 pt-2"
+      className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-7 px-4 pt-2 ${
+        totesResoltes ? "pb-32" : "pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+      }`}
     >
       {/* Sense compte enrere, la casella dels elements fa ella sola la franja de dalt. */}
       {rellotge === "no" && (
@@ -109,20 +88,12 @@ export function VistaHub({
         </BarraFranja>
       )}
 
-      {/* Sota la franja, la pantalla no fa scroll: si mai no hi cabés tot (pantalla molt
-          baixa), aquesta zona en fa ella sola, no la pàgina sencera. Sense barra nativa,
-          com la resta de l'app (globals.css). `overflow-y-auto` fa que l'eix x deixi de
-          ser `visible` (deixa de ser "auto" el que no s'ha dit): cal fer-hi lloc amb
-          `-mx-1 px-1` perquè les targetes de sota, que sobresurten `-mx-1` del marge,
-          no quedin retallades pels costats. */}
-      <div
-        className={`-mx-1 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${totesResoltes ? "pb-32" : "pb-[max(0.5rem,env(safe-area-inset-bottom))]"}`}
-      >
+      <div className="flex flex-col gap-4">
         {/* Progrés: el pentagrama s'encén a mesura que es resolen les fites. La fitxa de la fita
             triada n'ocupa el lloc, amb la mateixa alçada. */}
         <section
           ref={zonaRef}
-          className="targeta relative -mx-1 shrink-0 animate-entrar scroll-mt-10 overflow-hidden px-1 pb-2 pt-0 [animation-delay:80ms]"
+          className="targeta relative overflow-hidden px-1 pb-2 pt-0 animate-entrar scroll-mt-10 [animation-delay:80ms]"
         >
           <div className={seleccionada ? "invisible" : undefined}>
             <Pentagrama
@@ -149,9 +120,9 @@ export function VistaHub({
           )}
         </section>
 
-        {totesResoltes && <Narracio text={ESTRELLA_COMPLETA} etiqueta="fra francesc" className="shrink-0 animate-entrar" />}
+        {totesResoltes && <Narracio text={ESTRELLA_COMPLETA} etiqueta="fra francesc" className="animate-entrar" />}
 
-        <section className="-mx-1 shrink-0 animate-entrar [animation-delay:160ms]">
+        <section className="animate-entrar [animation-delay:160ms]">
           <MapaEquip
             estacions={estacions}
             totesResoltes={totesResoltes}
