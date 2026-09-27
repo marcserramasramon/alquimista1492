@@ -68,8 +68,7 @@ export const ARRIBADES: Record<Element, TextNarratiu> = {
 };
 
 // 2.1bis Arribada als "passos previs" (check-in abans d'una fita, docs/fites-nova.md § AIRE).
-// Clau: id del pas (content/public/estacions.ts, PASSOS_PREVIS). ESBORRANY pendent d'aprovar
-// i de gravar-ne la veu.
+// Clau: id del pas (content/public/estacions.ts, PASSOS_PREVIS).
 export const ARRIBADES_PAS: Record<string, TextNarratiu> = {
   "aire-pas": {
     paragrafs: [
