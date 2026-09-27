@@ -277,7 +277,7 @@ function FitxaFita({
   const tancada = estacio.oberta === false && !resolta;
   const queFer =
     esPas && tancada
-      ? `Aneu a la ${estacio.nom} i escanegeu el QR del cartell: us revelarà on és de debò la fita.`
+      ? "Seguiu les passes de Fra Francesc i resteu atents als perills."
       : estacio.entrada;
 
   return (
