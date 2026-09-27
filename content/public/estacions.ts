@@ -75,14 +75,17 @@ export const ESTACIONS: Estacio[] = [
     element: "foc",
   },
   {
+    // Punt real de l'enigma (docs/fites-nova.md § AIRE). No arriba a l'equip fins que
+    // obre el pas previ "aire-pas" (veure PASSOS_PREVIS): /api/estat n'amaga les
+    // coordenades fins llavors.
     id: "aire",
     ordre: 4,
-    nom: "Creu del Pujolar",
-    situacio: "Al turó sobre la Creu del Pujolar.",
+    nom: "Serrat de la Creu",
+    situacio: "Al Serrat de la Creu.",
     entrada: "Només l'aire pot desvelar el secret amagat.",
     imatge: "/images/creu-pujolar.webp",
-    latitud: 41.91154,
-    longitud: 2.226323,
+    latitud: 41.910894,
+    longitud: 2.224438,
     tipus: "text",
     disponible: true,
     element: "aire",
@@ -127,4 +130,52 @@ export function getEstacionsOrdenades(): Estacio[] {
 /** Estacions que compten per desbloquejar el ritual final del Gresol. */
 export function getEstacionsJugables(): Estacio[] {
   return ESTACIONS.filter((e) => e.tipus !== "especial");
+}
+
+/**
+ * Pas previ (check-in) d'una fita: un punt físic propi, sense enigma ni resposta,
+ * que cal obrir (GPS o QR) abans que l'app reveli on és realment la fita que
+ * `desbloqueja` (docs/fites-nova.md § AIRE). Eina genèrica: qualsevol fita pot
+ * tenir-ne un, no és exclusiu de l'Aire.
+ */
+export interface PasPrevi {
+  id: string;
+  /** Id de l'Estacio que aquest pas desbloqueja: se n'amaguen les coordenades fins que s'obre. */
+  desbloqueja: string;
+  nom: string;
+  situacio: string;
+  entrada: string;
+  imatge?: string;
+  latitud: number;
+  longitud: number;
+  disponible: boolean;
+  /** Només per acolorir el cartell/icona amb l'estil de l'element que precedeix; no compta com a fita. */
+  element?: Element;
+}
+
+export const PASSOS_PREVIS: PasPrevi[] = [
+  {
+    id: "aire-pas",
+    desbloqueja: "aire",
+    nom: "Creu del Pujolar",
+    situacio: "Al turó sobre la Creu del Pujolar.",
+    entrada: "Escolteu el missatge de Fra Francesc i seguiu amunt, cap al Serrat de la Creu.",
+    latitud: 41.911628,
+    longitud: 2.226846,
+    disponible: true,
+    element: "aire",
+  },
+];
+
+export function getPassosPrevis(): PasPrevi[] {
+  return PASSOS_PREVIS;
+}
+
+export function getPasPrevi(id: string): PasPrevi | undefined {
+  return PASSOS_PREVIS.find((p) => p.id === id);
+}
+
+/** El pas previ (si n'hi ha) que cal obrir abans de revelar aquesta estació. */
+export function getPasPreviPerEstacio(estacioId: string): PasPrevi | undefined {
+  return PASSOS_PREVIS.find((p) => p.desbloqueja === estacioId);
 }

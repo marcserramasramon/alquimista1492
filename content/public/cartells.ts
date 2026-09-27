@@ -23,6 +23,8 @@ export interface PoemaCartell {
   /** Una sola frase per als cartells de propaganda amb lema: no ha de donar cap pista de la solució.
    * Un `\n` força on es parteix la línia. */
   lema: string;
+  /** Frase curta, centrada, sota el poema (p.ex. una instrucció de "seguiu caminant"). */
+  notaCentrada?: string;
   pendent?: string;
 }
 
@@ -57,13 +59,24 @@ export const POEMES_CARTELLS: Record<string, PoemaCartell> = {
       "Interposa la gemma carmesí entre els teus ulls i el laberint vibrant. Quan la flama domi el miratge i devori el fals reflex, només el rastre del brot naixent s'alçarà victoriós entre la tenebra.",
     ],
   },
+  // Cartell del pas previ (check-in): docs/fites-nova.md § AIRE. Abans hi havia aquest
+  // paràgraf junt amb el de l'enigma en un sol cartell; ara en són dos, un per punt físic.
+  "aire-pas": {
+    lema: "Abans de l'aire, cal seguir-ne el rastre.",
+    imatge: "/images/cartells/aire.jpg",
+    fons: "/images/cartells/fons/aire.jpg",
+    pendent: "Reaprofita la il·lustració del cartell de l'aire: falta una imatge pròpia per a aquest punt.",
+    paragrafs: [
+      "Els devots de l'Orde em perseguien. Em vaig amagar rere els murs de pedra d'una masia oblidada, però cap pedra és prou forta per contenir l'essència de l'aire. Vaig fugir fins al cim del turó, allà on el vent en fa el seu element. No t'aturis: segueix amunt, cap a la creu vella, fins on la terra ja no pugui alçar-se més.",
+    ],
+    notaCentrada: "Continua al camí.",
+  },
   aire: {
     lema: "L'aire no es veu, però l'invisible també deixa rastre.",
     imatge: "/images/cartells/aire.jpg",
     fons: "/images/cartells/fons/aire.jpg",
     pendent: "El text demana restar el número del vidre del gravat de la creu, però la resposta és 4, el número del vidre, sense resta.",
     paragrafs: [
-      "Els devots de l'Orde em perseguien. Em vaig amagar rere els murs de pedra d'una masia oblidada, però cap pedra és prou forta per contenir l'essència de l'aire. Vaig fugir fins al cim del turó, allà on el vent en fa el seu element. No t'aturis: segueix amunt, cap a la creu vella, fins on la terra ja no pugui alçar-se més.",
       "Ofrena el caliu del teu propi alè sobre la làmina gelada perquè l'efímer es faci visible. Resta el missatge que la boira desvetlli d'allò gravat a la soca; la diferència serà el tribut que l'aire et concedeix.",
     ],
   },

@@ -290,3 +290,10 @@ Hi ha una carpeta `v2/` a l'arrel del repo (Next.js complet, propi `node_modules
 - El botó "Hi som! Obrir la fita" obre l'escàner de QR (`@yudiel/react-qr-scanner`) amb l'opció "Entreu el codi manualment" a sota (equips sense GPS o sense càmera).
 - Cada cartell porta un QR amb `{APP_URL}/s/{id}?c={codi}` i el codi escrit a sota. Els codis viuen a `content/private/codisFites.ts`; el màster els veu a `/master/codis`.
 - `/api/joc`, `/api/resposta` i `/api/pista` refusen les fites tancades. Taula: `v2_progres.oberta_at` i `obertura` (`gps` | `qr` | `codi`).
+
+## Passos previs (check-in abans d'una fita) — implementat 2026-09-27
+
+Eina genèrica (no exclusiva de l'Aire, veure `docs/fites-nova.md` § AIRE): qualsevol fita pot tenir un `PasPrevi` (`content/public/estacions.ts`, `PASSOS_PREVIS`) — un punt físic propi, amb el seu QR (`content/private/codisFites.ts`) i cartell (`content/public/cartells.ts`), sense enigma ni resposta. S'obre exactament igual que una fita (GPS/QR, mateixa taula `v2_progres`, mateix `/api/obrir`). En obrir-se:
+- `/s/{id-del-pas}` mostra només un text/veu (`content/public/textos.ts`, `ARRIBADES_PAS`) i un botó "Veure-ho al mapa".
+- `/api/estat` deixa d'amagar les coordenades reals de l'estació que `desbloqueja` — fins llavors, aquella estació no surt ni al mapa ni a la llista de fites.
+- No compta com a fita jugable (`getEstacionsJugables`/Gresol no la veuen: viu en un array separat, `PASSOS_PREVIS`, no a `ESTACIONS`).

@@ -128,6 +128,20 @@ export default function HubPage() {
     setEscanejant(true);
   }
 
+  // Un pas previ (check-in) no porta a cap prova: es queda al mapa, sona i en desbloqueja
+  // una altra (la fitxa en fa l'avís). Una fita normal escanejada hi entra directament.
+  function obertaPerCodi(estacioId: string) {
+    const oberta = estat!.estacions.find((e) => e.id === estacioId);
+    if (oberta?.tipus === "pas") {
+      setEscanejant(false);
+      sonarArribada();
+      setArribadaId(estacioId);
+      carregar();
+      return;
+    }
+    router.push(`/s/${estacioId}`);
+  }
+
   return (
     <>
       <VistaHub
@@ -139,9 +153,7 @@ export default function HubPage() {
         onAnarFinal={() => router.push("/final")}
         onLlegirMissatge={() => router.push("/missatge?tornada=1")}
       />
-      {escanejant && (
-        <ObrirFita onOberta={(estacioId) => router.push(`/s/${estacioId}`)} onTancar={() => setEscanejant(false)} />
-      )}
+      {escanejant && <ObrirFita onOberta={obertaPerCodi} onTancar={() => setEscanejant(false)} />}
     </>
   );
 }

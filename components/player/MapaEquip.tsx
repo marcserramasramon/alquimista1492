@@ -11,12 +11,15 @@ export interface EstacioMapa {
   situacio?: string;
   latitud: number;
   longitud: number;
-  tipus: "text" | "especial";
+  /** "pas" = check-in previ a una fita (docs/fites-nova.md § AIRE), sense enigma. */
+  tipus: "text" | "especial" | "pas";
   disponible: boolean;
   element?: Element;
   /** false = l'equip encara no hi ha arribat (GPS o QR del cartell). Sense valor, es pot entrar. */
   oberta?: boolean;
   progres: { resolta: boolean };
+  /** Només als "pas": id de la fita que desbloqueja (per dibuixar-hi la línia de guia). */
+  desbloqueja?: string;
 }
 
 export interface MapaEquipProps {
@@ -284,6 +287,15 @@ export function MapaEquip({
   // Els marcadors creixen menys que el mapa: continuen al seu lloc però no ho tapen tot.
   const escala = MIDA_MARCADORS / Math.sqrt(zoom);
 
+  // Línia discontínua d'un "pas" obert fins a la fita que desbloqueja, mentre no es resolgui
+  // (docs/app-nova.md § Passos previs): la marca en aparèixer al mapa i hi guia fins que es resol.
+  const liniesGuia = estacions.flatMap((pas) => {
+    if (!pas.desbloqueja || !pas.oberta) return [];
+    const desti = estacions.find((e) => e.id === pas.desbloqueja);
+    if (!desti || desti.progres.resolta) return [];
+    return [{ origen: pas, desti }];
+  });
+
   return (
     <>
       {/* Mentre el mapa és a pantalla completa, en reserva el lloc a la pàgina. */}
@@ -328,6 +340,10 @@ export function MapaEquip({
               <image href="/mapa-sentfores.webp" x={0} y={0} width={MIDA} height={MIDA} />
 
               {recorregut.length > 0 && <Cami punts={recorregut} escala={escala} />}
+
+              {liniesGuia.map(({ origen, desti }) => (
+                <LiniaGuia key={origen.id} origen={origen} desti={desti} escala={escala} />
+              ))}
 
               {estacions
                 .filter((e) => e.tipus !== "especial" || totesResoltes)
@@ -545,5 +561,33 @@ function Cami({ punts, escala }: { punts: { lat: number; lng: number }[]; escala
         </g>
       )}
     </g>
+  );
+}
+
+/** Línia discontínua d'un "pas" (check-in) fins a la fita que acaba de desbloquejar. */
+function LiniaGuia({
+  origen,
+  desti,
+  escala,
+}: {
+  origen: { latitud: number; longitud: number };
+  desti: { latitud: number; longitud: number };
+  escala: number;
+}) {
+  const a = aPixel(origen.latitud, origen.longitud);
+  const b = aPixel(desti.latitud, desti.longitud);
+  return (
+    <line
+      aria-hidden
+      x1={a.x}
+      y1={a.y}
+      x2={b.x}
+      y2={b.y}
+      stroke={GOLD}
+      strokeWidth={7 * escala}
+      strokeDasharray={`${18 * escala} ${14 * escala}`}
+      strokeLinecap="round"
+      pointerEvents="none"
+    />
   );
 }

@@ -6,7 +6,7 @@ import { AvisError } from "@/components/ui/Pantalla";
 import { Pentagrama } from "@/components/ui/Pentagrama";
 import { Narracio } from "@/components/ui/Narracio";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
-import { ARRIBADES, CORRECTE_PER_ELEMENT, FRAGMENTS } from "@/content/public/textos";
+import { ARRIBADES, ARRIBADES_PAS, CORRECTE_PER_ELEMENT, FRAGMENTS } from "@/content/public/textos";
 import { CelebracioFragment } from "@/components/vistes/CelebracioFragment";
 
 /** Dades públiques d'una estació tal com les retorna /api/joc/[estacioId]. */
@@ -19,6 +19,8 @@ export interface EstacioPublica {
   element?: Element;
   imatge?: string;
   disponible: boolean;
+  /** Check-in previ a una fita (docs/fites-nova.md § AIRE): text+veu i prou, sense enigma. */
+  pasPrevi?: boolean;
 }
 
 export interface VistaEstacioProps extends VistaJocRespostaProps {
@@ -76,6 +78,47 @@ export function VistaEstacio({
 
   const element = estacio.element ? ELEMENTS[estacio.element] : null;
   const color = element?.color ?? "var(--gold)";
+
+  // Check-in previ: només text+veu, sense enigma ni resposta. En tornar al mapa ja s'hi ha
+  // revelat la ubicació de la fita real (app/api/estat).
+  if (estacio.pasPrevi) {
+    return (
+      <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-5 py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
+        <button
+          onClick={onTornar}
+          aria-label="Tornar al mapa"
+          className="btn btn-secundari btn-rodo self-start"
+        >
+          ←
+        </button>
+        <div>
+          <p className="etiqueta" style={{ color }}>
+            pas
+          </p>
+          <h1 className={`text-4xl font-extrabold ${estacio.situacio ? "mb-1" : "mb-2"}`}>{estacio.nom}</h1>
+          {estacio.situacio && (
+            <p className="flex gap-1.5 text-base text-ink-soft">
+              <span aria-hidden>📍</span>
+              <span>
+                <span className="sr-only">On és: </span>
+                {estacio.situacio}
+              </span>
+            </p>
+          )}
+        </div>
+
+        {ARRIBADES_PAS[estacio.id] && (
+          <Narracio text={ARRIBADES_PAS[estacio.id]} etiqueta="fra francesc" color={color} className="animate-entrar" />
+        )}
+
+        <p className="text-center text-base text-ink-soft">S&apos;ha revelat al mapa on és la propera fita.</p>
+
+        <button onClick={onTornar} className="btn btn-primari">
+          Veure-ho al mapa →
+        </button>
+      </main>
+    );
+  }
 
   // La celebració ocupa tota la pantalla: sense la fita a sota, no hi ha res per fer scroll.
   if (joc.correcte && !resolta) {

@@ -3,7 +3,7 @@ import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getEquipSession } from "@/lib/auth";
-import { getEstacio } from "@/content/public/estacions";
+import { getEstacio, getPasPrevi } from "@/content/public/estacions";
 import { getEstacioPerCodi } from "@/content/private/codisFites";
 import { necessitaObertura, obrirFita } from "@/lib/obertura";
 import { RADI_OBERTURA_M, distanciaMetres } from "@/lib/ubicacio";
@@ -42,26 +42,28 @@ export async function POST(request: NextRequest) {
   const dades = validacio.data;
 
   if ("codi" in dades) {
-    const estacioId = getEstacioPerCodi(dades.codi);
-    const estacio = estacioId ? getEstacio(estacioId) : undefined;
-    if (!estacio || !estacio.disponible) {
+    const id = getEstacioPerCodi(dades.codi);
+    const desti = id ? getEstacio(id) ?? getPasPrevi(id) : undefined;
+    if (!desti || !desti.disponible) {
       return NextResponse.json({ error: "Aquest codi no és de cap fita. Reviseu-lo." }, { status: 404 });
     }
-    await obrirFita(sessio.teamId, estacio.id, dades.via);
-    return NextResponse.json({ estacioId: estacio.id });
+    await obrirFita(sessio.teamId, desti.id, dades.via);
+    return NextResponse.json({ estacioId: desti.id });
   }
 
   const estacio = getEstacio(dades.estacioId);
-  if (!estacio || !estacio.disponible || !necessitaObertura(estacio)) {
+  const pas = estacio ? undefined : getPasPrevi(dades.estacioId);
+  const desti = estacio ?? pas;
+  if (!desti || !desti.disponible || (estacio && !necessitaObertura(estacio))) {
     return NextResponse.json({ error: "Estació no disponible" }, { status: 404 });
   }
-  const distancia = distanciaMetres(dades, { lat: estacio.latitud, lng: estacio.longitud });
+  const distancia = distanciaMetres(dades, { lat: desti.latitud, lng: desti.longitud });
   if (distancia > RADI_OBERTURA_M) {
     return NextResponse.json(
       { error: "Encara no sou a la fita", distancia: Math.round(distancia) },
       { status: 403 }
     );
   }
-  await obrirFita(sessio.teamId, estacio.id, "gps");
-  return NextResponse.json({ estacioId: estacio.id });
+  await obrirFita(sessio.teamId, desti.id, "gps");
+  return NextResponse.json({ estacioId: desti.id });
 }

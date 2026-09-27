@@ -41,7 +41,9 @@ export function VistaHub({
     if (fitaArribadaId) setSeleccionadaId(fitaArribadaId);
   }
 
-  const elementals = estacions.filter((e) => e.element);
+  // Un "pas" (check-in) pot tenir `element` només per acolorir-lo com la fita que
+  // precedeix (content/public/estacions.ts, PasPrevi.element) — no compta com a punta del pentagrama.
+  const elementals = estacions.filter((e) => e.element && e.tipus !== "pas");
   const resoltes = elementals.filter((e) => e.progres.resolta).length;
   const nodes: NodePentagrama[] = elementals.map((e) => ({
     id: e.id,
@@ -136,7 +138,8 @@ export function VistaHub({
         )}
       </section>
 
-      <section className="animate-entrar [animation-delay:240ms]">
+      {/* Llista "les fites" amagada: el mapa ja les mostra. Deixem el codi per si es vol recuperar. */}
+      <section className="hidden animate-entrar [animation-delay:240ms]">
         <h2 className="etiqueta mb-2 text-base">les fites</h2>
         <ul className="flex flex-col gap-3">
           {visibles.map((estacio) => {
@@ -164,11 +167,13 @@ export function VistaHub({
                         className={`h-9 w-9 object-contain ${resolta ? "brightness-0 invert" : ""}`}
                       />
                     ) : (
-                      <span className="text-2xl">⚗️</span>
+                      <span className="text-2xl">{estacio.tipus === "especial" ? "⚗️" : "🚩"}</span>
                     )}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="etiqueta block text-xs">{element?.nom ?? "Ritual final"}</span>
+                    <span className="etiqueta block text-xs">
+                      {element?.nom ?? (estacio.tipus === "especial" ? "Ritual final" : "Pas previ")}
+                    </span>
                     <span className="block truncate text-xl font-extrabold leading-tight">{estacio.nom}</span>
                   </span>
                   <span className="shrink-0">
@@ -240,17 +245,24 @@ function FitxaFita({
   const element = estacio.element ? ELEMENTS[estacio.element] : null;
   const color = element?.color ?? "var(--gold)";
   const resolta = estacio.progres.resolta;
+  const esPas = estacio.tipus === "pas";
+  // Un pas previ queda "resolt" en el mateix moment d'obrir-se (docs/app-nova.md § Passos previs):
+  // l'avís s'ha de veure igualment, no només quan encara no s'ha "resolt".
+  const mostrarAvis = acabadaDarribar && (esPas || !resolta);
 
   return (
     <div role="region" aria-label={estacio.nom} className="absolute inset-0 flex animate-entrar flex-col bg-paper">
-      {/* La franja de color de dalt fa d'avís quan el GPS acaba d'obrir la fita. */}
-      {acabadaDarribar && !resolta ? (
+      {/* La franja de color de dalt fa d'avís quan el GPS o el QR acaben d'obrir la fita. */}
+      {mostrarAvis ? (
         <p
           role="status"
           className="shrink-0 px-4 py-0.5 text-center text-base font-extrabold leading-6 text-white"
           style={{ background: color }}
         >
-          <span aria-hidden className="inline-block motion-safe:animate-bounce">📍</span> Heu arribat! La fita s&apos;ha obert.
+          <span aria-hidden className="inline-block motion-safe:animate-bounce">
+            {esPas ? "🗺️" : "📍"}
+          </span>{" "}
+          {esPas ? "Nova fita desbloquejada! Mireu el mapa." : "Heu arribat! La fita s'ha obert."}
         </p>
       ) : (
         <div className="h-3 shrink-0" style={{ background: color }} />
@@ -263,12 +275,12 @@ function FitxaFita({
           {element ? (
             <img src={element.icona} alt="" className="h-10 w-10 object-contain" />
           ) : (
-            <span className="text-3xl">⚗️</span>
+            <span className="text-3xl">{estacio.tipus === "especial" ? "⚗️" : "🚩"}</span>
           )}
         </span>
         <div className="min-w-0 flex-1">
           <p className="etiqueta" style={{ color: element ? color : undefined }}>
-            {element?.nom ?? "Ritual final"}
+            {element?.nom ?? (estacio.tipus === "especial" ? "Ritual final" : "Pas previ")}
           </p>
           <h3 className="text-[1.75rem] font-extrabold leading-[1.1]">{estacio.nom}</h3>
         </div>

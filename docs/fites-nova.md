@@ -78,11 +78,14 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 
 ## 🌬️ AIRE
 
-**Estat: TÈCNICA DEFINIDA, LA RESTA PENDENT**
+**Estat: TÈCNICA DEFINIDA, DUES UBICACIONS (2026-09-27) — LA RESTA PENDENT**
+
+⚠️ **Canvi de disseny (2026-09-27):** l'Aire ja no és un sol punt físic, sinó dos, amb un **pas previ (check-in)** genèric al mig — eina reutilitzable, no exclusiva de l'Aire (`content/public/estacions.ts`, `PasPrevi`/`PASSOS_PREVIS`). L'equip escaneja el QR del pas previ, l'app li mostra un text/veu de Fra Francesc (sense enigma) i **només llavors** revela al mapa on és realment la fita (l'app li amaga les coordenades reals fins aquest moment).
 
 | Camp | Valor |
 |------|-------|
-| Ubicació | **Al turó sobre la Creu del Pujolar** — coordenades confirmades (2026-09-26, v2, verificades al mapa): **41.91154, 2.226323**. La creu física (monument real) queda ~105 m més a l'oest del punt de joc; el poema hi fa referència com a punt d'orientació ("cap a la creu vella") mentre els jugadors pugen cap al cim, on és realment el truc del vidre. (Historial: abans 41.910894, 2.224434; un pas intermedi el 2026-09-26 va provar 41.91153374677273, 2.2250516502454163, descartat) |
+| **Punt 1 — pas previ `aire-pas`** | **Creu del Pujolar** — 41.911628, 2.226846 (moguda 2026-09-27; l'antic punt de joc, abans que es partís en dos, era a 41.911542, 2.226367). Cartell amb el 1r paràgraf del poema (`content/public/cartells.ts`, `aire-pas`): "Em vaig amagar rere els murs de pedra... segueix amunt, cap a la creu vella." Sense enigma ni número: només arribar-hi (GPS o QR) desbloqueja el punt 2 |
+| **Punt 2 — fita `aire` (l'enigma)** | **Serrat de la Creu** — 41.910894, 2.224438 (coordenada represa de l'ubicació anterior al trasllat del 2026-09-26/27, a prop del monument real de la creu). Cartell nou amb el 2n paràgraf (l'enigma del vidre ensabonat) |
 | Tècnica | Sabó (mans o plats, transparent) sobre vidre/mirall + alè (baf) |
 | Element físic real aprofitat | Cap (des del 2026-09-23 el número de la base de la creu ja no es fa servir) |
 | Material del jugador | Vidre o mirall amb una capa finíssima de sabó dibuixant **el número 4** (invisible en sec) |
@@ -120,7 +123,7 @@ Els 5 punts físics, units en l'ordre del seu angle respecte al centroide, dibui
 |---|---|---|---|
 | 🔥 FOC | Entrada del poble | 41.915419, 2.231577 | 59° |
 | 💧 AIGUA | Font del Ferro (Carrer del Call) | 41.914816, 2.227479 | 125° |
-| 🌬️ AIRE | Al turó sobre la Creu del Pujolar | 41.91154, 2.226323 | ⚠️ angle pendent de recalcular (2026-09-26: coordenada moguda, veure secció AIRE) |
+| 🌬️ AIRE | Serrat de la Creu (punt de l'enigma; el pas previ `aire-pas` és a 41.911628, 2.226846) | 41.910894, 2.224438 | ⚠️ angle pendent de recalcular (2026-09-27: coordenada canviada un altre cop, veure secció AIRE) |
 | ✨ ÀNIMA | Pista skate (Camí Antic de Malla) | 41.910355, 2.230083 | 282° |
 | 🪨 TERRA | Planes Bones | 41.912256, 2.233469 | 351° |
 

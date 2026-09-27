@@ -67,6 +67,18 @@ export const ARRIBADES: Record<Element, TextNarratiu> = {
   },
 };
 
+// 2.1bis Arribada als "passos previs" (check-in abans d'una fita, docs/fites-nova.md § AIRE).
+// Clau: id del pas (content/public/estacions.ts, PASSOS_PREVIS). ESBORRANY pendent d'aprovar
+// i de gravar-ne la veu.
+export const ARRIBADES_PAS: Record<string, TextNarratiu> = {
+  "aire-pas": {
+    paragrafs: [
+      "Esteu en el camí correcte, que el vent de gregal us empeny per arribar al cim. Camineu amagats seguint el mur, atents a la foscor per si l'Inquisidor hi ronda. Pugeu fins al Serrat de la Creu, on el vent no s'atura, i hi trobareu el que busqueu.",
+    ],
+    audio: "/audio/arribada-aire-pas.mp3",
+  },
+};
+
 // 2.2 Fragment de cada fita (es desbloqueja en resoldre-la)
 export const FRAGMENTS: Record<Element, TextNarratiu> = {
   aigua: {

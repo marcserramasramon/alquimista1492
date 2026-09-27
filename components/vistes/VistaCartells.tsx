@@ -103,6 +103,11 @@ function Cartell({ c, estil }: { c: DadesCartell; estil: EstilCartell }) {
             {c.poema.paragrafs.map((paragraf, i) => (
               <p key={i}>{paragraf}</p>
             ))}
+            {c.poema.notaCentrada && (
+              <p className="text-center font-bold" style={{ color: element.color }}>
+                {c.poema.notaCentrada}
+              </p>
+            )}
           </div>
 
           {fons && c.soroll && (

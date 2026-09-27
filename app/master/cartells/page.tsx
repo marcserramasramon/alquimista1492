@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getMasterSessionFromCookies } from "@/lib/auth";
-import { getEstacionsOrdenades } from "@/content/public/estacions";
+import { getEstacionsOrdenades, getPassosPrevis } from "@/content/public/estacions";
 import { POEMES_CARTELLS } from "@/content/public/cartells";
 import { CODIS_FITES } from "@/content/private/codisFites";
 import { getSolucio } from "@/content/private/solucions";
@@ -32,7 +32,7 @@ export default async function CartellsPage({
   const base = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 
   const cartells: DadesCartell[] = [];
-  for (const e of getEstacionsOrdenades()) {
+  for (const e of [...getEstacionsOrdenades(), ...getPassosPrevis()]) {
     const codi = CODIS_FITES[e.id];
     const poema = POEMES_CARTELLS[e.id];
     if (!codi || !poema || !e.element) continue;

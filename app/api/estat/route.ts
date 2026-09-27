@@ -3,7 +3,7 @@ import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceRoleClient } from "@/lib/supabase";
 import { getEquipSession } from "@/lib/auth";
-import { getEstacionsOrdenades, getEstacionsJugables } from "@/content/public/estacions";
+import { getEstacionsOrdenades, getEstacionsJugables, getPassosPrevis, getPasPreviPerEstacio } from "@/content/public/estacions";
 import { MAXIMA_EDAT_UBICACIO_MASTER_MS } from "@/lib/ubicacio";
 import { estaOberta, necessitaObertura } from "@/lib/obertura";
 
@@ -47,22 +47,52 @@ export async function GET(request: NextRequest) {
     ubicacioMaster.updated_at &&
     Date.now() - new Date(ubicacioMaster.updated_at).getTime() < MAXIMA_EDAT_UBICACIO_MASTER_MS;
 
+  // Una estació amb pas previ no es revela (no surt al mapa) fins que l'equip l'obre.
+  const estacionsAmbPasTancat = getEstacionsOrdenades()
+    .map((e) => ({ e, pas: getPasPreviPerEstacio(e.id) }))
+    .filter(({ pas }) => pas && !estaOberta(progresPerEstacio.get(pas.id) ?? null));
+
+  const idsAmagats = new Set(estacionsAmbPasTancat.map(({ e }) => e.id));
+
   return NextResponse.json({
     master: masterVisible ? { lat: ubicacioMaster.lat, lng: ubicacioMaster.lng } : null,
     equip,
-    estacions: getEstacionsOrdenades().map((e) => {
-      const { oberta_at, ...progres } = progresPerEstacio.get(e.id) ?? {
-        resolta: false,
-        intents: 0,
-        pistes_usades: 0,
-        oberta_at: null,
-      };
-      return {
-        ...e,
-        oberta: !necessitaObertura(e) || estaOberta({ oberta_at, resolta: progres.resolta }),
-        progres,
-      };
-    }),
+    estacions: [
+      ...getEstacionsOrdenades()
+        .filter((e) => !idsAmagats.has(e.id))
+        .map((e) => {
+          const { oberta_at, ...progres } = progresPerEstacio.get(e.id) ?? {
+            resolta: false,
+            intents: 0,
+            pistes_usades: 0,
+            oberta_at: null,
+          };
+          return {
+            ...e,
+            oberta: !necessitaObertura(e) || estaOberta({ oberta_at, resolta: progres.resolta }),
+            progres,
+          };
+        }),
+      ...getPassosPrevis().map((p) => {
+        const oberta = estaOberta(progresPerEstacio.get(p.id) ?? null);
+        return {
+          id: p.id,
+          nom: p.nom,
+          entrada: p.entrada,
+          situacio: p.situacio,
+          imatge: p.imatge,
+          latitud: p.latitud,
+          longitud: p.longitud,
+          tipus: "pas" as const,
+          disponible: p.disponible,
+          element: p.element,
+          // El mapa hi dibuixa una línia discontínua fins que es resol la fita que desbloqueja.
+          desbloqueja: p.desbloqueja,
+          oberta,
+          progres: { resolta: oberta },
+        };
+      }),
+    ],
     totesResoltes,
   });
 }
