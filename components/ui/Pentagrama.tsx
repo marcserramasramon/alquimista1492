@@ -116,10 +116,12 @@ export function Pentagrama({
 }: PentagramaProps) {
   // Sempre es dibuixen les cinc puntes en posició fixa: si una fita encara no s'ha revelat
   // (p. ex. l'Aire, amagat fins que l'equip obre el seu pas previ — app/api/estat/route.ts),
-  // hi surt bloquejada en el seu lloc en lloc de desaparèixer. Si desapareixés, `vertex(i)`
-  // (que sempre reparteix 360° en cinc trossos de 72°) encongiria l'estrella en una creu.
+  // hi surt igualment (sense resoldre, contorn continu) en el seu lloc en lloc de desaparèixer.
+  // Si desapareixés, `vertex(i)` (que sempre reparteix 360° en cinc trossos de 72°) encongiria
+  // l'estrella en una creu. `disponible: true` perquè el contorn no surti discontinu com un
+  // "properament": la fita hi és, només que encara no s'ha revelat.
   const nodes: NodePentagrama[] = ORDRE.map(
-    (element) => nodesDonats.find((n) => n.element === element) ?? { id: element, element, resolt: false, disponible: false },
+    (element) => nodesDonats.find((n) => n.element === element) ?? { id: element, element, resolt: false, disponible: true },
   );
   const punts = nodes.map((_, i) => vertex(i));
   const resolts = nodes.filter((n) => n.resolt).length;
