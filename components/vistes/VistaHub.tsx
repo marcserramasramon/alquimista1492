@@ -67,7 +67,7 @@ export function VistaHub({
   return (
     <main
       className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-4 px-4 pt-2 ${
-        totesResoltes ? "pb-32" : "pb-10"
+        totesResoltes ? "pb-32" : "pb-4"
       }`}
     >
       {/* Sense compte enrere, la casella dels elements fa ella sola la franja de dalt. */}
