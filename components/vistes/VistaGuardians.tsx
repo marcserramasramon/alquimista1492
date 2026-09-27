@@ -10,6 +10,15 @@ const FONS = "#d9bd84";
 /** Dins del marc, negre sòlid: la Pedra hi brilla. */
 const FONS_CENTRAL = "#000";
 
+/** Espurnes blanques fixes sobre la Pedra Filosofal, cadascuna amb la seva posició, mida i retard. */
+const ESPURNES = [
+  { top: "18%", left: "26%", mida: "10px", retard: "0s" },
+  { top: "60%", left: "70%", mida: "8px", retard: "0.6s" },
+  { top: "70%", left: "30%", mida: "12px", retard: "1.2s" },
+  { top: "30%", left: "68%", mida: "9px", retard: "1.8s" },
+  { top: "45%", left: "48%", mida: "6px", retard: "0.3s" },
+];
+
 /**
  * 5. Pantalla final: l'equip esdevé Guardians del Secret i obté la Pedra Filosofal. Surt a /final
  * quan el LED del Gresol s'ha encès i Fra Francesc consagra l'equip des del màster.
@@ -36,11 +45,28 @@ export function VistaGuardians() {
       >
         <BotoMusica className="self-end" />
         {/* Pedra a la mateixa mida que el pentagrama del Pla del Masset (VistaFinal). */}
-        <img
-          src="/images/pedra-filosofal.webp"
-          alt="La Pedra Filosofal"
-          className="mx-auto w-64 max-w-full animate-segellar drop-shadow-[0_0_20px_rgb(234_179_8/0.55)]"
-        />
+        <div className="relative mx-auto w-64 max-w-full">
+          <img
+            src="/images/pedra-filosofal.webp"
+            alt="La Pedra Filosofal"
+            className="w-full animate-segellar drop-shadow-[0_0_20px_rgb(234_179_8/0.55)]"
+          />
+          {ESPURNES.map((e, i) => (
+            <span
+              key={i}
+              aria-hidden
+              className="pointer-events-none absolute animate-parpelleig rounded-full"
+              style={{
+                top: e.top,
+                left: e.left,
+                width: e.mida,
+                height: e.mida,
+                background: "radial-gradient(circle, #fff 0%, rgb(255 255 255 / 0) 70%)",
+                animationDelay: e.retard,
+              }}
+            />
+          ))}
+        </div>
         <div className="animate-entrar [animation-delay:200ms]">
           <Marca petita sobreFosc />
         </div>
