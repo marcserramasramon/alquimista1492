@@ -100,11 +100,11 @@ export function VistaHub({
       // a iOS, deixaria de comptar com a arrel de la pàgina — l'espai de la càmera (safe
       // area, viewport-fit=cover) hi tornaria encara que la barra el descompti bé. El
       // contenidor de sota (overflow-y-auto) ja reté tot el que pugui sobrar.
-      className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 pt-2"
+      className="mx-auto flex w-full max-w-md flex-col"
     >
       {/* Sense compte enrere, la casella dels elements fa ella sola la franja de dalt. */}
       {rellotge === "no" && (
-        <BarraFranja className="-mx-4 -mt-2 shrink-0">
+        <BarraFranja className="shrink-0">
           <div className="ml-auto">{casella}</div>
         </BarraFranja>
       )}
@@ -114,9 +114,12 @@ export function VistaHub({
           com la resta de l'app (globals.css). `overflow-y-auto` fa que l'eix x deixi de
           ser `visible` (deixa de ser "auto" el que no s'ha dit): cal fer-hi lloc amb
           `-mx-1 px-1` perquè les targetes de sota, que sobresurten `-mx-1` del marge,
-          no quedin retallades pels costats. */}
+          no quedin retallades pels costats. La roda i el mapa són quadrats (amplada fixa),
+          així que gairebé mai omplen tota l'alçada disponible: `justify-between` enganxa
+          el primer a dalt i l'últim a baix i envia tot l'espai sobrant al `gap` del mig,
+          en lloc de deixar-lo com un marge buit a dalt o a baix de la pantalla. */}
       <div
-        className={`-mx-1 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${totesResoltes ? "pb-32" : "pb-2"}`}
+        className={`-mx-1 flex min-h-0 flex-1 flex-col justify-between gap-3 overflow-y-auto overscroll-contain px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${totesResoltes ? "pb-32" : "pb-[max(0.5rem,env(safe-area-inset-bottom))]"}`}
       >
         {/* Progrés: el pentagrama s'encén a mesura que es resolen les fites. La fitxa de la fita
             triada n'ocupa el lloc, amb la mateixa alçada. */}
