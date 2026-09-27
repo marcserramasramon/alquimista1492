@@ -13,7 +13,7 @@ interface Station {
 
 const STATIONS: Station[] = [
   {
-    name: "Entrada del poble",
+    name: "Serrat del Caçador",
     element: "Foc",
     coords: [41.915419, 2.231577],
     angle: 59,

@@ -64,7 +64,7 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 
 | Camp | Valor |
 |------|-------|
-| Ubicació | **Entrada del poble** — coordenades confirmades: **41.915419, 2.231577** (moguda 42 m al sud el 2026-09-25 perquè el pentagrama quadri millor; el cartell físic s'ha de posar aquí — veure `docs/mapa-proposta-definitiva.md`) |
+| Ubicació | **Serrat del Caçador** — coordenades confirmades: **41.915419, 2.231577** (moguda 42 m al sud el 2026-09-25 perquè el pentagrama quadri millor; el cartell físic s'ha de posar aquí — veure `docs/mapa-proposta-definitiva.md`) |
 | Tècnica | **"Paper de foc" — cel·lofana vermella com a lent decodificadora, amb nom narratiu propi.** En la ficció, es presenta com un **vidre alquímic especial que té el foc atrapat a dins**. Full imprès amb un mar de xifres i símbols alquímics **vermells** (soroll visual); el missatge real hi és escrit en **blau**, un sol número enmig de tots els vermells. Mirant el full a través del "paper de foc" (la cel·lofana vermella), els vermells es dissolen/desapareixen en el filtre i el blau hi destaca fosc i llegible |
 | Material del jugador/equip | Un tros de **"paper de foc" (cel·lofana vermella)** per equip + el full imprès amb el número blau camuflat entre el soroll vermell |
 | Acció física | Els jugadors miren el full a través del "paper de foc" fins que el número en blau es distingeix de la resta |
@@ -121,7 +121,7 @@ Els 5 punts físics, units en l'ordre del seu angle respecte al centroide, dibui
 
 | Element | Ubicació | Coordenades | Angle respecte al centroide |
 |---|---|---|---|
-| 🔥 FOC | Entrada del poble | 41.915419, 2.231577 | 59° |
+| 🔥 FOC | Serrat del Caçador | 41.915419, 2.231577 | 59° |
 | 💧 AIGUA | Font del Lleó (Carrer del Call) | 41.914816, 2.227479 | 125° |
 | 🌬️ AIRE | Serrat de la Creu (punt de l'enigma; el pas previ `aire-pas` és a 41.911628, 2.226846) | 41.910894, 2.224438 | ⚠️ angle pendent de recalcular (2026-09-27: coordenada canviada un altre cop, veure secció AIRE) |
 | ✨ ÀNIMA | Pista skate (Camí Antic de Malla) | 41.910355, 2.230083 | 282° |

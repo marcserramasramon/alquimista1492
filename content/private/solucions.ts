@@ -36,7 +36,7 @@ export const SOLUCIONS: Record<string, Solucio> = {
     ],
   },
 
-  // FOC — Entrada del poble. Enmig d'un mar de xifres i símbols vermells,
+  // FOC — Serrat del Caçador. Enmig d'un mar de xifres i símbols vermells,
   // el "paper de foc" (cel·lofana vermella) els dissol i hi destaca el
   // número blau: la resposta.
   foc: {

@@ -52,7 +52,7 @@ Cada fita té dos textos:
 
 > Heu arribat a Planes Bones. Aquí, uns guardians de fang vetllen la matèria des de fa molt de temps. La Terra no regala res i no parla amb fórmules: obriu bé els ulls, trobeu on reposen i digueu-me quants són.
 
-**🔥 Foc — Entrada del poble**
+**🔥 Foc — Serrat del Caçador**
 
 > Aquesta és la porta del poble: tothom hi passa i ningú no s'hi atura. Per això hi vaig amagar el Foc. Un foc que no crema ni fa fum, però que ho veu tot. Mireu a través d'ell, i el soroll callarà.
 
@@ -84,7 +84,7 @@ Es desbloquegen en **resoldre** cada fita (encaixa amb `app-nova.md` § HISTÒRI
 >
 > Les heu hagut de buscar una a una per trobar aquest fragment, i així ha de ser: qui vol entendre la matèria, primer l'ha de saber veure. La Terra és el cos de totes les coses.
 
-### 🔥 Foc — Entrada del poble
+### 🔥 Foc — Serrat del Caçador
 
 **Títol:** El fragment del Foc
 

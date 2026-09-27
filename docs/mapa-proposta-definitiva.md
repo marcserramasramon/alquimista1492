@@ -16,7 +16,7 @@
 |---|---|---|---|---|---|
 | 1 | `font-ferro` | Font del Lleó | 41.914816 | 2.227479 | cap |
 | 2 | `planes-bones` | Planes Bones | 41.912256 | 2.233469 | cap |
-| 3 | `foc` | Entrada del poble | **41.915419** | **2.231577** | **NOVA**: abans 41.915765, 2.231385 (**42 m** cap al sud) |
+| 3 | `foc` | Serrat del Caçador | **41.915419** | **2.231577** | **NOVA**: abans 41.915765, 2.231385 (**42 m** cap al sud) |
 | 4 | `aire` | Al turó sobre la Creu del Pujolar | **41.91154** | **2.226323** | **NOVA (2026-09-26, v2):** abans 41.910894, 2.224434. El punt real de joc no és a la creu (que és un monument fix i no es mou): la creu queda ~105 m més a l'oest, seguint el pujol amunt. Text del cartell actualitzat amb l'excusa (`content/public/cartells.ts`) perquè els jugadors continuïn fins al cim |
 | 5 | `anima` | Dunes d'asfalt | **41.910355** | **2.230083** | **NOVA**: abans 41.91034, 2.230023 (5 m) |
 | 6 | `gresol` | Pla del Masset (centre) | 41.91313 | 2.229789 | cap |

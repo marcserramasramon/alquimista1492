@@ -64,7 +64,7 @@ export const ESTACIONS: Estacio[] = [
     // El poema del cartell físic encara és PENDENT a docs/fites-nova.md, però no es mostra a l'app.
     id: "foc",
     ordre: 3,
-    nom: "Entrada del poble",
+    nom: "Serrat del Caçador",
     situacio: "A la Carretera de la Guixa.",
     entrada: "Desveleu el número amagat enmig del soroll de colors.",
     imatge: "/images/entrada-poble.webp",

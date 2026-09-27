@@ -42,7 +42,7 @@
 
 > Heu arribat a Planes Bones. Aquí, uns guardians de fang vetllen la matèria des de fa molt de temps. La Terra no regala res i no parla amb fórmules: obriu bé els ulls, trobeu on reposen i digueu-me quants són.
 
-**🔥 Foc — Entrada del poble**
+**🔥 Foc — Serrat del Caçador**
 
 > Aquesta és la porta del poble: tothom hi passa i ningú no s'hi atura. Per això hi vaig amagar el Foc. Un foc que no crema ni fa fum, però que ho veu tot. Mireu a través d'ell, i el soroll callarà.
 
@@ -106,7 +106,7 @@
 >
 > Oblida els vells tractats i cerca el testimoni dels cossos d'argila. Quants recipients custodien el recer? Aparella'ls de dos en dos, com bessons que es reflecteixen; la meitat del seu nombre serà la clau mineral.
 
-### 🔥 Foc — Entrada del poble
+### 🔥 Foc — Serrat del Caçador
 
 **Lema (propaganda):** *Hi ha un foc que no crema: només revela.*
 
