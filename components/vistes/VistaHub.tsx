@@ -68,9 +68,30 @@ export function VistaHub({
   // perquè el hub ocupi exactament la resta i sigui una pantalla fixa.
   const alcadaFranja = useAlcadaFranja();
 
+  // Com que aquesta pantalla no fa scroll de pàgina, `100dvh` es queda desactualitzat a
+  // Chrome/Android quan la barra d'adreces o la d'eines apareix o s'amaga (només es
+  // recalcula si el document arrel fa scroll): deixa un buit del color de fons a dalt o
+  // se sobreposa al mapa a baix. `visualViewport` sí que s'actualitza sempre; mentre no
+  // s'ha mesurat es fa servir el `100dvh` de CSS (primer render / sense JS).
+  const [alcadaVisible, setAlcadaVisible] = useState<number | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const actualitzar = () => setAlcadaVisible(vv.height);
+    actualitzar();
+    vv.addEventListener("resize", actualitzar);
+    vv.addEventListener("scroll", actualitzar);
+    return () => {
+      vv.removeEventListener("resize", actualitzar);
+      vv.removeEventListener("scroll", actualitzar);
+    };
+  }, []);
+
   return (
     <main
-      style={{ height: `calc(100dvh - ${alcadaFranja}px)` }}
+      style={{
+        height: alcadaVisible != null ? `${alcadaVisible - alcadaFranja}px` : `calc(100dvh - ${alcadaFranja}px)`,
+      }}
       // Sense overflow-hidden aquí: convertiria el <main> en el seu propi "scrollport" i,
       // a iOS, deixaria de comptar com a arrel de la pàgina — l'espai de la càmera (safe
       // area, viewport-fit=cover) hi tornaria encara que la barra el descompti bé. El

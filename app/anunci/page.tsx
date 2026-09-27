@@ -53,17 +53,20 @@ function Pantalla({
   alt = "",
   posicio,
   vel,
+  compacte = false,
   children,
 }: {
   imatge?: string;
   alt?: string;
   posicio?: string;
   vel?: keyof typeof VELS;
+  /** Contingut més dens que l'habitual: redueix el marge superior i els espais perquè no calgui fer scroll. */
+  compacte?: boolean;
   children: ReactNode;
 }) {
   return (
     <section
-      className={`relative flex h-[100svh] snap-start flex-col overflow-hidden ${imatge ? "justify-end" : "justify-center"}`}
+      className={`relative flex h-[100svh] snap-start flex-col overflow-hidden ${imatge && !compacte ? "justify-end" : "justify-center"}`}
     >
       {imatge && (
         <Image
@@ -79,7 +82,11 @@ function Pantalla({
       {/* El vel de paper va enganxat al bloc de text: el cobreix sempre, sigui quina sigui la seva alçada. */}
       <div className="relative z-10 w-full overflow-y-auto" style={vel === "paper" ? { background: VELS.paper } : undefined}>
         <div
-          className={`mx-auto flex w-full max-w-xl flex-col items-center gap-3 sm:gap-5 px-5 pb-8 sm:pb-14 text-center ${imatge ? "pt-28 sm:pt-40" : "pt-8 sm:pt-14"}`}
+          className={`mx-auto flex w-full max-w-xl flex-col items-center px-5 text-center ${
+            compacte
+              ? "gap-1.5 pb-8 pt-8 sm:gap-5 sm:pb-14 sm:pt-14"
+              : `gap-3 pb-8 sm:gap-5 sm:pb-14 ${imatge ? "pt-28 sm:pt-40" : "pt-8 sm:pt-14"}`
+          }`}
         >
           {children}
         </div>
@@ -162,17 +169,15 @@ const PANTALLES_DESPRES: { color: string; contingut: ReactNode }[] = [
     // El final: el ritual que tanca la partida, sense explicar-ne la mecànica.
     color: DAURAT,
     contingut: (
-      <Pantalla imatge="/images/cartells/portada/cami-buit.jpg" vel="fosc">
+      <Pantalla imatge="/images/cartells/portada/cami-buit.jpg" vel="fosc" compacte>
         <Etiqueta>El final</Etiqueta>
         <TitolFosc>El Gresol dels Cinc Elements</TitolFosc>
-        <div className="w-full rounded-3xl bg-paper/90 py-4 shadow-[0_6px_0_var(--ink)]">
-          <MiniJocElements />
-        </div>
-        <p className="text-left text-lg leading-relaxed text-paper">
+        <MiniJocElements />
+        <p className="text-left text-sm sm:text-lg leading-snug sm:leading-relaxed text-paper">
           Quan tingueu els cinc fragments, tot us porta de tornada al cor del poble, al Pla de Masset. Allà els cinc
           elements s&apos;ajunten en un darrer ritual que ho decidirà tot.
         </p>
-        <p className="text-pretty text-xl italic leading-snug text-gold" style={VITRINA}>
+        <p className="text-pretty text-base sm:text-xl italic leading-snug text-gold" style={VITRINA}>
           Sigueu els Guardians del Secret i conjureu la fórmula de l&apos;alquímia secreta.
         </p>
       </Pantalla>

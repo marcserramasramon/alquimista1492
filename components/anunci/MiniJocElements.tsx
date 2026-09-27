@@ -108,10 +108,11 @@ export function MiniJocElements() {
   }
 
   return (
-    <div className="mx-auto flex w-full flex-col items-center gap-3 px-6">
+    <div className="mx-auto flex w-full flex-col items-center gap-3">
       <svg
         viewBox={`0 0 ${MIDA} ${MIDA}`}
-        className="mx-auto aspect-square w-full max-w-[560px]"
+        className="mx-auto aspect-square max-w-[560px] rounded-full bg-paper/90 shadow-[0_6px_0_var(--ink)]"
+        style={{ width: "min(100%, 34vh)" }}
         role="img"
         aria-label={`El Gresol dels Cinc Elements: ${fusionats} de ${ORDRE.length} fosos`}
       >
@@ -249,7 +250,7 @@ export function MiniJocElements() {
         })}
       </svg>
 
-      <p className="text-center text-sm italic text-ink-soft">
+      <p className="px-6 text-center text-sm italic text-paper">
         {complet ? "Els cinc elements, fosos en un de sol." : "Toqueu els cinc elements, en l'ordre que vulgueu."}
       </p>
 

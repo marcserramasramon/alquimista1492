@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
 import { disposarRunesCercle } from "./runes";
@@ -74,6 +74,29 @@ function opacitatGresol(resolts: number, total: number, sempreVisible: boolean) 
   if (sempreVisible || total === 0 || resolts >= total) return 1;
   const fraccio = resolts / Math.max(total - 1, 1);
   return OPACITAT_GRESOL_MIN + (OPACITAT_GRESOL_QUASI - OPACITAT_GRESOL_MIN) * fraccio;
+}
+
+/** Nombre màxim de reintents si una icona no arriba a carregar (xarxa mòbil al carrer). */
+const MAX_REINTENTS_ICONA = 3;
+
+/**
+ * Icona SVG amb reintent: si la imatge no carrega (xarxa inestable jugant al carrer), el
+ * navegador no en torna a provar sol perquè l'`href` no canvia. Cada error demana la
+ * mateixa imatge amb un paràmetre nou perquè el navegador la torni a sol·licitar.
+ */
+function IconaAmbReintent({ href, ...props }: React.SVGProps<SVGImageElement> & { href: string }) {
+  const [reintent, setReintent] = useState(0);
+  return (
+    <image
+      {...props}
+      href={reintent === 0 ? href : `${href}?r=${reintent}`}
+      onError={() => {
+        if (reintent < MAX_REINTENTS_ICONA) {
+          setTimeout(() => setReintent((n) => n + 1), 600 * (reintent + 1));
+        }
+      }}
+    />
+  );
 }
 
 /**
@@ -168,7 +191,7 @@ export function Pentagrama({
       {/* Gresol central: la gemma del logo (pentàgon robí, app/pantalles/logo/LogoPentagrama.tsx) */}
       <g style={{ opacity: opacitatCentre, transition: "opacity 1.2s ease" }}>
         <circle cx={C} cy={C} r={29} fill={centreActiu ? "#eab308" : "#e9d5a6"} />
-        <image href="/images/logo/pentagon-robi.webp" x={C - 28} y={C - 28} width={56} height={56} />
+        <IconaAmbReintent href="/images/logo/pentagon-robi.webp" x={C - 28} y={C - 28} width={56} height={56} />
       </g>
       {/* Zona de toc del centre, més gran que el gresol perquè s'encerti amb el dit. */}
       <circle cx={C} cy={C} r={42} fill="transparent" onClick={tocarCentre} />
@@ -209,7 +232,7 @@ export function Pentagrama({
               strokeWidth={viu ? 6 : 3}
               strokeDasharray={node.disponible ? undefined : "4 4"}
             />
-            <image
+            <IconaAmbReintent
               href={element.icona}
               x={x - 17}
               y={y - 17}
