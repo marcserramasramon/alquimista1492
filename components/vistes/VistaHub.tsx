@@ -100,7 +100,7 @@ export function VistaHub({
       // a iOS, deixaria de comptar com a arrel de la pàgina — l'espai de la càmera (safe
       // area, viewport-fit=cover) hi tornaria encara que la barra el descompti bé. El
       // contenidor de sota (overflow-y-auto) ja reté tot el que pugui sobrar.
-      className="mx-auto flex w-full max-w-md flex-col px-4 pt-2"
+      className="mx-auto flex w-full max-w-md flex-col gap-4 px-4 pt-2"
     >
       {/* Sense compte enrere, la casella dels elements fa ella sola la franja de dalt. */}
       {rellotge === "no" && (
@@ -122,7 +122,7 @@ export function VistaHub({
             triada n'ocupa el lloc, amb la mateixa alçada. */}
         <section
           ref={zonaRef}
-          className="targeta relative -mx-1 shrink-0 animate-entrar scroll-mt-10 overflow-hidden px-1 pb-2 pt-3 [animation-delay:80ms]"
+          className="targeta relative -mx-1 shrink-0 animate-entrar scroll-mt-10 overflow-hidden px-1 pb-2 pt-0 [animation-delay:80ms]"
         >
           <div className={seleccionada ? "invisible" : undefined}>
             <Pentagrama
