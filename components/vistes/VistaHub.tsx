@@ -55,6 +55,13 @@ export function VistaHub({
     resolt: e.progres.resolta,
     disponible: e.disponible,
   }));
+  // Fase 1: mentre la fita encara és amagada, la seva punta porta al pas previ que la revela
+  // (tocar l'Aire obre la fitxa de la Creu del Pujolar). Quan el pas s'obre, la fita real ja
+  // surt a `estacions` i la punta hi porta directament (fase 2).
+  for (const pas of estacions) {
+    if (pas.tipus !== "pas" || !pas.element || nodes.some((n) => n.element === pas.element)) continue;
+    nodes.push({ id: pas.id, element: pas.element, resolt: false, disponible: pas.disponible });
+  }
   const visibles = estacions.filter((e) => e.tipus !== "especial" || totesResoltes);
   const seleccionada = estacions.find((e) => e.id === seleccionadaId) ?? null;
 
@@ -113,6 +120,7 @@ export function VistaHub({
             <FitxaFita
               key={seleccionada.id}
               estacio={seleccionada}
+              teniaPasPrevi={estacions.some((e) => e.tipus === "pas" && e.desbloqueja === seleccionada.id)}
               acabadaDarribar={seleccionada.id === fitaArribadaId}
               onTancar={() => setSeleccionadaId(null)}
               onAnar={() => onAnarEstacio(seleccionada)}
@@ -245,11 +253,14 @@ function CasellaElements({ resoltes, total }: { resoltes: number; total: number 
  */
 function FitxaFita({
   estacio,
+  teniaPasPrevi,
   acabadaDarribar,
   onTancar,
   onAnar,
 }: {
   estacio: EstacioMapa;
+  /** La fita s'ha revelat a través d'un pas previ (fase 2 d'una fita en dos punts, com l'Aire). */
+  teniaPasPrevi: boolean;
   acabadaDarribar: boolean;
   onTancar: () => void;
   onAnar: () => void;
@@ -261,6 +272,13 @@ function FitxaFita({
   // Un pas previ queda "resolt" en el mateix moment d'obrir-se (docs/app-nova.md § Passos previs):
   // l'avís s'ha de veure igualment, no només quan encara no s'ha "resolt".
   const mostrarAvis = acabadaDarribar && (esPas || !resolta);
+  // Fita en dos punts (docs/fites-nova.md § AIRE): fase 1 = el pas previ, fase 2 = l'enigma.
+  const fase = esPas ? 1 : teniaPasPrevi ? 2 : null;
+  const tancada = estacio.oberta === false && !resolta;
+  const queFer =
+    esPas && tancada
+      ? `Aneu a la ${estacio.nom} i escanegeu el QR del cartell: us revelarà on és de debò la fita.`
+      : estacio.entrada;
 
   return (
     <div role="region" aria-label={estacio.nom} className="absolute inset-0 flex animate-entrar flex-col bg-paper">
@@ -293,6 +311,7 @@ function FitxaFita({
         <div className="min-w-0 flex-1">
           <p className="etiqueta" style={{ color: element ? color : undefined }}>
             {element?.nom ?? (estacio.tipus === "especial" ? "Ritual final" : "Pas previ")}
+            {fase && ` · pas ${fase} de 2`}
           </p>
           <h3 className="text-[1.75rem] font-extrabold leading-[1.1]">{estacio.nom}</h3>
         </div>
@@ -308,8 +327,14 @@ function FitxaFita({
           style={{ borderLeftWidth: 10, borderLeftColor: color }}
         >
           <p className="etiqueta mb-0.5 text-xs">què heu de fer</p>
-          <p className="text-xl font-extrabold leading-snug">{estacio.entrada}</p>
+          <p className="text-xl font-extrabold leading-snug">{queFer}</p>
         </div>
+        {fase === 2 && tancada && (
+          <p className="mt-2 flex gap-1.5 text-base leading-snug text-ink-soft">
+            <span aria-hidden>📷</span>
+            <span>En arribar-hi, el GPS obrirà la fita; si no, escanegeu el QR del cartell.</span>
+          </p>
+        )}
         {estacio.situacio && (
           <p className="mt-2 flex gap-1.5 text-base leading-snug text-ink-soft">
             <span aria-hidden>📍</span>
@@ -327,12 +352,16 @@ function FitxaFita({
           {!estacio.disponible
             ? "🔒 Properament"
             : resolta
-              ? "✓ Ja resolta · Tornar-hi"
-              : estacio.tipus === "especial"
-                ? "Començar el ritual →"
-                : estacio.oberta === false
-                  ? "Hi som! Obrir la fita →"
-                  : "Entrar a la fita →"}
+              ? esPas
+                ? "✓ Ja hi heu estat · Tornar-hi"
+                : "✓ Ja resolta · Tornar-hi"
+              : esPas && tancada
+                ? "📷 Hi som! Escanejar el QR →"
+                : estacio.tipus === "especial"
+                  ? "Començar el ritual →"
+                  : estacio.oberta === false
+                    ? "Hi som! Obrir la fita →"
+                    : "Entrar a la fita →"}
         </button>
       </div>
     </div>

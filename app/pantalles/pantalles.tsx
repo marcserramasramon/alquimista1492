@@ -126,9 +126,11 @@ function hub(
  * previ. Pantalla de regressió: Pentagrama ha de dibuixar-hi les cinc puntes igualment
  * (abans, en desaparèixer un node, l'estrella s'encongia en una creu de quatre puntes).
  */
-function hubAireAmagat() {
+function hubAireAmagat(fase: 1 | 2 = 1) {
+  // Fase 2: el pas previ ja és obert i la fita real de l'Aire ja surt (encara tancada).
+  const pasObert = fase === 2;
   const estacions: EstacioMapa[] = [
-    ...estacionsAmbProgres(RESOLTES_MITJA_PARTIDA).filter((e) => e.id !== "aire"),
+    ...estacionsAmbProgres(RESOLTES_MITJA_PARTIDA).filter((e) => pasObert || e.id !== "aire"),
     ...getPassosPrevis().map((p) => ({
       id: p.id,
       nom: p.nom,
@@ -140,8 +142,8 @@ function hubAireAmagat() {
       disponible: p.disponible,
       element: p.element,
       desbloqueja: p.desbloqueja,
-      oberta: false,
-      progres: { resolta: false },
+      oberta: pasObert,
+      progres: { resolta: pasObert },
     })),
   ];
   return (
@@ -151,6 +153,7 @@ function hubAireAmagat() {
       onAnarEstacio={noop}
       onAnarFinal={noop}
       onLlegirMissatge={noop}
+      seleccionadaInicialId={fase === 2 ? "aire" : null}
       marcadors={[]}
     />
   );
@@ -535,7 +538,14 @@ export const PANTALLES: Pantalla[] = [
     grup: "hub",
     titol: "Hub · l'Aire encara amagat",
     descripcio: "Regressió: l'Aire no s'ha revelat (pas previ tancat) — el pentagrama hi ha de mostrar 5 puntes igualment.",
-    render: hubAireAmagat,
+    render: () => hubAireAmagat(1),
+  },
+  {
+    id: "hub-aire-fase-2",
+    grup: "hub",
+    titol: "Hub · l'Aire, pas 2 de 2",
+    descripcio: "El QR de la Creu del Pujolar ja s'ha escanejat: la fitxa de l'Aire porta a la fita real (Serrat de la Creu).",
+    render: () => hubAireAmagat(2),
   },
   {
     id: "hub-mitja-partida",
