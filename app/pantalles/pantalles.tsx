@@ -14,7 +14,7 @@
  */
 
 import type { ReactNode } from "react";
-import { getEstacio, getEstacionsJugables, getEstacionsOrdenades, type Estacio } from "@/content/public/estacions";
+import { getEstacio, getEstacionsJugables, getEstacionsOrdenades, getPassosPrevis, type Estacio } from "@/content/public/estacions";
 import type { EstacioMapa, MarcadorMapa } from "@/components/player/MapaEquip";
 import { VistaUbicacio } from "@/components/vistes/VistaUbicacio";
 import { VistaBenvinguda } from "@/components/vistes/VistaBenvinguda";
@@ -116,6 +116,42 @@ function hub(
       seleccionadaInicialId={seleccionadaInicialId}
       marcadors={marcadors}
       fitaArribadaId={fitaArribadaId}
+    />
+  );
+}
+
+/**
+ * Reprodueix app/api/estat/route.ts: mentre l'Aire no s'ha obert pel seu pas previ, la fita
+ * real "aire" no surt a `estacions` (se n'amaguen les coordenades) i només hi surt el pas
+ * previ. Pantalla de regressió: Pentagrama ha de dibuixar-hi les cinc puntes igualment
+ * (abans, en desaparèixer un node, l'estrella s'encongia en una creu de quatre puntes).
+ */
+function hubAireAmagat() {
+  const estacions: EstacioMapa[] = [
+    ...estacionsAmbProgres(RESOLTES_MITJA_PARTIDA).filter((e) => e.id !== "aire"),
+    ...getPassosPrevis().map((p) => ({
+      id: p.id,
+      nom: p.nom,
+      entrada: p.entrada,
+      situacio: p.situacio,
+      latitud: p.latitud,
+      longitud: p.longitud,
+      tipus: "pas" as const,
+      disponible: p.disponible,
+      element: p.element,
+      desbloqueja: p.desbloqueja,
+      oberta: false,
+      progres: { resolta: false },
+    })),
+  ];
+  return (
+    <VistaHub
+      estacions={estacions}
+      totesResoltes={false}
+      onAnarEstacio={noop}
+      onAnarFinal={noop}
+      onLlegirMissatge={noop}
+      marcadors={[]}
     />
   );
 }
@@ -493,6 +529,13 @@ export const PANTALLES: Pantalla[] = [
     titol: "Hub · inici",
     descripcio: "Cap fita resolta.",
     render: () => hub([]),
+  },
+  {
+    id: "hub-aire-amagat",
+    grup: "hub",
+    titol: "Hub · l'Aire encara amagat",
+    descripcio: "Regressió: l'Aire no s'ha revelat (pas previ tancat) — el pentagrama hi ha de mostrar 5 puntes igualment.",
+    render: hubAireAmagat,
   },
   {
     id: "hub-mitja-partida",

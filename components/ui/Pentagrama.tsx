@@ -114,7 +114,13 @@ export function Pentagrama({
   className = "",
   imprès,
 }: PentagramaProps) {
-  const nodes = [...nodesDonats].sort((a, b) => ORDRE.indexOf(a.element) - ORDRE.indexOf(b.element));
+  // Sempre es dibuixen les cinc puntes en posició fixa: si una fita encara no s'ha revelat
+  // (p. ex. l'Aire, amagat fins que l'equip obre el seu pas previ — app/api/estat/route.ts),
+  // hi surt bloquejada en el seu lloc en lloc de desaparèixer. Si desapareixés, `vertex(i)`
+  // (que sempre reparteix 360° en cinc trossos de 72°) encongiria l'estrella en una creu.
+  const nodes: NodePentagrama[] = ORDRE.map(
+    (element) => nodesDonats.find((n) => n.element === element) ?? { id: element, element, resolt: false, disponible: false },
+  );
   const punts = nodes.map((_, i) => vertex(i));
   const resolts = nodes.filter((n) => n.resolt).length;
   const opacitatCentre = opacitatGresol(resolts, nodes.length, vius || centreActiu);
