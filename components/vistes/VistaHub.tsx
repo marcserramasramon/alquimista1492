@@ -114,12 +114,9 @@ export function VistaHub({
           com la resta de l'app (globals.css). `overflow-y-auto` fa que l'eix x deixi de
           ser `visible` (deixa de ser "auto" el que no s'ha dit): cal fer-hi lloc amb
           `-mx-1 px-1` perquè les targetes de sota, que sobresurten `-mx-1` del marge,
-          no quedin retallades pels costats. La roda i el mapa són quadrats (amplada fixa),
-          així que gairebé mai omplen tota l'alçada disponible: `justify-between` enganxa
-          el primer a dalt i l'últim a baix i envia tot l'espai sobrant al `gap` del mig,
-          en lloc de deixar-lo com un marge buit a dalt o a baix de la pantalla. */}
+          no quedin retallades pels costats. */}
       <div
-        className={`-mx-1 flex min-h-0 flex-1 flex-col justify-between gap-3 overflow-y-auto overscroll-contain px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${totesResoltes ? "pb-32" : "pb-[max(0.5rem,env(safe-area-inset-bottom))]"}`}
+        className={`-mx-1 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${totesResoltes ? "pb-32" : "pb-[max(0.5rem,env(safe-area-inset-bottom))]"}`}
       >
         {/* Progrés: el pentagrama s'encén a mesura que es resolen les fites. La fitxa de la fita
             triada n'ocupa el lloc, amb la mateixa alçada. */}
