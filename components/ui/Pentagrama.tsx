@@ -210,7 +210,8 @@ export function Pentagrama({
         const { x, y } = punts[i];
         const element = ELEMENTS[node.element];
         const seleccionat = node.id === seleccionatId;
-        const clicable = Boolean(onTriar);
+        // Una punta encara no revelada (no ve a `nodesDonats`) no té fitxa per obrir: no es pot tocar.
+        const clicable = Boolean(onTriar) && nodesDonats.some((n) => n.id === node.id);
         const viu = node.resolt || vius;
         return (
           <g
@@ -226,6 +227,8 @@ export function Pentagrama({
             role={clicable ? "button" : undefined}
             tabIndex={clicable ? 0 : undefined}
             aria-label={clicable ? `${element.nom}${node.resolt ? ", resolta" : ""}` : undefined}
+            // Sense el requadre de focus en tocar amb el dit; amb teclat (focus-visible) sí que surt.
+            className="[&:focus:not(:focus-visible)]:outline-none"
             style={{ cursor: clicable ? "pointer" : undefined }}
           >
             {seleccionat && (
