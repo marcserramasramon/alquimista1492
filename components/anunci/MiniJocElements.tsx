@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
-import { GLIFS_RUNES, INSCRIPCIO_RUNES } from "@/components/ui/runes";
+import { disposarRunesCercle } from "@/components/ui/runes";
 
 type EstatNode = "esperant" | "volant" | "fusionat";
 
@@ -48,36 +48,6 @@ function espiral(desti: { x: number; y: number }, mostres = 26, voltes = 1.2) {
   return trams.join(" ");
 }
 
-/**
- * Disposa la inscripció de runes (mateixos glifs que `components/ui/MarcRunes.tsx`)
- * al llarg d'un cercle de radi `radi`, repetint-la fins tancar la volta sencera.
- */
-function disposarRunesCercle(radi: number, alcada: number) {
-  const escala = alcada / 100;
-  const frase = [...INSCRIPCIO_RUNES].map((ch) => GLIFS_RUNES[ch]);
-  const circumferencia = 2 * Math.PI * radi;
-  const llargadaFrase = frase.reduce((s, g) => s + g.amplada * escala + SEPARACIO_RUNES, 0);
-  const repeticions = Math.max(1, Math.round(circumferencia / llargadaFrase));
-  const estirar = circumferencia / (repeticions * llargadaFrase);
-  const glifs: { key: string; d: string; transform: string }[] = [];
-  let s = 0;
-  let idx = 0;
-  for (let i = 0; i < repeticions; i++) {
-    for (const g of frase) {
-      const pas = (g.amplada * escala + SEPARACIO_RUNES) * estirar;
-      const angle = ((s + pas / 2) / circumferencia) * 360;
-      const transform =
-        `rotate(${angle.toFixed(2)} ${C} ${C}) ` +
-        `translate(${C} ${(C - radi).toFixed(2)}) ` +
-        `scale(${escala.toFixed(3)}) ` +
-        `translate(${(-g.amplada / 2).toFixed(2)} 0)`;
-      glifs.push({ key: `r${idx++}`, d: g.d, transform });
-      s += pas;
-    }
-  }
-  return glifs;
-}
-
 function estatInicial(): Record<Element, EstatNode> {
   return { aigua: "esperant", terra: "esperant", foc: "esperant", aire: "esperant", anima: "esperant" };
 }
@@ -93,9 +63,13 @@ function estatInicial(): Record<Element, EstatNode> {
 export function MiniJocElements() {
   const [estats, setEstats] = useState<Record<Element, EstatNode>>(estatInicial);
   const [revelat, setRevelat] = useState(false);
+  const [fumActiu, setFumActiu] = useState(false);
   const punts = useMemo(() => ORDRE.map((_, i) => vertex(i)), []);
   const camins = useMemo(() => punts.map((p) => espiral(p)), [punts]);
-  const runesAnell = useMemo(() => disposarRunesCercle(R_RUNES, ALCADA_RUNES), []);
+  const runesAnell = useMemo(
+    () => disposarRunesCercle(C, C, R_RUNES, ALCADA_RUNES, { separacio: SEPARACIO_RUNES }),
+    [],
+  );
 
   const fusionats = ORDRE.filter((e) => estats[e] === "fusionat").length;
   const complet = fusionats === ORDRE.length;
@@ -104,6 +78,17 @@ export function MiniJocElements() {
   useEffect(() => {
     if (!complet) return;
     const temporitzador = setTimeout(() => setRevelat(true), RETARD_REVELACIO_MS);
+    return () => clearTimeout(temporitzador);
+  }, [complet]);
+
+  // El fum acompanya el flaix i s'esvaeix una mica després que aparegui la gemma.
+  useEffect(() => {
+    if (!complet) {
+      setFumActiu(false);
+      return;
+    }
+    setFumActiu(true);
+    const temporitzador = setTimeout(() => setFumActiu(false), 1200);
     return () => clearTimeout(temporitzador);
   }, [complet]);
 
@@ -119,6 +104,7 @@ export function MiniJocElements() {
   function reiniciar() {
     setEstats(estatInicial());
     setRevelat(false);
+    setFumActiu(false);
   }
 
   return (
@@ -134,6 +120,9 @@ export function MiniJocElements() {
             <stop offset="0%" stopColor="#eab308" stopOpacity="0.85" />
             <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
           </radialGradient>
+          <filter id="anunci-fum-difuminat" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="10" />
+          </filter>
         </defs>
 
         {/* Anell exterior de runes, girant sense parar */}
@@ -167,11 +156,40 @@ export function MiniJocElements() {
               y={C - 125}
               width={250}
               height={250}
-              className="animate-revelar"
+              className="animate-gemma-girar"
+              style={{ transformOrigin: `${C}px ${C}px`, transformBox: "view-box" }}
             />
           )}
           {complet && !revelat && (
             <circle cx={C} cy={C} r={95} fill="#fff8e1" className="animate-esclat" />
+          )}
+          {fumActiu && (
+            <g filter="url(#anunci-fum-difuminat)" opacity={0.8}>
+              <circle
+                cx={C}
+                cy={C}
+                r={46}
+                fill="#f5f2e9"
+                className="animate-fum"
+                style={{ transformOrigin: `${C}px ${C}px`, transformBox: "view-box" }}
+              />
+              <circle
+                cx={C - 24}
+                cy={C + 14}
+                r={32}
+                fill="#e9e3d3"
+                className="animate-fum"
+                style={{ transformOrigin: `${C - 24}px ${C + 14}px`, transformBox: "view-box", animationDelay: "120ms" }}
+              />
+              <circle
+                cx={C + 28}
+                cy={C - 10}
+                r={36}
+                fill="#efe9da"
+                className="animate-fum"
+                style={{ transformOrigin: `${C + 28}px ${C - 10}px`, transformBox: "view-box", animationDelay: "260ms" }}
+              />
+            </g>
           )}
         </g>
 

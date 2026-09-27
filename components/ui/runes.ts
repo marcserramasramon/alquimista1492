@@ -25,3 +25,47 @@ export const GLIFS_RUNES: Record<string, { d: string; amplada: number }> = {
   "t": { amplada: 74.9, d: "M43.5 -11.4 48.9 -2.5 36.5 3.6 31.3 -5.1 30.7 -82.5 6.2 -63.8 1.2 -69.2 12 -76.9 12.7 -76.1 38.3 -96.4 68.7 -74.1 70.1 -75.3 74.2 -71.7 64.7 -63 43.5 -78.5Z" },
   "u": { amplada: 74.9, d: "M55.8 -56.2 19.2 -74.1V-11.4L24.5 -2.5L12.2 3.6L6.9 -5.1V-81.4L1.6 -90L13.9 -96.4L19.3 -87.5L68 -62.2V-11.4L73.4 -2.5L61 3.6L55.8 -5.1Z" },
 };
+
+export interface RunaPosicionada {
+  key: string;
+  d: string;
+  transform: string;
+}
+
+/**
+ * Disposa la inscripció de runes (per defecte `INSCRIPCIO_RUNES`) al llarg d'un cercle de
+ * radi `radi` centrat a (`cx`, `cy`), repetint-la fins tancar la volta sencera. `alcada` és
+ * l'alçada en px de cada runa. Ho fan servir `MiniJocElements` i `Pentagrama`.
+ */
+export function disposarRunesCercle(
+  cx: number,
+  cy: number,
+  radi: number,
+  alcada: number,
+  opcions: { separacio?: number; inscripcio?: string } = {},
+): RunaPosicionada[] {
+  const { separacio = 5, inscripcio = INSCRIPCIO_RUNES } = opcions;
+  const escala = alcada / 100;
+  const frase = [...inscripcio].map((ch) => GLIFS_RUNES[ch]);
+  const circumferencia = 2 * Math.PI * radi;
+  const llargadaFrase = frase.reduce((s, g) => s + g.amplada * escala + separacio, 0);
+  const repeticions = Math.max(1, Math.round(circumferencia / llargadaFrase));
+  const estirar = circumferencia / (repeticions * llargadaFrase);
+  const glifs: RunaPosicionada[] = [];
+  let s = 0;
+  let idx = 0;
+  for (let i = 0; i < repeticions; i++) {
+    for (const g of frase) {
+      const pas = (g.amplada * escala + separacio) * estirar;
+      const angle = ((s + pas / 2) / circumferencia) * 360;
+      const transform =
+        `rotate(${angle.toFixed(2)} ${cx} ${cy}) ` +
+        `translate(${cx} ${(cy - radi).toFixed(2)}) ` +
+        `scale(${escala.toFixed(3)}) ` +
+        `translate(${(-g.amplada / 2).toFixed(2)} 0)`;
+      glifs.push({ key: `r${idx++}`, d: g.d, transform });
+      s += pas;
+    }
+  }
+  return glifs;
+}

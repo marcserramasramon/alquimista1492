@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
+import { disposarRunesCercle } from "./runes";
 
 export interface NodePentagrama {
   id: string;
@@ -32,6 +33,15 @@ const C = MIDA / 2;
 const R_NODE = 100;
 const R_ANELL = 136;
 const MIDA_NODE = 27;
+
+/** Amplada de la banda entre l'anell exterior i l'interior, on hi viu la inscripció de runes. */
+const R_ANELL_INTERIOR = R_ANELL - 24;
+const MARGE_RUNES = 2;
+const ALCADA_RUNES_BASE = R_ANELL - R_ANELL_INTERIOR - 2 * MARGE_RUNES;
+const R_RUNES = R_ANELL_INTERIOR + MARGE_RUNES;
+const SEPARACIO_RUNES = 2;
+/** `imprès.midaText` (per defecte 13) escala l'alçada de les runes igual que abans escalava el `fontSize`. */
+const MIDA_TEXT_BASE = 13;
 
 /** Posició de cada element a l'estrella: comença per la punta de dalt i va en sentit horari. */
 const ORDRE: Element[] = ["foc", "terra", "anima", "aire", "aigua"];
@@ -87,6 +97,11 @@ export function Pentagrama({
   const opacitatCentre = opacitatGresol(resolts, nodes.length, vius || centreActiu);
   const router = useRouter();
   const tocs = useRef({ n: 0, darrer: 0 });
+  const alcadaRunes = imprès ? (ALCADA_RUNES_BASE * (imprès.midaText ?? MIDA_TEXT_BASE)) / MIDA_TEXT_BASE : ALCADA_RUNES_BASE;
+  const runesAnell = useMemo(
+    () => disposarRunesCercle(C, C, R_RUNES, alcadaRunes, { separacio: SEPARACIO_RUNES }),
+    [alcadaRunes],
+  );
 
   function tocarCentre() {
     const ara = Date.now();
@@ -107,10 +122,6 @@ export function Pentagrama({
       aria-label={`Pentagrama: ${nodes.filter((n) => n.resolt).length} de ${nodes.length} elements`}
     >
       <defs>
-        <path
-          id="anell-text"
-          d={`M ${C} ${C - R_ANELL + 12} a ${R_ANELL - 12} ${R_ANELL - 12} 0 1 1 -0.01 0`}
-        />
         <radialGradient id="brillantor">
           <stop offset="0%" stopColor="#eab308" stopOpacity="0.85" />
           <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
@@ -120,21 +131,15 @@ export function Pentagrama({
         </filter>
       </defs>
 
-      {/* Anell exterior amb el lloc i l'any */}
+      {/* Anell exterior amb la inscripció de runes (mateix alfabet que components/ui/MarcRunes.tsx) */}
       <g className={girar ? "animate-girar" : undefined} style={{ transformOrigin: `${C}px ${C}px` }}>
         <circle cx={C} cy={C} r={R_ANELL} fill="none" stroke="#1b1511" strokeWidth={3} />
         <circle cx={C} cy={C} r={R_ANELL - 24} fill="none" stroke="#1b1511" strokeWidth={1.5} />
-        <text
-          fontFamily="var(--font-alegreya-sans-sc), sans-serif"
-          fontWeight={700}
-          fontSize={imprès?.midaText ?? 13}
-          letterSpacing={3}
-          fill={imprès ? "#1b1511" : "#5a4a3c"}
-        >
-          <textPath href="#anell-text" textLength={2 * Math.PI * (R_ANELL - 12) - 6}>
-            sentfores ✦ mcdlxxii ✦ sentfores ✦ mcdlxxii ✦
-          </textPath>
-        </text>
+        <g fill={imprès ? "#1b1511" : "#5a4a3c"} opacity={0.9}>
+          {runesAnell.map((r) => (
+            <path key={r.key} d={r.d} transform={r.transform} />
+          ))}
+        </g>
       </g>
 
       {centreActiu && <circle cx={C} cy={C} r={110} fill="url(#brillantor)" />}

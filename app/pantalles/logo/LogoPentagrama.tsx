@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ReactNode } from "react";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
+import { disposarRunesCercle } from "@/components/ui/runes";
 
 /** "transparent" o un color hexadecimal. */
 const FONS_TRIABLES = [
@@ -127,35 +128,6 @@ async function urlADataUrl(url: string): Promise<string> {
   return llegirComDataUrl(await res.blob());
 }
 
-/**
- * Busca la @font-face que next/font ha generat per a la família i la retorna
- * amb el fitxer incrustat, perquè el text de l'anell surti igual a l'SVG exportat.
- */
-async function fontFaceIncrustada(familia: string): Promise<string> {
-  const nom = familia.split(",")[0].trim().replace(/^['"]|['"]$/g, "");
-  for (const full of Array.from(document.styleSheets)) {
-    let regles: CSSRuleList;
-    try {
-      regles = full.cssRules;
-    } catch {
-      continue;
-    }
-    for (const regla of Array.from(regles)) {
-      if (!(regla instanceof CSSFontFaceRule)) continue;
-      const fam = regla.style.getPropertyValue("font-family").replace(/['"]/g, "").trim();
-      if (fam !== nom) continue;
-      // next/font parteix la font en subconjunts; només ens cal el llatí bàsic.
-      const rang = regla.style.getPropertyValue("unicode-range");
-      if (rang && !/^U\+0+-FF\b/i.test(rang)) continue;
-      const url = regla.style.getPropertyValue("src").match(/url\(["']?([^"')]+)["']?\)/)?.[1];
-      if (!url) continue;
-      const dades = await urlADataUrl(new URL(url, full.href ?? location.href).href);
-      return `@font-face{font-family:'${nom}';font-weight:700;src:url(${dades}) format('woff2');}`;
-    }
-  }
-  return "";
-}
-
 function descarregar(href: string, nom: string) {
   const a = document.createElement("a");
   a.href = href;
@@ -170,29 +142,19 @@ function vertex(i: number) {
 
 function LogoSvg({ c }: { c: Config }) {
   const punts = ORDRE.map((_, i) => vertex(i));
-  // Línia base del text: centrada entre els dos anells encara que canviï la mida.
-  const rText = R_ANELL - 12 - (c.midaText - 13) * 0.35;
+  // Radi de la base de les runes: centrat entre els dos anells encara que canviï la mida.
+  const radiRunes = R_ANELL_INTERIOR + (R_ANELL - R_ANELL_INTERIOR - c.midaText) / 2;
   const src = CENTRES[c.centre].src;
   return (
     <svg viewBox={`0 0 ${MIDA} ${MIDA}`} className="block w-full" role="img" aria-label="Logo: pentagrama">
-      <defs>
-        <path id="logo-anell-text" d={`M ${C} ${C - rText} a ${rText} ${rText} 0 1 1 -0.01 0`} />
-      </defs>
-
       <circle cx={C} cy={C} r={R_ANELL} fill="none" stroke={c.linies} strokeWidth={c.gruixAnellExterior} />
       <circle cx={C} cy={C} r={R_ANELL_INTERIOR} fill="none" stroke={c.linies} strokeWidth={c.gruixAnellInterior} />
       {c.ambText && (
-        <text
-          fontFamily="var(--font-alegreya-sans-sc), sans-serif"
-          fontWeight={700}
-          fontSize={c.midaText}
-          letterSpacing={3}
-          fill="#5a4a3c"
-        >
-          <textPath href="#logo-anell-text" textLength={2 * Math.PI * rText - 6}>
-            sentfores ✦ mcdlxxii ✦ sentfores ✦ mcdlxxii ✦
-          </textPath>
-        </text>
+        <g fill="#5a4a3c" opacity={0.9}>
+          {disposarRunesCercle(C, C, radiRunes, c.midaText).map((r) => (
+            <path key={r.key} d={r.d} transform={r.transform} />
+          ))}
+        </g>
       )}
 
       {/* L'opacitat va al grup: així els encreuaments no es pinten dues vegades. */}
@@ -290,16 +252,6 @@ export function LogoPentagrama() {
     );
 
     // La font de l'anell ve d'una variable CSS que fora de la pàgina no existeix.
-    let estil = "";
-    const text = clon.querySelector("text");
-    if (text) {
-      const familia = getComputedStyle(document.body).getPropertyValue("--font-alegreya-sans-sc").trim();
-      if (familia) {
-        text.setAttribute("font-family", `${familia}, sans-serif`);
-        estil = await fontFaceIncrustada(familia);
-      }
-    }
-
     const interior = mida * (1 - (2 * marge) / 100);
     const desplacament = (mida - interior) / 2;
     const r = (mida * radi) / 100;
@@ -313,7 +265,6 @@ export function LogoPentagrama() {
     return (
       `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ` +
       `width="${mida}" height="${mida}" viewBox="0 0 ${mida} ${mida}">` +
-      (estil ? `<style>${estil}</style>` : "") +
       rect +
       new XMLSerializer().serializeToString(clon) +
       `</svg>`
@@ -417,9 +368,9 @@ export function LogoPentagrama() {
         </Seccio>
 
         <Seccio titol="Anell">
-          <Casella titol="Text de l'anell" valor={config.ambText} onCanvi={(v) => canviar("ambText", v)} />
+          <Casella titol="Runes de l'anell" valor={config.ambText} onCanvi={(v) => canviar("ambText", v)} />
           {config.ambText && (
-            <Slider titol="Mida del text" min={8} max={24} valor={config.midaText} onCanvi={(v) => canviar("midaText", v)} />
+            <Slider titol="Mida de les runes" min={8} max={24} valor={config.midaText} onCanvi={(v) => canviar("midaText", v)} />
           )}
           <Slider
             titol="Gruix exterior"
