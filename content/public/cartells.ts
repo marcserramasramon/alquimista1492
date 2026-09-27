@@ -63,9 +63,9 @@ export const POEMES_CARTELLS: Record<string, PoemaCartell> = {
   // paràgraf junt amb el de l'enigma en un sol cartell; ara en són dos, un per punt físic.
   "aire-pas": {
     lema: "Abans de l'aire, cal seguir-ne el rastre.",
-    imatge: "/images/cartells/aire.jpg",
+    imatge: "/images/cartells/aire-pas.jpg",
     fons: "/images/cartells/fons/aire.jpg",
-    pendent: "Reaprofita la il·lustració del cartell de l'aire: falta una imatge pròpia per a aquest punt.",
+    pendent: "El fons vertical (estil `fons`) encara reaprofita el de l'aire: falta una versió pròpia.",
     paragrafs: [
       "Els devots de l'Orde em perseguien. Em vaig amagar rere els murs de pedra d'una masia oblidada, però cap pedra és prou forta per contenir l'essència de l'aire. Vaig fugir fins al cim del turó, allà on el vent en fa el seu element. No t'aturis: segueix amunt, cap a la creu vella, fins on la terra ja no pugui alçar-se més.",
     ],
