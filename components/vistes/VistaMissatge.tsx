@@ -4,11 +4,7 @@ import { Pentagrama } from "@/components/ui/Pentagrama";
 import { SegellCera } from "@/components/ui/SegellCera";
 import { MISSATGE_SECRET } from "@/content/public/textos";
 
-/**
- * PENDENT: il·lustració pròpia del missatge (p. ex. /images/missatge.webp). Mentre sigui
- * null es mostra el pentagrama dels cinc elements, que és el que el missatge anuncia.
- */
-export const IMATGE_MISSATGE: string | null = null;
+export const IMATGE_MISSATGE: string | null = "/missatge-secret.jpg";
 
 export interface VistaMissatgeProps {
   onContinuar: () => void;
@@ -23,11 +19,25 @@ export function VistaMissatge({ onContinuar, textContinuar = "Comencem →" }: V
       <div className="animate-entrar">
         <Marca petita />
       </div>
-      <div className="mx-auto animate-entrar [animation-delay:60ms]">
+      <div className="mx-auto w-full animate-entrar [animation-delay:60ms]">
         {IMATGE_MISSATGE ? (
-          <img src={IMATGE_MISSATGE} alt="" className="h-48 w-auto max-w-full object-contain" />
+          <div className="relative overflow-hidden rounded-2xl border-[3px] border-ink shadow-[0_6px_0_var(--ink)]">
+            <img
+              src={IMATGE_MISSATGE}
+              alt=""
+              className="h-40 w-full object-cover"
+              style={{ filter: "sepia(0.8) saturate(1.1) contrast(1.1) brightness(1.08)" }}
+            />
+            {/* Capa daurada en multiply: allunya el violeta fred de l'original i l'acosta al pergamí */}
+            <div className="pointer-events-none absolute inset-0 bg-gold-deep opacity-[0.18] mix-blend-multiply" />
+            {/* Vinyeta per fondre els cantons amb el pergamí */}
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{ boxShadow: "inset 0 0 26px 10px rgb(27 21 17 / 0.35)" }}
+            />
+          </div>
         ) : (
-          <Pentagrama vius className="w-44" />
+          <Pentagrama vius className="mx-auto w-44" />
         )}
       </div>
       <Narracio text={MISSATGE_SECRET} etiqueta="missatge secret" className="animate-entrar [animation-delay:120ms]">
