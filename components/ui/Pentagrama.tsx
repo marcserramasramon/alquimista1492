@@ -210,8 +210,7 @@ export function Pentagrama({
         const { x, y } = punts[i];
         const element = ELEMENTS[node.element];
         const seleccionat = node.id === seleccionatId;
-        // Una punta encara no revelada (no ve a `nodesDonats`) no té fitxa per obrir: no es pot tocar.
-        const clicable = Boolean(onTriar) && nodesDonats.some((n) => n.id === node.id);
+        const clicable = Boolean(onTriar);
         const viu = node.resolt || vius;
         return (
           <g
