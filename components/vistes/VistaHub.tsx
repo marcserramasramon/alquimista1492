@@ -74,20 +74,20 @@ export function VistaHub({
 
   // Com que aquesta pantalla no fa scroll de pàgina, `100dvh` es queda desactualitzat a
   // Chrome/Android quan la barra d'adreces o la d'eines apareix o s'amaga (només es
-  // recalcula si el document arrel fa scroll): deixa un buit del color de fons a dalt o
-  // se sobreposa al mapa a baix. `visualViewport` sí que s'actualitza sempre; mentre no
-  // s'ha mesurat es fa servir el `100dvh` de CSS (primer render / sense JS).
+  // recalcula si el document arrel fa scroll, cosa que aquí no passa mai): deixa un buit
+  // del color de fons a dalt o a baix. `document.documentElement.clientHeight` és la
+  // mateixa font que `dvh` (per això les altres pantalles, que sí fan scroll, no ho
+  // pateixen); es torna a mesurar als events de resize perquè no depengui del scroll.
+  // Mentre no s'ha mesurat es fa servir el `100dvh` de CSS (primer render / sense JS).
   const [alcadaVisible, setAlcadaVisible] = useState<number | null>(null);
   useEffect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const actualitzar = () => setAlcadaVisible(vv.height);
+    const actualitzar = () => setAlcadaVisible(document.documentElement.clientHeight);
     actualitzar();
-    vv.addEventListener("resize", actualitzar);
-    vv.addEventListener("scroll", actualitzar);
+    window.addEventListener("resize", actualitzar);
+    window.visualViewport?.addEventListener("resize", actualitzar);
     return () => {
-      vv.removeEventListener("resize", actualitzar);
-      vv.removeEventListener("scroll", actualitzar);
+      window.removeEventListener("resize", actualitzar);
+      window.visualViewport?.removeEventListener("resize", actualitzar);
     };
   }, []);
 
