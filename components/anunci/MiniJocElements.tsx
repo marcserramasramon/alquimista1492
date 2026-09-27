@@ -1,20 +1,28 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
 import { GLIFS_RUNES, INSCRIPCIO_RUNES } from "@/components/ui/runes";
 
 type EstatNode = "esperant" | "volant" | "fusionat";
 
-const MIDA = 580;
+const MIDA = 620;
 const C = MIDA / 2;
 /** Mateixes proporcions que `components/ui/Pentagrama.tsx`: els elements a les puntes de l'estrella, dins l'anell. */
 const R_NODE = 209;
-const R_ANELL = 263;
-const R_RUNES = R_ANELL - 12;
-const ALCADA_RUNES = 28;
+const R_ANELL = 290;
+/** Distància entre el cercle gruixut (exterior) i el prim (interior): les runes hi han de cabre senceres al mig. */
+const GAP_ANELL = 46;
+const R_ANELL_INTERIOR = R_ANELL - GAP_ANELL;
+/** Marge dins la banda perquè cap runa toqui els cercles. */
+const MARGE_RUNES = 4;
+const ALCADA_RUNES = GAP_ANELL - 2 * MARGE_RUNES;
+/** Radi on comença (la base de) cada runa: creixen cap enfora, cap al cercle gruixut. */
+const R_RUNES = R_ANELL_INTERIOR + MARGE_RUNES;
 const SEPARACIO_RUNES = 5;
 const MIDA_NODE = 50;
+/** Temps que el flaix cobreix el Gresol abans de revelar la gemma (ha de quedar per sota de 0.9s, la durada de l'`esclat`). */
+const RETARD_REVELACIO_MS = 350;
 
 /** Mateix ordre i patró que `components/ui/Pentagrama.tsx`: la punta de dalt i sentit horari. */
 const ORDRE: Element[] = ["foc", "terra", "anima", "aire", "aigua"];
@@ -84,12 +92,20 @@ function estatInicial(): Record<Element, EstatNode> {
  */
 export function MiniJocElements() {
   const [estats, setEstats] = useState<Record<Element, EstatNode>>(estatInicial);
+  const [revelat, setRevelat] = useState(false);
   const punts = useMemo(() => ORDRE.map((_, i) => vertex(i)), []);
   const camins = useMemo(() => punts.map((p) => espiral(p)), [punts]);
   const runesAnell = useMemo(() => disposarRunesCercle(R_RUNES, ALCADA_RUNES), []);
 
   const fusionats = ORDRE.filter((e) => estats[e] === "fusionat").length;
   const complet = fusionats === ORDRE.length;
+
+  // Quan es fon el cinquè element: un flaix cobreix el Gresol i, en apagar-se, hi apareix la gemma.
+  useEffect(() => {
+    if (!complet) return;
+    const temporitzador = setTimeout(() => setRevelat(true), RETARD_REVELACIO_MS);
+    return () => clearTimeout(temporitzador);
+  }, [complet]);
 
   function tocar(element: Element) {
     if (estats[element] !== "esperant") return;
@@ -102,6 +118,7 @@ export function MiniJocElements() {
 
   function reiniciar() {
     setEstats(estatInicial());
+    setRevelat(false);
   }
 
   return (
@@ -122,7 +139,7 @@ export function MiniJocElements() {
         {/* Anell exterior de runes, girant sense parar */}
         <g className="animate-girar" style={{ transformOrigin: `${C}px ${C}px` }}>
           <circle cx={C} cy={C} r={R_ANELL} fill="none" stroke="#1b1511" strokeWidth={6} />
-          <circle cx={C} cy={C} r={R_ANELL - 24} fill="none" stroke="#1b1511" strokeWidth={3} />
+          <circle cx={C} cy={C} r={R_ANELL_INTERIOR} fill="none" stroke="#1b1511" strokeWidth={3} />
           <g fill="#5a4a3c" opacity={0.9}>
             {runesAnell.map((r) => (
               <path key={r.key} d={r.d} transform={r.transform} />
@@ -130,12 +147,32 @@ export function MiniJocElements() {
           </g>
         </g>
 
-        {complet && <circle cx={C} cy={C} r={150} fill="url(#anunci-brillantor)" />}
+        {complet && <circle cx={C} cy={C} r={175} fill="url(#anunci-brillantor)" />}
 
-        {/* Centre: el Gresol real del joc, sempre ben visible. */}
+        {/* Centre: el Gresol real del joc; en fondre's el cinquè element, un flaix el substitueix per la gemma. */}
         <g>
-          <circle cx={C} cy={C} r={55} fill={complet ? "#eab308" : "#e9d5a6"} style={{ transition: "fill 0.6s ease" }} />
-          <image href="/images/gresol.webp" x={C - 50} y={C - 50} width={100} height={100} />
+          <circle cx={C} cy={C} r={138} fill={complet ? "#eab308" : "#e9d5a6"} style={{ transition: "fill 0.6s ease" }} />
+          <image
+            href="/images/gresol.webp"
+            x={C - 125}
+            y={C - 125}
+            width={250}
+            height={250}
+            style={{ opacity: revelat ? 0 : 1, transition: "opacity 0.5s ease" }}
+          />
+          {revelat && (
+            <image
+              href="/images/logo/pentagon-robi.webp"
+              x={C - 125}
+              y={C - 125}
+              width={250}
+              height={250}
+              className="animate-revelar"
+            />
+          )}
+          {complet && !revelat && (
+            <circle cx={C} cy={C} r={95} fill="#fff8e1" className="animate-esclat" />
+          )}
         </g>
 
         {/* Puntes elementals: es toquen en qualsevol ordre */}
