@@ -41,8 +41,6 @@ const ELEMENT_CARTELL: Record<Element, string> = {
   anima: "anima",
 };
 
-const ELEMENTS_ORDRE: Element[] = ["aigua", "terra", "foc", "aire", "anima"];
-
 /** Vels sobre la imatge perquè el text es llegeixi: fosc (text clar) o de paper com el peu dels cartells (text fosc). */
 const VELS = {
   fosc: "linear-gradient(to top, rgb(27 21 17) 0%, rgb(27 21 17 / 0.88) 45%, rgb(27 21 17 / 0.55) 75%, rgb(27 21 17 / 0.15) 100%)",
@@ -79,9 +77,9 @@ function Pantalla({
       )}
       {vel === "fosc" && <div className="absolute inset-0" style={{ background: VELS.fosc }} />}
       {/* El vel de paper va enganxat al bloc de text: el cobreix sempre, sigui quina sigui la seva alçada. */}
-      <div className="relative z-10 w-full" style={vel === "paper" ? { background: VELS.paper } : undefined}>
+      <div className="relative z-10 w-full overflow-y-auto" style={vel === "paper" ? { background: VELS.paper } : undefined}>
         <div
-          className={`mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-5 pb-14 text-center ${imatge ? "pt-40" : "pt-14"}`}
+          className={`mx-auto flex w-full max-w-xl flex-col items-center gap-3 sm:gap-5 px-5 pb-8 sm:pb-14 text-center ${imatge ? "pt-28 sm:pt-40" : "pt-8 sm:pt-14"}`}
         >
           {children}
         </div>
@@ -96,77 +94,64 @@ function Etiqueta({ children }: { children: ReactNode }) {
 
 function TitolFosc({ children }: { children: ReactNode }) {
   return (
-    <h2 className="text-balance text-4xl font-extrabold leading-tight text-paper drop-shadow-[0_3px_8px_rgb(0_0_0_/_0.6)]">
+    <h2 className="text-balance text-3xl sm:text-4xl font-extrabold leading-tight text-paper drop-shadow-[0_3px_8px_rgb(0_0_0_/_0.6)]">
       {children}
     </h2>
-  );
-}
-
-/**
- * Els 5 elements com a 5 botons sense imatges: centrats verticalment a l'espai disponible.
- */
-function PantallaElements() {
-  return (
-    <div className="flex flex-row w-full max-w-2xl gap-2 justify-center items-center px-5 mx-auto">
-      {ELEMENTS_ORDRE.map((el) => {
-        const element = ELEMENTS[el];
-        const propagandaUrl = `/master/cartells?estil=propaganda&element=${el}`;
-        return (
-          <a
-            key={el}
-            href={propagandaUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex flex-col items-center justify-center aspect-square border-2 border-ink rounded-lg bg-ink/20 group transition-all duration-300 hover:scale-110 hover:bg-ink/40"
-          >
-            <h2
-              className="text-5xl font-extrabold leading-tight text-center transition-all duration-300"
-              style={{
-                color: element.color,
-                textShadow: "0 0 5px #f3e5c4, 0 0 10px #f3e5c4, 0 0 16px #f3e5c4",
-              }}
-            >
-              {element.nom}
-            </h2>
-          </a>
-        );
-      })}
-    </div>
   );
 }
 
 /** Les pantalles abans de les 5 fites, amb el color de cinta de cadascuna. */
 const PANTALLES_ABANS: { color: string; contingut: ReactNode }[] = [
   {
-    // La llegenda + el format: context de la trama + instruccions del joc, en una sola pantalla.
+    // La llegenda: context de la trama, en la seva pròpia pantalla.
     color: DAURAT,
     contingut: (
-      <div className="flex flex-col gap-6 w-full">
-        <div>
-          <Etiqueta>L&apos;any 1472</Etiqueta>
-          <TitolFosc>Un secret que ni la guerra no ha pogut destruir</TitolFosc>
-          <div className="flex flex-col gap-4 text-left text-lg leading-relaxed text-paper mt-4">
-            <p>
-              Sentfores crema. La Guerra dels Remences assola el país i el castell del poble cau en runes. Abans que
-              tot s&apos;ensorri, algú amaga pel terme els fragments d&apos;un secret que no pot caure en mans
-              equivocades.
-            </p>
-            <p>
-              No sou els únics que el busqueu. Algú ronda els carrers i els camins, vigilant qui s&apos;hi acosta massa
-              &mdash; i no dubtarà a aturar-vos.
-            </p>
-          </div>
-        </div>
-        <div className="border-t border-paper/30 pt-4">
-          <Etiqueta>El joc</Etiqueta>
-          <TitolFosc>Formeu equip i sortiu a buscar-lo</TitolFosc>
-          <p className="text-left text-lg leading-relaxed text-paper mt-4">
-            El dia de la partida, sortiu a recórrer Sentfores a peu, mòbil en mà. Pel poble i el seu entorn hi ha cinc
-            punts amagats, un per cada element: Aigua, Terra, Foc, Aire i Ànima. A cadascun us espera una prova diferent
-            a l&apos;aire lliure &mdash; supereu-la en equip per guanyar el vostre fragment del secret.
+      <Pantalla>
+        <Etiqueta>L&apos;any 1472</Etiqueta>
+        <TitolFosc>Un secret que ni la guerra no ha pogut destruir</TitolFosc>
+        <div className="flex flex-col gap-2 sm:gap-4 text-left text-sm sm:text-lg leading-snug sm:leading-relaxed text-paper">
+          <p>
+            Sentfores crema. La Guerra dels Remences assola el país i el castell del poble cau en runes. Abans que
+            tot s&apos;ensorri, algú amaga pel terme els fragments d&apos;un secret que no pot caure en mans
+            equivocades.
+          </p>
+          <p>
+            No sou els únics que el busqueu. Algú ronda els carrers i els camins, vigilant qui s&apos;hi acosta massa
+            &mdash; i no dubtarà a aturar-vos.
           </p>
         </div>
-      </div>
+        <Image
+          src="/images/cartells/portada/poble-crema.webp"
+          alt="El poble de Sentfores i el castell cremant durant la Guerra dels Remences"
+          width={1500}
+          height={837}
+          className="w-full rounded-2xl object-cover"
+          sizes="(max-width: 640px) 100vw, 36rem"
+        />
+      </Pantalla>
+    ),
+  },
+  {
+    // El joc: format + instruccions, amb una il·lustració de l'equip a sota, en la seva pròpia pantalla.
+    color: DAURAT,
+    contingut: (
+      <Pantalla>
+        <Etiqueta>El joc</Etiqueta>
+        <TitolFosc>Formeu equip i sortiu a buscar-lo</TitolFosc>
+        <p className="text-left text-sm sm:text-lg leading-snug sm:leading-relaxed text-paper">
+          El dia de la partida, sortiu a recórrer Sentfores a peu, mòbil en mà. Pel poble i el seu entorn hi ha cinc
+          punts amagats, un per cada element: Aigua, Terra, Foc, Aire i Ànima. A cadascun us espera una prova diferent
+          a l&apos;aire lliure &mdash; supereu-la en equip per guanyar el vostre fragment del secret.
+        </p>
+        <Image
+          src="/images/cartells/portada/equip-mobil-nit.webp"
+          alt="Un equip de jugadors consultant el mapa de fites al mòbil pels carrers de Sentfores de nit"
+          width={2000}
+          height={1116}
+          className="w-full rounded-2xl object-cover"
+          sizes="(max-width: 640px) 100vw, 36rem"
+        />
+      </Pantalla>
     ),
   },
 ];
@@ -251,7 +236,7 @@ export default function AnunciPage() {
               El secret està ocult, vine a descobrir-lo.
             </p>
             <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-              <span className="rounded-full border-2 border-paper/70 bg-ink/40 px-4 py-2 text-sm font-bold text-paper backdrop-blur-sm sm:text-base">
+              <span className="rounded-full border-2 border-paper/70 bg-orange-600 px-4 py-2 text-sm font-bold text-paper sm:text-base">
                 {DATA_ESDEVENIMENT}
               </span>
               <span className="rounded-full border-2 border-paper/70 bg-ink/40 px-4 py-2 text-sm font-bold text-paper backdrop-blur-sm sm:text-base">
@@ -262,24 +247,16 @@ export default function AnunciPage() {
           </div>
         </section>
 
-        {/* Pantalla combinada: text i elements centrats verticalment */}
-        <section className="relative flex h-[100svh] w-full snap-start flex-col justify-center overflow-hidden">
-          {/* Text i elements junts centrats */}
-          <div className="flex flex-col items-center gap-8 px-5">
-            {/* Text */}
-            <div className="mx-auto w-full max-w-2xl flex flex-col items-center gap-5 px-5 text-center text-sm">
-              {PANTALLES_ABANS[0].contingut}
-            </div>
-            {/* Elements */}
-            <div className="mx-auto w-full">
-              <PantallaElements />
-            </div>
+        {/* Pantalles abans de les 5 fites: la llegenda i, en la seva pròpia pantalla, el joc amb els elements */}
+        {PANTALLES_ABANS.map((p, i) => (
+          <div key={i} style={{ gridColumn: 2, gridRow: i + 2 }}>
+            {p.contingut}
           </div>
-        </section>
+        ))}
 
         {/* Pantalles després de les fites */}
         {PANTALLES_DESPRES.map((p, i) => (
-          <div key={i} style={{ gridColumn: 2, gridRow: i + 3 }}>
+          <div key={i} style={{ gridColumn: 2, gridRow: i + 2 + PANTALLES_ABANS.length }}>
             {p.contingut}
           </div>
         ))}
