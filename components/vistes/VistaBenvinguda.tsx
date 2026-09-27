@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Pentagrama } from "@/components/ui/Pentagrama";
 import { Marca, Pantalla } from "@/components/ui/Pantalla";
 import { BENVINGUDA } from "@/content/public/textos";
@@ -21,6 +22,7 @@ export function VistaBenvinguda({
   onContinuar,
 }: VistaBenvingudaProps) {
   const teBotoInstallar = modeInstallacio === "boto";
+  const [accepto, setAccepto] = useState(false);
 
   return (
     <Pantalla>
@@ -58,9 +60,25 @@ export function VistaBenvinguda({
           </div>
         )}
 
+        <label className="flex items-start gap-3 text-sm text-ink-soft">
+          <input
+            type="checkbox"
+            checked={accepto}
+            onChange={(e) => setAccepto(e.target.checked)}
+            className="mt-0.5 h-6 w-6 shrink-0 accent-gold"
+          />
+          <span>
+            Accepto les{" "}
+            <a href="/condicions" target="_blank" rel="noopener noreferrer" className="font-bold text-ink underline">
+              condicions de participació i privacitat
+            </a>
+          </span>
+        </label>
+
         <button
           type="button"
           onClick={onContinuar}
+          disabled={!accepto}
           className={teBotoInstallar ? "btn btn-secundari" : "btn btn-primari"}
         >
           Continuar →
