@@ -198,7 +198,7 @@ export function VistaHub({
         </ul>
       </section>
 
-      <button type="button" onClick={onLlegirMissatge} className="btn btn-secundari animate-entrar [animation-delay:320ms]">
+      <button type="button" onClick={onLlegirMissatge} className="hidden btn btn-secundari animate-entrar [animation-delay:320ms]">
         📜 Tornar a llegir el missatge
       </button>
 
