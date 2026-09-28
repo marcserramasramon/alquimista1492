@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { MapaEquip, type EstacioMapa, type MarcadorMapa } from "@/components/player/MapaEquip";
 import type { EstatUbicacio } from "@/lib/useCompartirUbicacio";
 import { PanellMissatgesMaster, type PanellMissatgesMasterProps } from "@/components/vistes/PanellMissatgesMaster";
+import { PanellAvisosMaster, type AvisEquip } from "@/components/vistes/PanellAvisosMaster";
 import { PanellRecorregut, type PanellRecorregutProps } from "@/components/vistes/PanellRecorregut";
 import { PanellPartidaMaster } from "@/components/vistes/PanellPartidaMaster";
 import { TargetaEquipMaster, type EquipMaster } from "@/components/vistes/TargetaEquipMaster";
@@ -44,8 +45,13 @@ export interface VistaMasterEquipsProps {
   comparteixo: boolean;
   estatUbicacio: EstatUbicacio;
   onComparteixoChange: (valor: boolean) => void;
+  /** Interruptor global: si és cert, cada equip veu al mapa la posició dels altres equips. */
+  equipsVeuenEquips: boolean;
+  onEquipsVeuenEquipsChange: (valor: boolean) => void;
   /** Panell de missatges als equips. Si no hi és, no es mostra. */
   missatges?: Omit<PanellMissatgesMasterProps, "equips">;
+  /** Avisos que els equips envien al màster (botó "?" del mapa). Si no hi és, no es mostra. */
+  avisos?: { recents: AvisEquip[]; onLlegit: (id: string) => void };
   /** Recorregut d'un equip al mapa, amb els temps. Si no hi és, no es mostra. */
   recorregut?: Omit<PanellRecorregutProps, "equips">;
   /** Com de fresques són les dades. Sense valor, no es mostra l'indicador. */
@@ -124,7 +130,10 @@ export function VistaMasterEquips({
   comparteixo,
   estatUbicacio,
   onComparteixoChange,
+  equipsVeuenEquips,
+  onEquipsVeuenEquipsChange,
   missatges,
+  avisos,
   recorregut,
   connexio,
   fets,
@@ -148,6 +157,7 @@ export function VistaMasterEquips({
 
   // Mentre es mira la pestanya Equips, els fets nous ja es donen per vistos.
   const hiHaNoVistos = (fets?.noVistos ?? 0) > 0;
+  const avisosNoLlegits = avisos?.recents.filter((a) => !a.llegit_at).length ?? 0;
   const veure = fets?.onVeure;
   useEffect(() => {
     if (pestanya === "equips" && hiHaNoVistos) veure?.();
@@ -268,9 +278,42 @@ export function VistaMasterEquips({
               </span>
             </span>
           </label>
+
+          {/* Interruptor global: cada equip veu els altres al seu mapa. */}
+          <label
+            className={`flex min-h-16 cursor-pointer items-center gap-4 rounded-2xl border-[3px] px-4 py-3 transition ${
+              equipsVeuenEquips ? "border-ink bg-[#fffdf7] shadow-[0_4px_0_var(--ink)]" : "border-ink/30 bg-paper-2"
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={equipsVeuenEquips}
+              onChange={(e) => onEquipsVeuenEquipsChange(e.target.checked)}
+              className="peer sr-only"
+            />
+            <span
+              aria-hidden
+              className={`relative h-9 w-16 shrink-0 rounded-full border-[3px] border-ink transition-colors peer-focus-visible:ring-4 peer-focus-visible:ring-gold ${
+                equipsVeuenEquips ? "bg-ok" : "bg-paper-3"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-6 w-6 rounded-full border-[3px] border-ink bg-white transition-all ${
+                  equipsVeuenEquips ? "left-[1.85rem]" : "left-0.5"
+                }`}
+              />
+            </span>
+            <span className="flex-1">
+              <span className="block text-lg font-extrabold">Els equips es veuen entre ells</span>
+              <span className="block text-base text-ink-soft">
+                {equipsVeuenEquips ? "Cada equip veu on són els altres." : "Cada equip només veu la seva posició."}
+              </span>
+            </span>
+          </label>
         </section>
 
-        <div hidden={pestanya !== "missatges"}>
+        <div hidden={pestanya !== "missatges"} className="flex flex-col gap-5">
+          {avisos && <PanellAvisosMaster equips={equips && agafats} {...avisos} />}
           {missatges ? (
             <PanellMissatgesMaster equips={equips && agafats} {...missatges} />
           ) : (
@@ -335,6 +378,12 @@ export function VistaMasterEquips({
                   <span className="absolute right-2 top-1.5 min-w-6 rounded-full border-2 border-ink bg-blood px-1.5 text-sm leading-5 text-white">
                     {fets?.noVistos}
                     <span className="sr-only"> fets nous</span>
+                  </span>
+                )}
+                {p.id === "missatges" && !actiu && avisosNoLlegits > 0 && (
+                  <span className="absolute right-2 top-1.5 min-w-6 rounded-full border-2 border-ink bg-blood px-1.5 text-sm leading-5 text-white">
+                    {avisosNoLlegits}
+                    <span className="sr-only"> avisos nous</span>
                   </span>
                 )}
               </button>

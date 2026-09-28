@@ -2,10 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { EstacioMapa, MarcadorMapa } from "@/components/player/MapaEquip";
+import type { EstacioMapa, MarcadorMapa, VideoMapa } from "@/components/player/MapaEquip";
+import { EnviarAvis } from "@/components/player/EnviarAvis";
 import { ObrirFita } from "@/components/player/ObrirFita";
 import { VistaHub } from "@/components/vistes/VistaHub";
+import { VistaMissatgeVideo } from "@/components/vistes/VistaMissatgeVideo";
 import { VistaCarregant } from "@/components/vistes/VistaCarregant";
+import { getMissatgeMaster } from "@/content/public/missatgesMaster";
 import {
   INTERVAL_UBICACIO_MS,
   RADI_OBERTURA_M,
@@ -22,6 +25,10 @@ interface EstatResponse {
   totesResoltes: boolean;
   /** Només si el màster comparteix la seva ubicació. */
   master: { lat: number; lng: number } | null;
+  /** Posició dels altres equips, només si el màster ha activat que es vegin entre ells. */
+  altresEquips: { id: string; name: string; lat: number; lng: number }[];
+  /** Claus dels missatges amb vídeo (per GPS) ja acceptats per l'equip. */
+  videosVistos: string[];
 }
 
 /** Si el servidor no obre una fita per GPS (posició just a la vora), no es torna a provar fins passat això. */
@@ -48,6 +55,10 @@ export default function HubPage() {
   const { posicio } = useCompartirUbicacio({ actiu: comparteix, endpoint: "/api/ubicacio" });
   const [arribadaId, setArribadaId] = useState<string | null>(null);
   const [escanejant, setEscanejant] = useState(false);
+  /** Clau del missatge amb vídeo que l'equip ha tornat a obrir des de la insígnia del mapa. */
+  const [videoReobert, setVideoReobert] = useState<string | null>(null);
+  /** El botó "?" del mapa: formulari per avisar el màster. */
+  const [avisant, setAvisant] = useState(false);
   const intentsGps = useRef(new Map<string, number>());
 
   const carregar = useCallback(
@@ -108,7 +119,17 @@ export default function HubPage() {
 
   const marcadors: MarcadorMapa[] = [];
   if (estat.master) marcadors.push({ id: "master", tipus: "master", ...estat.master });
+  for (const equip of estat.altresEquips) {
+    marcadors.push({ id: equip.id, tipus: "equip", lat: equip.lat, lng: equip.lng, etiqueta: equip.name });
+  }
   if (posicio) marcadors.push({ id: "jo", tipus: "jo", lat: posicio.lat, lng: posicio.lng });
+
+  const videos: VideoMapa[] = estat.videosVistos.flatMap((clau) => {
+    const missatge = getMissatgeMaster(clau);
+    if (!missatge?.geofence) return [];
+    return [{ id: clau, lat: missatge.geofence.lat, lng: missatge.geofence.lng, titol: missatge.titol }];
+  });
+  const missatgeReobert = videoReobert ? getMissatgeMaster(videoReobert) : undefined;
 
   async function anarEstacio(estacio: EstacioMapa) {
     if (estacio.tipus === "especial") {
@@ -149,11 +170,24 @@ export default function HubPage() {
         totesResoltes={estat.totesResoltes}
         marcadors={marcadors}
         fitaArribadaId={arribadaId}
+        videos={videos}
+        onSeleccionarVideo={setVideoReobert}
         onAnarEstacio={anarEstacio}
         onAnarFinal={() => router.push("/final")}
         onLlegirMissatge={() => router.push("/missatge?tornada=1")}
+        onAvis={() => setAvisant(true)}
       />
       {escanejant && <ObrirFita onOberta={obertaPerCodi} onTancar={() => setEscanejant(false)} />}
+      {avisant && <EnviarAvis onTancar={() => setAvisant(false)} />}
+      {missatgeReobert?.video && (
+        <VistaMissatgeVideo
+          key={videoReobert}
+          titol={missatgeReobert.titol}
+          text={missatgeReobert.text}
+          video={missatgeReobert.video}
+          onAcceptar={() => setVideoReobert(null)}
+        />
+      )}
     </>
   );
 }

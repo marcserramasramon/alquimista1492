@@ -11,6 +11,7 @@ import type {
   MissatgeEnviat,
   ResultatEnviament,
 } from "@/components/vistes/PanellMissatgesMaster";
+import type { AvisEquip } from "@/components/vistes/PanellAvisosMaster";
 import type { DadesRecorregut } from "@/components/vistes/PanellRecorregut";
 import type { DadesConnexio } from "@/components/ui/EstatConnexio";
 import type { Confirmacio } from "@/components/ui/DialegConfirmacio";
@@ -45,7 +46,7 @@ interface EquipApi extends Omit<EquipMaster, "ubicacio" | "guardians"> {
 
 interface EquipsResponse {
   equips: EquipApi[];
-  master: { sharing: boolean } | null;
+  master: { sharing: boolean; equips_sharing: boolean } | null;
   partidaIniciadaAt: string | null;
   partidaAcabaAt: string | null;
   ara: string;
@@ -78,8 +79,10 @@ export default function MasterPage() {
   const [desfasamentMs, setDesfasamentMs] = useState(0);
   const [canviantPartida, setCanviantPartida] = useState(false);
   const [comparteixo, setComparteixo] = useState(false);
+  const [equipsVeuenEquips, setEquipsVeuenEquips] = useState(false);
   const ubicacio = useCompartirUbicacio({ actiu: comparteixo, endpoint: "/api/master/ubicacio" });
   const [missatgesRecents, setMissatgesRecents] = useState<MissatgeEnviat[]>([]);
+  const [avisosRecents, setAvisosRecents] = useState<AvisEquip[]>([]);
   const [recorregutId, setRecorregutId] = useState<string | null>(null);
   const [recorregut, setRecorregut] = useState<DadesRecorregut | null>(null);
   const [connexio, setConnexio] = useState<DadesConnexio>({ ultimaLecturaAt: null, errorsSeguits: 0 });
@@ -157,8 +160,9 @@ export default function MasterPage() {
           if (!data) return;
           aplicar(data);
           setConnexio({ ultimaLecturaAt: Date.now(), errorsSeguits: 0 });
-          // L'interruptor arrenca amb el que diu el servidor (p.ex. després de recarregar).
+          // Els interruptors arrenquen amb el que diu el servidor (p.ex. després de recarregar).
           if (primera && data.master?.sharing) setComparteixo(true);
+          if (primera && data.master?.equips_sharing) setEquipsVeuenEquips(true);
           primera = false;
         })
         .catch(() => setConnexio((c) => ({ ...c, errorsSeguits: c.errorsSeguits + 1 })));
@@ -188,6 +192,37 @@ export default function MasterPage() {
       clearInterval(interval);
     };
   }, [carregarMissatges]);
+
+  const carregarAvisos = useCallback(
+    () =>
+      fetch("/api/master/avisos")
+        .then(async (res) => {
+          if (!res.ok) return;
+          const data: { avisos: AvisEquip[] } = await res.json();
+          setAvisosRecents(data.avisos);
+        })
+        .catch(() => {}),
+    []
+  );
+
+  // Avisos que els equips envien amb el botó "?" del mapa (el 401 ja el gestiona el refresc dels equips).
+  useEffect(() => {
+    const inicial = setTimeout(carregarAvisos, 0);
+    const interval = setInterval(carregarAvisos, 5000);
+    return () => {
+      clearTimeout(inicial);
+      clearInterval(interval);
+    };
+  }, [carregarAvisos]);
+
+  async function marcarAvisLlegit(id: string) {
+    setAvisosRecents((ara) => ara.map((a) => (a.id === id ? { ...a, llegit_at: new Date().toISOString() } : a)));
+    await fetch("/api/master/avisos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    }).catch(() => {});
+  }
 
   // Fets de la partida: els nous vibren i, si un equip ja té tots els fragments, surt l'avís gran.
   useEffect(() => {
@@ -252,6 +287,15 @@ export default function MasterPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ sharing: valor }),
+    }).catch(() => {});
+  }
+
+  async function canviarEquipsVeuenEquips(valor: boolean) {
+    setEquipsVeuenEquips(valor);
+    await fetch("/api/master/ubicacio", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ equipsSharing: valor }),
     }).catch(() => {});
   }
 
@@ -387,7 +431,10 @@ export default function MasterPage() {
       comparteixo={comparteixo}
       estatUbicacio={ubicacio.estat}
       onComparteixoChange={canviarComparteixo}
+      equipsVeuenEquips={equipsVeuenEquips}
+      onEquipsVeuenEquipsChange={canviarEquipsVeuenEquips}
       missatges={{ recents: missatgesRecents, onEnviar: enviarMissatge }}
+      avisos={{ recents: avisosRecents, onLlegit: marcarAvisLlegit }}
       recorregut={{ triatId: recorregutId, dades: recorregut, onTriar: triarRecorregut }}
       connexio={connexio}
       fets={{ llista: fets, noVistos, onVeure: veureFets, avisos: avisosFragments, onEntes: entesFragments }}

@@ -6,8 +6,8 @@ export const INTERVAL_UBICACIO_MS = 30_000;
 /** El servidor ignora posicions que arribin més de pressa que això (defensa contra clients que no respectin l'interval). */
 export const MINIM_ENTRE_UBICACIONS_MS = 10_000;
 
-/** Una posició del màster més antiga que això no s'ensenya als equips (mòbil sense bateria, sense cobertura...). */
-export const MAXIMA_EDAT_UBICACIO_MASTER_MS = 10 * 60_000;
+/** Una posició (del màster o d'un equip) més antiga que això no s'ensenya (mòbil sense bateria, sense cobertura...). */
+export const MAXIMA_EDAT_UBICACIO_MS = 10 * 60_000;
 
 /** A menys d'aquesta distància d'una fita, la fita s'obre sola. */
 export const RADI_OBERTURA_M = 50;

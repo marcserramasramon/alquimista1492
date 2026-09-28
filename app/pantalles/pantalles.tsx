@@ -16,6 +16,7 @@
 import type { ReactNode } from "react";
 import { getEstacio, getEstacionsJugables, getEstacionsOrdenades, getPassosPrevis, type Estacio } from "@/content/public/estacions";
 import type { EstacioMapa, MarcadorMapa } from "@/components/player/MapaEquip";
+import { HubVideoVist } from "./HubVideoVist";
 import { VistaUbicacio } from "@/components/vistes/VistaUbicacio";
 import { VistaBenvinguda } from "@/components/vistes/VistaBenvinguda";
 import { VistaSeleccioEquip } from "@/components/vistes/VistaSeleccioEquip";
@@ -42,6 +43,8 @@ import { VistaMissatgeMaster } from "@/components/vistes/VistaMissatgeMaster";
 import { VistaMissatgeVideo } from "@/components/vistes/VistaMissatgeVideo";
 import { MISSATGES_MASTER, TITOL_TEXT_LLIURE } from "@/content/public/missatgesMaster";
 import type { MissatgeEnviat } from "@/components/vistes/PanellMissatgesMaster";
+import { VistaEnviarAvis } from "@/components/vistes/VistaEnviarAvis";
+import type { AvisEquip } from "@/components/vistes/PanellAvisosMaster";
 import { IndicadorTemps } from "@/components/ui/IndicadorTemps";
 import type { DadesRecorregut } from "@/components/vistes/PanellRecorregut";
 import type { FetPartida } from "@/components/vistes/PanellFetsMaster";
@@ -117,6 +120,7 @@ function hub(
       seleccionadaInicialId={seleccionadaInicialId}
       marcadors={marcadors}
       fitaArribadaId={fitaArribadaId}
+      onAvis={noop}
     />
   );
 }
@@ -329,6 +333,8 @@ const MASTER_BASE = {
   onReiniciar: noop,
   estacions: ESTACIONS_MASTER,
   onComparteixoChange: noop,
+  equipsVeuenEquips: false,
+  onEquipsVeuenEquipsChange: noop,
 };
 
 // Missatges del màster (punt 9): enviaments recents d'exemple, un "a tots" i un a un sol equip.
@@ -350,6 +356,24 @@ const MISSATGES_RECENTS: MissatgeEnviat[] = [
   },
 ];
 const enviarFals = async () => ({ ok: true, enviats: EQUIPS_MASTER.length });
+
+// Avisos d'exemple que un equip envia al màster amb el botó "?" del mapa (punt 9bis).
+const AVISOS_MASTER: AvisEquip[] = [
+  {
+    id: "a1",
+    team_id: "2",
+    text: "No trobem la fita del Foc, ja fa deu minuts que hi donem voltes.",
+    created_at: new Date(ARA_MISSATGES + 60_000).toISOString(),
+    llegit_at: null,
+  },
+  {
+    id: "a2",
+    team_id: "1",
+    text: "Un dels nostres s'ha entortolligat el turmell, anem més lents.",
+    created_at: new Date(ARA_MISSATGES - 5 * 60_000).toISOString(),
+    llegit_at: new Date(ARA_MISSATGES - 4 * 60_000).toISOString(),
+  },
+];
 
 // Fets d'exemple (panell del màster): del més nou al més vell.
 const FETS_MASTER: FetPartida[] = [
@@ -613,6 +637,19 @@ export const PANTALLES: Pantalla[] = [
         ...(POSICIO_EQUIP ? [{ id: "jo", tipus: "jo" as const, ...POSICIO_EQUIP }] : []),
       ]),
   },
+  {
+    id: "hub-video-vist",
+    grup: "hub",
+    titol: "Hub · vídeo ja vist",
+    descripcio:
+      "Un missatge amb vídeo (geofence) ja acceptat deixa una insígnia 🎥 al mapa, al punt on es va activar. Toqueu-la per tornar-lo a veure.",
+    render: () => (
+      <HubVideoVist
+        estacions={estacionsAmbProgres(RESOLTES_MITJA_PARTIDA)}
+        totesResoltes={JUGABLES.every((id) => RESOLTES_MITJA_PARTIDA.includes(id))}
+      />
+    ),
+  },
 
   {
     id: "missatge-master",
@@ -658,6 +695,30 @@ export const PANTALLES: Pantalla[] = [
         </>
       );
     },
+  },
+  {
+    id: "avisar-master",
+    grup: "hub",
+    titol: "Hub · avisar el màster",
+    descripcio: "Botó \"?\" del mapa: l'equip escriu un avís de text per al màster (direcció única, no és un xat).",
+    render: (dades) => (
+      <>
+        {getPantalla("hub-mitja-partida")?.render(dades)}
+        <VistaEnviarAvis onEnviar={noop} onTancar={noop} />
+      </>
+    ),
+  },
+  {
+    id: "avisar-master-enviat",
+    grup: "hub",
+    titol: "Hub · avís enviat",
+    descripcio: "Confirmació després d'enviar l'avís al màster.",
+    render: (dades) => (
+      <>
+        {getPantalla("hub-mitja-partida")?.render(dades)}
+        <VistaEnviarAvis enviat onEnviar={noop} onTancar={noop} />
+      </>
+    ),
   },
   {
     id: "missatge-ambient-aigua",
@@ -1238,6 +1299,24 @@ export const PANTALLES: Pantalla[] = [
           onEnviar: enviarFals,
           inicial: { desti: "tots", resultat: { ok: true, enviats: EQUIPS_MASTER.length } },
         }}
+      />
+    ),
+  },
+  {
+    id: "master-avisos",
+    grup: "master",
+    titol: "Màster · avisos dels equips",
+    descripcio: "Botó \"?\" del mapa (punt 9bis): avisos que envien els equips, un encara sense llegir.",
+    render: () => (
+      <VistaMasterEquips
+        pestanyaInicial="missatges"
+        {...MASTER_BASE}
+        equips={EQUIPS_MASTER}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+        missatges={{ recents: MISSATGES_RECENTS, onEnviar: enviarFals }}
+        avisos={{ recents: AVISOS_MASTER, onLlegit: noop }}
       />
     ),
   },

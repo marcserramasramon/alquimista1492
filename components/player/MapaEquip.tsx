@@ -33,6 +33,20 @@ export interface MapaEquipProps {
   marcadors?: MarcadorMapa[];
   /** Camí que ha seguit un equip (només al mapa del màster), en ordre. */
   recorregut?: { lat: number; lng: number }[];
+  /** Missatges amb vídeo (per GPS) ja acceptats: insígnia petita per tornar-los a veure. */
+  videos?: VideoMapa[];
+  /** Es crida en tocar la insígnia d'un vídeo ja vist. */
+  onSeleccionarVideo?: (id: string) => void;
+  /** Es crida en tocar el botó "?" (avisar el màster). Sense aquesta funció, el botó no surt. */
+  onAvis?: () => void;
+}
+
+export interface VideoMapa {
+  /** Clau del missatge (missatgesMaster.ts). */
+  id: string;
+  lat: number;
+  lng: number;
+  titol: string;
 }
 
 export interface MarcadorMapa {
@@ -101,6 +115,9 @@ export function MapaEquip({
   onSeleccionar,
   marcadors = [],
   recorregut = [],
+  videos = [],
+  onSeleccionarVideo,
+  onAvis,
 }: MapaEquipProps) {
   // Fora de la imatge del mapa, un marcador es queda a l'última
   // posició coneguda de dins (app-nova.md §7ter.3).
@@ -416,6 +433,27 @@ export function MapaEquip({
                   );
                 })}
 
+              {videos.map((v) => {
+                const { x, y } = aPixel(v.lat, v.lng);
+                return (
+                  <g
+                    key={`video-${v.id}`}
+                    transform={`translate(${x} ${y}) scale(${escala})`}
+                    onClick={onSeleccionarVideo ? () => onSeleccionarVideo(v.id) : undefined}
+                    style={{ cursor: onSeleccionarVideo ? "pointer" : undefined }}
+                    role={onSeleccionarVideo ? "button" : undefined}
+                    aria-label={`Tornar a veure el vídeo: ${v.titol}`}
+                  >
+                    {/* Zona de toc més gran que el dibuix */}
+                    <circle r={32} fill="transparent" />
+                    <circle r={16} fill={GOLD} stroke={INK} strokeWidth={3.5} />
+                    <text textAnchor="middle" dominantBaseline="central" fontSize={17} y={1}>
+                      🎥
+                    </text>
+                  </g>
+                );
+              })}
+
               {marcadorsVisibles.map((m) => {
                 const { x, y } = aPixel(m.lat, m.lng);
                 if (m.tipus === "jo") {
@@ -503,6 +541,20 @@ export function MapaEquip({
               </button>
             )}
           </div>
+
+          {/* Botó d'avís al màster: sempre a l'abast del polze, cantonada oposada als altres controls. */}
+          {onAvis && (
+            <div className="absolute bottom-2.5 right-2.5">
+              <button
+                type="button"
+                onClick={onAvis}
+                aria-label="Avisar el màster"
+                className="btn btn-secundari btn-rodo text-xl"
+              >
+                ?
+              </button>
+            </div>
+          )}
         </div>
         {pantallaCompleta && (
           <p className="pt-2 text-center text-base font-bold text-paper">

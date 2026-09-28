@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MapaEquip, type EstacioMapa, type MarcadorMapa } from "@/components/player/MapaEquip";
+import { MapaEquip, type EstacioMapa, type MarcadorMapa, type VideoMapa } from "@/components/player/MapaEquip";
 import { BarraFranja, useMostrarAFranja } from "@/components/player/FranjaPartida";
 import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
 import { Narracio } from "@/components/ui/Narracio";
@@ -21,6 +21,12 @@ export interface VistaHubProps {
   marcadors?: MarcadorMapa[];
   /** Fita que el GPS acaba d'obrir en arribar-hi: se'n mostra la fitxa amb l'avís. */
   fitaArribadaId?: string | null;
+  /** Missatges amb vídeo (per GPS) ja acceptats: insígnia al mapa per tornar-los a veure. */
+  videos?: VideoMapa[];
+  /** Es crida en tocar la insígnia d'un vídeo ja vist. */
+  onSeleccionarVideo?: (id: string) => void;
+  /** Es crida en tocar el botó "?" del mapa (avisar el màster). Sense aquesta funció, el botó no surt. */
+  onAvis?: () => void;
 }
 
 export function VistaHub({
@@ -32,6 +38,9 @@ export function VistaHub({
   seleccionadaInicialId = null,
   marcadors,
   fitaArribadaId = null,
+  videos,
+  onSeleccionarVideo,
+  onAvis,
 }: VistaHubProps) {
   const [seleccionadaId, setSeleccionadaId] = useState<string | null>(seleccionadaInicialId ?? fitaArribadaId);
   // Quan el GPS obre una fita nova, se'n mostra la fitxa encara que n'hi hagués una altra de triada.
@@ -137,6 +146,9 @@ export function VistaHub({
             seleccionadaId={seleccionadaId}
             onSeleccionar={(e) => setSeleccionadaId(e.id)}
             marcadors={marcadors}
+            videos={videos}
+            onSeleccionarVideo={onSeleccionarVideo}
+            onAvis={onAvis}
           />
           {marcadors && marcadors.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 px-2 text-sm text-ink-soft">
@@ -151,6 +163,11 @@ export function VistaHub({
                     🧙
                   </span>{" "}
                   L&apos;organització
+                </span>
+              )}
+              {marcadors.some((m) => m.tipus === "equip") && (
+                <span className="flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-full border-2 border-white bg-[#b3261e] ring-1 ring-ink/30" /> Altres equips
                 </span>
               )}
             </div>

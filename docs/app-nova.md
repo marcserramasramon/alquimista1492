@@ -210,7 +210,7 @@ Els QR d'estació **tampoc** s'escanegen amb un escàner intern: cada cartell d'
 > 1. El **màster** veu la posició de **tots els equips** en un mapa al seu dashboard.
 > 2. Cada **equip** veu la posició del **personatge** (interpretat pel màster, sempre el mateix — §7bis.3) a la seva pestanya MAPA.
 >
-> Els equips **no** es veuen entre ells — només el màster té visió de conjunt.
+> Els equips no es veuen entre ells per defecte — només el màster té visió de conjunt. **Actualitzat (2026-09-28):** el màster pot activar un interruptor global (`v2_master_location.equips_sharing`, veure §7ter.2bis) perquè tots els equips es vegin entre ells al mapa. No és configurable per equip.
 
 ### 7ter.1 Tecnologia
 
@@ -227,6 +227,15 @@ No cal cap llibreria nova: `navigator.geolocation` (API nativa del navegador). E
 - Client: `app/api/game/location/route.ts` (POST) — valida sessió del jugador, resol el seu `team_id` al servidor (mai confiar en un `team_id` enviat pel client), aplica throttle també al servidor, actualitza les 3 columnes.
 - **RLS:** cap policy de lectura pública sobre aquestes columnes — ni un equip ha de poder llegir la posició d'un altre equip (ni la seva pròpia via client directe, ja que tot passa per API). El màster hi accedeix via ruta pròpia amb service role (p.ex. `app/api/master/equips-mapa/route.ts`) + subscripció Realtime autenticada de màster.
 - Dashboard del màster: vista de mapa nova (probablement reutilitzant `StaticMap` en mode "màster", o un component nou `components/master/EquipsMap.tsx`) amb un pin per equip (color per equip, ja existeix `teams.color`), actualització en viu, i el cercle de precisió GPS (`accuracy`) quan sigui rellevant.
+
+### 7ter.2bis Equips que es veuen entre ells — decidit (2026-09-28)
+
+- Interruptor global al dashboard del màster (pestanya Mapa), un sol botó: "Els equips es veuen entre ells". No hi ha control per equip.
+- **Model de dades:** `v2_master_location.equips_sharing boolean not null default false` (migració `20260928000020_v2_equips_veuen_equips.sql`) — mateixa fila singleton que ja guarda `sharing` (la del personatge).
+- API: `POST /api/master/ubicacio` accepta ara `{ equipsSharing: boolean }` a més de `{ sharing }` i de la posició. `GET /api/master/equips` retorna `equips_sharing` perquè el dashboard sàpiga l'estat en carregar.
+- Quan és actiu, `GET /api/estat` (el que consulta cada equip) inclou `altresEquips: { id, name, lat, lng }[]` amb la posició de la resta d'equips (mai la pròpia), amb el mateix llindar de frescor que la posició del personatge (`MAXIMA_EDAT_UBICACIO_MS`, 10 min). Quan és inactiu, `altresEquips` és sempre buit.
+- El mapa de l'equip (`MapaEquip` via `VistaHub`) hi pinta un marcador per equip (tipus `"equip"`, ja reutilitzat del mapa del màster) amb el nom a sobre.
+- Continua sense haver-hi cap policy RLS de lectura pública: tot passa per `app/api/estat` amb la service role key (regla 7 del CLAUDE.md), igual que abans.
 
 ### 7ter.3 Posició del personatge (per als equips)
 

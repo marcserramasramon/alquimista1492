@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
   const { data: ubicacioMaster } = await db
     .from("v2_master_location")
-    .select("lat, lng, sharing, updated_at")
+    .select("lat, lng, sharing, equips_sharing, updated_at")
     .eq("id", 1)
     .maybeSingle();
 

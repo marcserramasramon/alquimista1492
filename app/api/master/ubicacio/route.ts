@@ -6,8 +6,12 @@ import { getServiceRoleClient } from "@/lib/supabase";
 import { getMasterSession } from "@/lib/auth";
 import { UbicacioSchema } from "@/lib/ubicacio";
 
-/** O bé la posició del màster, o bé l'interruptor de compartir-la. */
-const MasterUbicacioSchema = z.union([UbicacioSchema, z.object({ sharing: z.boolean() })]);
+/** La posició del màster, l'interruptor de compartir-la, o el de fer que els equips es vegin entre ells. */
+const MasterUbicacioSchema = z.union([
+  UbicacioSchema,
+  z.object({ sharing: z.boolean() }),
+  z.object({ equipsSharing: z.boolean() }),
+]);
 
 export async function POST(request: NextRequest) {
   const sessio = await getMasterSession(request);
@@ -23,7 +27,9 @@ export async function POST(request: NextRequest) {
   const canvis =
     "sharing" in dades
       ? { sharing: dades.sharing }
-      : { lat: dades.lat, lng: dades.lng, accuracy: dades.accuracy ?? null, updated_at: new Date().toISOString() };
+      : "equipsSharing" in dades
+        ? { equips_sharing: dades.equipsSharing }
+        : { lat: dades.lat, lng: dades.lng, accuracy: dades.accuracy ?? null, updated_at: new Date().toISOString() };
 
   const { error } = await getServiceRoleClient().from("v2_master_location").update(canvis).eq("id", 1);
   if (error) {
