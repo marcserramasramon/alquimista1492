@@ -66,7 +66,7 @@ export const ESTACIONS: Estacio[] = [
     ordre: 3,
     nom: "Serrat del Caçador",
     situacio: "A la Carretera de la Guixa.",
-    entrada: "Desveleu el número amagat enmig del soroll de colors.",
+    entrada: "Desveleu el fragment mirant a través del foc.",
     imatge: "/images/entrada-poble.webp",
     latitud: 41.915419,
     longitud: 2.231577,
