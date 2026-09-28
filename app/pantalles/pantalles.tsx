@@ -39,6 +39,7 @@ import { POEMES_CARTELLS } from "@/content/public/cartells";
 import { generaSoroll, opcionsSoroll } from "@/lib/sorollFoc";
 import { VistaObrirFita, type VistaObrirFitaProps } from "@/components/vistes/VistaObrirFita";
 import { VistaMissatgeMaster } from "@/components/vistes/VistaMissatgeMaster";
+import { VistaMissatgeVideo } from "@/components/vistes/VistaMissatgeVideo";
 import { MISSATGES_MASTER, TITOL_TEXT_LLIURE } from "@/content/public/missatgesMaster";
 import type { MissatgeEnviat } from "@/components/vistes/PanellMissatgesMaster";
 import { IndicadorTemps } from "@/components/ui/IndicadorTemps";
@@ -641,6 +642,22 @@ export const PANTALLES: Pantalla[] = [
         />
       </>
     ),
+  },
+  {
+    id: "missatge-inquisidor-video",
+    grup: "hub",
+    titol: "Missatge del màster · vídeo de l'Inquisidor",
+    descripcio:
+      "Missatge amb vídeo (content/public/missatgesMaster.ts, clau \"inquisidor-alerta\"). Sense public/video/alerta-inquisidor.mp4 encara gravat, es veu el mode de reserva: només text.",
+    render: (dades) => {
+      const missatge = MISSATGES_MASTER.find((m) => m.id === "inquisidor-alerta")!;
+      return (
+        <>
+          {getPantalla("hub-mitja-partida")?.render(dades)}
+          <VistaMissatgeVideo titol={missatge.titol} text={missatge.text} video={missatge.video!} onAcceptar={noop} />
+        </>
+      );
+    },
   },
 
   // Fites

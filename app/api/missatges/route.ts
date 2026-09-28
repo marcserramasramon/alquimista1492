@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const db = getServiceRoleClient();
   const { data, error } = await db
     .from("v2_missatges")
-    .select("id, titol, text, created_at")
+    .select("id, clau, titol, text, created_at")
     .eq("team_id", sessio.teamId)
     .is("llegit_at", null)
     .order("created_at", { ascending: true })

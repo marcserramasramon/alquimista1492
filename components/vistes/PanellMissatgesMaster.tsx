@@ -129,7 +129,7 @@ export function PanellMissatgesMaster({ equips, recents, onEnviar, inicial }: Pa
                   clau === m.id ? "bg-gold text-ink" : "bg-[#fffdf7] text-ink"
                 }`}
               >
-                {m.titol}
+                {m.video ? `🎥 ${m.titol}` : m.titol}
               </button>
             ))}
             <button
@@ -147,7 +147,7 @@ export function PanellMissatgesMaster({ equips, recents, onEnviar, inicial }: Pa
 
         {seleccionat && (
           <div className="rounded-xl border-2 border-ink/40 bg-paper p-3">
-            <p className="etiqueta">el veuran així</p>
+            <p className="etiqueta">{seleccionat.video ? "el veuran així (amb vídeo)" : "el veuran així"}</p>
             <p className="mt-1 font-display text-2xl font-extrabold leading-tight">{seleccionat.titol}</p>
             <p className="mt-1 text-lg">{seleccionat.text}</p>
           </div>

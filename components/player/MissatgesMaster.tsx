@@ -3,9 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { VistaMissatgeMaster } from "@/components/vistes/VistaMissatgeMaster";
+import { VistaMissatgeVideo } from "@/components/vistes/VistaMissatgeVideo";
+import { getMissatgeMaster } from "@/content/public/missatgesMaster";
 
 interface Missatge {
   id: string;
+  clau: string | null;
   titol: string;
   text: string;
 }
@@ -79,6 +82,22 @@ export function MissatgesMaster() {
     }).catch(() => null);
     if (!res?.ok) acceptats.current.delete(actual.id);
     setEnviant(false);
+  }
+
+  const video = actual.clau ? getMissatgeMaster(actual.clau)?.video : undefined;
+
+  if (video) {
+    return (
+      <VistaMissatgeVideo
+        key={actual.id}
+        titol={actual.titol}
+        text={actual.text}
+        video={video}
+        pendents={missatges.length}
+        enviant={enviant}
+        onAcceptar={acceptar}
+      />
+    );
   }
 
   return (

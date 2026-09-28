@@ -12,12 +12,21 @@
  * Veu: n'hi ha de Fra Francesc (que adverteix de l'home del Sant Ofici, com el
  * missatge secret; la ironia es descobreix al final) i d'operatius, neutres.
  * Cap no fa servir la contrasenya de l'Orde, per no esguerrar-ne el moment.
+ *
+ * `video`: ruta a public/video/ per als missatges amb vídeo (l'Inquisidor
+ * alertant en directe). PENDENT: cal gravar i penjar-hi el fitxer — el guió
+ * i la veu sintetitzada són a content/public/textos.ts perquè
+ * scripts/generate-audio.py en generi l'àudio, a barrejar amb el vídeo un
+ * cop gravat. Sense el fitxer, el pop-up cau en un missatge només de text.
  */
+
+import { ALERTA_INQUISIDOR } from "@/content/public/textos";
 
 export interface MissatgeMaster {
   id: string;
   titol: string;
   text: string;
+  video?: string;
 }
 
 export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
@@ -40,6 +49,12 @@ export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
     id: "inquisidor-vigila",
     titol: "L'Inquisidor us vigila",
     text: "L'home del Sant Ofici ronda a prop. Parleu baix, no us separeu i no li doneu cap motiu per aturar-vos.",
+  },
+  {
+    id: "inquisidor-alerta",
+    titol: ALERTA_INQUISIDOR.titol!,
+    text: ALERTA_INQUISIDOR.paragrafs.join(" "),
+    video: "/video/alerta-inquisidor.mp4",
   },
   {
     id: "inquisidor-pregunta",
