@@ -84,17 +84,18 @@ export function MissatgesMaster() {
     setEnviant(false);
   }
 
-  const video = actual.clau ? getMissatgeMaster(actual.clau)?.video : undefined;
+  const definicio = actual.clau ? getMissatgeMaster(actual.clau) : undefined;
 
-  if (video) {
+  if (definicio?.video) {
     return (
       <VistaMissatgeVideo
         key={actual.id}
         titol={actual.titol}
         text={actual.text}
-        video={video}
+        video={definicio.video}
         pendents={missatges.length}
         enviant={enviant}
+        tapaMarcaAigua={definicio.tapaMarcaAigua}
         onAcceptar={acceptar}
       />
     );

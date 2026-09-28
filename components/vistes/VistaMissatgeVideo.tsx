@@ -10,6 +10,8 @@ export interface VistaMissatgeVideoProps {
   pendents?: number;
   /** Mentre es desa que s'ha llegit. */
   enviant?: boolean;
+  /** El vídeo té una marca d'aigua a la cantonada inferior dreta: hi dibuixa un cercle negre a sobre. */
+  tapaMarcaAigua?: boolean;
   onAcceptar: () => void;
 }
 
@@ -30,6 +32,7 @@ export function VistaMissatgeVideo({
   video,
   pendents = 1,
   enviant = false,
+  tapaMarcaAigua = false,
   onAcceptar,
 }: VistaMissatgeVideoProps) {
   const boto = useRef<HTMLButtonElement>(null);
@@ -164,6 +167,9 @@ export function VistaMissatgeVideo({
 
       <div className="relative flex-1 overflow-hidden">
         <video ref={videoRef} className="h-full w-full object-cover" playsInline controls={blocat} />
+        {tapaMarcaAigua && (
+          <div aria-hidden className="pointer-events-none absolute bottom-3 right-3 h-16 w-16 rounded-full bg-black" />
+        )}
         {blocat && (
           <button
             type="button"
