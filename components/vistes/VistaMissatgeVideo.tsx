@@ -36,25 +36,58 @@ export function VistaMissatgeVideo({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState(false);
   const [blocat, setBlocat] = useState(false);
+  const [reproduint, setReproduint] = useState(false);
+  const [acabat, setAcabat] = useState(false);
 
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
     setError(false);
     setBlocat(false);
+    setReproduint(false);
+    setAcabat(false);
 
     const enError = () => setError(true);
     const enPreparat = () => el.play().catch(() => setBlocat(true));
+    const enReproduir = () => {
+      setReproduint(true);
+      setAcabat(false);
+    };
+    const enPausa = () => setReproduint(false);
+    const enAcabar = () => {
+      setReproduint(false);
+      setAcabat(true);
+    };
     el.addEventListener("error", enError);
     el.addEventListener("canplay", enPreparat);
+    el.addEventListener("play", enReproduir);
+    el.addEventListener("pause", enPausa);
+    el.addEventListener("ended", enAcabar);
     el.src = video;
     el.load();
 
     return () => {
       el.removeEventListener("error", enError);
       el.removeEventListener("canplay", enPreparat);
+      el.removeEventListener("play", enReproduir);
+      el.removeEventListener("pause", enPausa);
+      el.removeEventListener("ended", enAcabar);
     };
   }, [video]);
+
+  /** Pausa/reprèn; si el vídeo ja s'ha acabat, el torna a començar. */
+  function alternarReproduccio() {
+    const el = videoRef.current;
+    if (!el) return;
+    if (acabat) {
+      el.currentTime = 0;
+      el.play().catch(() => setBlocat(true));
+    } else if (reproduint) {
+      el.pause();
+    } else {
+      el.play().catch(() => setBlocat(true));
+    }
+  }
 
   useEffect(() => {
     boto.current?.focus();
@@ -93,11 +126,41 @@ export function VistaMissatgeVideo({
       aria-describedby="missatge-video-text"
       className="fixed inset-0 z-[200] flex flex-col bg-black pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
     >
-      {pendents > 1 && (
-        <p className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-10 rounded-full border-2 border-ink bg-gold px-2.5 text-sm font-extrabold">
-          1 de {pendents}
-        </p>
-      )}
+      <div className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-10 flex items-center gap-2">
+        {pendents > 1 && (
+          <p className="rounded-full border-2 border-ink bg-gold px-2.5 text-sm font-extrabold">1 de {pendents}</p>
+        )}
+        {!blocat && (
+          <button
+            type="button"
+            onClick={alternarReproduccio}
+            aria-label={acabat ? "Tornar a reproduir" : reproduint ? "Pausar" : "Reproduir"}
+            className="btn btn-secundari btn-rodo shadow-[0_3px_0_var(--ink)]"
+          >
+            {acabat ? (
+              <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden>
+                <path
+                  d="M4 12a8 8 0 1 1 2.7 5.95M4 12v5h5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            ) : reproduint ? (
+              <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
+                <rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" />
+                <rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden>
+                <path d="M6 4l14 8-14 8V4z" fill="currentColor" />
+              </svg>
+            )}
+          </button>
+        )}
+      </div>
 
       <div className="relative flex-1 overflow-hidden">
         <video ref={videoRef} className="h-full w-full object-cover" playsInline controls={blocat} />
