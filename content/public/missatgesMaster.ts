@@ -105,6 +105,16 @@ export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
     video: "/video/terra-planes-bones.mp4",
     geofence: { lat: 41.9136, lng: 2.232721, radiMetres: 30 },
   },
+  /** Es dispara sol pel Camí de Malla, camí cap a la fita d'Ànima (pista skate). Vídeo
+   *  generat amb IA: presència de l'Ànima al camí. Narració pendent amb
+   *  scripts/generate-audio-ambient.py (afegir "anima-cami-malla" a AMBIENT_IDS). */
+  {
+    id: "anima-cami-malla",
+    titol: "L'Ànima ronda el camí",
+    text: "Heu vist l'Ànima vibrar entre les ombres del camí, una llum porpra que s'esvaeix en veure-us. Continueu.",
+    video: "/video/anima-cami-malla.mp4",
+    geofence: { lat: 41.912181, lng: 2.229094, radiMetres: 30 },
+  },
   {
     id: "bon-cami",
     titol: "Aneu per bon camí",

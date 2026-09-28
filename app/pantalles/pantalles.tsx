@@ -752,6 +752,22 @@ export const PANTALLES: Pantalla[] = [
       );
     },
   },
+  {
+    id: "missatge-ambient-anima",
+    grup: "hub",
+    titol: "Missatge ambient · l'Ànima (Camí de Malla)",
+    descripcio:
+      "Vídeo per geofence (content/public/missatgesMaster.ts, clau \"anima-cami-malla\"), pel Camí de Malla cap a la fita d'Ànima.",
+    render: (dades) => {
+      const missatge = MISSATGES_MASTER.find((m) => m.id === "anima-cami-malla")!;
+      return (
+        <>
+          {getPantalla("hub-mitja-partida")?.render(dades)}
+          <VistaMissatgeVideo titol={missatge.titol} text={missatge.text} video={missatge.video!} onAcceptar={noop} />
+        </>
+      );
+    },
+  },
 
   // Fites
   {
