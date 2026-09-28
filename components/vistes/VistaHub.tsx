@@ -277,7 +277,7 @@ function FitxaFita({
   const tancada = estacio.oberta === false && !resolta;
   const queFer =
     esPas && tancada
-      ? "Seguiu les passes de Fra Francesc i resteu atents als perills."
+      ? "Seguiu el camí, atents als perills."
       : estacio.entrada;
 
   return (
