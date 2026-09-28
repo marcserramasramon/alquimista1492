@@ -79,6 +79,15 @@ function opacitatGresol(resolts: number, total: number, sempreVisible: boolean) 
 /** Nombre màxim de reintents si una icona no arriba a carregar (xarxa mòbil al carrer). */
 const MAX_REINTENTS_ICONA = 3;
 
+/** Espurnes blanques sobre la gemma central quan està del tot encesa (posició en % de la caixa 56×56). */
+const ESPURNES_GEMMA = [
+  { cx: 0.26, cy: 0.18, r: 2.2, retard: "0s" },
+  { cx: 0.7, cy: 0.6, r: 1.7, retard: "0.6s" },
+  { cx: 0.3, cy: 0.7, r: 2.6, retard: "1.2s" },
+  { cx: 0.68, cy: 0.3, r: 1.9, retard: "1.8s" },
+  { cx: 0.48, cy: 0.45, r: 1.4, retard: "0.3s" },
+];
+
 /**
  * Icona SVG amb reintent: si la imatge no carrega (xarxa inestable jugant al carrer), el
  * navegador no en torna a provar sol perquè l'`href` no canvia. Cada error demana la
@@ -157,6 +166,10 @@ export function Pentagrama({
           <stop offset="0%" stopColor="#eab308" stopOpacity="0.85" />
           <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
         </radialGradient>
+        <radialGradient id="espurna-blanca">
+          <stop offset="0%" stopColor="#fff" stopOpacity="1" />
+          <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+        </radialGradient>
         <filter id="gris">
           <feColorMatrix type="saturate" values="0" />
         </filter>
@@ -200,6 +213,19 @@ export function Pentagrama({
       <g style={{ opacity: opacitatCentre, transition: "opacity 1.2s ease" }}>
         <circle cx={C} cy={C} r={29} fill={centreActiu ? "#eab308" : "#e9d5a6"} />
         <IconaAmbReintent href="/images/logo/pentagon-robi.webp" x={C - 28} y={C - 28} width={56} height={56} />
+        {centreActiu &&
+          !imprès &&
+          ESPURNES_GEMMA.map((e, i) => (
+            <circle
+              key={i}
+              cx={C - 28 + e.cx * 56}
+              cy={C - 28 + e.cy * 56}
+              r={e.r}
+              fill="url(#espurna-blanca)"
+              className="animate-parpelleig"
+              style={{ transformBox: "fill-box", transformOrigin: "center", animationDelay: e.retard }}
+            />
+          ))}
       </g>
       {/* Zona de toc del centre, més gran que el gresol perquè s'encerti amb el dit. */}
       <circle cx={C} cy={C} r={42} fill="transparent" onClick={tocarCentre} />

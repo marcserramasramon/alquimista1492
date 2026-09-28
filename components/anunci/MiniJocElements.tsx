@@ -24,6 +24,15 @@ const MIDA_NODE = 50;
 /** Temps que el flaix cobreix el Gresol abans de revelar la gemma (ha de quedar per sota de 0.9s, la durada de l'`esclat`). */
 const RETARD_REVELACIO_MS = 350;
 
+/** Espurnes blanques sobre la gemma revelada (posició en % de la caixa 250×250). */
+const ESPURNES_GEMMA = [
+  { cx: 0.26, cy: 0.18, r: 4, retard: "0s" },
+  { cx: 0.7, cy: 0.6, r: 3, retard: "0.6s" },
+  { cx: 0.3, cy: 0.7, r: 5, retard: "1.2s" },
+  { cx: 0.68, cy: 0.3, r: 3.5, retard: "1.8s" },
+  { cx: 0.48, cy: 0.45, r: 2.5, retard: "0.3s" },
+];
+
 /** Mateix ordre i patró que `components/ui/Pentagrama.tsx`: la punta de dalt i sentit horari. */
 const ORDRE: Element[] = ["foc", "terra", "anima", "aire", "aigua"];
 
@@ -124,6 +133,10 @@ export function MiniJocElements() {
           <filter id="anunci-fum-difuminat" x="-100%" y="-100%" width="300%" height="300%">
             <feGaussianBlur stdDeviation="10" />
           </filter>
+          <radialGradient id="anunci-espurna-blanca">
+            <stop offset="0%" stopColor="#fff" stopOpacity="1" />
+            <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+          </radialGradient>
         </defs>
 
         {/* Anell exterior de runes, girant sense parar */}
@@ -161,6 +174,18 @@ export function MiniJocElements() {
               style={{ transformOrigin: `${C}px ${C}px`, transformBox: "view-box" }}
             />
           )}
+          {revelat &&
+            ESPURNES_GEMMA.map((e, i) => (
+              <circle
+                key={i}
+                cx={C - 125 + e.cx * 250}
+                cy={C - 125 + e.cy * 250}
+                r={e.r}
+                fill="url(#anunci-espurna-blanca)"
+                className="animate-parpelleig"
+                style={{ transformBox: "fill-box", transformOrigin: "center", animationDelay: e.retard }}
+              />
+            ))}
           {complet && !revelat && (
             <circle cx={C} cy={C} r={95} fill="#fff8e1" className="animate-esclat" />
           )}
