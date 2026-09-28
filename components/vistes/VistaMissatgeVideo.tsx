@@ -10,8 +10,6 @@ export interface VistaMissatgeVideoProps {
   pendents?: number;
   /** Mentre es desa que s'ha llegit. */
   enviant?: boolean;
-  /** El vídeo té una marca d'aigua a la cantonada inferior dreta: hi dibuixa un cercle negre a sobre. */
-  tapaMarcaAigua?: boolean;
   onAcceptar: () => void;
 }
 
@@ -32,7 +30,6 @@ export function VistaMissatgeVideo({
   video,
   pendents = 1,
   enviant = false,
-  tapaMarcaAigua = false,
   onAcceptar,
 }: VistaMissatgeVideoProps) {
   const boto = useRef<HTMLButtonElement>(null);
@@ -129,16 +126,20 @@ export function VistaMissatgeVideo({
       aria-describedby="missatge-video-text"
       className="fixed inset-0 z-[200] flex flex-col bg-black pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
     >
-      <div className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-10 flex items-center gap-2">
-        {pendents > 1 && (
-          <p className="rounded-full border-2 border-ink bg-gold px-2.5 text-sm font-extrabold">1 de {pendents}</p>
-        )}
+      {pendents > 1 && (
+        <p className="absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-10 rounded-full border-2 border-ink bg-gold px-2.5 text-sm font-extrabold">
+          1 de {pendents}
+        </p>
+      )}
+
+      <div className="relative flex-1 overflow-hidden">
+        <video ref={videoRef} className="h-full w-full object-cover" playsInline controls={blocat} />
         {!blocat && (
           <button
             type="button"
             onClick={alternarReproduccio}
             aria-label={acabat ? "Tornar a reproduir" : reproduint ? "Pausar" : "Reproduir"}
-            className="btn btn-secundari btn-rodo shadow-[0_3px_0_var(--ink)]"
+            className="btn btn-secundari btn-rodo absolute bottom-3 right-3 z-10 shadow-[0_3px_0_var(--ink)]"
           >
             {acabat ? (
               <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden>
@@ -162,13 +163,6 @@ export function VistaMissatgeVideo({
               </svg>
             )}
           </button>
-        )}
-      </div>
-
-      <div className="relative flex-1 overflow-hidden">
-        <video ref={videoRef} className="h-full w-full object-cover" playsInline controls={blocat} />
-        {tapaMarcaAigua && (
-          <div aria-hidden className="pointer-events-none absolute bottom-3 right-3 h-16 w-16 rounded-full bg-black" />
         )}
         {blocat && (
           <button

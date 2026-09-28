@@ -48,9 +48,6 @@ export interface MissatgeMaster {
   text: string;
   video?: string;
   geofence?: { lat: number; lng: number; radiMetres: number };
-  /** El vídeo té una marca d'aigua (generat amb IA) a la cantonada inferior dreta:
-   *  VistaMissatgeVideo hi dibuixa un cercle negre a sobre per tapar-la. */
-  tapaMarcaAigua?: boolean;
 }
 
 export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
@@ -82,7 +79,6 @@ export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
     text: ALERTA_INQUISIDOR.paragrafs.join(" "),
     video: "/video/alerta-inquisidor.mp4",
     geofence: { lat: 41.912569, lng: 2.227555, radiMetres: 40 },
-    tapaMarcaAigua: true,
   },
   {
     id: "inquisidor-pregunta",

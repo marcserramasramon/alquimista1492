@@ -654,13 +654,7 @@ export const PANTALLES: Pantalla[] = [
       return (
         <>
           {getPantalla("hub-mitja-partida")?.render(dades)}
-          <VistaMissatgeVideo
-            titol={missatge.titol}
-            text={missatge.text}
-            video={missatge.video!}
-            tapaMarcaAigua={missatge.tapaMarcaAigua}
-            onAcceptar={noop}
-          />
+          <VistaMissatgeVideo titol={missatge.titol} text={missatge.text} video={missatge.video!} onAcceptar={noop} />
         </>
       );
     },
