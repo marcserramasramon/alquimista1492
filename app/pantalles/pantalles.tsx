@@ -659,6 +659,38 @@ export const PANTALLES: Pantalla[] = [
       );
     },
   },
+  {
+    id: "missatge-ambient-aigua",
+    grup: "hub",
+    titol: "Missatge ambient · l'Aigua (església)",
+    descripcio:
+      "Vídeo per geofence (content/public/missatgesMaster.ts, clau \"aigua-esglesia\"), pel camí cap a/des de Font del Lleó.",
+    render: (dades) => {
+      const missatge = MISSATGES_MASTER.find((m) => m.id === "aigua-esglesia")!;
+      return (
+        <>
+          {getPantalla("hub-mitja-partida")?.render(dades)}
+          <VistaMissatgeVideo titol={missatge.titol} text={missatge.text} video={missatge.video!} onAcceptar={noop} />
+        </>
+      );
+    },
+  },
+  {
+    id: "missatge-ambient-terra",
+    grup: "hub",
+    titol: "Missatge ambient · la Terra (Mas Vinyals)",
+    descripcio:
+      "Vídeo per geofence (content/public/missatgesMaster.ts, clau \"terra-vinyals\"), pel camí cap a Planes Bones.",
+    render: (dades) => {
+      const missatge = MISSATGES_MASTER.find((m) => m.id === "terra-vinyals")!;
+      return (
+        <>
+          {getPantalla("hub-mitja-partida")?.render(dades)}
+          <VistaMissatgeVideo titol={missatge.titol} text={missatge.text} video={missatge.video!} onAcceptar={noop} />
+        </>
+      );
+    },
+  },
 
   // Fites
   {
