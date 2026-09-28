@@ -93,13 +93,13 @@ export function VistaHub({
     // quadrats de mida fixa, així que en una pantalla molt alta hi pot quedar espai
     // sobrant a sota; és el mateix compromís que accepten totes les altres pantalles.
     <main
-      className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-7 px-4 pt-2 ${
+      className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-7 px-4 pt-7 ${
         totesResoltes ? "pb-32" : "pb-[max(1.5rem,env(safe-area-inset-bottom))]"
       }`}
     >
       {/* Sense compte enrere, la casella dels elements fa ella sola la franja de dalt. */}
       {rellotge === "no" && (
-        <BarraFranja className="-mx-4 -mt-2 shrink-0">
+        <BarraFranja className="-mx-4 -mt-7 shrink-0">
           <div className="ml-auto">{casella}</div>
         </BarraFranja>
       )}
@@ -109,7 +109,7 @@ export function VistaHub({
             triada n'ocupa el lloc, amb la mateixa alçada. */}
         <section
           ref={zonaRef}
-          className="targeta relative overflow-hidden px-1 pb-2 pt-0 animate-entrar scroll-mt-10 [animation-delay:80ms]"
+          className="targeta relative -mt-5 overflow-hidden px-1 pb-2 pt-0 animate-entrar scroll-mt-10 [animation-delay:80ms]"
         >
           <div className={seleccionada ? "invisible" : undefined}>
             <Pentagrama
@@ -149,29 +149,31 @@ export function VistaHub({
             videos={videos}
             onSeleccionarVideo={onSeleccionarVideo}
             onAvis={onAvis}
+            llegenda={
+              marcadors && marcadors.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-soft">
+                  {marcadors.some((m) => m.tipus === "jo") && (
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-3 w-3 rounded-full border-2 border-white bg-[#2563eb] ring-1 ring-ink/30" /> Vosaltres
+                    </span>
+                  )}
+                  {marcadors.some((m) => m.tipus === "master") && (
+                    <span className="flex items-center gap-1.5">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black text-[11px] leading-none" aria-hidden>
+                        🧙
+                      </span>{" "}
+                      L&apos;organització
+                    </span>
+                  )}
+                  {marcadors.some((m) => m.tipus === "equip") && (
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-3 w-3 rounded-full border-2 border-white bg-[#b3261e] ring-1 ring-ink/30" /> Altres equips
+                    </span>
+                  )}
+                </div>
+              ) : undefined
+            }
           />
-          {marcadors && marcadors.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 px-2 text-sm text-ink-soft">
-              {marcadors.some((m) => m.tipus === "jo") && (
-                <span className="flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded-full border-2 border-white bg-[#2563eb] ring-1 ring-ink/30" /> Vosaltres
-                </span>
-              )}
-              {marcadors.some((m) => m.tipus === "master") && (
-                <span className="flex items-center gap-1.5">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black text-[11px] leading-none" aria-hidden>
-                    🧙
-                  </span>{" "}
-                  L&apos;organització
-                </span>
-              )}
-              {marcadors.some((m) => m.tipus === "equip") && (
-                <span className="flex items-center gap-1.5">
-                  <span className="h-3 w-3 rounded-full border-2 border-white bg-[#b3261e] ring-1 ring-ink/30" /> Altres equips
-                </span>
-              )}
-            </div>
-          )}
         </section>
 
         {/* Llista "les fites" amagada: el mapa ja les mostra. Deixem el codi per si es vol recuperar. */}

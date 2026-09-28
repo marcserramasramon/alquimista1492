@@ -39,6 +39,8 @@ export interface MapaEquipProps {
   onSeleccionarVideo?: (id: string) => void;
   /** Es crida en tocar el botó "?" (avisar el màster). Sense aquesta funció, el botó no surt. */
   onAvis?: () => void;
+  /** Llegenda dels marcadors: es dibuixa a la mateixa fila que el botó "?", alineada amb ell. */
+  llegenda?: React.ReactNode;
 }
 
 export interface VideoMapa {
@@ -118,6 +120,7 @@ export function MapaEquip({
   videos = [],
   onSeleccionarVideo,
   onAvis,
+  llegenda,
 }: MapaEquipProps) {
   // Fora de la imatge del mapa, un marcador es queda a l'última
   // posició coneguda de dins (app-nova.md §7ter.3).
@@ -548,17 +551,20 @@ export function MapaEquip({
           </p>
         )}
       </div>
-      {/* Botó d'avís al màster: sota el mapa, molt petit perquè no competeixi amb els controls del mapa. */}
-      {!pantallaCompleta && onAvis && (
-        <div className="mt-1.5 flex justify-end">
-          <button
-            type="button"
-            onClick={onAvis}
-            aria-label="Avisar el màster"
-            className="flex h-5 w-5 items-center justify-center rounded-full border border-ink/60 bg-transparent text-xs font-extrabold text-ink-soft"
-          >
-            ?
-          </button>
+      {/* Llegenda (a l'esquerra) i botó d'avís al màster (a la dreta): sota el mapa, a la mateixa alçada. */}
+      {!pantallaCompleta && (llegenda || onAvis) && (
+        <div className="mt-1.5 flex items-center justify-between gap-3">
+          <div className="translate-x-[15px] translate-y-[2px]">{llegenda}</div>
+          {onAvis && (
+            <button
+              type="button"
+              onClick={onAvis}
+              aria-label="Avisar el màster"
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-ink/60 bg-[#fffdf7] text-xs font-extrabold text-ink-soft"
+            >
+              ?
+            </button>
+          )}
         </div>
       )}
     </>
