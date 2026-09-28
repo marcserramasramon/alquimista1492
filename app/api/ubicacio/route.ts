@@ -3,7 +3,34 @@ import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceRoleClient } from "@/lib/supabase";
 import { getEquipSession } from "@/lib/auth";
-import { MINIM_ENTRE_UBICACIONS_MS, UbicacioSchema } from "@/lib/ubicacio";
+import { distanciaMetres, MINIM_ENTRE_UBICACIONS_MS, UbicacioSchema } from "@/lib/ubicacio";
+import { MISSATGES_MASTER } from "@/content/public/missatgesMaster";
+
+const MISSATGES_GEOFENCE = MISSATGES_MASTER.filter((m) => m.geofence);
+
+/** Envia els missatges amb `geofence` que l'equip encara no hagi rebut i als quals s'hagi acostat prou. */
+async function dispararMissatgesGeofence(
+  db: ReturnType<typeof getServiceRoleClient>,
+  teamId: string,
+  posicio: { lat: number; lng: number }
+) {
+  for (const missatge of MISSATGES_GEOFENCE) {
+    const { lat, lng, radiMetres } = missatge.geofence!;
+    if (distanciaMetres(posicio, { lat, lng }) > radiMetres) continue;
+    const { data: ja_enviat } = await db
+      .from("v2_missatges")
+      .select("id")
+      .eq("team_id", teamId)
+      .eq("clau", missatge.id)
+      .limit(1)
+      .maybeSingle();
+    if (ja_enviat) continue;
+    const { error } = await db
+      .from("v2_missatges")
+      .insert({ team_id: teamId, clau: missatge.id, titol: missatge.titol, text: missatge.text });
+    if (error) console.error("Error enviant missatge per geofence:", error);
+  }
+}
 
 /** L'equip envia la seva posició. L'equip surt de la cookie, mai del cos de la petició. */
 export async function POST(request: NextRequest) {
@@ -41,6 +68,11 @@ export async function POST(request: NextRequest) {
       created_at: ara.toISOString(),
     });
     if (error) console.error("Error desant el recorregut:", error);
+  }
+
+  // Missatges automàtics per proximitat: només en joc (no abans de començar ni al final).
+  if (desada && desada.status === "joc" && MISSATGES_GEOFENCE.length > 0) {
+    await dispararMissatgesGeofence(db, sessio.teamId, { lat, lng });
   }
 
   return NextResponse.json({ ok: true });

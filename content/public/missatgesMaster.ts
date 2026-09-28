@@ -13,20 +13,41 @@
  * missatge secret; la ironia es descobreix al final) i d'operatius, neutres.
  * Cap no fa servir la contrasenya de l'Orde, per no esguerrar-ne el moment.
  *
- * `video`: ruta a public/video/ per als missatges amb vídeo (l'Inquisidor
- * alertant en directe). PENDENT: cal gravar i penjar-hi el fitxer — el guió
- * i la veu sintetitzada són a content/public/textos.ts perquè
- * scripts/generate-audio.py en generi l'àudio, a barrejar amb el vídeo un
- * cop gravat. Sense el fitxer, el pop-up cau en un missatge només de text.
+ * `video`: ruta a public/video/ per als missatges amb vídeo. Sense el fitxer,
+ * el pop-up cau en un missatge només de text.
+ *
+ * `geofence`: si hi és, el missatge s'envia sol —sense que el màster toqui
+ * res— la primera vegada que un equip (amb la ubicació activada) passa a
+ * `radiMetres` d'aquest punt, sempre que la partida ja hagi començat
+ * (app/api/ubicacio/route.ts). Sense `geofence`, el missatge només s'envia
+ * a mà des del panell del màster.
  */
 
-import { ALERTA_INQUISIDOR } from "@/content/public/textos";
+/**
+ * Guió del vídeo de l'Inquisidor (content/public/missatgesMaster.ts, clau
+ * "inquisidor-alerta"). A diferència de la resta, aquesta NO és la veu de Fra
+ * Francesc: és l'Inquisidor mateix, amenaçador — per això no viu a textos.ts
+ * ni es genera amb scripts/generate-audio.py, sinó amb
+ * scripts/generate-veu-inquisidor.py (veu més greu, més lenta i amb eco).
+ * Si es canvia el text, cal tornar a executar aquell script.
+ */
+const ALERTA_INQUISIDOR = {
+  titol: "Us ha sentit",
+  paragrafs: [
+    "Sé que rondeu per aquest poble.",
+    "Heretgia! La sento a l'aire, com fum de foguera.",
+    "El Sant Ofici no oblida ni perdona.",
+    "Qui toca l'obra de l'alquimista, crema amb ella.",
+    "Qui hi ha aquí?",
+  ],
+};
 
 export interface MissatgeMaster {
   id: string;
   titol: string;
   text: string;
   video?: string;
+  geofence?: { lat: number; lng: number; radiMetres: number };
 }
 
 export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
@@ -50,16 +71,39 @@ export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
     titol: "L'Inquisidor us vigila",
     text: "L'home del Sant Ofici ronda a prop. Parleu baix, no us separeu i no li doneu cap motiu per aturar-vos.",
   },
+  /** Es dispara sol al cementiri, pel camí cap al pas previ `aire-pas` (Creu del Pujolar).
+   *  Veure textos.ts pel guió/àudio. */
   {
     id: "inquisidor-alerta",
-    titol: ALERTA_INQUISIDOR.titol!,
+    titol: ALERTA_INQUISIDOR.titol,
     text: ALERTA_INQUISIDOR.paragrafs.join(" "),
     video: "/video/alerta-inquisidor.mp4",
+    geofence: { lat: 41.912569, lng: 2.227555, radiMetres: 40 },
   },
   {
     id: "inquisidor-pregunta",
     titol: "Pregunta per vosaltres",
     text: "M'han dit que l'Inquisidor pregunta per vosaltres. Seguiu endavant, però amb els ulls ben oberts.",
+  },
+  /** Es dispara sol pel camí cap a/des de Font del Lleó (Aigua), a l'església del poble.
+   *  Vídeo generat amb IA (element espectacular, no una amenaça): l'Aigua s'alça, fa
+   *  una cabriola i continua el seu camí. Narració muntada amb scripts/generate-audio-ambient.py. */
+  {
+    id: "aigua-esglesia",
+    titol: "L'aigua ha passat",
+    text: "Heu vist l'Aigua alçar-se i tornar a caure. Reconeix qui s'hi acosta. Continueu.",
+    video: "/video/aigua-esglesia.mp4",
+    geofence: { lat: 41.91377776075638, lng: 2.227906392940557, radiMetres: 30 },
+  },
+  /** Es dispara sol pel camí cap a Planes Bones (Terra), a l'altura de l'entrada del Mas
+   *  Vinyals. Vídeo generat amb IA: arbres i plantes creixen al costat del camí, seguint
+   *  els seus passos. Narració muntada amb scripts/generate-audio-ambient.py. */
+  {
+    id: "terra-vinyals",
+    titol: "La Terra ha florit",
+    text: "Heu vist créixer la Terra al vostre pas. Fins i tot ella sap que us acosteu al que busca.",
+    video: "/video/terra-planes-bones.mp4",
+    geofence: { lat: 41.9136, lng: 2.232721, radiMetres: 30 },
   },
   {
     id: "bon-cami",

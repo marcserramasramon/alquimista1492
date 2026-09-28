@@ -19,6 +19,10 @@ export interface VistaMissatgeVideoProps {
  * només hi queda com a subtítol, per si no es pot sentir el so a ple carrer.
  * Si el fitxer no es pot reproduir (encara no gravat, o error de xarxa), cau en
  * un missatge només de text perquè l'avís sempre arribi.
+ *
+ * Els listeners de <video> (error inclòs) es lliguen a mà abans de fixar `src`:
+ * l'esdeveniment "error" no fa bombolla i, amb un fitxer local que falla de
+ * seguida (404), pot arribar abans que React n'hagi enllaçat el `onError` de JSX.
  */
 export function VistaMissatgeVideo({
   titol,
@@ -29,12 +33,32 @@ export function VistaMissatgeVideo({
   onAcceptar,
 }: VistaMissatgeVideoProps) {
   const boto = useRef<HTMLButtonElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState(false);
   const [blocat, setBlocat] = useState(false);
 
   useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    setError(false);
+    setBlocat(false);
+
+    const enError = () => setError(true);
+    const enPreparat = () => el.play().catch(() => setBlocat(true));
+    el.addEventListener("error", enError);
+    el.addEventListener("canplay", enPreparat);
+    el.src = video;
+    el.load();
+
+    return () => {
+      el.removeEventListener("error", enError);
+      el.removeEventListener("canplay", enPreparat);
+    };
+  }, [video]);
+
+  useEffect(() => {
     boto.current?.focus();
-  }, [titol, text]);
+  }, [titol, text, error]);
 
   if (error) {
     return (
@@ -76,23 +100,12 @@ export function VistaMissatgeVideo({
       )}
 
       <div className="relative flex-1 overflow-hidden">
-        <video
-          className="h-full w-full object-cover"
-          src={video}
-          autoPlay
-          playsInline
-          controls={blocat}
-          onError={() => setError(true)}
-          onCanPlay={(e) => {
-            e.currentTarget.play().catch(() => setBlocat(true));
-          }}
-        />
+        <video ref={videoRef} className="h-full w-full object-cover" playsInline controls={blocat} />
         {blocat && (
           <button
             type="button"
-            onClick={(e) => {
-              const v = e.currentTarget.parentElement?.querySelector("video");
-              v?.play();
+            onClick={() => {
+              videoRef.current?.play();
               setBlocat(false);
             }}
             className="absolute inset-0 flex items-center justify-center bg-black/40 text-6xl text-white"

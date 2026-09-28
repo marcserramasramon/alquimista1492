@@ -160,19 +160,6 @@ export const TEMPS_CONSUMIT: TextNarratiu = {
   audio: "/audio/temps.mp3",
 };
 
-// 3c. Alerta del màster amb vídeo: l'Inquisidor us ha vist (content/public/missatgesMaster.ts,
-// clau "inquisidor-alerta"). El text hi és importat des d'aquí perquè no se separi de l'àudio.
-export const ALERTA_INQUISIDOR: TextNarratiu = {
-  titol: "Us ha vist",
-  paragrafs: [
-    "Calleu. No mireu enrere.",
-    "L'home del Sant Ofici acaba de preguntar pel vostre equip a algú del poble: sap que porteu proves d'heretgia.",
-    "Si us troba amb els fragments a sobre, no hi haurà judici, només la sentència.",
-    "Amagueu el que porteu, separeu-vos del carrer principal, i no torneu a obrir aquesta app fins que jo us digui que el perill ha passat.",
-  ],
-  audio: "/audio/alerta-inquisidor.mp3",
-};
-
 // 4a. Pla del Masset, en arribar (abans del desemmascarament; sense àudio)
 export const GRESOL_ARRIBADA: TextNarratiu = {
   titol: "El cor de l'estrella",
