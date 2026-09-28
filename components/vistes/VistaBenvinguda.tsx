@@ -27,7 +27,7 @@ export function VistaBenvinguda({
   return (
     <Pantalla>
       <div className="flex flex-1 flex-col items-center justify-center gap-6">
-        <Pentagrama girar vius className="w-64 max-w-full animate-entrar" />
+        <Pentagrama girar vius espurnes className="w-64 max-w-full animate-entrar" />
         <div className="animate-entrar [animation-delay:120ms]">
           <Marca />
         </div>

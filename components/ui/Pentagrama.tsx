@@ -23,6 +23,8 @@ export interface PentagramaProps {
   onTriar?: (id: string) => void;
   /** Elements amb color encara que no estiguin resolts (ús decoratiu). */
   vius?: boolean;
+  /** Força les espurnes sobre la gemma central encara que `centreActiu` sigui fals (ús decoratiu, p. ex. la Benvinguda). */
+  espurnes?: boolean;
   className?: string;
   /** Per als cartells impresos: estrella contínua d'aquest color i gruix, i text de l'anell més gran i fosc. */
   imprès?: { colorLinies: string; gruixLinies: number; midaText: number };
@@ -120,6 +122,7 @@ export function Pentagrama({
   seleccionatId = null,
   onTriar,
   vius = false,
+  espurnes = false,
   className = "",
   imprès,
 }: PentagramaProps) {
@@ -213,7 +216,7 @@ export function Pentagrama({
       <g style={{ opacity: opacitatCentre, transition: "opacity 1.2s ease" }}>
         <circle cx={C} cy={C} r={29} fill={centreActiu ? "#eab308" : "#e9d5a6"} />
         <IconaAmbReintent href="/images/logo/pentagon-robi.webp" x={C - 28} y={C - 28} width={56} height={56} />
-        {centreActiu &&
+        {(espurnes || centreActiu) &&
           !imprès &&
           ESPURNES_GEMMA.map((e, i) => (
             <circle
