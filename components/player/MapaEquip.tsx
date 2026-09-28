@@ -541,20 +541,6 @@ export function MapaEquip({
               </button>
             )}
           </div>
-
-          {/* Botó d'avís al màster: sempre a l'abast del polze, cantonada oposada als altres controls. */}
-          {onAvis && (
-            <div className="absolute bottom-2.5 right-2.5">
-              <button
-                type="button"
-                onClick={onAvis}
-                aria-label="Avisar el màster"
-                className="btn btn-secundari btn-rodo text-xl"
-              >
-                ?
-              </button>
-            </div>
-          )}
         </div>
         {pantallaCompleta && (
           <p className="pt-2 text-center text-base font-bold text-paper">
@@ -562,6 +548,19 @@ export function MapaEquip({
           </p>
         )}
       </div>
+      {/* Botó d'avís al màster: sota el mapa, molt petit perquè no competeixi amb els controls del mapa. */}
+      {!pantallaCompleta && onAvis && (
+        <div className="mt-1.5 flex justify-end">
+          <button
+            type="button"
+            onClick={onAvis}
+            aria-label="Avisar el màster"
+            className="flex h-5 w-5 items-center justify-center rounded-full border border-ink/60 bg-transparent text-xs font-extrabold text-ink-soft"
+          >
+            ?
+          </button>
+        </div>
+      )}
     </>
   );
 }
