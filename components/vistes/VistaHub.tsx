@@ -97,10 +97,13 @@ export function VistaHub({
         totesResoltes ? "pb-32" : "pb-[max(1.5rem,env(safe-area-inset-bottom))]"
       }`}
     >
-      {/* Sense compte enrere, la casella dels elements fa ella sola la franja de dalt. */}
+      {/* Sense rellotge a l'esquerra que la contrapesi, la casella sola arran de la vora dreta
+          queda tallada per la cantonada corbada de la pantalla en alguns iPhone: centrada al
+          terç dret de la barra (entre l'espai de la càmera i el marge) hi queda prou lluny de
+          totes dues vores, més a prop del marge que del centre. */}
       {rellotge === "no" && (
         <BarraFranja className="-mx-4 -mt-7 shrink-0">
-          <div className="ml-auto">{casella}</div>
+          <div className="ml-auto flex w-1/3 justify-center">{casella}</div>
         </BarraFranja>
       )}
 
@@ -109,7 +112,7 @@ export function VistaHub({
             triada n'ocupa el lloc, amb la mateixa alçada. */}
         <section
           ref={zonaRef}
-          className="targeta relative -mt-5 overflow-hidden px-1 pb-2 pt-0 animate-entrar scroll-mt-10 [animation-delay:80ms]"
+          className="targeta relative -mt-3 overflow-hidden px-1 pb-2 pt-0 animate-entrar scroll-mt-10 [animation-delay:80ms]"
         >
           <div className={seleccionada ? "invisible" : undefined}>
             <Pentagrama
@@ -139,7 +142,10 @@ export function VistaHub({
 
         {totesResoltes && <Narracio text={ESTRELLA_COMPLETA} etiqueta="fra francesc" className="animate-entrar" />}
 
-        <section className="animate-entrar [animation-delay:160ms]">
+        {/* mt-1.5 compensa els 6px de la sub­ombra .targeta del pentagrama (globals.css): sense
+            això el gap-4 del contenidor (1rem) es veu com a 10px perquè l'ombra sòlida es dibuixa
+            per sota de la vora i "menja" part de l'espai. */}
+        <section className="mt-1.5 animate-entrar [animation-delay:160ms]">
           <MapaEquip
             estacions={estacions}
             totesResoltes={totesResoltes}

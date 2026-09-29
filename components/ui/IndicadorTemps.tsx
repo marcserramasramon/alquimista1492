@@ -38,11 +38,11 @@ export function IndicadorTemps({ acabaAt, desfasamentMs = 0, onZero }: Indicador
       <p
         role="timer"
         aria-label="Temps que queda"
-        className={`flex items-center gap-1.5 font-display text-lg font-extrabold leading-5 tabular-nums ${
-          alerta ? "motion-safe:animate-pulse" : ""
+        className={`ml-2 flex items-center gap-1 font-sans text-base font-extrabold leading-5 tabular-nums ${
+          alerta ? "motion-safe:animate-pulse" : "text-blood"
         }`}
       >
-        <span aria-hidden className="text-sm">⏳</span>
+        <span aria-hidden className="ml-0.5 text-sm">⏳</span>
         <CompteEnrere acabaAt={acabaAt} desfasamentMs={desfasamentMs} onZero={onZero} />
       </p>
       {extra && <div className="ml-auto">{extra}</div>}
