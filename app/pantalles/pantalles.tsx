@@ -768,6 +768,22 @@ export const PANTALLES: Pantalla[] = [
       );
     },
   },
+  {
+    id: "missatge-ambient-foc",
+    grup: "hub",
+    titol: "Missatge ambient · el Foc (Plaça de la Creu)",
+    descripcio:
+      "Vídeo per geofence (content/public/missatgesMaster.ts, clau \"foc-placa-creu\"), pel camí a la Plaça de la Creu (no és una fita).",
+    render: (dades) => {
+      const missatge = MISSATGES_MASTER.find((m) => m.id === "foc-placa-creu")!;
+      return (
+        <>
+          {getPantalla("hub-mitja-partida")?.render(dades)}
+          <VistaMissatgeVideo titol={missatge.titol} text={missatge.text} video={missatge.video!} onAcceptar={noop} />
+        </>
+      );
+    },
+  },
 
   // Fites
   {

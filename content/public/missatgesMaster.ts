@@ -115,6 +115,15 @@ export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
     video: "/video/anima-cami-malla.mp4",
     geofence: { lat: 41.912181, lng: 2.229094, radiMetres: 30 },
   },
+  /** Es dispara sol a la Plaça de la Creu, pel camí (no és una fita). Narració pendent amb
+   *  scripts/generate-audio-ambient.py (afegir "foc-placa-creu" a AMBIENT_IDS). */
+  {
+    id: "foc-placa-creu",
+    titol: "El Foc ha espurnejat",
+    text: "Heu vist el Foc espurnejar entre les pedres de la plaça i apagar-se en veure-us. Continueu.",
+    video: "/video/foc-placa-creu.mp4",
+    geofence: { lat: 41.914663, lng: 2.229972, radiMetres: 30 },
+  },
   {
     id: "bon-cami",
     titol: "Aneu per bon camí",

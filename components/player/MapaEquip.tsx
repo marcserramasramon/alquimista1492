@@ -142,7 +142,6 @@ export function MapaEquip({
   });
 
   const vistaRef = useRef<HTMLDivElement | null>(null);
-  const [pantallaCompleta, setPantallaCompleta] = useState(false);
   // Mida de la finestra del mapa (px). La capa del mapa és sempre quadrada.
   const [mida, setMida] = useState({ w: 0, h: 0 });
   // Transformació de la capa: posició a la pantalla = t + z · posició dins la capa.
@@ -177,7 +176,7 @@ export function MapaEquip({
     [capaW, capaH, mida.w, mida.h]
   );
 
-  // Recol·loca el mapa quan canvia la mida (girar el mòbil, pantalla completa...).
+  // Recol·loca el mapa quan canvia la mida (girar el mòbil...).
   const [midaAjustada, setMidaAjustada] = useState(mida);
   if (midaAjustada !== mida) {
     setMidaAjustada(mida);
@@ -273,13 +272,13 @@ export function MapaEquip({
     iniciarGest();
   }
 
-  // Roda del ratolí (ordinador): amb Ctrl, o sempre a pantalla completa.
+  // Roda del ratolí (ordinador): amb Ctrl.
   // Cal un listener no passiu per poder aturar el scroll de la pàgina.
   useEffect(() => {
     const el = vistaRef.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey && !pantallaCompleta) return;
+      if (!e.ctrlKey && !e.metaKey) return;
       e.preventDefault();
       const r = el.getBoundingClientRect();
       const px = e.clientX - r.left;
@@ -291,17 +290,7 @@ export function MapaEquip({
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [ajustar, pantallaCompleta]);
-
-  // Esc tanca la pantalla completa.
-  useEffect(() => {
-    if (!pantallaCompleta) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setPantallaCompleta(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [pantallaCompleta]);
+  }, [ajustar]);
 
   const zoom = vista.z;
   // Els marcadors creixen menys que el mapa: continuen al seu lloc però no ho tapen tot.
@@ -318,25 +307,10 @@ export function MapaEquip({
 
   return (
     <>
-      {/* Mentre el mapa és a pantalla completa, en reserva el lloc a la pàgina. */}
-      {pantallaCompleta && (
-        <div className="aspect-square w-full rounded-3xl border-[3px] border-dashed border-ink/30" aria-hidden />
-      )}
-      <div
-        className={
-          pantallaCompleta
-            ? "fixed inset-0 z-[25] flex flex-col bg-ink/90 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-[max(0.5rem,env(safe-area-inset-top))]"
-            : "relative"
-        }
-        role={pantallaCompleta ? "dialog" : undefined}
-        aria-modal={pantallaCompleta ? true : undefined}
-        aria-label={pantallaCompleta ? "Mapa de Sentfores" : undefined}
-      >
+      <div className="relative">
         <div
           ref={vistaRef}
-          className={`relative w-full touch-none select-none overflow-hidden border-[3px] border-ink bg-paper-2 ${
-            pantallaCompleta ? "min-h-0 flex-1 rounded-2xl" : "aspect-square rounded-3xl shadow-[0_6px_0_var(--ink)]"
-          }`}
+          className="relative aspect-square w-full touch-none select-none overflow-hidden rounded-3xl border-[3px] border-ink bg-paper-2 shadow-[0_6px_0_var(--ink)]"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -524,16 +498,8 @@ export function MapaEquip({
           </svg>
 
           {/* Controls a l'abast del polze: sempre visibles, mínim 48px */}
-          <div className="absolute left-2.5 top-2.5 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setPantallaCompleta((p) => !p)}
-              aria-label={pantallaCompleta ? "Tancar el mapa gran" : "Veure el mapa en gran"}
-              className="btn btn-secundari btn-rodo text-xl"
-            >
-              {pantallaCompleta ? "✕" : <IconaAmpliar />}
-            </button>
-            {zoom > 1 && (
+          {zoom > 1 && (
+            <div className="absolute left-2.5 top-2.5 flex gap-2">
               <button
                 type="button"
                 onClick={reiniciar}
@@ -542,17 +508,12 @@ export function MapaEquip({
               >
                 <IconaReiniciar />
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-        {pantallaCompleta && (
-          <p className="pt-2 text-center text-base font-bold text-paper">
-            Pessigueu per apropar · arrossegueu per moure-us
-          </p>
-        )}
       </div>
       {/* Llegenda (a l'esquerra) i botó d'avís al màster (a la dreta): sota el mapa, a la mateixa alçada. */}
-      {!pantallaCompleta && (llegenda || onAvis) && (
+      {(llegenda || onAvis) && (
         <div className="mt-1.5 flex items-center justify-between gap-3">
           <div className="translate-x-[15px] translate-y-[2px]">{llegenda}</div>
           {onAvis && (
@@ -568,14 +529,6 @@ export function MapaEquip({
         </div>
       )}
     </>
-  );
-}
-
-function IconaAmpliar() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
-    </svg>
   );
 }
 

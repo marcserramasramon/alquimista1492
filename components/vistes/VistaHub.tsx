@@ -258,7 +258,7 @@ export function VistaHub({
 function CasellaElements({ resoltes, total }: { resoltes: number; total: number }) {
   return (
     <p aria-label={`${resoltes} de ${total} elements`} className="flex items-baseline gap-1.5 leading-5">
-      <span className="font-display text-lg font-extrabold leading-5 tabular-nums">
+      <span className="etiqueta text-[0.7rem] leading-5 text-current tabular-nums">
         {resoltes}/{total}
       </span>
       <span className="etiqueta text-[0.7rem] leading-5 text-current opacity-80">elements</span>

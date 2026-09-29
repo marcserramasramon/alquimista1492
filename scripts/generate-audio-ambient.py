@@ -36,7 +36,7 @@ SENTENCE_GAP = 0.35
 POST_FILTER = "highpass=f=70,loudnorm=I=-16:TP=-1.5"
 
 # Ids in content/public/missatgesMaster.ts whose `video` gets Fra Francesc's narration.
-AMBIENT_IDS = ["aigua-esglesia", "terra-vinyals", "anima-cami-malla"]
+AMBIENT_IDS = ["aigua-esglesia", "terra-vinyals", "anima-cami-malla", "foc-placa-creu"]
 
 NUMBERS = {"1472": "mil quatre-cents setanta-dos"}
 
