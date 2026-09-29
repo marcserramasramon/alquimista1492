@@ -6,7 +6,8 @@ import { ESPERA_ENTRE_INTENTS_MS } from "@/lib/partida";
 
 interface InputAnswerGameProps {
   estacioId: string;
-  onResolt: () => void;
+  /** `totesResoltes`: si amb aquesta resposta l'equip ha completat les cinc fites elementals. */
+  onResolt: (totesResoltes: boolean) => void;
 }
 
 /**
@@ -42,7 +43,7 @@ export function useInputAnswerGame({ estacioId, onResolt }: InputAnswerGameProps
       setCorrecte(Boolean(data.correcte));
       if (data.correcte) {
         // Temps per veure l'animació i sentir el so de CelebracioFragment abans del fragment.
-        setTimeout(onResolt, 3000);
+        setTimeout(() => onResolt(Boolean(data.totesResoltes)), 3000);
       } else {
         setEsperant(true);
         setTimeout(() => setEsperant(false), Math.max(0, inici + ESPERA_ENTRE_INTENTS_MS - Date.now()));

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useInputAnswerGame } from "@/components/games/InputAnswerGame";
 import { VistaEstacio, type EstacioPublica } from "@/components/vistes/VistaEstacio";
+import { CelebracioEstrella } from "@/components/vistes/CelebracioEstrella";
 
 interface EstacioData {
   estacio: EstacioPublica;
@@ -19,12 +20,17 @@ export default function EstacioPage() {
   const [dades, setDades] = useState<EstacioData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [resolta, setResolta] = useState(false);
+  // Aquesta resposta ha completat les cinc fites elementals: en tornar al mapa, primer es veu
+  // la celebració de l'estrella completa (CelebracioEstrella) en lloc d'anar-hi directes.
+  const [estrellaCompletada, setEstrellaCompletada] = useState(false);
+  const [mostrarEstrella, setMostrarEstrella] = useState(false);
 
   const { setPistesDesbloquejades, ...joc } = useInputAnswerGame({
     estacioId,
     // Després de la celebració, la mateixa pantalla mostra el fragment desbloquejat.
-    onResolt: () => {
+    onResolt: (totesResoltes) => {
       setResolta(true);
+      setEstrellaCompletada(totesResoltes);
       window.scrollTo({ top: 0 });
     },
   });
@@ -78,12 +84,15 @@ export default function EstacioPage() {
   }, [estacioId, router]);
 
   return (
-    <VistaEstacio
-      {...joc}
-      estacio={dades?.estacio ?? null}
-      resolta={resolta}
-      error={error}
-      onTornar={() => router.push("/joc")}
-    />
+    <>
+      <VistaEstacio
+        {...joc}
+        estacio={dades?.estacio ?? null}
+        resolta={resolta}
+        error={error}
+        onTornar={() => (estrellaCompletada ? setMostrarEstrella(true) : router.push("/joc"))}
+      />
+      {mostrarEstrella && <CelebracioEstrella onAcabat={() => router.push("/joc")} />}
+    </>
   );
 }

@@ -23,6 +23,7 @@ import { VistaSeleccioEquip } from "@/components/vistes/VistaSeleccioEquip";
 import { VistaEspera } from "@/components/vistes/VistaEspera";
 import { EQUIPS } from "@/content/public/equips";
 import { VistaHub } from "@/components/vistes/VistaHub";
+import { CelebracioEstrellaVista } from "./CelebracioEstrellaVista";
 import { VistaCarregant } from "@/components/vistes/VistaCarregant";
 import { VistaEstacio } from "@/components/vistes/VistaEstacio";
 import type { VistaJocRespostaProps } from "@/components/vistes/VistaJocResposta";
@@ -625,6 +626,14 @@ export const PANTALLES: Pantalla[] = [
     titol: "Hub · totes resoltes",
     descripcio: "Text de l'estrella completa i botó del Pla del Masset.",
     render: () => hub(JUGABLES),
+  },
+  {
+    id: "hub-celebracio-estrella",
+    grup: "hub",
+    titol: "Hub · celebració de l'estrella completa",
+    descripcio:
+      "En completar la 5a fita (en qualsevol ordre): public/video/estrella-completa.mp4 és el fons des del primer fotograma, amb el pentagrama i el text a sobre; el pentagrama s'encén punta a punta i després fa zoom in i s'esvaeix (el text es queda quiet), deixant veure el vídeo. Sense el fitxer, l'animació torna directament aquí (mode de reserva).",
+    render: () => <CelebracioEstrellaVista hubDeSota={hub(JUGABLES)} />,
   },
   {
     id: "hub-amb-master",

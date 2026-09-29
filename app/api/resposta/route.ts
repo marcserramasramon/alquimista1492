@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServiceRoleClient } from "@/lib/supabase";
 import { getEquipSession } from "@/lib/auth";
-import { getEstacio } from "@/content/public/estacions";
+import { getEstacio, getEstacionsJugables } from "@/content/public/estacions";
 import { fitaOberta } from "@/lib/obertura";
 import { getSolucio, comparaResposta } from "@/content/private/solucions";
 import { RESPOSTA_CORRECTA, RESPOSTA_MASSA_RAPIDA, RESPOSTES_INCORRECTES } from "@/content/public/textos";
@@ -94,10 +94,21 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // Amb encert, cal saber si aquesta era l'última fita que faltava (en qualsevol ordre): la
+  // resposta ho porta perquè el client hi pugui encadenar la celebració de l'estrella completa
+  // (components/vistes/CelebracioEstrella.tsx) en lloc de tornar directament al mapa.
+  let totesResoltes = false;
+  if (correcte) {
+    const { data: progresEquip } = await db.from("v2_progres").select("estacio_id, resolta").eq("team_id", sessio.teamId);
+    const resoltaPerEstacio = new Map((progresEquip ?? []).map((p) => [p.estacio_id, p.resolta]));
+    totesResoltes = getEstacionsJugables().every((e) => e.id === estacioId || resoltaPerEstacio.get(e.id));
+  }
+
   // Els missatges d'error es van alternant a cada intent.
   const intent = existent?.intents ?? 0;
   return NextResponse.json({
     correcte,
+    totesResoltes,
     missatge: correcte ? RESPOSTA_CORRECTA : RESPOSTES_INCORRECTES[intent % RESPOSTES_INCORRECTES.length],
   });
 }
