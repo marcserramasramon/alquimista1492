@@ -10,10 +10,12 @@ export interface VistaMissatgeProps {
   onContinuar: () => void;
   /** Rètol del botó: "Comencem" la primera vegada, "Tornar al mapa" si s'hi torna des del hub. */
   textContinuar?: string;
+  /** Si hi és, surt a la cantonada del text (on abans hi havia la veu) un botó per tornar a veure el vídeo. */
+  onRepetirVideo?: () => void;
 }
 
 /** 1. El missatge secret de Fra Francesc: es llegeix abans d'entrar al hub. Signat i segellat amb cera. */
-export function VistaMissatge({ onContinuar, textContinuar = "Comencem →" }: VistaMissatgeProps) {
+export function VistaMissatge({ onContinuar, textContinuar = "Comencem →", onRepetirVideo }: VistaMissatgeProps) {
   return (
     <Pantalla className="gap-6">
       <div className="animate-entrar">
@@ -22,14 +24,7 @@ export function VistaMissatge({ onContinuar, textContinuar = "Comencem →" }: V
       <div className="mx-auto w-full animate-entrar [animation-delay:60ms]">
         {IMATGE_MISSATGE ? (
           <div className="relative overflow-hidden rounded-2xl border-[3px] border-ink shadow-[0_6px_0_var(--ink)]">
-            <img
-              src={IMATGE_MISSATGE}
-              alt=""
-              className="h-40 w-full object-cover"
-              style={{ filter: "sepia(0.8) saturate(1.1) contrast(1.1) brightness(1.08)" }}
-            />
-            {/* Capa daurada en multiply: allunya el violeta fred de l'original i l'acosta al pergamí */}
-            <div className="pointer-events-none absolute inset-0 bg-gold-deep opacity-[0.18] mix-blend-multiply" />
+            <img src={IMATGE_MISSATGE} alt="" className="h-40 w-full object-cover" />
             {/* Vinyeta per fondre els cantons amb el pergamí */}
             <div
               className="pointer-events-none absolute inset-0"
@@ -40,7 +35,25 @@ export function VistaMissatge({ onContinuar, textContinuar = "Comencem →" }: V
           <Pentagrama vius className="mx-auto w-44" />
         )}
       </div>
-      <Narracio text={MISSATGE_SECRET} etiqueta="missatge secret" className="animate-entrar [animation-delay:120ms]">
+      <Narracio
+        text={MISSATGE_SECRET}
+        etiqueta="missatge secret"
+        className="animate-entrar [animation-delay:120ms]"
+        accio={
+          onRepetirVideo && (
+            <button
+              type="button"
+              onClick={onRepetirVideo}
+              aria-label="Tornar a veure el vídeo"
+              className="btn btn-secundari btn-rodo shrink-0 shadow-[0_3px_0_var(--ink)]"
+            >
+              <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden>
+                <path d="M6 4l14 8-14 8V4z" fill="currentColor" />
+              </svg>
+            </button>
+          )
+        }
+      >
         <div className="mt-6 flex items-end justify-between gap-3">
           <SegellCera className="w-24 shrink-0 -rotate-12 animate-segellar [animation-delay:700ms]" />
           <div className="min-w-0 text-right">

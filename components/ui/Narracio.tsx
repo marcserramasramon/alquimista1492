@@ -122,6 +122,7 @@ export function Narracio({
   etiqueta,
   color,
   retardVeu,
+  accio,
   children,
   className = "",
 }: {
@@ -130,6 +131,8 @@ export function Narracio({
   color?: string;
   /** Mil·lisegons d'espera abans que la veu soni sola (per no trepitjar un so de la pantalla). */
   retardVeu?: number;
+  /** Botó a la cantonada quan el text no té àudio (p. ex. tornar a veure el vídeo). */
+  accio?: React.ReactNode;
   /** Contingut extra al final (signatura, lema...). */
   children?: React.ReactNode;
   className?: string;
@@ -147,10 +150,10 @@ export function Narracio({
 
   return (
     <section className={`targeta p-5 ${className}`} style={color ? { borderLeft: `10px solid ${color}` } : undefined}>
-      {text.audio ? (
+      {text.audio || accio ? (
         <div className="flex items-start justify-between gap-3">
           {capcalera || <span />}
-          <BotoVeu src={text.audio} retard={retardVeu} />
+          {text.audio ? <BotoVeu src={text.audio} retard={retardVeu} /> : accio}
         </div>
       ) : (
         capcalera

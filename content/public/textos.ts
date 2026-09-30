@@ -30,7 +30,6 @@ export const MISSATGE_SECRET: TextNarratiu & { signatura: string } = {
     "Que el foc de l'Atanor us guiï.",
   ],
   signatura: "— Fra F.",
-  audio: "/audio/intro.mp3",
 };
 
 // 2.1 Arribada a cada fita (es mostra en obrir-la)
