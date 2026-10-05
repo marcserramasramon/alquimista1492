@@ -653,7 +653,7 @@ export const PANTALLES: Pantalla[] = [
     titol: "Hub · celebració de l'estrella completa",
     descripcio:
       "En completar la 5a fita (en qualsevol ordre): public/video/estrella-completa.mp4 és el fons des del primer fotograma, amb el pentagrama i el text a sobre; el pentagrama s'encén punta a punta i després fa zoom in i s'esvaeix (el text es queda quiet), deixant veure el vídeo. Sense el fitxer, l'animació torna directament aquí (mode de reserva).",
-    render: () => <CelebracioEstrellaVista hubDeSota={hub(JUGABLES)} />,
+    render: () => <CelebracioEstrellaVista hubDeSota={hub(JUGABLES)} estacions={estacionsAmbProgres(JUGABLES)} />,
   },
   {
     id: "hub-amb-master",

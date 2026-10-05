@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
 import type { Element } from "@/content/public/estacions";
-import { sonarFragment } from "@/lib/so";
+import { MapaEquip, type EstacioMapa } from "@/components/player/MapaEquip";
+import { Narracio } from "@/components/ui/Narracio";
+import { ESTRELLA_COMPLETA } from "@/content/public/textos";
+import { aturarVeu, sonarFragment } from "@/lib/so";
 
 export interface CelebracioEstrellaProps {
   /**
@@ -13,6 +16,8 @@ export interface CelebracioEstrellaProps {
    */
   video?: string;
   onAcabat: () => void;
+  /** Fites per dibuixar el mapa de la pantalla final. Si no hi són, es demanen a /api/estat. */
+  estacions?: EstacioMapa[];
 }
 
 /** Mateix ordre que el pentagrama (components/ui/Pentagrama.tsx ORDRE): comença a dalt i va en sentit horari. */
@@ -37,18 +42,30 @@ const RESERVA_MAXIMA_MS = 20_000;
  * s'il·lumina; en acabat, el pentagrama (només ell, el text es queda quiet) fa zoom in i s'esvaeix
  * cap a la càmera, deixant veure el vídeo i el text a sobre fins que s'acaba.
  */
-export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onAcabat }: CelebracioEstrellaProps) {
+export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onAcabat, estacions: estacionsDonades }: CelebracioEstrellaProps) {
   const [resolts, setResolts] = useState(0);
   const [centreActiu, setCentreActiu] = useState(false);
   const [sortint, setSortint] = useState(false);
+  const [final, setFinal] = useState(false);
+  const [estacionsCarregades, setEstacionsCarregades] = useState<EstacioMapa[] | null>(null);
+  const estacions = estacionsDonades ?? estacionsCarregades;
   const videoRef = useRef<HTMLVideoElement>(null);
   const acabatCridat = useRef(false);
 
   function acabar() {
     if (acabatCridat.current) return;
     acabatCridat.current = true;
-    onAcabat();
+    setFinal(true);
+    window.scrollTo({ top: 0 });
   }
+
+  useEffect(() => {
+    if (estacionsDonades) return;
+    fetch("/api/estat")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => data?.estacions && setEstacionsCarregades(data.estacions))
+      .catch(() => {});
+  }, [estacionsDonades]);
 
   useEffect(() => {
     sonarFragment();
@@ -98,6 +115,28 @@ export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onA
     disponible: true,
   }));
 
+  // Acabat el vídeo: pantalla de text de Fra Francesc amb el botó per tornar al hub.
+  if (final) {
+    const tornar = () => {
+      aturarVeu();
+      onAcabat();
+    };
+    return (
+      <main className="fixed inset-0 z-50 overflow-y-auto bg-paper">
+        <div className="mx-auto flex min-h-dvh max-w-md flex-col gap-5 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]">
+          <button type="button" onClick={tornar} aria-label="Tancar" className="btn btn-secundari btn-rodo shrink-0 self-end text-xl">
+            ✕
+          </button>
+          <Narracio text={ESTRELLA_COMPLETA} etiqueta="fra francesc" className="animate-entrar" />
+          {estacions && <MapaEquip estacions={estacions} totesResoltes />}
+          <button type="button" onClick={tornar} className="btn btn-primari sticky bottom-[max(1.25rem,env(safe-area-inset-bottom))] mt-auto">
+            Tornar al menú →
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <div
       role="status"
@@ -107,15 +146,6 @@ export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onA
       {/* El vídeo és mut: garanteix que els navegadors el deixin començar sol just en obrir la
           pantalla (l'autoplay amb so no sempre ho fa, i aquí el protagonisme és l'animació). */}
       <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" playsInline />
-
-      <button
-        type="button"
-        onClick={acabar}
-        aria-label="Tancar"
-        className="btn btn-secundari btn-rodo absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-10 text-xl shadow-[0_3px_0_var(--ink)]"
-      >
-        ✕
-      </button>
 
       <div
         className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center"
@@ -145,12 +175,6 @@ export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onA
         <p className="etiqueta animate-entrar text-[#fffdf7]" style={{ textShadow: "0 2px 10px rgb(0 0 0 / 0.65)" }}>
           ✦ l&apos;estrella és completa ✦
         </p>
-      </div>
-
-      <div className="absolute inset-x-0 bottom-0 z-10 mx-auto max-w-md px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-        <button type="button" onClick={acabar} className="btn btn-primari">
-          Tornar al mapa →
-        </button>
       </div>
     </div>
   );
