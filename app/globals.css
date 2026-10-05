@@ -54,6 +54,10 @@
   --animate-fusionar: fusionar 0.9s cubic-bezier(0.4, 0, 0.2, 1) both;
   --animate-pujar: pujar 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   --animate-baixar: baixar 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-bombolla: bombolla 0.6s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+  --animate-esvair: esvair 0.35s ease-in both;
+  --animate-destacar: destacar 0.5s ease-out both;
+  --animate-assenyalar: assenyalar 0.8s ease-in-out infinite;
 }
 
 html,
@@ -329,6 +333,46 @@ h3 {
   }
   to {
     transform: none;
+  }
+}
+
+/* Manual d'ús: la bombolla surt amb un petit rebot, la peça que assenyala s'il·lumina i la cua hi bota. */
+@keyframes bombolla {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes esvair {
+  to {
+    opacity: 0;
+    transform: scale(0.85) translateY(6px);
+  }
+}
+
+@keyframes destacar {
+  from {
+    opacity: 0.35;
+    filter: grayscale(0.7);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+  }
+}
+
+@keyframes assenyalar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(var(--salt, 6px));
   }
 }
 

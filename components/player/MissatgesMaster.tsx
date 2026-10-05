@@ -13,6 +13,9 @@ interface Missatge {
   text: string;
 }
 
+/** Es dispara en desar un missatge com a llegit: el hub hi refresca la insígnia del vídeo al mapa. */
+export const EVENT_MISSATGE_LLEGIT = "missatge-llegit";
+
 /** Cada quant es consulta si el màster ha enviat res. */
 const INTERVAL_MS = 8_000;
 
@@ -80,7 +83,8 @@ export function MissatgesMaster() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: actual.id }),
     }).catch(() => null);
-    if (!res?.ok) acceptats.current.delete(actual.id);
+    if (res?.ok) window.dispatchEvent(new Event(EVENT_MISSATGE_LLEGIT));
+    else acceptats.current.delete(actual.id);
     setEnviant(false);
   }
 

@@ -66,6 +66,7 @@ export function VistaJocResposta({
   return (
     <div className="flex flex-col gap-8">
       <form
+        data-manual="resposta"
         onSubmit={(e) => {
           e.preventDefault();
           onSubmit();
@@ -103,7 +104,7 @@ export function VistaJocResposta({
         </button>
       </form>
 
-      <section aria-labelledby="titol-pistes" className="rounded-3xl border-[3px] border-dashed border-ink/35 p-4">
+      <section data-manual="pistes" aria-labelledby="titol-pistes" className="rounded-3xl border-[3px] border-dashed border-ink/35 p-4">
         <h2 id="titol-pistes" className="text-3xl font-bold">
           {PISTES.titol}
         </h2>

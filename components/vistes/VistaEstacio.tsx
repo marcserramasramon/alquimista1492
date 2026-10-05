@@ -35,6 +35,8 @@ export interface VistaEstacioProps extends VistaJocRespostaProps {
    * de sota, la prova. La galeria el fixa per ensenyar cada pas.
    */
   pasInicial?: "narracio" | "prova";
+  /** Fita ja resolta: torna a reproduir el vídeo de la fita (que porta la veu del fragment). */
+  onRepetirVideo?: () => void;
   onTornar: () => void;
 }
 
@@ -43,6 +45,7 @@ export function VistaEstacio({
   error,
   resolta = false,
   pasInicial = "narracio",
+  onRepetirVideo,
   onTornar,
   ...joc
 }: VistaEstacioProps) {
@@ -190,10 +193,25 @@ export function VistaEstacio({
         {resolta ? (
           estacio.element && (
             <Narracio
-              text={FRAGMENTS[estacio.element]}
+              // Amb vídeo, el botó el torna a veure i la veu sona amb ell; sense, és el botó de veu de sempre.
+              text={onRepetirVideo ? { ...FRAGMENTS[estacio.element], audio: undefined } : FRAGMENTS[estacio.element]}
               etiqueta="✓ fragment trobat"
               color={color}
               className="animate-entrar"
+              accio={
+                onRepetirVideo && (
+                  <button
+                    type="button"
+                    onClick={onRepetirVideo}
+                    aria-label="Tornar a veure el vídeo i escoltar Fra Francesc"
+                    className="btn btn-secundari btn-rodo shrink-0 shadow-[0_3px_0_var(--ink)]"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden>
+                      <path d="M6 4l14 8-14 8V4z" fill="currentColor" />
+                    </svg>
+                  </button>
+                )
+              }
             />
           )
         ) : pas === "narracio" && estacio.element ? (

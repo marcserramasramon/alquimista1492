@@ -255,3 +255,65 @@ export const PISTES = {
   cancelar: "No, seguim buscant",
   confirmar: "Sí, mostra-la",
 };
+
+// Manual d'ús: bombolles que apareixen sobre l'app real, assenyalen una peça (la que porta
+// `data-manual="<objectiu>"`) i s'esvaeixen soles. `objectiu: null` = nota solta, sense peça.
+// TEXT PROVISIONAL: pendent de validar.
+export interface PasManual {
+  objectiu: string | null;
+  emoji: string;
+  titol?: string;
+  text: string;
+  /** On cau la cua de la bombolla (0 = vora esquerra, 1 = dreta). Per defecte, a sota del centre de la peça. */
+  cuaX?: number;
+}
+
+export interface EscenaManual {
+  id: string;
+  passos: PasManual[];
+}
+
+/** El hub: temps, pentagrama i mapa (surt sola la primera vegada que s'hi entra). */
+export const MANUAL_HUB: EscenaManual = {
+  id: "hub",
+  passos: [
+    {
+      objectiu: "temps",
+      cuaX: 0.25,
+      emoji: "⏳",
+      titol: "Temps",
+      text: "Això és el temps que us queda. Quan arribi a zero, la partida s'acaba sola.",
+    },
+    {
+      objectiu: "pentagrama",
+      emoji: "⭐",
+      titol: "Pentagrama",
+      text: "Hi ha 5 fites: Aigua, Terra, Foc, Aire i Ànima. Cada fita resolta encén el seu element. Toqueu un element per veure on és!",
+    },
+    { objectiu: "mapa", emoji: "🧭", titol: "Mapa", text: "El punt blau sou vosaltres. Aneu fins a la fita triada." },
+    {
+      objectiu: "elements",
+      cuaX: 0.8,
+      emoji: "👥",
+      text: "Aquí veieu quants elements porteu. Tots els mòbils de l'equip veuen el mateix progrés.",
+    },
+  ],
+};
+
+/** La fitxa d'una fita al hub (surt sola la primera vegada que se'n veu una). */
+export const MANUAL_ARRIBAR: EscenaManual = {
+  id: "arribar",
+  passos: [
+    { objectiu: "fitxa", emoji: "📍", text: "En arribar a la fita, s'obre sola!" },
+    { objectiu: "fitxa-boto", emoji: "📷", text: "Si no s'obre, escanegeu el QR del cartell." },
+  ],
+};
+
+/** La pantalla de la fita, amb el camp de resposta (surt sola la primera vegada). */
+export const MANUAL_RESOLDRE: EscenaManual = {
+  id: "resoldre",
+  passos: [
+    { objectiu: "resposta", emoji: "✍️", text: "Llegiu què heu de fer, feu el repte i escriviu aquí la resposta." },
+    { objectiu: "pistes", emoji: "💡", text: "Si us encalleu, podeu demanar una pista." },
+  ],
+};

@@ -17,16 +17,16 @@ Durades llegides dels fitxers. Narrador = Fra Francesc (veu Matxa-TTS) tret que 
 
 ## 2. Fites — Arribada (en obrir la fita)
 
-Text a `ARRIBADES` / `ARRIBADES_PAS` (`content/public/textos.ts`). Sense cap vídeo.
+Text a `ARRIBADES` / `ARRIBADES_PAS` (`content/public/textos.ts`). **Els 6 vídeos ja estan fets** (confirmat per l'usuari el 2026-10-05); encara no són a `public/video/` del repo.
 
 | Fita | Àudio | Durada | Vídeo |
 |---|---|---|---|
-| 💧 Aigua — Font del Lleó | `arribada-aigua.mp3` | 0:14 | ❌ falta |
-| 🪨 Terra — Planes Bones | `arribada-terra.mp3` | 0:16 | ❌ falta |
-| 🔥 Foc — Serrat del Caçador | `arribada-foc.mp3` | 0:11 | ❌ falta |
-| 🌬️ Aire, pas previ — Creu del Pujolar | `arribada-aire-pas.mp3` | 0:18 | ❌ falta |
-| 🌬️ Aire — Serrat de la Creu | `arribada-aire.mp3` | 0:14 | ❌ falta |
-| ✨ Ànima — Pista skate | `arribada-anima.mp3` | 0:18 | ❌ falta |
+| 💧 Aigua — Font del Lleó | `arribada-aigua.mp3` | 0:14 | ✅ fet |
+| 🪨 Terra — Planes Bones | `arribada-terra.mp3` | 0:16 | ✅ fet |
+| 🔥 Foc — Serrat del Caçador | `arribada-foc.mp3` | 0:11 | ✅ fet |
+| 🌬️ Aire, pas previ — Creu del Pujolar | `arribada-aire-pas.mp3` | 0:18 | ✅ fet |
+| 🌬️ Aire — Serrat de la Creu | `arribada-aire.mp3` | 0:14 | ✅ fet |
+| ✨ Ànima — Pista skate | `arribada-anima.mp3` | 0:18 | ✅ fet |
 
 ## 3. Fites — Fitxa del hub (en tocar una punta del pentagrama)
 
@@ -69,7 +69,7 @@ Hi ha 4 fitxers `.narrat` a `public/video/` (aigua, terra, anima, foc): marques/
 | Moment | Àudio | Durada | Vídeo | Estat |
 |---|---|---|---|---|
 | Les 5 fites completades | `estrella.mp3` | 0:49 | `video/estrella-completa.mp4` (0:10, fons del pentagrama, `CelebracioEstrella.tsx`) | ⚠️ el vídeo existeix però dura 10 s i la narració 49 s. Cal vídeo llarg amb la veu dins, o encadenar |
-| S'acaba el temps | `temps.mp3` | 0:31 | — | ❌ falta |
+| S'acaba el temps | `temps.mp3` | 0:31 | — | ✅ **decidit (2026-10-05): sense vídeo, només àudio** |
 | Pla del Masset (arribada) i ritual del Gresol | — | — | — | sense àudio (`GRESOL_ARRIBADA`, `GRESOL_RITUAL`) |
 | Pantalla final «Guardians del Secret» | `guardians.mp3` | 0:20 | — | és **música de fons en bucle** (no narració) |
 
@@ -88,15 +88,15 @@ Hi ha 4 fitxers `.narrat` a `public/video/` (aigua, terra, anima, foc): marques/
 
 Per ordre de fita:
 
-1. **Arribades (6):** aigua, terra, foc, aire-pas, aire, ànima → 6 vídeos nous de 11–18 s.
+1. ~~**Arribades (6):** aigua, terra, foc, aire-pas, aire, ànima~~ **Fets (2026-10-05).**
 2. **Fitxa Foc (1):** `popup-foc` → 1 vídeo de 10 s (o treure l'àudio, el text ja és a la pantalla).
 3. **Fragments (5):** aigua, terra, foc, aire, ànima → 5 vídeos de 20–32 s (guió a `docs/video-fites.md`).
 4. **Estrella completa (1):** allargar `estrella-completa.mp4` fins als 49 s de narració.
-5. **Temps consumit (1):** `temps.mp3` → 1 vídeo de 31 s.
+5. ~~**Temps consumit (1):** `temps.mp3` → 1 vídeo de 31 s.~~ **Descartat (2026-10-05):** aquesta pantalla es queda només amb àudio (`temps.mp3`).
 6. **Verificar** que `intro-carta`, `alerta-inquisidor`, `anima-cami-malla` i `foc-placa-creu` duen la narració dins; després retirar `intro.mp3` i `alerta-inquisidor.mp3`.
 7. **Decidir** què passa amb la música (`musica-entrada`, `guardians`) i `so-fragment`: o es queden com a àudio de fons, o s'integren als vídeos.
 
-**Total de vídeos nous:** 6 + 1 + 5 + 1 + 1 = **14** (o 13 si es descarta el popup de Foc), uns 4 min de metratge.
+**Vídeos nous que queden:** 5 fragments + 1 estrella = **6** (7 amb el popup de Foc, opcional). Arribades fetes; «S'acaba el temps» només àudio.
 
 Durada total d'àudio de narració per convertir: ≈ 5:20 (arribades 1:31 + popup 0:10 + fragments 2:09 + estrella 0:49 + temps 0:31 + guardians/música apart).
 

@@ -91,6 +91,7 @@ export function BarraFranja({
   return (
     <div
       ref={ref}
+      data-manual="temps"
       className={`sticky top-0 z-30 flex min-h-[max(1.5rem,env(safe-area-inset-top))] items-center gap-3 border-b-2 py-0.5 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] transition-colors ${
         alerta ? "border-ink bg-blood text-white" : "border-ink bg-gold text-ink"
       } ${className}`}

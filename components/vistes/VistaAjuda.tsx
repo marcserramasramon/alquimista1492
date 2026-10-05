@@ -30,6 +30,8 @@ const PREGUNTES: PreguntaFreqüent[] = [
 ];
 
 export interface VistaAjudaProps {
+  /** Torna a obrir el manual d'ús. */
+  onManual: () => void;
   onEscriureMissatge: () => void;
   onTancar: () => void;
 }
@@ -38,7 +40,7 @@ export interface VistaAjudaProps {
  * Pop-up del botó "?" del mapa: primer les preguntes freqüents (es responen soles, sense
  * amoïnar el màster); si cap no encaixa, el botó de sota porta al formulari real (VistaEnviarAvis).
  */
-export function VistaAjuda({ onEscriureMissatge, onTancar }: VistaAjudaProps) {
+export function VistaAjuda({ onManual, onEscriureMissatge, onTancar }: VistaAjudaProps) {
   const [obertaId, setObertaId] = useState<string | null>(null);
 
   return (
@@ -57,6 +59,10 @@ export function VistaAjuda({ onEscriureMissatge, onTancar }: VistaAjudaProps) {
             ✕
           </button>
         </div>
+
+        <button type="button" onClick={onManual} className="btn btn-secundari">
+          📖 Com es juga
+        </button>
 
         <div className="flex flex-col gap-2.5">
           {PREGUNTES.map((p) => {

@@ -47,6 +47,8 @@ import { MISSATGES_MASTER, TITOL_TEXT_LLIURE } from "@/content/public/missatgesM
 import type { MissatgeEnviat } from "@/components/vistes/PanellMissatgesMaster";
 import { VistaEnviarAvis } from "@/components/vistes/VistaEnviarAvis";
 import { VistaAjuda } from "@/components/vistes/VistaAjuda";
+import { GuiaManual } from "@/components/player/GuiaManual";
+import { MANUAL_ARRIBAR, MANUAL_HUB, MANUAL_RESOLDRE } from "@/content/public/textos";
 import type { AvisEquip } from "@/components/vistes/PanellAvisosMaster";
 import { IndicadorTemps } from "@/components/ui/IndicadorTemps";
 import type { DadesRecorregut } from "@/components/vistes/PanellRecorregut";
@@ -733,10 +735,44 @@ export const PANTALLES: Pantalla[] = [
     render: (dades) => (
       <>
         {getPantalla("hub-mitja-partida")?.render(dades)}
-        <VistaAjuda onEscriureMissatge={noop} onTancar={noop} />
+        <VistaAjuda onManual={noop} onEscriureMissatge={noop} onTancar={noop} />
       </>
     ),
   },
+  ...[
+    {
+      id: "manual-hub",
+      titol: "el hub",
+      descripcio: "Bombolles sobre el hub real: temps, pentagrama, mapa i la rodona per tornar-les a veure.",
+      base: "hub-mitja-partida",
+      escena: MANUAL_HUB,
+    },
+    {
+      id: "manual-arribar",
+      titol: "arribar a la fita",
+      descripcio: "Bombolles sobre la fitxa d'una fita: s'obre sola en arribar-hi, o amb el QR.",
+      base: "hub-fita-arribada",
+      escena: MANUAL_ARRIBAR,
+    },
+    {
+      id: "manual-resoldre",
+      titol: "resoldre la fita",
+      descripcio: "Bombolles sobre el camp de resposta i les pistes.",
+      base: `fita-${getEstacionsJugables()[0]?.id}-prova`,
+      escena: MANUAL_RESOLDRE,
+    },
+  ].map(({ id, titol, descripcio, base, escena }) => ({
+    id,
+    grup: "hub" as const,
+    titol: `Manual · ${titol}`,
+    descripcio: `${descripcio} Surten sobre l'app real, s'esvaeixen soles i queda una rodona; a l'app surten una sola vegada.`,
+    render: (dades: DadesServidor) => (
+      <>
+        {getPantalla(base)?.render(dades)}
+        <GuiaManual escenes={[escena]} sempre />
+      </>
+    ),
+  })),
   {
     id: "avisar-master",
     grup: "hub",

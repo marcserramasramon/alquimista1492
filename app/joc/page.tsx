@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import type { EstacioMapa, MarcadorMapa, VideoMapa } from "@/components/player/MapaEquip";
 import { EnviarAvis } from "@/components/player/EnviarAvis";
 import { ObrirFita } from "@/components/player/ObrirFita";
+import { EVENT_MISSATGE_LLEGIT } from "@/components/player/MissatgesMaster";
 import { VistaAjuda } from "@/components/vistes/VistaAjuda";
 import { VistaHub } from "@/components/vistes/VistaHub";
+import { GuiaManual } from "@/components/player/GuiaManual";
 import { VistaMissatgeVideo } from "@/components/vistes/VistaMissatgeVideo";
 import { VistaCarregant } from "@/components/vistes/VistaCarregant";
+import { MANUAL_ARRIBAR, MANUAL_HUB } from "@/content/public/textos";
 import { getMissatgeMaster } from "@/content/public/missatgesMaster";
 import {
   INTERVAL_UBICACIO_MS,
@@ -49,6 +52,9 @@ async function obrirPerGps(estacio: EstacioMapa, posicio: Ubicacio): Promise<boo
   return Boolean(res?.ok);
 }
 
+/** Escenes del manual d'aquesta pantalla (estables: el component les compara per referència). */
+const ESCENES_MANUAL = [MANUAL_HUB, MANUAL_ARRIBAR];
+
 export default function HubPage() {
   const router = useRouter();
   const [estat, setEstat] = useState<EstatResponse | null>(null);
@@ -62,6 +68,8 @@ export default function HubPage() {
   const [ajudaOberta, setAjudaOberta] = useState(false);
   /** Des de l'ajuda (o directament): formulari per avisar el màster. */
   const [avisant, setAvisant] = useState(false);
+  /** Cada cop que puja, el manual torna a ensenyar les bombolles (botó "Com es juga" de l'ajuda). */
+  const [reiniciManual, setReiniciManual] = useState(0);
   const intentsGps = useRef(new Map<string, number>());
 
   const carregar = useCallback(
@@ -89,6 +97,12 @@ export default function HubPage() {
     // Refresca el progrés i la posició del màster.
     const interval = setInterval(carregar, INTERVAL_UBICACIO_MS);
     return () => clearInterval(interval);
+  }, [carregar]);
+
+  // En acceptar un missatge amb vídeo, la seva insígnia ha de sortir al mapa de seguida (no als 30 s).
+  useEffect(() => {
+    window.addEventListener(EVENT_MISSATGE_LLEGIT, carregar);
+    return () => window.removeEventListener(EVENT_MISSATGE_LLEGIT, carregar);
   }, [carregar]);
 
   // El navegador només deixa sonar el so d'arribada si abans s'ha tocat la pàgina.
@@ -181,8 +195,13 @@ export default function HubPage() {
         onAvis={() => setAjudaOberta(true)}
       />
       {escanejant && <ObrirFita onOberta={obertaPerCodi} onTancar={() => setEscanejant(false)} />}
+      <GuiaManual escenes={ESCENES_MANUAL} reinici={reiniciManual} />
       {ajudaOberta && (
         <VistaAjuda
+          onManual={() => {
+            setAjudaOberta(false);
+            setReiniciManual((n) => n + 1);
+          }}
           onEscriureMissatge={() => {
             setAjudaOberta(false);
             setAvisant(true);

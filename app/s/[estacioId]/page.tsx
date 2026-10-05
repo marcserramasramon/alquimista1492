@@ -6,7 +6,8 @@ import { useInputAnswerGame } from "@/components/games/InputAnswerGame";
 import { VistaEstacio, type EstacioPublica } from "@/components/vistes/VistaEstacio";
 import { CelebracioEstrella } from "@/components/vistes/CelebracioEstrella";
 import { VideoFita } from "@/components/vistes/VideoFita";
-import { FRAGMENTS } from "@/content/public/textos";
+import { GuiaManual } from "@/components/player/GuiaManual";
+import { FRAGMENTS, MANUAL_RESOLDRE } from "@/content/public/textos";
 import { aturarVeu } from "@/lib/so";
 
 interface EstacioData {
@@ -14,6 +15,8 @@ interface EstacioData {
   pistesDesbloquejades: string[];
   resolta: boolean;
 }
+
+const ESCENES_MANUAL = [MANUAL_RESOLDRE];
 
 export default function EstacioPage() {
   const params = useParams();
@@ -103,8 +106,10 @@ export default function EstacioPage() {
         estacio={dades?.estacio ?? null}
         resolta={resolta}
         error={error}
+        onRepetirVideo={dades?.estacio.element ? () => setVeientVideo(true) : undefined}
         onTornar={() => (estrellaCompletada ? setMostrarEstrella(true) : router.push("/joc"))}
       />
+      {!resolta && !error && !veientVideo && !mostrarEstrella && !joc.correcte && <GuiaManual escenes={ESCENES_MANUAL} />}
       {veientVideo && dades?.estacio.element && (
         <VideoFita
           video={`/video/fita-${dades.estacio.element}.mp4`}

@@ -112,6 +112,7 @@ export function VistaHub({
             triada n'ocupa el lloc, amb la mateixa alçada. */}
         <section
           ref={zonaRef}
+          data-manual="pentagrama"
           className="targeta relative -mt-3 overflow-hidden px-1 pb-2 pt-0 animate-entrar scroll-mt-10 [animation-delay:80ms]"
         >
           <div className={seleccionada ? "invisible" : undefined}>
@@ -145,7 +146,7 @@ export function VistaHub({
         {/* mt-1.5 compensa els 6px de la sub­ombra .targeta del pentagrama (globals.css): sense
             això el gap-4 del contenidor (1rem) es veu com a 10px perquè l'ombra sòlida es dibuixa
             per sota de la vora i "menja" part de l'espai. */}
-        <section className="mt-1.5 animate-entrar [animation-delay:160ms]">
+        <section data-manual="mapa" className="mt-1.5 animate-entrar [animation-delay:160ms]">
           <MapaEquip
             estacions={estacions}
             totesResoltes={totesResoltes}
@@ -263,7 +264,7 @@ export function VistaHub({
 /** Elements aconseguits sobre el total: mateixa alçada i forma que el compte enrere. */
 function CasellaElements({ resoltes, total }: { resoltes: number; total: number }) {
   return (
-    <p aria-label={`${resoltes} de ${total} elements`} className="flex items-baseline gap-1.5 leading-5">
+    <p data-manual="elements" aria-label={`${resoltes} de ${total} elements`} className="flex items-baseline gap-1.5 leading-5">
       <span className="etiqueta text-[0.7rem] leading-5 text-current tabular-nums">
         {resoltes}/{total}
       </span>
@@ -276,7 +277,7 @@ function CasellaElements({ resoltes, total }: { resoltes: number; total: number 
  * Fitxa de la fita triada, al lloc del pentagrama. El nom i el botó hi són sempre; si el text
  * del mig no hi cap, es desplaça per dins.
  */
-function FitxaFita({
+export function FitxaFita({
   estacio,
   teniaPasPrevi,
   acabadaDarribar,
@@ -306,7 +307,7 @@ function FitxaFita({
       : estacio.entrada;
 
   return (
-    <div role="region" aria-label={estacio.nom} className="absolute inset-0 flex animate-entrar flex-col bg-paper">
+    <div role="region" data-manual="fitxa" aria-label={estacio.nom} className="absolute inset-0 flex animate-entrar flex-col bg-paper">
       {/* La franja de color de dalt fa d'avís quan el GPS o el QR acaben d'obrir la fita. */}
       {mostrarAvis ? (
         <p
@@ -373,7 +374,7 @@ function FitxaFita({
 
       {/* El botó, sempre a la vista. */}
       <div className="shrink-0 px-4 pb-3 pt-1.5">
-        <button onClick={onAnar} disabled={!estacio.disponible} className="btn btn-primari">
+        <button data-manual="fitxa-boto" onClick={onAnar} disabled={!estacio.disponible} className="btn btn-primari">
           {!estacio.disponible
             ? "🔒 Properament"
             : resolta

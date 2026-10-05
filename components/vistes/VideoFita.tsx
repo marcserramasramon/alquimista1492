@@ -14,12 +14,14 @@ export interface VideoFitaProps {
 
 /** Xarxa de seguretat (autoplay bloquejat sense error): com a CelebracioEstrella. */
 const RESERVA_MAXIMA_MS = 20_000;
+/** Xarxa de seguretat un cop acabat el vídeo: màxim que s'espera la veu (si el context d'àudio es queda suspès, mai acabaria). */
+const RESERVA_VEU_MS = 90_000;
 
 /**
  * Vídeo de la fita resolta, entre la pantalla de fita completa (CelebracioFragment) i la de la fita
- * amb el text del fragment. El vídeo és mut: el so és la veu del fragment, que arrenca amb ell i,
- * quan el vídeo s'acaba, continua sonant a la pantalla de la fita (aquest component no l'atura mai).
- * Si el fitxer no hi és o falla, `onAcabat` es crida de seguida i la veu continua igualment.
+ * amb el text del fragment. La veu del fragment arrenca amb el vídeo; quan el vídeo s'acaba, es queda
+ * congelat a l'últim fotograma fins que la veu acaba, i només llavors es passa a la pantalla de la fita.
+ * Si el fitxer de vídeo no hi és o falla, `onAcabat` es crida de seguida i la veu continua a la fita.
  */
 export function VideoFita({ video, veu, onAcabat }: VideoFitaProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -31,24 +33,49 @@ export function VideoFita({ video, veu, onAcabat }: VideoFitaProps) {
     onAcabat();
   }
 
+  // Mentre la veu no ha acabat (o no se sap si sonarà), el vídeo acabat es queda congelat a l'últim fotograma.
+  const veuPendent = useRef(!!veu);
+  const videoAcabat = useRef(false);
+
+  function provarAcabar() {
+    if (videoAcabat.current && !veuPendent.current) acabar();
+  }
+
   useEffect(() => {
     if (!veu) return;
+    veuPendent.current = true;
     marcarEscoltada(veu);
-    void sonarVeu(veu, 0, () => {});
+    void sonarVeu(veu, 0, () => {
+      veuPendent.current = false;
+      provarAcabar();
+    }).then((reproduccio) => {
+      // Sense fitxer o sense àudio disponible: no hi ha res a esperar.
+      if (reproduccio) return;
+      veuPendent.current = false;
+      provarAcabar();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [veu]);
 
   // Els listeners es lliguen abans de fixar `src`: un 404 pot disparar "error" abans que React l'enllaci.
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
-    const reserva = setTimeout(acabar, RESERVA_MAXIMA_MS);
-    const final = () => {
+    let reserva = setTimeout(acabar, RESERVA_MAXIMA_MS);
+    // Vídeo fallit (sense fitxer, corrupte): no hi ha fotograma a congelar, es passa de seguida.
+    const enError = () => {
       clearTimeout(reserva);
-      el.pause();
       acabar();
     };
-    el.addEventListener("error", final);
-    el.addEventListener("ended", final);
+    // Vídeo acabat: es queda l'últim fotograma fins que la veu s'acabi. La reserva cobreix una veu que no arribi mai al final.
+    const enAcabar = () => {
+      clearTimeout(reserva);
+      videoAcabat.current = true;
+      reserva = setTimeout(acabar, RESERVA_VEU_MS);
+      provarAcabar();
+    };
+    el.addEventListener("error", enError);
+    el.addEventListener("ended", enAcabar);
     el.src = video;
     el.load();
     // So propi del vídeo (ambient) al 33%, sota la veu. Si el navegador bloqueja l'autoplay amb so, es reintenta mut.
@@ -58,8 +85,8 @@ export function VideoFita({ video, veu, onAcabat }: VideoFitaProps) {
       el.play().catch(() => {});
     });
     return () => {
-      el.removeEventListener("error", final);
-      el.removeEventListener("ended", final);
+      el.removeEventListener("error", enError);
+      el.removeEventListener("ended", enAcabar);
       clearTimeout(reserva);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
