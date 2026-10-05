@@ -108,6 +108,15 @@ export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onA
           pantalla (l'autoplay amb so no sempre ho fa, i aquí el protagonisme és l'animació). */}
       <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" playsInline />
 
+      <button
+        type="button"
+        onClick={acabar}
+        aria-label="Tancar"
+        className="btn btn-secundari btn-rodo absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-10 text-xl shadow-[0_3px_0_var(--ink)]"
+      >
+        ✕
+      </button>
+
       <div
         className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center"
         style={{ background: "radial-gradient(circle at 50% 42%, rgb(0 0 0 / 0.1) 0%, rgb(0 0 0 / 0.55) 100%)" }}
@@ -136,6 +145,12 @@ export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onA
         <p className="etiqueta animate-entrar text-[#fffdf7]" style={{ textShadow: "0 2px 10px rgb(0 0 0 / 0.65)" }}>
           ✦ l&apos;estrella és completa ✦
         </p>
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 z-10 mx-auto max-w-md px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <button type="button" onClick={acabar} className="btn btn-primari">
+          Tornar al mapa →
+        </button>
       </div>
     </div>
   );
