@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { EstacioMapa, MarcadorMapa, VideoMapa } from "@/components/player/MapaEquip";
 import { EnviarAvis } from "@/components/player/EnviarAvis";
 import { ObrirFita } from "@/components/player/ObrirFita";
+import { VistaAjuda } from "@/components/vistes/VistaAjuda";
 import { VistaHub } from "@/components/vistes/VistaHub";
 import { VistaMissatgeVideo } from "@/components/vistes/VistaMissatgeVideo";
 import { VistaCarregant } from "@/components/vistes/VistaCarregant";
@@ -57,7 +58,9 @@ export default function HubPage() {
   const [escanejant, setEscanejant] = useState(false);
   /** Clau del missatge amb vídeo que l'equip ha tornat a obrir des de la insígnia del mapa. */
   const [videoReobert, setVideoReobert] = useState<string | null>(null);
-  /** El botó "?" del mapa: formulari per avisar el màster. */
+  /** El botó "?" del mapa: primer les preguntes freqüents. */
+  const [ajudaOberta, setAjudaOberta] = useState(false);
+  /** Des de l'ajuda (o directament): formulari per avisar el màster. */
   const [avisant, setAvisant] = useState(false);
   const intentsGps = useRef(new Map<string, number>());
 
@@ -175,9 +178,18 @@ export default function HubPage() {
         onAnarEstacio={anarEstacio}
         onAnarFinal={() => router.push("/final")}
         onLlegirMissatge={() => router.push("/missatge?tornada=1")}
-        onAvis={() => setAvisant(true)}
+        onAvis={() => setAjudaOberta(true)}
       />
       {escanejant && <ObrirFita onOberta={obertaPerCodi} onTancar={() => setEscanejant(false)} />}
+      {ajudaOberta && (
+        <VistaAjuda
+          onEscriureMissatge={() => {
+            setAjudaOberta(false);
+            setAvisant(true);
+          }}
+          onTancar={() => setAjudaOberta(false)}
+        />
+      )}
       {avisant && <EnviarAvis onTancar={() => setAvisant(false)} />}
       {missatgeReobert?.video && (
         <VistaMissatgeVideo

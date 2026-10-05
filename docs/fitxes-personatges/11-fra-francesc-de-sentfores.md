@@ -59,7 +59,18 @@ Nom de l'Orde secret al qual pertany Fra Francesc (confirmat 2026-09-21, adoptat
 - **Contrasenya de reconeixement (a adaptar):** "El temps es consumeix" / "Però el foc de l'Atanor es manté" — moment candidat per a l'escena de desemmascarament al Pla de Masset.
 - Fra Francesc n'és l'únic membre que els jugadors coneixen — no calen altres personatges de l'Orde.
 
+## Aparença
+
+Confirmat per l'usuari (2026-09-29), en el context del disseny del vídeo d'introducció:
+
+- **Home gran**, de rostre arrugat, amb "el pes del temps" a les faccions.
+- **Savi** — la mirada i l'expressió han de transmetre coneixement acumulat, no fragilitat.
+- **Barba mitjana** (ni afaitat ni barba llarga de patriarca).
+
+⚠️ Això és l'aparença de **Fra Francesc mateix** (el narrador del missatge/vídeo d'introducció). La disfressa de comissari que porta tota la partida (Acte I) segueix sense definir-se — es manté la premissa que ha d'amagar la cara (caputxa, sense trets visibles) fins al desemmascarament al Pla de Masset.
+
 ⚠️ Encara PENDENT (no inventar sense confirmar en aquest xat):
 
-- [ ] Aparença, veu i objectes personals — tant de Fra Francesc com de la seva disfressa de comissari (es poden definir seguint el mateix format que `03-l-emissari.md` un cop tancada la resta).
+- [ ] Veu i objectes personals de Fra Francesc (més enllà de l'aparença física ja confirmada).
+- [ ] Aparença concreta de la disfressa de comissari (roba, capa, qualsevol tret distintiu que no reveli la cara).
 - [ ] Contingut exacte del missatge secret que envia als jugadors (el text del detonant).

@@ -50,7 +50,7 @@ Cada fita té dos textos:
 
 **🪨 Terra — Planes Bones**
 
-> Heu arribat a Planes Bones. Aquí, uns guardians de fang vetllen la matèria des de fa molt de temps. La Terra no regala res i no parla amb fórmules: obriu bé els ulls, trobeu on reposen i digueu-me quants són.
+> Heu arribat a Planes Bones. Aquí, uns guardians de pedra vetllen la matèria des de fa molt de temps. La Terra no regala res i no parla amb fórmules: obriu bé els ulls, trobeu on reposen i digueu-me quants són.
 
 **🔥 Foc — Serrat del Caçador**
 
@@ -62,7 +62,7 @@ Cada fita té dos textos:
 
 **✨ Ànima — Pista skate**
 
-> Aquest lloc és ple de pujades i caigudes. Qui hi ve cau, s'aixeca i torna a provar-ho, com l'alquimista davant del gresol. L'Ànima no es mostra a la llum del dia: porteu la vostra llum porpra i busqueu-la allà on s'arriba més amunt.
+> Aquest lloc és com la vida, ple de pujades i caigudes. Qui hi ve cau, s'aixeca i torna a provar-ho, com l'alquimista davant del gresol. L'Ànima no es mostra a la llum del dia: porteu la vostra llum i busqueu-la.
 
 ### 2.2 Fragments
 
@@ -74,15 +74,15 @@ Es desbloquegen en **resoldre** cada fita (encaixa amb `app-nova.md` § HISTÒRI
 
 > L'Aigua és el primer element que vaig aprendre a escoltar. Tot el que brolla porta alguna cosa de dins la terra, i res no s'hi pot amagar gaire temps.
 >
-> Per això hi vaig deixar un fragment: l'Aigua dissol, neteja i revela. Qui sap mirar-la ja ha començat el camí.
+> Per això hi vaig deixar un fragment: l'Aigua dissol, neteja i revela. Qui sap escoltar-la ja ha començat el camí.
 
 ### 🪨 Terra — Planes Bones
 
 **Títol:** El fragment de la Terra
 
-> Sofre, mercuri i sal: els tres principis que tota cosa porta a dins. L'Orde els guardava en gerres de fang, perquè la terra és pacient i no delata ningú.
+> Sofre, mercuri i sal: els tres principis de la forja alquimica. Guardats en fang, perquè la terra és pacient i no delata ningú.
 >
-> Les heu hagut de buscar una a una per trobar aquest fragment, i així ha de ser: qui vol entendre la matèria, primer l'ha de saber veure. La Terra és el cos de totes les coses.
+> Les heu hagut de buscar una a una per trobar aquest fragment, i així ha de ser: qui vol entendre la matèria, primer s'ha d'embrutar. La Terra és el cos de totes les coses.
 
 ### 🔥 Foc — Serrat del Caçador
 
@@ -100,7 +100,7 @@ Es desbloquegen en **resoldre** cada fita (encaixa amb `app-nova.md` § HISTÒRI
 
 > Dalt del serrat, el vent ho escampa tot: les paraules, les cendres, els rumors. L'Aire és l'únic element que no es pot tancar en cap gerra.
 >
-> El vaig deixar al peu de la creu, on la gent ve a pregar, perquè ningú no sospita d'un lloc sant. I recordeu-ho: el vostre alè també és Aire. Mentre respireu, la Gran Obra és viva.
+> El vaig deixar lligat al metall sagrat de la creu, perquè pugui alçar-se als cels. I recordeu-ho: el vostre alè també és Aire. Mentre respireu, la Gran Obra és viva.
 
 ### ✨ Ànima — Pista skate
 

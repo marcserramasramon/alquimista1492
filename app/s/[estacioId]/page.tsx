@@ -5,6 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { useInputAnswerGame } from "@/components/games/InputAnswerGame";
 import { VistaEstacio, type EstacioPublica } from "@/components/vistes/VistaEstacio";
 import { CelebracioEstrella } from "@/components/vistes/CelebracioEstrella";
+import { VideoFita } from "@/components/vistes/VideoFita";
+import { FRAGMENTS } from "@/content/public/textos";
+import { aturarVeu } from "@/lib/so";
 
 interface EstacioData {
   estacio: EstacioPublica;
@@ -24,16 +27,26 @@ export default function EstacioPage() {
   // la celebració de l'estrella completa (CelebracioEstrella) en lloc d'anar-hi directes.
   const [estrellaCompletada, setEstrellaCompletada] = useState(false);
   const [mostrarEstrella, setMostrarEstrella] = useState(false);
+  // Entre la celebració i el fragment: el vídeo de la fita, amb la veu del fragment sonant.
+  const [veientVideo, setVeientVideo] = useState(false);
 
   const { setPistesDesbloquejades, ...joc } = useInputAnswerGame({
     estacioId,
-    // Després de la celebració, la mateixa pantalla mostra el fragment desbloquejat.
+    // Després de la celebració, el vídeo de la fita i, en acabar, la mateixa pantalla mostra el fragment.
     onResolt: (totesResoltes) => {
-      setResolta(true);
+      setVeientVideo(true);
       setEstrellaCompletada(totesResoltes);
-      window.scrollTo({ top: 0 });
     },
   });
+
+  function acabarVideo() {
+    setVeientVideo(false);
+    setResolta(true);
+    window.scrollTo({ top: 0 });
+  }
+
+  // La veu del fragment la engega VideoFita i continua a la pantalla de la fita: s'atura en marxar.
+  useEffect(() => aturarVeu, []);
 
   useEffect(() => {
     carregarEstacio();
@@ -92,7 +105,14 @@ export default function EstacioPage() {
         error={error}
         onTornar={() => (estrellaCompletada ? setMostrarEstrella(true) : router.push("/joc"))}
       />
-      {mostrarEstrella && <CelebracioEstrella onAcabat={() => router.push("/joc")} />}
+      {veientVideo && dades?.estacio.element && (
+        <VideoFita
+          video={`/video/fita-${dades.estacio.element}.mp4`}
+          veu={FRAGMENTS[dades.estacio.element].audio}
+          onAcabat={acabarVideo}
+        />
+      )}
+      {mostrarEstrella &&<CelebracioEstrella onAcabat={() => router.push("/joc")} />}
     </>
   );
 }

@@ -31,7 +31,8 @@ import { VistaFinal } from "@/components/vistes/VistaFinal";
 import { VistaMissatge } from "@/components/vistes/VistaMissatge";
 import { VistaTempsConsumit } from "@/components/vistes/VistaTempsConsumit";
 import { VistaGuardians } from "@/components/vistes/VistaGuardians";
-import { RESPOSTA_CORRECTA, RESPOSTES_INCORRECTES } from "@/content/public/textos";
+import { FRAGMENTS, RESPOSTA_CORRECTA, RESPOSTES_INCORRECTES } from "@/content/public/textos";
+import { VideoFita } from "@/components/vistes/VideoFita";
 import { VistaMasterLogin } from "@/components/vistes/VistaMasterLogin";
 import { VistaMasterEquips, type EquipMaster } from "@/components/vistes/VistaMasterEquips";
 import { VistaMasterCodis } from "@/components/vistes/VistaMasterCodis";
@@ -45,6 +46,7 @@ import { VistaMissatgeVideo } from "@/components/vistes/VistaMissatgeVideo";
 import { MISSATGES_MASTER, TITOL_TEXT_LLIURE } from "@/content/public/missatgesMaster";
 import type { MissatgeEnviat } from "@/components/vistes/PanellMissatgesMaster";
 import { VistaEnviarAvis } from "@/components/vistes/VistaEnviarAvis";
+import { VistaAjuda } from "@/components/vistes/VistaAjuda";
 import type { AvisEquip } from "@/components/vistes/PanellAvisosMaster";
 import { IndicadorTemps } from "@/components/ui/IndicadorTemps";
 import type { DadesRecorregut } from "@/components/vistes/PanellRecorregut";
@@ -253,6 +255,24 @@ function pantallesFita(estacio: Estacio): Pantalla[] {
       render: (dades) =>
         fita({ resposta: dades.fites[estacio.id]?.resposta ?? "", missatge: MISSATGE_CORRECTE, correcte: true }),
     },
+    ...(estacio.element
+      ? [
+          {
+            ...base,
+            id: `fita-${estacio.id}-video`,
+            titol: `${estacio.nom} · vídeo`,
+            descripcio:
+              "Entre la celebració i el fragment: public/video/fita-*.mp4 (mut) amb la veu del fragment. En acabar el vídeo, la veu continua a la pantalla de la fita. Sense el fitxer, passa directe (mode de reserva).",
+            render: () => (
+              <VideoFita
+                video={`/video/fita-${estacio.element}.mp4`}
+                veu={FRAGMENTS[estacio.element!].audio}
+                onAcabat={noop}
+              />
+            ),
+          },
+        ]
+      : []),
     {
       ...base,
       id: `fita-${estacio.id}-pista`,
@@ -706,10 +726,22 @@ export const PANTALLES: Pantalla[] = [
     },
   },
   {
+    id: "ajuda",
+    grup: "hub",
+    titol: "Hub · ajuda",
+    descripcio: "Botó \"?\" del mapa: preguntes freqüents; si cap no encaixa, un botó porta al formulari per avisar el màster.",
+    render: (dades) => (
+      <>
+        {getPantalla("hub-mitja-partida")?.render(dades)}
+        <VistaAjuda onEscriureMissatge={noop} onTancar={noop} />
+      </>
+    ),
+  },
+  {
     id: "avisar-master",
     grup: "hub",
     titol: "Hub · avisar el màster",
-    descripcio: "Botó \"?\" del mapa: l'equip escriu un avís de text per al màster (direcció única, no és un xat).",
+    descripcio: "Formulari real, obert des de l'ajuda (o directament): l'equip escriu un avís de text per al màster (direcció única, no és un xat).",
     render: (dades) => (
       <>
         {getPantalla("hub-mitja-partida")?.render(dades)}

@@ -14,7 +14,8 @@ function jaEscoltada(src: string): boolean {
   }
 }
 
-function marcarEscoltada(src: string) {
+/** Marca una veu com a escoltada: BotoVeu ja no la farà sonar sola (la pantalla de vídeo de la fita l'ha engegat). */
+export function marcarEscoltada(src: string) {
   try {
     sessionStorage.setItem(`veu:${src}`, "1");
   } catch {

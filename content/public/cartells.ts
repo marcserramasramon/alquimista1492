@@ -46,7 +46,7 @@ export const POEMES_CARTELLS: Record<string, PoemaCartell> = {
     fons: "/images/cartells/fons/planes-bones.jpg",
     paragrafs: [
       "El fang ancestral reposa en l'obaga, bressol dels tres principis de la Gran Obra. Entre la sal que fixa, el sofre que crema sense flama i el mercuri volàtil, la matèria jeu silent esperant l'ull atent de l'iniciat.",
-      "Oblida els vells tractats i cerca el testimoni dels cossos d'argila. Quants recipients custodien el recer? Aparella'ls de dos en dos, com bessons que es reflecteixen; la meitat del seu nombre serà la clau mineral.",
+      "Oblida els vells tractats i cerca el testimoni dels cossos d'argila. Quants recipients custodien el recer? Compta'ls i repeteix la xifra tres cops, com un conjur que es repeteix: aquest serà el nombre de la clau mineral.",
     ],
   },
   foc: {

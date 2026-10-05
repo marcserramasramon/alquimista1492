@@ -10,7 +10,7 @@
 
 Cada fita/estació és un **element**. El jugador hi troba un missatge o número amagat mitjançant un truc físic-químic de "tinta invisible" propi de l'element. El resultat (número/xifra) es valida a la webapp.
 
-**Decidit (2026-09-23): el número de cada fita és la posició del seu element a la recepta del Gresol.** Aigua **1** · Foc **2** · Terra **3** · Aire **4** · Ànima **5**.
+**Decidit (2026-10-03): la resposta de cada fita és un nombre primer de tres xifres, i l'ordre de la recepta del Gresol és l'ordre creixent dels nombres.** Aigua **127** · Foc **233** · Terra **666** · Aire **431** · Ànima **773**. (Abans eren les posicions 1–5. Cal reimprimir/repintar els números físics de cada fita; a Terra, la mecànica 6 ÷ 2 ja no dona un nombre de 3 xifres: PENDENT redissenyar-la.)
 
 **Totes les fites comparteixen:**
 - Un cartell físic amb el context narratiu + (quan aplica) un poema/pista que insinua el truc de revelació, sense dir-lo directament.
@@ -34,8 +34,8 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 | Acció física | Els jugadors giren la manovella perquè brolli aigua (idealment tenyida amb colorant/aquarel·la) i mullen el paper. La cera repel·leix la tinta/aigua i el número apareix en blanc net sobre el fons mullat |
 | Poema | **Text del cartell (2026-09-26, prosa):**<br>*Quatre puntes governen el curs del misteri, el batec sagrat que obre la senda. On la bèstia de bronze guarda el corrent i la roda desafia el repòs, l'origen es desvetlla davant d'aquell qui sap aturar el pas i escoltar la primera vibració.*<br><br>*El pergamí roman cec sota la volta celeste, esperant la carícia del bateig. Deixa que el raig del guardià amari el buit silenciós: allò que s'havia ocultat mostrarà la seva força primigènia quan la humitat trenqui el vel.*<br><br>(2026-09-26: "doblarà la seva força" → "mostrarà la seva força primigènia", perquè no faci pensar en un doble; la resposta és **1**.) |
 | Element físic real aprofitat | Cap per a la resposta (des del 2026-09-23). La manovella té 4 radis, però ja no entren al càlcul |
-| Resposta esperada | **Actualitzat (2026-09-23):** el número dibuixat amb cera, un cop revelat amb l'aigua, és **1** (posició de l'Aigua a la recepta). Resposta final a validar al servidor: **1** |
-| Pistes | 1. "El que brolla revela el secret." · 2. "Mulla el paper amb aigua per desvelar el número." · 3. "El número és 1." |
+| Resposta esperada | **Actualitzat (2026-09-23):** el número dibuixat amb cera, un cop revelat amb l'aigua, és **1** (posició de l'Aigua a la recepta). Resposta final a validar al servidor: **127** (2026-10-03) |
+| Pistes | 1. "El que brolla revela el secret." · 2. "Mulla el paper amb aigua per desvelar el número." · 3. "El número és 127." |
 | Notes de seguretat | Cap especial (aigua freda, exterior) |
 
 ---
@@ -51,9 +51,9 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 | Material del jugador | Cap: només el cartell amb el poema |
 | Acció física | Els jugadors busquen les àmfores de Planes Bones i les compten |
 | Element físic real aprofitat | **6 àmfores** a Planes Bones (recompte real al lloc, 2026-09-26 — abans es pensava que n'hi havia 3). **El recompte ja no és directament la resposta**: cal comptar-les totes i dividir-les per la meitat, 6 ÷ 2 = 3 (coincideix amb la posició de la Terra a la recepta) |
-| Poema/context | **Text del cartell (2026-09-26, prosa, actualitzat per reflectir les 6 àmfores):**<br>*El fang ancestral reposa en l'obaga, bressol dels tres principis de la Gran Obra. Entre la sal que fixa, el sofre que crema sense flama i el mercuri volàtil, la matèria jeu silent esperant l'ull atent de l'iniciat.*<br><br>*Oblida els vells tractats i cerca el testimoni dels cossos d'argila. Quants recipients custodien el recer? Aparella'ls de dos en dos, com bessons que es reflecteixen; la meitat del seu nombre serà la clau mineral.* |
-| Resposta esperada | **Confirmat:** comptar les 6 àmfores i dividir per 2. Resposta final a validar al servidor: **3** |
-| Pistes | 1. "Busca on guarda els elixirs l'alquimista." · 2. "Compta les àmfores i parteix-les per la meitat." · 3. "El número és el 3." |
+| Poema/context | **Text del cartell (2026-09-26, prosa, actualitzat per reflectir les 6 àmfores):**<br>*El fang ancestral reposa en l'obaga, bressol dels tres principis de la Gran Obra. Entre la sal que fixa, el sofre que crema sense flama i el mercuri volàtil, la matèria jeu silent esperant l'ull atent de l'iniciat.*<br><br>*Oblida els vells tractats i cerca el testimoni dels cossos d'argila. Quants recipients custodien el recer? Compta'ls i repeteix la xifra tres cops, com un conjur que es repeteix: aquest serà el nombre de la clau mineral.* |
+| Resposta esperada | **Actualitzat (2026-10-03):** comptar les 6 àmfores i repetir la xifra tres cops. Resposta final a validar al servidor: **666** (2026-10-03; el nombre d'àmfores (6) repetit tres cops) |
+| Pistes | 1. "Busca on guarda els elixirs l'alquimista." · 2. "Compta les àmfores i escriu aquest nombre tres cops." · 3. "El número és el 666." |
 | Notes de seguretat/logística | Comprovar abans de la partida que les 6 àmfores hi són i es veuen bé |
 
 ---
@@ -70,8 +70,8 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 | Acció física | Els jugadors miren el full a través del "paper de foc" fins que el número en blau es distingeix de la resta |
 | Element físic real aprofitat | Cap — el **pal vell de telèfon** del lloc queda només com a referència visual/logística (ja no hi ha encenedor a penjar-hi, en desaparèixer el foc) |
 | Poema/context | **Text del cartell (2026-09-26, prosa):**<br>*Un alè incandescent dorm empresonat en el vidre, foc que no crema la pell ni desprèn cendra. A les portes del recinte s'estén un mar de confusions cromàtiques, on les ombres i les llums lluiten per enganyar la mirada ingènua.*<br><br>*Interposa la gemma carmesí entre els teus ulls i el laberint vibrant. Quan la flama domi el miratge i devori el fals reflex, només el rastre del brot naixent s'alçarà victoriós entre la tenebra.*<br><br>⚠️ Pendent: **el codi ara fa servir un número blau com a resposta (2026-09-26)**, però el poema encara diu "brot naixent" (imatge de color verd). Cal decidir si es reescriu aquest vers per parlar de blau (p.ex. una imatge d'aigua/cel) o si es deixa així com a mer floreig poètic — no ho decideixo jo, veure `content/public/cartells.ts` (`pendent` de `foc`) |
-| Resposta esperada | El número blau és **2** (posició del Foc a la recepta). El full imprès l'ha de dur en blau, enmig d'un mar de xifres i símbols vermells |
-| Pistes | 1. "El vidre de foc desvela el secret." · 2. "Posa el paper vermell davant." · 3. "El número és el 2." |
+| Resposta esperada | El número blau és **233**. El full imprès l'ha de dur en blau, enmig d'un mar de xifres i símbols vermells |
+| Pistes | 1. "El vidre de foc desvela el secret." · 2. "Posa el paper vermell davant." · 3. "El número és el 233." |
 | Notes de seguretat/logística | Ja NO cal supervisió de foc obert. Cal preparar un tros de cel·lofana vermella per equip (resistent, que no es trenqui) i imprimir/pintar el full amb prou densitat de soroll vermell perquè el blau no es distingeixi de seguida a ull nu sense el filtre |
 
 ---
@@ -88,11 +88,11 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 | **Punt 2 — fita `aire` (l'enigma)** | **Serrat de la Creu** — 41.910894, 2.224438 (coordenada represa de l'ubicació anterior al trasllat del 2026-09-26/27, a prop del monument real de la creu). Cartell nou amb el 2n paràgraf (l'enigma del vidre ensabonat) |
 | Tècnica | Sabó (mans o plats, transparent) sobre vidre/mirall + alè (baf) |
 | Element físic real aprofitat | Cap (des del 2026-09-23 el número de la base de la creu ja no es fa servir) |
-| Material del jugador | Vidre o mirall amb una capa finíssima de sabó dibuixant **el número 4** (invisible en sec) |
+| Material del jugador | Vidre o mirall amb una capa finíssima de sabó dibuixant **el número 431** (invisible en sec) |
 | Acció física | Els jugadors bufen (alè calent) sobre el vidre; s'entela tot excepte el número de sabó (4), que queda net i llegible un instant |
 | Poema/context | **Text del cartell (2026-09-26, prosa, actualitzat amb l'excusa narrativa per pujar fins al turó; el paràgraf de context antic sobre "el ferro immòbil... quatre marques a la seva base" s'ha tret perquè ja no s'aprofita cap element físic de la base de la creu):**<br>*Els devots de l'Orde em perseguien. Em vaig amagar rere els murs de pedra d'una masia oblidada, però cap pedra és prou forta per contenir l'essència de l'aire. Vaig fugir fins al cim del turó, allà on el vent en fa el seu element. No t'aturis: segueix amunt, cap a la creu vella, fins on la terra ja no pugui alçar-se més.*<br><br>*Ofrena el caliu del teu propi alè sobre la làmina gelada perquè l'efímer es faci visible. Resta el missatge que la boira desvetlli d'allò gravat a la soca; la diferència serà el tribut que l'aire et concedeix.*<br><br>⚠️ Contradicció sense resoldre (independent de la ubicació): demana restar el número del vidre del gravat de la creu, però la resposta és **4** (el número del vidre, sense resta). |
-| Resposta esperada | **Actualitzat (2026-09-23):** el número del vidre, **4** (posició de l'Aire a la recepta) |
-| Pistes | 1. "El secret es desvelarà amb l'aire del teu alè." · 2. "Bufa l'alè calent sobre el vidre." · 3. "El número és 4." |
+| Resposta esperada | **Actualitzat (2026-09-23):** el número del vidre, **431** |
+| Pistes | 1. "El secret es desvelarà amb l'aire del teu alè." · 2. "Bufa l'alè calent sobre el vidre." · 3. "El número és 431." |
 | Notes de seguretat/logística | El baf es dissipa ràpid — potser cal poder repetir l'acció diverses vegades; vidre ben fixat perquè no es trenqui/caigui; neteja entre partides (el sabó es pot esborrar amb l'ús) |
 
 ---
@@ -108,8 +108,8 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 | Material del jugador/equip | Una **llanterna UV per equip** (material físic a preparar/comprar, no digital) |
 | Acció física | Els jugadors pugen fins al **punt més alt** de la pista (la rampa/turó més elevat) i hi passen la llanterna UV pel terra fins a fer aparèixer el número |
 | Poema/context | **Text del cartell (2026-09-26, prosa):**<br>*Onades petrificades tracen un laberint de runa i falses aparences. Incomptables glifs dormen escampats com estels caiguts a la pols; però la quintaessència no habita el fons del cresol, sinó l'àpex que desafia el buit.*<br><br>*Només la cresta dominant custodia el batec vertader. Desperta la teva flama porpra sobre la roca més alta, i la runa coronada revelarà l'últim misteri.* (escurçat el 2026-09-26) |
-| Resposta esperada | **Actualitzat (2026-09-23):** un sol número, **5** (posició de l'Ànima a la recepta) |
-| Pistes | 1. "El que busques és sota els teus peus." · 2. "Il·lumina el terra amb la llanterna." · 3. "El número és 5." |
+| Resposta esperada | **Actualitzat (2026-09-23):** un sol número, **773** |
+| Pistes | 1. "El que busques és sota els teus peus." · 2. "Il·lumina el terra amb la llanterna." · 3. "El número és 773." |
 | Notes tècniques | **Ja NO cal** accés a `getUserMedia` ni processament de canvas — s'elimina la implicació tècnica que hi havia abans per a `docs/app-nova.md` (permisos de càmera, filtre de color, etc.). L'app només necessita un input de text/número igual que a la resta d'estacions |
 | Notes de seguretat/logística | Cal preveure una llanterna UV per equip (comprar-ne prou unitats + piles de recanvi); verificar que la tinta UV escollida sigui prou resistent a la intempèrie (terra exterior, possible humitat/rosada de nit) i seguri per pintar sobre paviment públic (permisos de l'ajuntament si cal); provar-ho in situ de nit abans de l'esdeveniment per confirmar que es veu bé amb les llanternes previstes |
 
@@ -151,7 +151,7 @@ Al centre exacte del pentagrama (Pla de Masset, 41.913130, 2.229789 — coincide
 - **Només el transparent (l'Ànima, l'últim) porta sal.** La sal fa de conductor entre dos fils i el LED s'encén sol.
 - **Qui fa passar l'equip a la pantalla final és el frare:** quan veu el LED encès, prem "Consagrar Guardians del Secret" al panell del màster i el mòbil de l'equip passa a "Guardians del Secret".
 - **L'actor durant el ritual és Fra Francesc, que els ensenya la recepta de la Pedra Filosofal.**
-- **Els números trobats a les fites donen l'ordre de la recepta** (Aigua 1, Foc 2, Terra 3, Aire 4, Ànima 5).
+- **Els números trobats a les fites donen l'ordre de la recepta** (Aigua 127, Foc 233, Terra 666, Aire 431, Ànima 773, en ordre creixent).
 
 ⚠️ PENDENT:
 - Què passa si l'ordre és incorrecte (en principi el LED no pot encendre's abans d'hora, perquè només l'últim líquid porta sal).

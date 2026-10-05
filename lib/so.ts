@@ -689,6 +689,11 @@ export interface Reproduccio {
 
 let veuActual: Reproduccio | null = null;
 
+/** Atura la veu que soni ara (si n'hi ha). Per a qui l'ha engegat i ha de marxar sense aturar-la ell. */
+export function aturarVeu() {
+  veuActual?.aturar();
+}
+
 /**
  * Fa sonar una veu des de `desDe` segons. Només en sona una alhora: la que sonava s'atura.
  * `enAcabar` s'avisa quan arriba al final (no quan s'atura a mà).

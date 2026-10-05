@@ -77,7 +77,12 @@ export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onA
     el.addEventListener("ended", enAcabar);
     el.src = video;
     el.load();
-    el.play().catch(() => {});
+    // So propi del vídeo (ambient) al 33%, sota la veu. Si el navegador bloqueja l'autoplay amb so, es reintenta mut.
+    el.volume = 0.33;
+    el.play().catch(() => {
+      el.muted = true;
+      el.play().catch(() => {});
+    });
     return () => {
       el.removeEventListener("error", enError);
       el.removeEventListener("ended", enAcabar);
@@ -101,7 +106,7 @@ export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onA
     >
       {/* El vídeo és mut: garanteix que els navegadors el deixin començar sol just en obrir la
           pantalla (l'autoplay amb so no sempre ho fa, i aquí el protagonisme és l'animació). */}
-      <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" playsInline muted />
+      <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" playsInline />
 
       <div
         className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center"
