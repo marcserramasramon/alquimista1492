@@ -64,7 +64,7 @@ interface PasActual {
 /**
  * Manual d'ús sobre l'app real: bombolles que surten una darrere l'altra, amb la cua cap a la peça
  * (marcada amb `data-manual`) que expliquen, i s'esvaeixen soles al cap d'uns segons. Quan una
- * s'esvaeix, al seu lloc queda un botonet blanc que la torna a ensenyar. No tapa res ni bloqueja la pantalla.
+ * s'esvaeix, al seu lloc queda un botonet que la torna a ensenyar mentre dura aquesta visita (no es recorden). No tapa res ni bloqueja la pantalla.
  */
 export function GuiaManual({ escenes, reinici = 0, sempre = false }: GuiaManualProps) {
   const [actual, setActual] = useState<PasActual | null>(null);
@@ -132,16 +132,11 @@ export function GuiaManual({ escenes, reinici = 0, sempre = false }: GuiaManualP
     [afegirFet, mostrarPas, sempre],
   );
 
-  // Cada escena surt sola quan la pantalla en mostra la primera peça; les ja vistes deixen els botonets.
+  // Cada escena surt sola, una única vegada, quan la pantalla en mostra la primera peça.
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
     const inici = setTimeout(() => {
       interval = setInterval(() => {
-        if (!sempre) {
-          for (const e of escenesRef.current) {
-            if (llegirVista(e.id)) e.passos.forEach((_, i) => afegirFet(clauPas(e.id, i)));
-          }
-        }
         if (executant.current) return;
         const pendent = escenesRef.current.find(
           (e) =>
@@ -160,7 +155,7 @@ export function GuiaManual({ escenes, reinici = 0, sempre = false }: GuiaManualP
       clearInterval(interval);
       saltar.current?.();
     };
-  }, [idsEscenes, reproduir, sempre, afegirFet]);
+  }, [idsEscenes, reproduir, sempre]);
 
   // L'ordre de "tornar a veure tot" que arriba de fora (el botó "Com es juga" de l'ajuda): la
   // escena més específica que té la seva peça a pantalla (la fitxa d'una fita abans que el hub sencer).
@@ -208,7 +203,7 @@ async function portarALaVista(el: HTMLElement): Promise<boolean> {
 const MIDA_BOTONET = 40;
 
 /**
- * Botonet blau clar que queda on havia sortit la bombolla (a la vora de la peça, on hi anava la cua).
+ * Botonet de paper que queda on havia sortit la bombolla (a la vora de la peça, on hi anava la cua).
  * Segueix la peça si la pantalla fa scroll i s'amaga si la peça no és a la vista.
  */
 function Botonet({ pas, amagat, onToc }: { pas: PasManual; amagat: boolean; onToc: () => void }) {
@@ -225,8 +220,8 @@ function Botonet({ pas, amagat, onToc }: { pas: PasManual; amagat: boolean; onTo
         if (visible) {
           const fraccio = pas.cuaX ?? 0.5;
           const x = r.left + Math.max(20, Math.min(r.width - 20, fraccio * r.width));
-          // A la vora de dalt de la peça (on hi anava la cua); si és enganxada a dalt de la pantalla, a la de baix.
-          const y = Math.max(24, Math.min(vh - 24, r.top >= 28 ? r.top : r.bottom));
+          // A la vora de dalt de la peça (on hi anava la cua); si és enganxada a dalt de la pantalla, penja per sota seu.
+          const y = Math.max(24, Math.min(vh - 24, r.top >= 28 ? r.top : r.bottom + MIDA_BOTONET / 2 - 4));
           // left/top (no transform): l'animació d'entrada ja fa servir transform.
           boto.style.left = `${x - MIDA_BOTONET / 2}px`;
           boto.style.top = `${y - MIDA_BOTONET / 2}px`;
@@ -248,7 +243,7 @@ function Botonet({ pas, amagat, onToc }: { pas: PasManual; amagat: boolean; onTo
       type="button"
       onClick={onToc}
       aria-label={`Tornar a veure: ${pas.titol ?? pas.text}`}
-      className={`fixed z-[90] flex items-center justify-center rounded-full border-[3px] border-ink bg-[#bfe0ff] text-xl leading-none shadow-[0_3px_0_var(--ink)] transition-opacity duration-300 after:absolute after:-inset-2 after:content-[''] ${
+      className={`fixed z-[90] flex items-center justify-center rounded-full border-[3px] border-ink bg-[#fffdf7] text-xl leading-none shadow-[0_3px_0_var(--ink)] transition-opacity duration-300 after:absolute after:-inset-2 after:content-[''] ${
         amagat ? "pointer-events-none opacity-0" : "animate-bombolla"
       }`}
       style={{ width: MIDA_BOTONET, height: MIDA_BOTONET, display: "none" }}

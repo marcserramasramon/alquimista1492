@@ -61,7 +61,7 @@ export function VistaAjuda({ onManual, onEscriureMissatge, onTancar }: VistaAjud
         </div>
 
         <button type="button" onClick={onManual} className="btn btn-secundari">
-          📖 Com es juga
+          📖 Manual d&apos;ús
         </button>
 
         <div className="flex flex-col gap-2.5">
