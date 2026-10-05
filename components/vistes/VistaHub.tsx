@@ -12,7 +12,6 @@ export interface VistaHubProps {
   estacions: EstacioMapa[];
   totesResoltes: boolean;
   onAnarEstacio: (estacio: EstacioMapa) => void;
-  onAnarFinal: () => void;
   /** Tornar a llegir el missatge secret de l'inici. */
   onLlegirMissatge: () => void;
   /** Fita seleccionada en obrir la vista (mostra la seva fitxa). */
@@ -33,7 +32,6 @@ export function VistaHub({
   estacions,
   totesResoltes,
   onAnarEstacio,
-  onAnarFinal,
   onLlegirMissatge,
   seleccionadaInicialId = null,
   marcadors,
@@ -93,9 +91,7 @@ export function VistaHub({
     // quadrats de mida fixa, així que en una pantalla molt alta hi pot quedar espai
     // sobrant a sota; és el mateix compromís que accepten totes les altres pantalles.
     <main
-      className={`mx-auto flex min-h-dvh w-full max-w-md flex-col gap-7 px-4 pt-7 ${
-        totesResoltes ? "pb-32" : "pb-[max(1.5rem,env(safe-area-inset-bottom))]"
-      }`}
+      className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-7 px-4 pt-7 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
     >
       {/* Sense rellotge a l'esquerra que la contrapesi, la casella sola arran de la vora dreta
           queda tallada per la cantonada corbada de la pantalla en alguns iPhone: centrada al
@@ -247,16 +243,6 @@ export function VistaHub({
           📜 Tornar a llegir el missatge
         </button>
       </div>
-
-      {totesResoltes && (
-        <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 [background:linear-gradient(to_top,var(--paper)_60%,transparent)]">
-          <div className="animate-bategar rounded-2xl">
-            <button onClick={onAnarFinal} className="btn btn-fosc text-xl">
-              ⚗️ Anar al Pla del Masset
-            </button>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

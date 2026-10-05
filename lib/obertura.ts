@@ -5,9 +5,9 @@ import type { Estacio } from "@/content/public/estacions";
 
 export type Obertura = "gps" | "qr" | "codi";
 
-/** Només les fites elementals s'han d'obrir arribant-hi; el Gresol s'obre amb els cinc fragments. */
-export function necessitaObertura(estacio: Estacio): boolean {
-  return estacio.tipus === "text";
+/** Totes les estacions s'obren arribant-hi (GPS o QR); el Cor de l'estrella, a més, només un cop resoltes les cinc fites. */
+export function necessitaObertura(_estacio: Estacio): boolean {
+  return true;
 }
 
 /** Una fita resolta abans que existís l'obertura també compta com a oberta. */

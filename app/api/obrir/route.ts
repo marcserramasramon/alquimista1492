@@ -3,7 +3,8 @@ import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getEquipSession } from "@/lib/auth";
-import { getEstacio, getPasPrevi } from "@/content/public/estacions";
+import { getEstacio, getEstacionsJugables, getPasPrevi } from "@/content/public/estacions";
+import { getServiceRoleClient } from "@/lib/supabase";
 import { getEstacioPerCodi } from "@/content/private/codisFites";
 import { necessitaObertura, obrirFita } from "@/lib/obertura";
 import { RADI_OBERTURA_M, distanciaMetres } from "@/lib/ubicacio";
@@ -56,6 +57,17 @@ export async function POST(request: NextRequest) {
   const desti = estacio ?? pas;
   if (!desti || !desti.disponible || (estacio && !necessitaObertura(estacio))) {
     return NextResponse.json({ error: "Estació no disponible" }, { status: 404 });
+  }
+  // El Cor de l'estrella (estació especial) no s'obre fins que no hi ha les cinc fites resoltes.
+  if (estacio?.tipus === "especial") {
+    const { data: progres } = await getServiceRoleClient()
+      .from("v2_progres")
+      .select("estacio_id, resolta")
+      .eq("team_id", sessio.teamId);
+    const resoltes = new Set((progres ?? []).filter((p) => p.resolta).map((p) => p.estacio_id));
+    if (!getEstacionsJugables().every((e) => resoltes.has(e.id))) {
+      return NextResponse.json({ error: "Encara no heu resolt les cinc fites" }, { status: 403 });
+    }
   }
   const distancia = distanciaMetres(dades, { lat: desti.latitud, lng: desti.longitud });
   if (distancia > RADI_OBERTURA_M) {

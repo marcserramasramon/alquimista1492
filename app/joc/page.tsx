@@ -117,6 +117,8 @@ export default function HubPage() {
     const ara = Date.now();
     for (const estacio of estat.estacions) {
       if (estacio.oberta !== false || !estacio.disponible) continue;
+      // El Cor de l'estrella no s'obre fins que no hi ha les cinc fites resoltes.
+      if (estacio.tipus === "especial" && !estat.totesResoltes) continue;
       const distancia = distanciaA(posicio, estacio);
       if (distancia === null || distancia > RADI_OBERTURA_M) continue;
       if (ara - (intentsGps.current.get(estacio.id) ?? 0) < REINTENT_GPS_MS) continue;
@@ -149,20 +151,18 @@ export default function HubPage() {
   const missatgeReobert = videoReobert ? getMissatgeMaster(videoReobert) : undefined;
 
   async function anarEstacio(estacio: EstacioMapa) {
-    if (estacio.tipus === "especial") {
-      router.push("/final");
-      return;
-    }
     if (estacio.oberta !== false) {
-      router.push(`/s/${estacio.id}`);
+      router.push(estacio.tipus === "especial" ? "/final" : `/s/${estacio.id}`);
       return;
     }
     // El GPS encara no l'ha oberta: si ja hi sou, es prova de nou; si no, escàner del QR (opcional si el GPS funciona).
     const distancia = distanciaA(posicio, estacio);
     if (posicio && distancia !== null && distancia <= RADI_OBERTURA_M && (await obrirPerGps(estacio, posicio))) {
-      router.push(`/s/${estacio.id}`);
+      router.push(estacio.tipus === "especial" ? "/final" : `/s/${estacio.id}`);
       return;
     }
+    // El Cor de l'estrella només s'obre per GPS: no té cartell amb QR.
+    if (estacio.tipus === "especial") return;
     setEscanejant(true);
   }
 
@@ -190,7 +190,6 @@ export default function HubPage() {
         videos={videos}
         onSeleccionarVideo={setVideoReobert}
         onAnarEstacio={anarEstacio}
-        onAnarFinal={() => router.push("/final")}
         onLlegirMissatge={() => router.push("/missatge?tornada=1")}
         onAvis={() => setAjudaOberta(true)}
       />

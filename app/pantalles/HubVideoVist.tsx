@@ -30,7 +30,6 @@ export function HubVideoVist({ estacions, totesResoltes }: { estacions: EstacioM
         estacions={estacions}
         totesResoltes={totesResoltes}
         onAnarEstacio={noop}
-        onAnarFinal={noop}
         onLlegirMissatge={noop}
         videos={videos}
         onSeleccionarVideo={setReobertId}

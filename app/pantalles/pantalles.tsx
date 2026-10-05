@@ -120,7 +120,6 @@ function hub(
       estacions={estacions}
       totesResoltes={totesResoltes}
       onAnarEstacio={noop}
-      onAnarFinal={noop}
       onLlegirMissatge={noop}
       seleccionadaInicialId={seleccionadaInicialId}
       marcadors={marcadors}
@@ -161,7 +160,6 @@ function hubAireAmagat(fase: 1 | 2 = 1) {
       estacions={estacions}
       totesResoltes={false}
       onAnarEstacio={noop}
-      onAnarFinal={noop}
       onLlegirMissatge={noop}
       seleccionadaInicialId={fase === 2 ? "aire" : null}
       marcadors={[]}
