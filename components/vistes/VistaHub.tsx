@@ -4,9 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { MapaEquip, type EstacioMapa, type MarcadorMapa, type VideoMapa } from "@/components/player/MapaEquip";
 import { BarraFranja, useMostrarAFranja } from "@/components/player/FranjaPartida";
 import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
-import { Narracio } from "@/components/ui/Narracio";
 import { ELEMENTS } from "@/content/public/estacions";
-import { ESTRELLA_COMPLETA } from "@/content/public/textos";
 
 export interface VistaHubProps {
   estacions: EstacioMapa[];
@@ -136,8 +134,6 @@ export function VistaHub({
             />
           )}
         </section>
-
-        {totesResoltes && <Narracio text={ESTRELLA_COMPLETA} etiqueta="fra francesc" className="animate-entrar" />}
 
         {/* mt-1.5 compensa els 6px de la sub­ombra .targeta del pentagrama (globals.css): sense
             això el gap-4 del contenidor (1rem) es veu com a 10px perquè l'ombra sòlida es dibuixa

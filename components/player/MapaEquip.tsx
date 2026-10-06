@@ -347,12 +347,14 @@ export function MapaEquip({
                   const { x, y } = aPixel(estacio.latitud, estacio.longitud);
                   const element = estacio.element ? ELEMENTS[estacio.element] : null;
                   const seleccionada = estacio.id === seleccionadaId;
+                  // El Pla del Masset (només visible amb l'estrella completa): més gran i amb pulsació lenta.
+                  const cor = estacio.tipus === "especial" && !seleccionada;
                   const resolta = estacio.progres.resolta;
                   const color = element?.color ?? GOLD;
                   return (
                     <g
                       key={estacio.id}
-                      transform={`translate(${x} ${y}) scale(${escala * (seleccionada ? 2 : 1)})`}
+                      transform={`translate(${x} ${y}) scale(${escala * (seleccionada ? 2 : cor ? 1.6 : 1)})`}
                       onClick={onSeleccionar ? () => onSeleccionar(estacio) : undefined}
                       style={{ cursor: onSeleccionar ? "pointer" : undefined }}
                       aria-label={element?.nom ?? estacio.nom}
@@ -367,15 +369,17 @@ export function MapaEquip({
                       )}
                       {/* La seleccionada (el doble de gran) batega */}
                       <g>
-                        {seleccionada && (
+                        {(seleccionada || cor) && (
                           <animateTransform
                             attributeName="transform"
                             type="scale"
                             values="1;1.15;1"
-                            dur="1.4s"
+                            dur={cor ? "3.2s" : "1.4s"}
                             repeatCount="indefinite"
                           />
                         )}
+                        {/* El Pla del Masset: la punta de l'agulla (no el centre del cercle) ha de caure sobre el punt GPS */}
+                        <g transform={cor ? "translate(0 -38)" : undefined}>
                         {/* Agulla: cercle amb punta cap avall */}
                         <path d="M -12 20 L 0 38 L 12 20 Z" fill={INK} />
                         <circle
@@ -405,6 +409,7 @@ export function MapaEquip({
                             {resolta ? "✓" : "✦"}
                           </text>
                         )}
+                        </g>
                       </g>
                     </g>
                   );
