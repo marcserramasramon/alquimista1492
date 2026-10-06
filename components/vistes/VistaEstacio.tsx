@@ -37,6 +37,8 @@ export interface VistaEstacioProps extends VistaJocRespostaProps {
   pasInicial?: "narracio" | "prova";
   /** Fita ja resolta: torna a reproduir el vídeo de la fita (que porta la veu del fragment). */
   onRepetirVideo?: () => void;
+  /** Si la fita té vídeo d'arribada: el botó de veu de la fitxa passa a ser un play que el torna a veure. */
+  onRepetirArribada?: () => void;
   onTornar: () => void;
 }
 
@@ -46,6 +48,7 @@ export function VistaEstacio({
   resolta = false,
   pasInicial = "narracio",
   onRepetirVideo,
+  onRepetirArribada,
   onTornar,
   ...joc
 }: VistaEstacioProps) {
@@ -218,10 +221,24 @@ export function VistaEstacio({
           <>
             {/* Pas 1: la veu de Fra Francesc. El botó de sota dona pas a la prova. */}
             <Narracio
-              text={ARRIBADES[estacio.element]}
+              text={onRepetirArribada ? { ...ARRIBADES[estacio.element], audio: undefined } : ARRIBADES[estacio.element]}
               etiqueta="fra francesc"
               color={color}
               className="mb-6 animate-entrar"
+              accio={
+                onRepetirArribada && (
+                  <button
+                    type="button"
+                    onClick={onRepetirArribada}
+                    aria-label="Tornar a veure el vídeo d'arribada i escoltar Fra Francesc"
+                    className="btn btn-secundari btn-rodo shrink-0 shadow-[0_3px_0_var(--ink)]"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden>
+                      <path d="M6 4l14 8-14 8V4z" fill="currentColor" />
+                    </svg>
+                  </button>
+                )
+              }
             />
             <button onClick={anarAProva} className="btn btn-primari">
               A la prova →

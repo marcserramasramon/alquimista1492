@@ -3,12 +3,17 @@
 import { useEffect, useRef } from "react";
 import { marcarEscoltada } from "@/components/ui/Narracio";
 import { sonarVeu } from "@/lib/so";
+import { useSoVideo } from "@/lib/useSoVideo";
 
 export interface VideoFitaProps {
   /** Ruta a public/video/ del vídeo de la fita (fita-aigua.mp4...). Sense el fitxer, s'obvia. */
   video: string;
   /** Veu del fragment (public/audio/fragment-*.mp3): sona des del primer moment i no s'atura amb el vídeo. */
   veu?: string;
+  /** El vídeo té el seu so ambient a part (/audio/video/*.mp3); sona al 33%, sota la veu. Els d'arribada no en tenen: només la veu. */
+  ambient?: boolean;
+  /** Text per a lectors de pantalla. */
+  etiqueta?: string;
   onAcabat: () => void;
 }
 
@@ -23,9 +28,10 @@ const RESERVA_VEU_MS = 90_000;
  * congelat a l'últim fotograma fins que la veu acaba, i només llavors es passa a la pantalla de la fita.
  * Si el fitxer de vídeo no hi és o falla, `onAcabat` es crida de seguida i la veu continua a la fita.
  */
-export function VideoFita({ video, veu, onAcabat }: VideoFitaProps) {
+export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del fragment trobat", onAcabat }: VideoFitaProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const acabatCridat = useRef(false);
+  useSoVideo(videoRef, video, { volum: 0.33, actiu: ambient });
 
   function acabar() {
     if (acabatCridat.current) return;
@@ -78,12 +84,8 @@ export function VideoFita({ video, veu, onAcabat }: VideoFitaProps) {
     el.addEventListener("ended", enAcabar);
     el.src = video;
     el.load();
-    // So propi del vídeo (ambient) al 33%, sota la veu. Si el navegador bloqueja l'autoplay amb so, es reintenta mut.
-    el.volume = 0.33;
-    el.play().catch(() => {
-      el.muted = true;
-      el.play().catch(() => {});
-    });
+    // El vídeo va mut (el so ambient, si en té, el posa useSoVideo): l'autoplay no es pot bloquejar.
+    el.play().catch(() => {});
     return () => {
       el.removeEventListener("error", enError);
       el.removeEventListener("ended", enAcabar);
@@ -93,7 +95,7 @@ export function VideoFita({ video, veu, onAcabat }: VideoFitaProps) {
   }, [video]);
 
   return (
-    <div role="status" aria-label="Vídeo del fragment trobat" className="fixed inset-0 z-50 overflow-hidden bg-black">
+    <div role="status" aria-label={etiqueta} className="fixed inset-0 z-50 overflow-hidden bg-black">
       <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" playsInline />
     </div>
   );

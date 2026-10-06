@@ -21,7 +21,7 @@ export interface VistaObrirFitaProps {
 export const LLARGADA_CODI_FITA = 5;
 
 /**
- * Obrir una fita que el GPS encara no ha obert: escanejar el QR del cartell
+ * Obrir una fita tancada: escanejar el QR del cartell
  * o, a sota, entrar-ne el codi a mà. És la mateixa pantalla per a totes les
  * fites: el codi ja diu quina fita és.
  */

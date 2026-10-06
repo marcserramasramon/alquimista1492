@@ -117,8 +117,8 @@ export default function HubPage() {
     const ara = Date.now();
     for (const estacio of estat.estacions) {
       if (estacio.oberta !== false || !estacio.disponible) continue;
-      // El Cor de l'estrella no s'obre fins que no hi ha les cinc fites resoltes.
-      if (estacio.tipus === "especial" && !estat.totesResoltes) continue;
+      // Només el Cor de l'estrella s'obre per GPS (les altres fites, amb el QR), i no fins que hi ha les cinc fites resoltes.
+      if (estacio.tipus !== "especial" || !estat.totesResoltes) continue;
       const distancia = distanciaA(posicio, estacio);
       if (distancia === null || distancia > RADI_OBERTURA_M) continue;
       if (ara - (intentsGps.current.get(estacio.id) ?? 0) < REINTENT_GPS_MS) continue;
@@ -155,14 +155,15 @@ export default function HubPage() {
       router.push(estacio.tipus === "especial" ? "/final" : `/s/${estacio.id}`);
       return;
     }
-    // El GPS encara no l'ha oberta: si ja hi sou, es prova de nou; si no, escàner del QR (opcional si el GPS funciona).
-    const distancia = distanciaA(posicio, estacio);
-    if (posicio && distancia !== null && distancia <= RADI_OBERTURA_M && (await obrirPerGps(estacio, posicio))) {
-      router.push(estacio.tipus === "especial" ? "/final" : `/s/${estacio.id}`);
+    // El Cor de l'estrella només s'obre per GPS (no té cartell amb QR): si ja hi sou, es prova de nou.
+    if (estacio.tipus === "especial") {
+      const distancia = distanciaA(posicio, estacio);
+      if (posicio && distancia !== null && distancia <= RADI_OBERTURA_M && (await obrirPerGps(estacio, posicio))) {
+        router.push("/final");
+      }
       return;
     }
-    // El Cor de l'estrella només s'obre per GPS: no té cartell amb QR.
-    if (estacio.tipus === "especial") return;
+    // Les altres fites s'obren sempre escanejant el QR del cartell.
     setEscanejant(true);
   }
 

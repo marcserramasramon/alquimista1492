@@ -648,6 +648,13 @@ export const PANTALLES: Pantalla[] = [
     render: () => hub(JUGABLES),
   },
   {
+    id: "hub-cor-estrella",
+    grup: "hub",
+    titol: "Hub · el cor de l'estrella",
+    descripcio: "Amb les cinc fites resoltes, la fitxa del Cor de l'estrella (Pla del Masset) amb el botó del ritual.",
+    render: () => hub(JUGABLES, "gresol"),
+  },
+  {
     id: "hub-celebracio-estrella",
     grup: "hub",
     titol: "Hub · celebració de l'estrella completa",

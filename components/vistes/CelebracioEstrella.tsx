@@ -7,6 +7,7 @@ import { MapaEquip, type EstacioMapa } from "@/components/player/MapaEquip";
 import { Narracio } from "@/components/ui/Narracio";
 import { ESTRELLA_COMPLETA } from "@/content/public/textos";
 import { aturarVeu, sonarFragment } from "@/lib/so";
+import { useSoVideo } from "@/lib/useSoVideo";
 
 export interface CelebracioEstrellaProps {
   /**
@@ -51,6 +52,7 @@ export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onA
   const estacions = estacionsDonades ?? estacionsCarregades;
   const videoRef = useRef<HTMLVideoElement>(null);
   const acabatCridat = useRef(false);
+  useSoVideo(videoRef, video, { volum: 0.33 });
 
   function acabar() {
     if (acabatCridat.current) return;
@@ -94,12 +96,8 @@ export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onA
     el.addEventListener("ended", enAcabar);
     el.src = video;
     el.load();
-    // So propi del vídeo (ambient) al 33%, sota la veu. Si el navegador bloqueja l'autoplay amb so, es reintenta mut.
-    el.volume = 0.33;
-    el.play().catch(() => {
-      el.muted = true;
-      el.play().catch(() => {});
-    });
+    // El vídeo va mut: el so ambient (al 33%, sota la veu) és un fitxer a part, vegeu useSoVideo.
+    el.play().catch(() => {});
     return () => {
       el.removeEventListener("error", enError);
       el.removeEventListener("ended", enAcabar);

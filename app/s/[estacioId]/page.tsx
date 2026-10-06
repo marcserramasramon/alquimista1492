@@ -32,6 +32,10 @@ export default function EstacioPage() {
   const [mostrarEstrella, setMostrarEstrella] = useState(false);
   // Entre la celebració i el fragment: el vídeo de la fita, amb la veu del fragment sonant.
   const [veientVideo, setVeientVideo] = useState(false);
+  // En obrir la fita per primer cop (QR o GPS): el vídeo d'arribada de Fra Francesc, amb la veu dins.
+  const [veientArribada, setVeientArribada] = useState(false);
+  // La fita té el seu vídeo d'arribada (public/video/arribada-fita-*.mp4): el botó de veu passa a ser un play.
+  const [hiHaArribada, setHiHaArribada] = useState(false);
 
   const { setPistesDesbloquejades, ...joc } = useInputAnswerGame({
     estacioId,
@@ -41,6 +45,11 @@ export default function EstacioPage() {
       setEstrellaCompletada(totesResoltes);
     },
   });
+
+  function acabarArribada() {
+    setVeientArribada(false);
+    window.scrollTo({ top: 0 });
+  }
 
   function acabarVideo() {
     setVeientVideo(false);
@@ -94,6 +103,28 @@ export default function EstacioPage() {
       setDades(data);
       setResolta(data.resolta);
       setPistesDesbloquejades(data.pistesDesbloquejades ?? []);
+      engegarArribada(data);
+    }
+
+    // Una sola vegada per sessió i fita, i només si encara no està resolta.
+    async function engegarArribada(data: EstacioData) {
+      const element = data.estacio.element;
+      if (!element) return;
+      const video = `/video/arribada-fita-${element}.mp4`;
+      const hiEs = await fetch(video, { method: "HEAD" })
+        .then((r) => r.ok && (r.headers.get("content-type") ?? "").startsWith("video"))
+        .catch(() => false);
+      if (!hiEs) return;
+      setHiHaArribada(true);
+      if (data.resolta) return;
+      const clau = `arribada-video:${estacioId}`;
+      try {
+        if (sessionStorage.getItem(clau) === "1") return;
+        sessionStorage.setItem(clau, "1");
+      } catch {
+        // Sense sessionStorage: es veurà cada cop que s'obri la fita.
+      }
+      setVeientArribada(true);
     }
     // setPistesDesbloquejades és un setter de useState: estable entre renders.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -107,13 +138,23 @@ export default function EstacioPage() {
         resolta={resolta}
         error={error}
         onRepetirVideo={dades?.estacio.element ? () => setVeientVideo(true) : undefined}
+        onRepetirArribada={hiHaArribada ? () => setVeientArribada(true) : undefined}
         onTornar={() => (estrellaCompletada ? setMostrarEstrella(true) : router.push("/joc"))}
       />
-      {!resolta && !error && !veientVideo && !mostrarEstrella && !joc.correcte && <GuiaManual escenes={ESCENES_MANUAL} />}
+      {!resolta && !error && !veientArribada && !veientVideo && !mostrarEstrella && !joc.correcte && <GuiaManual escenes={ESCENES_MANUAL} />}
+      {veientArribada && dades?.estacio.element && (
+        <VideoFita
+          video={`/video/arribada-fita-${dades.estacio.element}.mp4`}
+          veu={`/audio/arribada-fita-${dades.estacio.element}.mp3`}
+          etiqueta="Vídeo d'arribada: Fra Francesc"
+          onAcabat={acabarArribada}
+        />
+      )}
       {veientVideo && dades?.estacio.element && (
         <VideoFita
           video={`/video/fita-${dades.estacio.element}.mp4`}
           veu={FRAGMENTS[dades.estacio.element].audio}
+          ambient
           onAcabat={acabarVideo}
         />
       )}

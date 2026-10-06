@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSoVideo } from "@/lib/useSoVideo";
 
 export interface VistaMissatgeVideoProps {
   titol: string;
@@ -38,6 +39,13 @@ export function VistaMissatgeVideo({
   const [blocat, setBlocat] = useState(false);
   const [reproduint, setReproduint] = useState(false);
   const [acabat, setAcabat] = useState(false);
+  // El so és un fitxer a part; si el navegador el bloqueja, es para el vídeo i es mostren els controls perquè l'equip el toqui.
+  useSoVideo(videoRef, video, {
+    onBlocat: () => {
+      videoRef.current?.pause();
+      setBlocat(true);
+    },
+  });
 
   useEffect(() => {
     const el = videoRef.current;

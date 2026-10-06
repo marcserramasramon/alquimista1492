@@ -11,8 +11,8 @@ import { RADI_OBERTURA_M, distanciaMetres } from "@/lib/ubicacio";
 
 /**
  * Obre una fita de dues maneres:
- * - GPS: el mòbil diu on és i el servidor comprova que és dins el radi de la fita.
- * - Codi: el del QR del cartell, escanejat o entrat a mà. El codi ja diu quina fita és.
+ * - Codi: el del QR del cartell, escanejat o entrat a mà. El codi ja diu quina fita és. Per a totes les fites.
+ * - GPS: només el Cor de l'estrella; el mòbil diu on és i el servidor comprova que és dins el radi.
  */
 const ObrirSchema = z.union([
   z.object({
@@ -58,16 +58,18 @@ export async function POST(request: NextRequest) {
   if (!desti || !desti.disponible || (estacio && !necessitaObertura(estacio))) {
     return NextResponse.json({ error: "Estació no disponible" }, { status: 404 });
   }
-  // El Cor de l'estrella (estació especial) no s'obre fins que no hi ha les cinc fites resoltes.
-  if (estacio?.tipus === "especial") {
-    const { data: progres } = await getServiceRoleClient()
-      .from("v2_progres")
-      .select("estacio_id, resolta")
-      .eq("team_id", sessio.teamId);
-    const resoltes = new Set((progres ?? []).filter((p) => p.resolta).map((p) => p.estacio_id));
-    if (!getEstacionsJugables().every((e) => resoltes.has(e.id))) {
-      return NextResponse.json({ error: "Encara no heu resolt les cinc fites" }, { status: 403 });
-    }
+  // Només el Cor de l'estrella (estació especial) s'obre per GPS; la resta, sempre amb el QR.
+  if (estacio?.tipus !== "especial") {
+    return NextResponse.json({ error: "Estació no disponible" }, { status: 404 });
+  }
+  // El Cor de l'estrella no s'obre fins que no hi ha les cinc fites resoltes.
+  const { data: progres } = await getServiceRoleClient()
+    .from("v2_progres")
+    .select("estacio_id, resolta")
+    .eq("team_id", sessio.teamId);
+  const resoltes = new Set((progres ?? []).filter((p) => p.resolta).map((p) => p.estacio_id));
+  if (!getEstacionsJugables().every((e) => resoltes.has(e.id))) {
+    return NextResponse.json({ error: "Encara no heu resolt les cinc fites" }, { status: 403 });
   }
   const distancia = distanciaMetres(dades, { lat: desti.latitud, lng: desti.longitud });
   if (distancia > RADI_OBERTURA_M) {
