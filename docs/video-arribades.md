@@ -61,5 +61,5 @@
 ## PENDENT
 
 - [ ] Confirmar l'hàbit i la bossa de l'Alquimista (veure nota de dalt).
-- [ ] Confirmar que a l'arribada l'Alquimista parla al clip (labial) o només gesticula i la veu va per sobre en post.
+- [x] ~~Parla al clip o només gesticula?~~ → Decidit (2026-10-05): al clip el frare mou els llavis i la veu és una **pista d'àudio a part** (`/audio/arribada-*.mp3`). Aigua: clip generat i acceptat tal com és (`arribada-fita-aigua.mp4`).
 - [ ] Terra: revisar cada generació perquè no es puguin comptar les àmfores.

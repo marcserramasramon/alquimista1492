@@ -50,7 +50,7 @@ Cada fita té dos textos:
 
 **🪨 Terra — Planes Bones**
 
-> Heu arribat a Planes Bones. Aquí, uns guardians de pedra vetllen la matèria des de fa molt de temps. La Terra no regala res i no parla amb fórmules: obriu bé els ulls, trobeu on reposen i digueu-me quants són.
+> Heu arribat a Planes Bones. Aquí, uns guardians de pedra vetllen la matèria des de fa molt de temps. Obriu bé els ulls, trobeu on reposen, compteu-los tres cops i el conjur farà la resta.
 
 **🔥 Foc — Serrat del Caçador**
 

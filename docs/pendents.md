@@ -18,4 +18,4 @@ Llista viva de feina pendent. Última actualització: 2026-10-05.
 
 - [ ] `fites-nova.md` Terra: la línia 53 encara descriu la mecànica antiga (6 ÷ 2 = 3); la vigent és 666 (6 àmfores repetit tres cops). Treure el «PENDENT» de la línia 13 i actualitzar l'estat de la capçalera.
 - [ ] `MASTER-PROMPT-IMATGES-NOVA.md` (línies 75 i 193): encara diu 3 àmfores, n'hi ha 6.
-- [ ] Text d'arribada de Terra («digueu-me quants són») invita a respondre 6, no 666. Decidir si es canvia (implica regravar l'àudio) o es deixa.
+- [ ] Text d'arribada de Terra: **canviat** (2026-10-06) a «…compteu-los tres cops i el conjur farà la resta». Cal regravar `arribada-terra.mp3` (el vigent és del text antic).
