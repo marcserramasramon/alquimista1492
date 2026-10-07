@@ -10,7 +10,7 @@
 
 Cada fita/estació és un **element**. El jugador hi troba un missatge o número amagat mitjançant un truc físic-químic de "tinta invisible" propi de l'element. El resultat (número/xifra) es valida a la webapp.
 
-**Decidit (2026-10-03): la resposta de cada fita és un nombre primer de tres xifres, i l'ordre de la recepta del Gresol és l'ordre creixent dels nombres.** Aigua **127** · Foc **233** · Terra **666** · Aire **431** · Ànima **773**. (Abans eren les posicions 1–5. Cal reimprimir/repintar els números físics de cada fita; a Terra, la mecànica 6 ÷ 2 ja no dona un nombre de 3 xifres: PENDENT redissenyar-la.)
+**Decidit (2026-10-03): la resposta de cada fita és un nombre primer de tres xifres, i l'ordre de la recepta del Gresol és l'ordre creixent dels nombres.** Aigua **127** · Foc **233** · Terra **666** · Aire **431** · Ànima **773**. (Abans eren les posicions 1–5. Cal reimprimir/repintar els números físics de cada fita; a Terra, la mecànica antiga 6 ÷ 2 s'ha substituït per 6 àmfores repetit tres cops = 666.)
 
 **Totes les fites comparteixen:**
 - Un cartell físic amb el context narratiu + (quan aplica) un poema/pista que insinua el truc de revelació, sense dir-lo directament.
@@ -42,7 +42,7 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 
 ## 🪨 TERRA
 
-**Estat: TÈCNICA DEFINIDA, LA RESTA PENDENT**
+**Estat: DEFINIDA (resposta 666, 2026-10-03; arribada en vídeo, 2026-10-06)**
 
 | Camp | Valor |
 |------|-------|
@@ -50,7 +50,7 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 | Tècnica | Observació: buscar i comptar les àmfores del lloc (ja no es fa servir el full amb cola blanca + fang) |
 | Material del jugador | Cap: només el cartell amb el poema |
 | Acció física | Els jugadors busquen les àmfores de Planes Bones i les compten |
-| Element físic real aprofitat | **6 àmfores** a Planes Bones (recompte real al lloc, 2026-09-26 — abans es pensava que n'hi havia 3). **El recompte ja no és directament la resposta**: cal comptar-les totes i dividir-les per la meitat, 6 ÷ 2 = 3 (coincideix amb la posició de la Terra a la recepta) |
+| Element físic real aprofitat | **6 àmfores** a Planes Bones (recompte real al lloc, 2026-09-26 — abans es pensava que n'hi havia 3). **El recompte no és directament la resposta**: cal comptar-les i repetir la xifra tres cops (6 → 666) |
 | Poema/context | **Text del cartell (2026-09-26, prosa, actualitzat per reflectir les 6 àmfores):**<br>*El fang ancestral reposa en l'obaga, bressol dels tres principis de la Gran Obra. Entre la sal que fixa, el sofre que crema sense flama i el mercuri volàtil, la matèria jeu silent esperant l'ull atent de l'iniciat.*<br><br>*Oblida els vells tractats i cerca el testimoni dels cossos d'argila. Quants recipients custodien el recer? Compta'ls i repeteix la xifra tres cops, com un conjur que es repeteix: aquest serà el nombre de la clau mineral.* |
 | Resposta esperada | **Actualitzat (2026-10-03):** comptar les 6 àmfores i repetir la xifra tres cops. Resposta final a validar al servidor: **666** (2026-10-03; el nombre d'àmfores (6) repetit tres cops) |
 | Pistes | 1. "Busca on guarda els elixirs l'alquimista." · 2. "Compta les àmfores i escriu aquest nombre tres cops." · 3. "El número és el 666." |
