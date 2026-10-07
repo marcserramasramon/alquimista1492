@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><defs><clipPath id="c-e-aire"><circle cx="128" cy="128" r="106"/></clipPath><pattern id="h-e-aire" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#24170d" stroke-width="1.6" opacity="0.1"/></pattern>
+    <linearGradient id="s-e-aire" x1="0" x2="1"><stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".34"/></linearGradient>
+        <radialGradient id="g-e-aire" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="#fff8dc"/><stop offset="1" stop-color="#f8ebcd"/></radialGradient></defs>
+      <circle cx="128" cy="128" r="124" fill="#24170d"/>
+      <circle cx="128" cy="128" r="120" fill="#d9a93a"><animate attributeName="opacity" values="1;.55;1" dur="1.4s" repeatCount="indefinite"/></circle>
+      <circle cx="128" cy="128" r="106" fill="url(#g-e-aire)"/>
+      <g clip-path="url(#c-e-aire)"><rect width="256" height="256" fill="url(#h-e-aire)"/>
+      <g transform="translate(128 128) scale(.93) translate(-128 -128)"><path d="M128 56 L198 180 L58 180 Z" fill="#e0a21c" fill-opacity="0.3" stroke="none"/><path d="M128 56 L198 180 L58 180 Z" fill="none" stroke="#24170d" stroke-width="22" stroke-linejoin="miter" stroke-miterlimit="10" /><path d="M42 142 H214" fill="none" stroke="#24170d" stroke-width="22" stroke-linecap="butt" /><path d="M128 56 L198 180 L58 180 Z" fill="none" stroke="#e0a21c" stroke-width="12" stroke-linejoin="miter" stroke-miterlimit="10" /><path d="M42 142 H214" fill="none" stroke="#e0a21c" stroke-width="12" stroke-linecap="butt" /></g></g>
+      <circle cx="128" cy="128" r="106" fill="none" stroke="#24170d" stroke-width="4"/></svg>

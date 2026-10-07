@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><defs><clipPath id="c-r-terra"><circle cx="128" cy="128" r="103"/></clipPath><pattern id="h-r-terra" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#24170d" stroke-width="1.6" opacity="0.22"/></pattern>
+    <linearGradient id="s-r-terra" x1="0" x2="1"><stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".34"/></linearGradient><linearGradient id="s-r-terra" x1="0" x2="1"><stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".34"/></linearGradient></defs>
+      <circle cx="128" cy="128" r="124" fill="#24170d"/>
+      <circle cx="128" cy="128" r="120" fill="#d9a93a"/>
+      <circle cx="128" cy="128" r="103" fill="#5b8a1e"/>
+      <g clip-path="url(#c-r-terra)"><rect width="256" height="256" fill="url(#h-r-terra)"/><rect width="256" height="256" fill="url(#s-r-terra)"/>
+      <g transform="translate(128 128) scale(.94) translate(-128 -128)"><path d="M58 76 L198 76 L128 200 Z" fill="#fff" fill-opacity="0.16" stroke="none"/><path d="M58 76 L198 76 L128 200 Z" fill="none" stroke="#24170d" stroke-width="26" stroke-linejoin="miter" stroke-miterlimit="10" /><path d="M42 114 H214" fill="none" stroke="#24170d" stroke-width="26" stroke-linecap="butt" /><path d="M58 76 L198 76 L128 200 Z" fill="none" stroke="#f6e9c8" stroke-width="14" stroke-linejoin="miter" stroke-miterlimit="10" /><path d="M42 114 H214" fill="none" stroke="#f6e9c8" stroke-width="14" stroke-linecap="butt" /></g></g>
+      <circle cx="128" cy="128" r="103" fill="none" stroke="#24170d" stroke-width="4"/>
+      <g transform="translate(205 205)"><circle r="39" fill="#1f7a3a" stroke="#24170d" stroke-width="7"/>
+      <path d="M-18 1 L-5 14 L19 -13" fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></g></svg>

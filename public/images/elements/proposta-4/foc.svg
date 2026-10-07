@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c-foc"><circle cx="128" cy="128" r="110"/></clipPath>
+    <pattern id="h-foc" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="7" stroke="#24170d" stroke-width="1.6" opacity=".22"/>
+    </pattern>
+    <linearGradient id="s-foc" x1="0" x2="1">
+      <stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".34"/>
+    </linearGradient>
+  </defs>
+  <circle cx="128" cy="128" r="124" fill="#24170d"/>
+  <circle cx="128" cy="128" r="110" fill="#d8431a"/>
+  <g clip-path="url(#c-foc)">
+    <rect width="256" height="256" fill="url(#h-foc)"/>
+    <rect width="256" height="256" fill="url(#s-foc)"/>
+  </g>
+  <circle cx="128" cy="128" r="116.5" fill="none" stroke="#d9a93a" stroke-width="3"/>
+  <circle cx="128" cy="128" r="110" fill="none" stroke="#24170d" stroke-width="3"/>
+  <g clip-path="url(#c-foc)">
+    <path d="M128 56 L198 180 L58 180 Z" fill="#fff" fill-opacity=".16" stroke="none"/>
+    <path d="M128 56 L198 180 L58 180 Z" fill="none" stroke="#24170d" stroke-width="26" stroke-linejoin="miter" stroke-miterlimit="10" />
+    <path d="M128 56 L198 180 L58 180 Z" fill="none" stroke="#f6e9c8" stroke-width="14" stroke-linejoin="miter" stroke-miterlimit="10" />
+  </g>
+</svg>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c-3-nit-aire"><circle cx="128" cy="128" r="108"/></clipPath>
+    <pattern id="h-3-nit-aire" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="7" stroke="#24170d" stroke-width="1.6" opacity="0"/>
+    </pattern>
+    <linearGradient id="s-3-nit-aire" x1="0" x2="1">
+      <stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".34"/>
+    </linearGradient>
+  </defs>
+  <circle cx="128" cy="128" r="124" fill="#d9a93a"/><circle cx="128" cy="128" r="115" fill="#24170d"/>
+  <circle cx="128" cy="128" r="108" fill="#150d07"/>
+  <g clip-path="url(#c-3-nit-aire)">
+    
+    
+    <g transform="translate(128 128) scale(0.982) translate(-128 -128)"><g transform="translate(128 126) scale(1.6)"><path d="M-62 -6 H-38 a9 9 0 1 0 -9 -9" fill="none" stroke="#f6e9c8" stroke-width="11.5" stroke-linecap="round"/><path d="M-62 -6 H-38 a9 9 0 1 0 -9 -9" fill="none" stroke="#e3ab33" stroke-width="4.5" stroke-linecap="round"/>
+      <g transform="scale(-1 1) translate(0 16)"><path d="M-62 -6 H-38 a9 9 0 1 0 -9 -9" fill="none" stroke="#f6e9c8" stroke-width="11.5" stroke-linecap="round"/><path d="M-62 -6 H-38 a9 9 0 1 0 -9 -9" fill="none" stroke="#e3ab33" stroke-width="4.5" stroke-linecap="round"/></g>
+      <path d="M-8 -46 H8 V-30 H28 V-14 H8 V26 H-8 V-14 H-28 V-30 H-8 Z" fill="#e3ab33" stroke="#f6e9c8" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect x="-26" y="26" width="52" height="12" fill="#e3ab33" stroke="#f6e9c8" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <rect x="-40" y="38" width="80" height="12" fill="#e3ab33" stroke="#f6e9c8" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/></g></g>
+  </g>
+  
+</svg>

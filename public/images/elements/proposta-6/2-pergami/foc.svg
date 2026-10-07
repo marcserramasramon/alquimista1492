@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c-2-pergami-foc"><circle cx="128" cy="128" r="102"/></clipPath>
+    <pattern id="h-2-pergami-foc" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="7" stroke="#24170d" stroke-width="1.6" opacity="0.1"/>
+    </pattern>
+    <linearGradient id="s-2-pergami-foc" x1="0" x2="1">
+      <stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".34"/>
+    </linearGradient>
+  </defs>
+  <circle cx="128" cy="128" r="124" fill="#24170d"/>
+  <circle cx="128" cy="128" r="102" fill="#f6e9c8"/>
+  <g clip-path="url(#c-2-pergami-foc)">
+    <rect width="256" height="256" fill="url(#h-2-pergami-foc)"/>
+    
+    <g transform="translate(128 128) scale(0.927) translate(-128 -128)"><g transform="translate(128 126) scale(2.1)">
+      <path d="M-18 -36 H18 L42 -8 L0 46 L-42 -8 Z" fill="#d8431a" stroke="#24170d" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M-42 -8 H42" fill="none" stroke="#24170d" stroke-width="4" stroke-linejoin="round"/>
+      <path transform="translate(0 -4) scale(.8)" d="M0 -3 C8 11 17 16 17 26 C17 34 9 38 0 38 C-9 38 -17 34 -17 26 C-17 19 -11 15 -8 8 C-5 13 -3 12 0 -3Z" fill="#f6e9c8" stroke="#24170d" stroke-width="4" stroke-linejoin="round"/></g></g>
+  </g>
+  <circle cx="128" cy="128" r="108" fill="none" stroke="#d9a93a" stroke-width="3"/>
+</svg>

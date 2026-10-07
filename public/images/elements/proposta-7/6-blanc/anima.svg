@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <clipPath id="c-6-blanc-anima"><circle cx="128" cy="128" r="106"/></clipPath>
+    <pattern id="h-6-blanc-anima" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="7" stroke="#24170d" stroke-width="1.6" opacity="0"/>
+    </pattern>
+    <linearGradient id="s-6-blanc-anima" x1="0" x2="1">
+      <stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".34"/>
+    </linearGradient>
+  </defs>
+  <circle cx="128" cy="128" r="124" fill="#24170d"/><circle cx="128" cy="128" r="120" fill="#7a2fa6"/>
+  <circle cx="128" cy="128" r="106" fill="#ffffff"/>
+  <g clip-path="url(#c-6-blanc-anima)">
+    
+    
+    <g transform="translate(128 128) scale(0.964) translate(-128 -128)"><g transform=""><path d="M178 128 A50 50 0 1 0 78 128 A50 50 0 1 0 178 128Z" fill="#7a2fa6" fill-opacity="0.16" stroke="none"/><path d="M178 128 A50 50 0 1 0 78 128 A50 50 0 1 0 178 128Z" fill="none" stroke="#24170d" stroke-width="26" stroke-linejoin="miter" stroke-miterlimit="10"/><path d="M40 128 H216" fill="none" stroke="#24170d" stroke-width="26" stroke-linecap="butt"/><path d="M178 128 A50 50 0 1 0 78 128 A50 50 0 1 0 178 128Z" fill="none" stroke="#7a2fa6" stroke-width="14" stroke-linejoin="miter" stroke-miterlimit="10"/><path d="M40 128 H216" fill="none" stroke="#7a2fa6" stroke-width="14" stroke-linecap="butt"/></g></g>
+  </g>
+  <circle cx="128" cy="128" r="106" fill="none" stroke="#24170d" stroke-width="4"/>
+</svg>

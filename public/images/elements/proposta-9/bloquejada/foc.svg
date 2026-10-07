@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256"><defs><clipPath id="c-b-foc"><circle cx="128" cy="128" r="102"/></clipPath><pattern id="h-b-foc" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#24170d" stroke-width="1.6" opacity="0.1"/></pattern>
+    <linearGradient id="s-b-foc" x1="0" x2="1"><stop offset=".4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".34"/></linearGradient></defs>
+      <circle cx="128" cy="128" r="124" fill="#8f7f62"/>
+      <circle cx="128" cy="128" r="102" fill="#d9cba8"/>
+      <g clip-path="url(#c-b-foc)"><rect width="256" height="256" fill="url(#h-b-foc)"/>
+      <g transform="translate(128 128) scale(.927) translate(-128 -128)"><path d="M128 56 L198 180 L58 180 Z" fill="none" stroke="#9c8c6e" stroke-width="9" stroke-linejoin="miter" stroke-miterlimit="10" /></g></g>
+      <circle cx="128" cy="128" r="113" fill="none" stroke="#6b5b45" stroke-width="4" stroke-dasharray="11 9"/></svg>
