@@ -176,19 +176,19 @@ export function Pentagrama({
         <filter id="gris">
           <feColorMatrix type="saturate" values="0" />
         </filter>
-        {/* Efecte de guix: vora irregular + gra que deixa buits al traç. */}
+        {/* Efecte guix: vora una mica irregular i gra que deixa petits buits (regió en unitats de l'SVG
+            perquè una línia horitzontal o vertical, amb alçada 0, no sigui descartada pel filtre). */}
         <filter id="guix" filterUnits="userSpaceOnUse" x={0} y={0} width={MIDA} height={MIDA}>
-          <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="3" result="soroll-vora" />
-          <feDisplacementMap in="SourceGraphic" in2="soroll-vora" scale="2" xChannelSelector="R" yChannelSelector="G" result="vora" />
-          <feTurbulence type="fractalNoise" baseFrequency="0.45" numOctaves="2" seed="8" result="gra" />
-          <feColorMatrix in="gra" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -5 4.1" result="forats" />
-          <feComposite in="vora" in2="forats" operator="in" result="guix" />
-          {/* Cantons amb degradat: halo difús sota el traç. */}
-          <feGaussianBlur in="guix" stdDeviation="2.2" result="halo" />
-          <feMerge>
-            <feMergeNode in="halo" />
-            <feMergeNode in="guix" />
-          </feMerge>
+          <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves={2} seed={4} result="vora" />
+          <feDisplacementMap in="SourceGraphic" in2="vora" scale={3} xChannelSelector="R" yChannelSelector="G" result="aspra" />
+          <feTurbulence type="fractalNoise" baseFrequency="2.8" numOctaves={1} seed={9} result="gra" />
+          <feColorMatrix
+            in="gra"
+            type="matrix"
+            values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3.4 0 0 0 -0.95"
+            result="forats"
+          />
+          <feComposite in="aspra" in2="forats" operator="in" />
         </filter>
       </defs>
 
@@ -206,36 +206,25 @@ export function Pentagrama({
       {centreActiu && <circle cx={C} cy={C} r={110} fill="url(#brillantor)" />}
 
       {/* Estrella: cada punta es connecta amb la de dues posicions més enllà */}
-      {/* L'opacitat i el guix van al grup (no a cada línia): així els encreuaments no es sobreposen. */}
-      {[false, true].map((enceses) => (
-        <g
-          key={enceses ? "enceses" : "pendents"}
-          opacity={imprès || enceses ? 1 : 0.4}
-          filter={imprès ? undefined : "url(#guix)"}
-        >
-          {/* Primer tots els laterals foscos i després tots els nuclis clars, perquè als encreuaments el nucli no quedi tapat. */}
-          {(imprès ? ["lateral"] : ["lateral", "nucli"]).map((capa) =>
-            punts.map((p, i) => {
-              const j = (i + 2) % punts.length;
-              const q = punts[j];
-              if ((nodes[i].resolt && nodes[j].resolt) !== enceses) return null;
-              const gruix = enceses ? 10 : 8;
-              return (
-                <line
-                  key={`${capa}${i}`}
-                  x1={p.x}
-                  y1={p.y}
-                  x2={q.x}
-                  y2={q.y}
-                  stroke={imprès ? (imprès.colorLinies ?? "#1b1511") : capa === "lateral" ? "#8a6200" : "#f0c43a"}
-                  strokeWidth={imprès ? (imprès.gruixLinies ?? 2) : capa === "lateral" ? gruix : gruix * 0.4}
-                  strokeLinecap="round"
-                />
-              );
-            }),
-          )}
-        </g>
-      ))}
+      {punts.map((p, i) => {
+        const j = (i + 2) % punts.length;
+        const q = punts[j];
+        const encesa = nodes[i].resolt && nodes[j].resolt;
+        return (
+          <line
+            key={`l${i}`}
+            x1={p.x}
+            y1={p.y}
+            x2={q.x}
+            y2={q.y}
+            stroke={encesa ? "#eab308" : (imprès?.colorLinies ?? "#1b1511")}
+            strokeWidth={encesa ? 6 : (imprès?.gruixLinies ?? 3.5)}
+            strokeOpacity={encesa || imprès ? 1 : 0.38}
+            strokeLinecap="round"
+            filter={encesa || imprès ? undefined : "url(#guix)"}
+          />
+        );
+      })}
 
       {/* Gresol central: la gemma del logo (pentàgon robí, app/pantalles/logo/LogoPentagrama.tsx) */}
       <g style={{ opacity: opacitatCentre, transition: "opacity 1.2s ease" }}>

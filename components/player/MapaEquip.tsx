@@ -382,14 +382,19 @@ export function MapaEquip({
                         <g transform={cor ? "translate(0 -38)" : undefined}>
                         {/* Agulla: cercle amb punta cap avall */}
                         <path d="M -12 20 L 0 38 L 12 20 Z" fill={INK} />
-                        <circle
-                          r={27}
-                          fill={resolta ? color : estacio.disponible ? PAPER : "#d6c7a5"}
-                          stroke={INK}
-                          strokeWidth={4}
-                        />
+                        {/* Fita resolta: medalló del símbol alquímic amb el ✓ (la resta, l'agulla de sempre) */}
+                        {element && resolta ? (
+                          <image href={element.iconaResolta} x={-30} y={-30} width={60} height={60} />
+                        ) : (
+                          <circle
+                            r={27}
+                            fill={resolta ? color : estacio.disponible ? PAPER : "#d6c7a5"}
+                            stroke={INK}
+                            strokeWidth={4}
+                          />
+                        )}
                         {!resolta && estacio.disponible && <circle r={21} fill="none" stroke={color} strokeWidth={5} />}
-                        {element && !resolta ? (
+                        {element && resolta ? null : element && !resolta ? (
                           <image
                             href={element.icona}
                             x={-15}

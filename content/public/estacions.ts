@@ -24,13 +24,17 @@ export interface Estacio {
   element?: Element;
 }
 
-/** `color` és el mateix que la variable CSS de l'element (app/globals.css). */
-export const ELEMENTS: Record<Element, { nom: string; icona: string; color: string }> = {
-  aigua: { nom: "Aigua", icona: "/images/elements/aigua.webp", color: "#1d6fd6" },
-  terra: { nom: "Terra", icona: "/images/elements/terra.webp", color: "#5b8a1e" },
-  foc: { nom: "Foc", icona: "/images/elements/foc.webp", color: "#e8541f" },
-  aire: { nom: "Aire", icona: "/images/elements/aire.webp", color: "#0e9bb8" },
-  anima: { nom: "Ànima", icona: "/images/elements/anima.webp", color: "#8b3fb5" },
+/**
+ * `color` és el mateix que la variable CSS de l'element (app/globals.css).
+ * `iconaResolta` és el medalló del símbol alquímic amb el ✓: només es mostra a les fites resoltes
+ * (generat per scripts/genera-icones-elements.mjs). La resta d'estats fan servir `icona`.
+ */
+export const ELEMENTS: Record<Element, { nom: string; icona: string; iconaResolta: string; color: string }> = {
+  aigua: { nom: "Aigua", icona: "/images/elements/aigua.webp", iconaResolta: "/images/elements/aigua-resolta.svg", color: "#1d6fd6" },
+  terra: { nom: "Terra", icona: "/images/elements/terra.webp", iconaResolta: "/images/elements/terra-resolta.svg", color: "#5b8a1e" },
+  foc: { nom: "Foc", icona: "/images/elements/foc.webp", iconaResolta: "/images/elements/foc-resolta.svg", color: "#e8541f" },
+  aire: { nom: "Aire", icona: "/images/elements/aire.webp", iconaResolta: "/images/elements/aire-resolta.svg", color: "#0e9bb8" },
+  anima: { nom: "Ànima", icona: "/images/elements/anima.webp", iconaResolta: "/images/elements/anima-resolta.svg", color: "#8b3fb5" },
 };
 
 export const ESTACIONS: Estacio[] = [
