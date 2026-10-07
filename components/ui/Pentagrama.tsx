@@ -176,6 +176,20 @@ export function Pentagrama({
         <filter id="gris">
           <feColorMatrix type="saturate" values="0" />
         </filter>
+        {/* Efecte de guix: vora irregular + gra que deixa buits al traç. */}
+        <filter id="guix" filterUnits="userSpaceOnUse" x={0} y={0} width={MIDA} height={MIDA}>
+          <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="3" result="soroll-vora" />
+          <feDisplacementMap in="SourceGraphic" in2="soroll-vora" scale="2" xChannelSelector="R" yChannelSelector="G" result="vora" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.45" numOctaves="2" seed="8" result="gra" />
+          <feColorMatrix in="gra" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -5 4.1" result="forats" />
+          <feComposite in="vora" in2="forats" operator="in" result="guix" />
+          {/* Cantons amb degradat: halo difús sota el traç. */}
+          <feGaussianBlur in="guix" stdDeviation="2.2" result="halo" />
+          <feMerge>
+            <feMergeNode in="halo" />
+            <feMergeNode in="guix" />
+          </feMerge>
+        </filter>
       </defs>
 
       {/* Anell exterior amb la inscripció de runes (mateix alfabet que components/ui/MarcRunes.tsx) */}
@@ -192,25 +206,36 @@ export function Pentagrama({
       {centreActiu && <circle cx={C} cy={C} r={110} fill="url(#brillantor)" />}
 
       {/* Estrella: cada punta es connecta amb la de dues posicions més enllà */}
-      {punts.map((p, i) => {
-        const j = (i + 2) % punts.length;
-        const q = punts[j];
-        const encesa = nodes[i].resolt && nodes[j].resolt;
-        return (
-          <line
-            key={`l${i}`}
-            x1={p.x}
-            y1={p.y}
-            x2={q.x}
-            y2={q.y}
-            stroke={encesa ? "#eab308" : (imprès?.colorLinies ?? "#1b1511")}
-            strokeWidth={encesa ? 6 : (imprès?.gruixLinies ?? 2)}
-            strokeOpacity={encesa || imprès ? 1 : 0.35}
-            strokeDasharray={encesa || imprès ? undefined : "6 6"}
-            strokeLinecap="round"
-          />
-        );
-      })}
+      {/* L'opacitat i el guix van al grup (no a cada línia): així els encreuaments no es sobreposen. */}
+      {[false, true].map((enceses) => (
+        <g
+          key={enceses ? "enceses" : "pendents"}
+          opacity={imprès || enceses ? 1 : 0.4}
+          filter={imprès ? undefined : "url(#guix)"}
+        >
+          {/* Primer tots els laterals foscos i després tots els nuclis clars, perquè als encreuaments el nucli no quedi tapat. */}
+          {(imprès ? ["lateral"] : ["lateral", "nucli"]).map((capa) =>
+            punts.map((p, i) => {
+              const j = (i + 2) % punts.length;
+              const q = punts[j];
+              if ((nodes[i].resolt && nodes[j].resolt) !== enceses) return null;
+              const gruix = enceses ? 10 : 8;
+              return (
+                <line
+                  key={`${capa}${i}`}
+                  x1={p.x}
+                  y1={p.y}
+                  x2={q.x}
+                  y2={q.y}
+                  stroke={imprès ? (imprès.colorLinies ?? "#1b1511") : capa === "lateral" ? "#8a6200" : "#f0c43a"}
+                  strokeWidth={imprès ? (imprès.gruixLinies ?? 2) : capa === "lateral" ? gruix : gruix * 0.4}
+                  strokeLinecap="round"
+                />
+              );
+            }),
+          )}
+        </g>
+      ))}
 
       {/* Gresol central: la gemma del logo (pentàgon robí, app/pantalles/logo/LogoPentagrama.tsx) */}
       <g style={{ opacity: opacitatCentre, transition: "opacity 1.2s ease" }}>
@@ -262,36 +287,36 @@ export function Pentagrama({
             {seleccionat && (
               <circle cx={x} cy={y} r={MIDA_NODE + 9} fill="none" stroke="#eab308" strokeWidth={5} />
             )}
-            <circle
-              cx={x}
-              cy={y}
-              r={MIDA_NODE}
-              fill={viu ? "#fffdf7" : "#f3e5c4"}
-              stroke={viu ? element.color : "#1b1511"}
-              strokeWidth={viu ? 6 : 3}
-              strokeDasharray={node.disponible ? undefined : "4 4"}
-            />
-            <IconaAmbReintent
-              href={element.icona}
-              x={x - 17}
-              y={y - 17}
-              width={34}
-              height={34}
-              opacity={viu ? 1 : node.disponible ? 0.55 : 0.3}
-              filter={viu ? undefined : "url(#gris)"}
-            />
-            {node.resolt && (
-              <g>
-                <circle cx={x + 19} cy={y - 19} r={11} fill="#1f7a3a" stroke="#1b1511" strokeWidth={2.5} />
-                <path
-                  d={`M ${x + 14} ${y - 19} l 4 4 l 7 -8`}
-                  fill="none"
-                  stroke="#fff"
-                  strokeWidth={3}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+            {node.resolt ? (
+              // Fita resolta: medalló del símbol alquímic (porta el segell ✓)
+              <IconaAmbReintent
+                href={element.iconaResolta}
+                x={x - MIDA_NODE - 3}
+                y={y - MIDA_NODE - 3}
+                width={(MIDA_NODE + 3) * 2}
+                height={(MIDA_NODE + 3) * 2}
+              />
+            ) : (
+              <>
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={MIDA_NODE}
+                  fill={viu ? "#fffdf7" : "#f3e5c4"}
+                  stroke={viu ? element.color : "#1b1511"}
+                  strokeWidth={viu ? 6 : 3}
+                  strokeDasharray={node.disponible ? undefined : "4 4"}
                 />
-              </g>
+                <IconaAmbReintent
+                  href={element.icona}
+                  x={x - 17}
+                  y={y - 17}
+                  width={34}
+                  height={34}
+                  opacity={viu ? 1 : node.disponible ? 0.55 : 0.3}
+                  filter={viu ? undefined : "url(#gris)"}
+                />
+              </>
             )}
           </g>
         );
