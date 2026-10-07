@@ -44,7 +44,7 @@ export const ARRIBADES: Record<Element, TextNarratiu> = {
     paragrafs: [
       "Heu arribat a Planes Bones. Aquí, uns guardians de pedra vetllen la matèria des de fa molt de temps. Obriu bé els ulls, trobeu on reposen, compteu-los tres cops i el conjur farà la resta.",
     ],
-    audio: "/audio/arribada-terra.mp3",
+    audio: "/audio/arribada-fita-terra.mp3",
   },
   foc: {
     paragrafs: [
@@ -74,17 +74,6 @@ export const ARRIBADES_PAS: Record<string, TextNarratiu> = {
       "Esteu en el camí correcte, que el vent de gregal us empeny per arribar al cim. Camineu amagats seguint el mur, atents a la foscor per si l'Inquisidor hi ronda. Pugeu fins al Serrat de la Creu, on el vent no s'atura, i hi trobareu el que busqueu.",
     ],
     audio: "/audio/arribada-aire-pas.mp3",
-  },
-};
-
-// 2.1ter Veu per a la fitxa del hub (FitxaFita, components/vistes/VistaHub.tsx), la que surt
-// en tocar una punta del pentagrama. Àudio gravat, PENDENT de connectar-hi el botó de veu.
-export const POPUP_HUB: Partial<Record<Element, TextNarratiu>> = {
-  foc: {
-    paragrafs: [
-      "Que heu de fer: mireu a través de les flames per descobrir allò que vaig amagar. Lloc: Serrat del Caçador, carretera de la Guixa.",
-    ],
-    audio: "/audio/popup-foc.mp3",
   },
 };
 

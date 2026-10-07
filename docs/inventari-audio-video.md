@@ -32,7 +32,7 @@ Text a `ARRIBADES` / `ARRIBADES_PAS` (`content/public/textos.ts`). **Els 6 víde
 
 | Fita | Àudio | Durada | Vídeo |
 |---|---|---|---|
-| 🔥 Foc | `popup-foc.mp3` | 0:10 | ❌ falta. *(botó de veu encara PENDENT de connectar)* |
+| 🔥 Foc | ~~`popup-foc.mp3`~~ | 0:10 | obsolet (2026-10-06): substituït per l'arribada en vídeo `arribada-fita-foc` |
 | Aigua, Terra, Aire, Ànima | — | — | no tenen àudio de fitxa |
 
 ## 4. Fites — En resoldre (fragment)
@@ -89,7 +89,7 @@ Hi ha 4 fitxers `.narrat` a `public/video/` (aigua, terra, anima, foc): marques/
 Per ordre de fita:
 
 1. ~~**Arribades (6):** aigua, terra, foc, aire-pas, aire, ànima~~ **Fets (2026-10-05).**
-2. **Fitxa Foc (1):** `popup-foc` → 1 vídeo de 10 s (o treure l'àudio, el text ja és a la pantalla).
+2. **Fitxa Foc (1):** `popup-foc` obsolet; l'arribada del Foc ja és el vídeo `arribada-fita-foc`.
 3. **Fragments (5):** aigua, terra, foc, aire, ànima → 5 vídeos de 20–32 s (guió a `docs/video-fites.md`).
 4. **Estrella completa (1):** allargar `estrella-completa.mp4` fins als 49 s de narració.
 5. ~~**Temps consumit (1):** `temps.mp3` → 1 vídeo de 31 s.~~ **Descartat (2026-10-05):** aquesta pantalla es queda només amb àudio (`temps.mp3`).

@@ -100,22 +100,26 @@ export default function EstacioPage() {
         return;
       }
       const data: EstacioData = await res.json();
+      // Abans de pintar la fitxa: si hi ha vídeo d'arribada, la veu vella de la fitxa no ha de sonar a sota.
+      const arribada = await hiHaVideoArribada(data);
       setDades(data);
       setResolta(data.resolta);
       setPistesDesbloquejades(data.pistesDesbloquejades ?? []);
-      engegarArribada(data);
+      if (arribada) engegarArribada(data);
+    }
+
+    async function hiHaVideoArribada(data: EstacioData): Promise<boolean> {
+      const element = data.estacio.element;
+      if (!element) return false;
+      const hiEs = await fetch(`/video/arribada-fita-${element}.mp4`, { method: "HEAD" })
+        .then((r) => r.ok && (r.headers.get("content-type") ?? "").startsWith("video"))
+        .catch(() => false);
+      setHiHaArribada(hiEs);
+      return hiEs;
     }
 
     // Una sola vegada per sessió i fita, i només si encara no està resolta.
-    async function engegarArribada(data: EstacioData) {
-      const element = data.estacio.element;
-      if (!element) return;
-      const video = `/video/arribada-fita-${element}.mp4`;
-      const hiEs = await fetch(video, { method: "HEAD" })
-        .then((r) => r.ok && (r.headers.get("content-type") ?? "").startsWith("video"))
-        .catch(() => false);
-      if (!hiEs) return;
-      setHiHaArribada(true);
+    function engegarArribada(data: EstacioData) {
       if (data.resolta) return;
       const clau = `arribada-video:${estacioId}`;
       try {
