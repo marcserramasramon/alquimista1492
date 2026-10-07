@@ -246,7 +246,7 @@ export function Pentagrama({
       {/* Gresol central: la gemma del logo (pentàgon robí, app/pantalles/logo/LogoPentagrama.tsx) */}
       <g style={{ opacity: opacitatCentre, transition: "opacity 1.2s ease" }}>
         <circle cx={C} cy={C} r={29} fill={centreActiu ? "#eab308" : "#e9d5a6"} />
-        <IconaAmbReintent href="/images/logo/pentagon-robi.webp" x={C - 28} y={C - 28} width={56} height={56} />
+        <IconaAmbReintent href="/images/logo/pentagon-blanc-blau.webp" x={C - 28} y={C - 28} width={56} height={56} />
         {(espurnes || centreActiu) &&
           !imprès &&
           ESPURNES_GEMMA.map((e, i) => (
