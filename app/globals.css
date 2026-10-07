@@ -431,6 +431,66 @@ h3 {
   }
 }
 
+/* Reflex de llum que creua el pentagrama d'esquerra a dreta (components/ui/Pentagrama.tsx).
+   Les coordenades són les de l'SVG del pentagrama (300 de costat): la banda surt per l'esquerra,
+   el creua en el primer ~20% del cicle i espera fora fins a la següent passada. */
+@keyframes reflex-passada {
+  0% {
+    transform: translateX(-100px);
+  }
+  20%,
+  100% {
+    transform: translateX(400px);
+  }
+}
+/* Amb dos grups el cicle dura el doble: la passada ocupa la meitat de percentatge per tenir la mateixa durada. */
+@keyframes reflex-passada-2 {
+  0% {
+    transform: translateX(-100px);
+  }
+  10%,
+  100% {
+    transform: translateX(400px);
+  }
+}
+.reflex-banda {
+  /* Sense animació (reducció de moviment) la banda queda fora dels elements. */
+  transform: translateX(-200px);
+  animation: reflex-passada 8s linear 1s infinite;
+}
+.reflex-grup-2.reflex-banda {
+  animation-name: reflex-passada-2;
+}
+
+/* La capa en color de cada icona només és visible mentre la banda hi passa (mateix temps que la banda). */
+@keyframes reflex-visible {
+  0%,
+  20% {
+    opacity: 1;
+  }
+  20.01%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes reflex-visible-2 {
+  0%,
+  10% {
+    opacity: 1;
+  }
+  10.01%,
+  100% {
+    opacity: 0;
+  }
+}
+.reflex-icona {
+  opacity: 0;
+  animation: reflex-visible 8s linear 1s infinite;
+}
+.reflex-grup-2.reflex-icona {
+  animation-name: reflex-visible-2;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
 import { disposarRunesCercle } from "./runes";
@@ -26,6 +26,11 @@ export interface PentagramaProps {
   /** Força les espurnes sobre la gemma central encara que `centreActiu` sigui fals (ús decoratiu, p. ex. la Benvinguda). */
   espurnes?: boolean;
   className?: string;
+  /**
+   * Cada quants segons passa un reflex de llum (en color) pels símbols dels elements; 0 el desactiva.
+   * Passa per grups: primer per les fites resoltes i, `reflexCada` segons després, per les pendents.
+   */
+  reflexCada?: number;
   /** Per als cartells impresos: estrella contínua d'aquest color i gruix, i text de l'anell més gran i fosc. */
   imprès?: { colorLinies: string; gruixLinies: number; midaText: number };
 }
@@ -123,6 +128,7 @@ export function Pentagrama({
   onTriar,
   vius = false,
   espurnes = false,
+  reflexCada = 8,
   className = "",
   imprès,
 }: PentagramaProps) {
@@ -138,6 +144,11 @@ export function Pentagrama({
   const punts = nodes.map((_, i) => vertex(i));
   const resolts = nodes.filter((n) => n.resolt).length;
   const opacitatCentre = opacitatGresol(resolts, nodes.length, vius || centreActiu);
+  // El reflex va per grups (resoltes / pendents): cada grup té la seva passada, una darrere l'altra.
+  // Si només n'hi ha un, la passada és d'aquell grup cada `reflexCada` segons.
+  const grupsReflex = Number(nodes.some((n) => n.resolt)) + Number(nodes.some((n) => !n.resolt));
+  // Prefix únic: si hi ha dos pentagrames al DOM, les màscares i el degradat del reflex no s'han de confondre.
+  const uid = useId().replace(/:/g, "");
   const router = useRouter();
   const tocs = useRef({ n: 0, darrer: 0 });
   const alcadaRunes = imprès ? (ALCADA_RUNES_BASE * (imprès.midaText ?? MIDA_TEXT_BASE)) / MIDA_TEXT_BASE : ALCADA_RUNES_BASE;
@@ -173,6 +184,12 @@ export function Pentagrama({
           <stop offset="0%" stopColor="#fff" stopOpacity="1" />
           <stop offset="100%" stopColor="#fff" stopOpacity="0" />
         </radialGradient>
+        {/* Banda del reflex: transparent als costats i clara al mig (s'usa dins les màscares dels nodes). */}
+        <linearGradient id={`reflex-banda-${uid}`} x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stopColor="#fff" stopOpacity="0" />
+          <stop offset="0.5" stopColor="#fff" stopOpacity="1" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </linearGradient>
         <filter id="gris">
           <feColorMatrix type="saturate" values="0" />
         </filter>
@@ -255,6 +272,16 @@ export function Pentagrama({
         const seleccionat = node.id === seleccionatId;
         const clicable = Boolean(onTriar);
         const viu = node.resolt || vius;
+        const reflex = !imprès && reflexCada > 0;
+        // Icona sobre la qual passa el reflex: la mateixa que es veu a sota (mida i posició).
+        const mida = node.resolt ? (MIDA_NODE + 3) * 2 : 34;
+        const maskId = `reflex-${uid}-${node.id}`;
+        const classeGrup = grupsReflex > 1 ? " reflex-grup-2" : "";
+        // Torn del reflex: 1r les resoltes; 2n (reflexCada després) les pendents.
+        const estilReflex = {
+          animationDuration: `${reflexCada * grupsReflex}s`,
+          animationDelay: `${1 + (grupsReflex > 1 && !node.resolt ? reflexCada : 0)}s`,
+        };
         return (
           <g
             key={node.id}
@@ -304,6 +331,38 @@ export function Pentagrama({
                   height={34}
                   opacity={viu ? 1 : node.disponible ? 0.55 : 0.3}
                   filter={viu ? undefined : "url(#gris)"}
+                />
+              </>
+            )}
+            {reflex && (
+              <>
+                <mask id={maskId} maskUnits="userSpaceOnUse" x={x - mida} y={y - mida} width={mida * 2} height={mida * 2}>
+                  {/* Banda en coordenades absolutes del pentagrama: creua d'esquerra a dreta. Cada element hi
+                      participa només en el torn del seu grup (resoltes o pendents), no tots a la vegada. */}
+                  <g className={`reflex-banda${classeGrup}`} style={estilReflex}>
+                    <rect
+                      x={-9}
+                      y={-60}
+                      width={18}
+                      height={MIDA + 120}
+                      fill={`url(#reflex-banda-${uid})`}
+                      transform={`rotate(22 0 ${C})`}
+                    />
+                  </g>
+                </mask>
+                {/* Resolta/viva: la mateixa icona, més lluminosa. Sense resoldre: la mateixa icona, però en color. */}
+                <image
+                  href={node.resolt ? element.iconaResolta : element.icona}
+                  x={x - mida / 2}
+                  y={y - mida / 2}
+                  width={mida}
+                  height={mida}
+                  mask={`url(#${maskId})`}
+                  // Amagada per defecte i només visible durant la seva passada: si la màscara fallés,
+                  // la capa de color no es quedaria mai sobre la icona.
+                  className={`reflex-icona${classeGrup}`}
+                  style={viu ? { ...estilReflex, filter: "brightness(1.7) saturate(1.2)" } : estilReflex}
+                  pointerEvents="none"
                 />
               </>
             )}
