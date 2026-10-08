@@ -62,8 +62,11 @@ export function opcionsSoroll(estil: "imatge" | "fons") {
 /** Proporció de l'alçada del cartell que ocupa el número de la resposta (60% de l'1,9 original). */
 const PROPORCIO_MIDA_OBJECTIU = 1.14;
 
-/** Color de la resposta: el mateix blau que "Aigua" a la resta de l'app (`content/public/gresol.ts`). */
-export const BLAU_OBJECTIU = "#1d6fd6";
+/** Fracció de les xifres vermelles originals que es dibuixen. */
+const PROPORCIO_VERMELLS = 0.75;
+
+/** Color de la resposta: un blau clar, diferent del dels símbols del soroll (BLAUS_SIMBOLS). */
+export const BLAU_OBJECTIU = "#7fb2f5";
 
 /** Colors del soroll: variants de vermell (les que es dissolen a través del "paper de foc"), cap que es pugui confondre amb el blau de la resposta. */
 const COLORS_SOROLL = [
@@ -76,6 +79,15 @@ const COLORS_SOROLL = [
   "#c4432c", // òxid
   "#961b24", // carmesí
   "#b5291b", // vermell terracota
+];
+
+/** Blaus dels símbols del soroll: més foscos, i diferents del blau clar de la resposta. */
+const BLAUS_SIMBOLS = [
+  "#1d6fd6", // blau "Aigua" de l'app
+  "#1a4fa8", // blau fosc
+  "#2a5cc4", // blau elèctric
+  "#164a9a", // blau marí
+  "#2f6fb8", // blau acer
 ];
 
 const SIMBOLS: FormaSimbol[] = ["foc", "aigua", "aire", "terra", "sol", "lluna", "sofre", "sal", "estrella"];
@@ -165,9 +177,11 @@ export function generaSoroll({
       const cx = (columna + 0.5) * ampladaCella;
       const cy = (fila + 0.5) * alcadaCella;
       const esXifra = r() < 0.62;
-      // Les xifres es queden vermelles (soroll); tots els símbols surten del
-      // blau de la resposta, perquè el blau no delati el "2" per si sol.
-      const color = esXifra ? tria(COLORS_SOROLL) : BLAU_OBJECTIU;
+      // Només es queda el 75% de les xifres vermelles que hi havia (la resta de cel·les queden buides).
+      if (esXifra && r() >= PROPORCIO_VERMELLS) continue;
+      // Les xifres es queden vermelles (soroll); els símbols són blaus, però
+      // d'un blau diferent al de la resposta (BLAUS_SIMBOLS).
+      const color = esXifra ? tria(COLORS_SOROLL) : tria(BLAUS_SIMBOLS);
       peces.push({
         x: cx + entre(-ampladaCella * 0.7, ampladaCella * 0.7),
         y: cy + entre(-alcadaCella * 0.7, alcadaCella * 0.7),
