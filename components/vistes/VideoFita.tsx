@@ -80,8 +80,15 @@ export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del 
       reserva = setTimeout(acabar, RESERVA_VEU_MS);
       provarAcabar();
     };
+    // Ha arrencat: la reserva inicial (pensada per a un autoplay que no arrenca) ja no val, o tallaria
+    // els vídeos de més de RESERVA_MAXIMA_MS. Ara es dona la durada del vídeo més el mateix marge.
+    const enReproduir = () => {
+      clearTimeout(reserva);
+      reserva = setTimeout(acabar, (Number.isFinite(el.duration) ? el.duration * 1000 : 0) + RESERVA_MAXIMA_MS);
+    };
     el.addEventListener("error", enError);
     el.addEventListener("ended", enAcabar);
+    el.addEventListener("playing", enReproduir, { once: true });
     el.src = video;
     el.load();
     // El vídeo va mut (el so ambient, si en té, el posa useSoVideo): l'autoplay no es pot bloquejar.
@@ -89,6 +96,7 @@ export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del 
     return () => {
       el.removeEventListener("error", enError);
       el.removeEventListener("ended", enAcabar);
+      el.removeEventListener("playing", enReproduir);
       clearTimeout(reserva);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

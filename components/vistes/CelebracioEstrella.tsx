@@ -83,7 +83,7 @@ export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onA
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
-    const reserva = setTimeout(acabar, RESERVA_MAXIMA_MS);
+    let reserva = setTimeout(acabar, RESERVA_MAXIMA_MS);
     const enError = () => {
       clearTimeout(reserva);
       acabar();
@@ -92,8 +92,14 @@ export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onA
       clearTimeout(reserva);
       acabar();
     };
+    // Ha arrencat: la reserva ja no ha de tallar un vídeo més llarg que RESERVA_MAXIMA_MS.
+    const enReproduir = () => {
+      clearTimeout(reserva);
+      reserva = setTimeout(acabar, (Number.isFinite(el.duration) ? el.duration * 1000 : 0) + RESERVA_MAXIMA_MS);
+    };
     el.addEventListener("error", enError);
     el.addEventListener("ended", enAcabar);
+    el.addEventListener("playing", enReproduir, { once: true });
     el.src = video;
     el.load();
     // El vídeo va mut: el so ambient (al 33%, sota la veu) és un fitxer a part, vegeu useSoVideo.
@@ -101,6 +107,7 @@ export function CelebracioEstrella({ video = "/video/estrella-completa.mp4", onA
     return () => {
       el.removeEventListener("error", enError);
       el.removeEventListener("ended", enAcabar);
+      el.removeEventListener("playing", enReproduir);
       clearTimeout(reserva);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
