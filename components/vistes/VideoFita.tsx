@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { marcarEscoltada } from "@/components/ui/Narracio";
+import type { Element } from "@/content/public/estacions";
 import { sonarVeu } from "@/lib/so";
 import { useSoVideo } from "@/lib/useSoVideo";
+import { AnimacioFitaCompleta } from "./AnimacioFitaCompleta";
 
 export interface VideoFitaProps {
   /** Ruta a public/video/ del vídeo de la fita (fita-aigua.mp4...). Sense el fitxer, s'obvia. */
@@ -14,6 +16,10 @@ export interface VideoFitaProps {
   ambient?: boolean;
   /** Text per a lectors de pantalla. */
   etiqueta?: string;
+  /** Element de la fita resolta: en acabar el vídeo surt l'animació de fita completada (AnimacioFitaCompleta). */
+  animacio?: Element;
+  /** Elements ja resolts, per al pentagrama de l'animació. Sense valor, ho demana ella. */
+  resolts?: Element[];
   onAcabat: () => void;
 }
 
@@ -21,6 +27,8 @@ export interface VideoFitaProps {
 const RESERVA_MAXIMA_MS = 20_000;
 /** Xarxa de seguretat un cop acabat el vídeo: màxim que s'espera la veu (si el context d'àudio es queda suspès, mai acabaria). */
 const RESERVA_VEU_MS = 90_000;
+/** Temps mínim que es veu l'animació de fita completada, encara que la veu ja hagi acabat. */
+const MINIM_ANIMACIO_MS = 4_000;
 
 /**
  * Vídeo de la fita resolta, entre la pantalla de fita completa (CelebracioFragment) i la de la fita
@@ -28,8 +36,11 @@ const RESERVA_VEU_MS = 90_000;
  * congelat a l'últim fotograma fins que la veu acaba, i només llavors es passa a la pantalla de la fita.
  * Si el fitxer de vídeo no hi és o falla, `onAcabat` es crida de seguida i la veu continua a la fita.
  */
-export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del fragment trobat", onAcabat }: VideoFitaProps) {
+export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del fragment trobat", animacio, resolts, onAcabat }: VideoFitaProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [animant, setAnimant] = useState(false);
+  // Sense animació no hi ha mínim a esperar.
+  const minimFet = useRef(!animacio);
   const acabatCridat = useRef(false);
   useSoVideo(videoRef, video, { volum: 0.33, actiu: ambient });
 
@@ -44,7 +55,7 @@ export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del 
   const videoAcabat = useRef(false);
 
   function provarAcabar() {
-    if (videoAcabat.current && !veuPendent.current) acabar();
+    if (videoAcabat.current && !veuPendent.current && minimFet.current) acabar();
   }
 
   useEffect(() => {
@@ -68,6 +79,7 @@ export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del 
     const el = videoRef.current;
     if (!el) return;
     let reserva = setTimeout(acabar, RESERVA_MAXIMA_MS);
+    let minim: ReturnType<typeof setTimeout> | undefined;
     // Vídeo fallit (sense fitxer, corrupte): no hi ha fotograma a congelar, es passa de seguida.
     const enError = () => {
       clearTimeout(reserva);
@@ -78,6 +90,14 @@ export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del 
       clearTimeout(reserva);
       videoAcabat.current = true;
       reserva = setTimeout(acabar, RESERVA_VEU_MS);
+      // L'animació surt sobre l'últim fotograma: dura fins que s'acabi la veu, i mai menys del mínim.
+      if (animacio) {
+        setAnimant(true);
+        minim = setTimeout(() => {
+          minimFet.current = true;
+          provarAcabar();
+        }, MINIM_ANIMACIO_MS);
+      }
       provarAcabar();
     };
     // Ha arrencat: la reserva inicial (pensada per a un autoplay que no arrenca) ja no val, o tallaria
@@ -98,6 +118,7 @@ export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del 
       el.removeEventListener("ended", enAcabar);
       el.removeEventListener("playing", enReproduir);
       clearTimeout(reserva);
+      clearTimeout(minim);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [video]);
@@ -105,6 +126,7 @@ export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del 
   return (
     <div role="status" aria-label={etiqueta} className="fixed inset-0 z-50 overflow-hidden bg-black">
       <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" playsInline />
+      {animant && animacio && <AnimacioFitaCompleta element={animacio} resolts={resolts} />}
     </div>
   );
 }

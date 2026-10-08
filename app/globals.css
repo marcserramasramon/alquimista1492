@@ -625,6 +625,58 @@ h3 {
   }
 }
 
+/* AnimacioFitaCompleta: partícules de fons de cada element i entrada de la capa. */
+@keyframes fosa {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ascendir {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  20% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-65vh);
+  }
+}
+
+@keyframes caure {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  20% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(65vh);
+  }
+}
+
+@keyframes derivar {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  20% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(80vw);
+  }
+}
+
 @keyframes elevar {
   0% {
     opacity: 0;

@@ -267,6 +267,8 @@ function pantallesFita(estacio: Estacio): Pantalla[] {
               <VideoFita
                 video={`/video/fita-${estacio.element}.mp4`}
                 veu={FRAGMENTS[estacio.element!].audio}
+                animacio={estacio.element}
+                resolts={["aigua", "terra", "foc"]}
                 onAcabat={noop}
               />
             ),

@@ -159,6 +159,7 @@ export default function EstacioPage() {
           video={`/video/fita-${dades.estacio.element}.mp4`}
           veu={FRAGMENTS[dades.estacio.element].audio}
           ambient
+          animacio={dades.estacio.element}
           onAcabat={acabarVideo}
         />
       )}
