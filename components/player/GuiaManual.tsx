@@ -63,13 +63,11 @@ interface PasActual {
 
 /**
  * Manual d'ús sobre l'app real: bombolles que surten una darrere l'altra, amb la cua cap a la peça
- * (marcada amb `data-manual`) que expliquen, i s'esvaeixen soles al cap d'uns segons. Quan una
- * s'esvaeix, al seu lloc queda un botonet que la torna a ensenyar mentre dura aquesta visita (no es recorden). No tapa res ni bloqueja la pantalla.
+ * (marcada amb `data-manual`) que expliquen, i s'esvaeixen soles al cap d'uns segons. Es tornen
+ * a veure des del botó "Manual d'ús" de l'ajuda. No tapa res ni bloqueja la pantalla.
  */
 export function GuiaManual({ escenes, reinici = 0, sempre = false }: GuiaManualProps) {
   const [actual, setActual] = useState<PasActual | null>(null);
-  /** Passos que ja s'han ensenyat: cadascun deixa el seu botonet. */
-  const [fets, setFets] = useState<string[]>([]);
   /** Cada reproducció té el seu número; una de més nova fa que les antigues s'aturin soles. */
   const generacio = useRef(0);
   const executant = useRef(false);
@@ -82,8 +80,6 @@ export function GuiaManual({ escenes, reinici = 0, sempre = false }: GuiaManualP
     escenesRef.current = escenes;
   });
   const idsEscenes = escenes.map((e) => e.id).join();
-
-  const afegirFet = useCallback((clau: string) => setFets((f) => (f.includes(clau) ? f : [...f, clau])), []);
 
   /** Ensenya una bombolla i espera que s'esvaeixi. Torna fals si una reproducció més nova l'ha aturada. */
   const mostrarPas = useCallback(async (pas: PasManual, clau: string, meva: number): Promise<boolean> => {
@@ -107,20 +103,16 @@ export function GuiaManual({ escenes, reinici = 0, sempre = false }: GuiaManualP
   }, []);
 
   const reproduir = useCallback(
-    async (escena: EscenaManual, nomesPas?: number) => {
+    async (escena: EscenaManual) => {
       const meva = ++generacio.current;
       saltar.current?.();
       executant.current = true;
-      if (nomesPas === undefined) {
-        vistesAra.current.add(escena.id);
-        if (!sempre) recordarVista(escena.id);
-      }
+      vistesAra.current.add(escena.id);
+      if (!sempre) recordarVista(escena.id);
       try {
         for (const [i, pas] of escena.passos.entries()) {
-          if (nomesPas !== undefined && i !== nomesPas) continue;
           const clau = clauPas(escena.id, i);
           if (!(await mostrarPas(pas, clau, meva))) return;
-          afegirFet(clau);
         }
       } finally {
         if (generacio.current === meva) {
@@ -129,7 +121,7 @@ export function GuiaManual({ escenes, reinici = 0, sempre = false }: GuiaManualP
         }
       }
     },
-    [afegirFet, mostrarPas, sempre],
+    [mostrarPas, sempre],
   );
 
   // Cada escena surt sola, una única vegada, quan la pantalla en mostra la primera peça.
@@ -177,15 +169,6 @@ export function GuiaManual({ escenes, reinici = 0, sempre = false }: GuiaManualP
           onToc={() => saltar.current?.()}
         />
       )}
-      {escenes.flatMap((escena) =>
-        escena.passos.map((pas, i) => {
-          const clau = clauPas(escena.id, i);
-          if (!pas.objectiu || !fets.includes(clau)) return null;
-          return (
-            <Botonet key={clau} pas={pas} amagat={actual?.clau === clau} onToc={() => void reproduir(escena, i)} />
-          );
-        }),
-      )}
     </>
   );
 }
@@ -198,59 +181,6 @@ async function portarALaVista(el: HTMLElement): Promise<boolean> {
   if (r.top >= 56 && r.bottom <= vh - 8) return false;
   el.scrollIntoView({ behavior: "smooth", block: r.height > vh * 0.75 ? "start" : "center" });
   return true;
-}
-
-const MIDA_BOTONET = 40;
-
-/**
- * Botonet de paper que queda on havia sortit la bombolla (a la vora de la peça, on hi anava la cua).
- * Segueix la peça si la pantalla fa scroll i s'amaga si la peça no és a la vista.
- */
-function Botonet({ pas, amagat, onToc }: { pas: PasManual; amagat: boolean; onToc: () => void }) {
-  const ref = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    let id = requestAnimationFrame(function fotograma() {
-      const boto = ref.current;
-      const el = pas.objectiu ? buscar(pas.objectiu) : null;
-      if (boto && el) {
-        const r = el.getBoundingClientRect();
-        const vh = window.innerHeight;
-        const visible = r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < vh;
-        if (visible) {
-          const fraccio = pas.cuaX ?? 0.5;
-          const x = r.left + Math.max(20, Math.min(r.width - 20, fraccio * r.width));
-          // A la vora de dalt de la peça (on hi anava la cua); si és enganxada a dalt de la pantalla, penja per sota seu.
-          const y = Math.max(24, Math.min(vh - 24, r.top >= 28 ? r.top : r.bottom + MIDA_BOTONET / 2 - 4));
-          // left/top (no transform): l'animació d'entrada ja fa servir transform.
-          boto.style.left = `${x - MIDA_BOTONET / 2}px`;
-          boto.style.top = `${y - MIDA_BOTONET / 2}px`;
-          boto.style.display = "";
-        } else {
-          boto.style.display = "none";
-        }
-      } else if (boto) {
-        boto.style.display = "none";
-      }
-      id = requestAnimationFrame(fotograma);
-    });
-    return () => cancelAnimationFrame(id);
-  }, [pas.objectiu, pas.cuaX]);
-
-  return (
-    <button
-      ref={ref}
-      type="button"
-      onClick={onToc}
-      aria-label={`Tornar a veure: ${pas.titol ?? pas.text}`}
-      className={`fixed z-[90] flex items-center justify-center rounded-full border-[3px] border-ink bg-[#fffdf7] text-xl leading-none shadow-[0_3px_0_var(--ink)] transition-opacity duration-300 after:absolute after:-inset-2 after:content-[''] ${
-        amagat ? "pointer-events-none opacity-0" : "animate-bombolla"
-      }`}
-      style={{ width: MIDA_BOTONET, height: MIDA_BOTONET, display: "none" }}
-    >
-      <span aria-hidden>{pas.emoji}</span>
-    </button>
-  );
 }
 
 function BombollaSobreLaPantalla({
