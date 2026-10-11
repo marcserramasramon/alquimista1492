@@ -11,6 +11,14 @@ export const MODEL_FIGURA_3D = "/models/capa-encaputxada.glb";
  */
 const GIR_DAVANT_GRAUS = 0;
 
+/** Fanal que porta la figura (public/images/ar/fanal.webp), amb una espelma a dins. */
+const IMATGE_FANAL = "/images/ar/fanal.webp";
+/**
+ * On és, en unitats del model (alçada del model = 1). X negatiu = a l'esquerra de qui mira la
+ * figura, que és la mà dreta de la figura; `alcada` és la del fanal.
+ */
+const FANAL = { x: -0.17, y: 0.33, z: 0.11, alcada: 0.17 };
+
 /** 1 = tal com ve la textura; menys = més fosca. */
 const BRILLANTOR_FIGURA = 0.75;
 
@@ -108,18 +116,28 @@ export function Figura3D({ estat, onError }: Props) {
           });
           material.onBeforeCompile = (shader) => {
             shader.uniforms.uTemps = temps;
-            // Més contrast i més fosc: es retallen els clars i s'enfosqueix el conjunt.
-            shader.fragmentShader = shader.fragmentShader.replace(
-              "#include <map_fragment>",
-              `#include <map_fragment>
-              diffuseColor.rgb = clamp((diffuseColor.rgb - 0.12) * 1.6 + 0.04, 0.0, 1.0);
-              diffuseColor.rgb *= ${BRILLANTOR_FIGURA.toFixed(2)};`
-            );
+            // Més contrast i més fosc, i la llum groga de l'espelma sobre la roba a prop del fanal.
+            shader.fragmentShader = shader.fragmentShader
+              .replace("#include <common>", `#include <common>
+uniform float uTemps;
+varying vec3 vPosLocal;`)
+              .replace(
+                "#include <map_fragment>",
+                `#include <map_fragment>
+                diffuseColor.rgb = clamp((diffuseColor.rgb - 0.12) * 1.6 + 0.04, 0.0, 1.0);
+                diffuseColor.rgb *= ${BRILLANTOR_FIGURA.toFixed(2)};
+                float dFanal = distance(vPosLocal, vec3(${FANAL.x.toFixed(3)}, ${FANAL.y.toFixed(3)}, ${FANAL.z.toFixed(3)}));
+                float flama = 0.8 + 0.12 * sin(uTemps * 7.3) + 0.08 * sin(uTemps * 13.7 + 1.3) + 0.05 * sin(uTemps * 23.0);
+                diffuseColor.rgb += vec3(1.0, 0.68, 0.26) * 0.9 * exp(-dFanal * dFanal * 30.0) * flama;`
+              );
             shader.vertexShader = shader.vertexShader
-              .replace("#include <common>", "#include <common>\nuniform float uTemps;")
+              .replace("#include <common>", `#include <common>
+uniform float uTemps;
+varying vec3 vPosLocal;`)
               .replace(
                 "#include <begin_vertex>",
                 `#include <begin_vertex>
+                vPosLocal = position;
                 float roba = pow(1.0 - clamp(position.y, 0.0, 1.0), 1.6);
                 transformed.x += sin(uTemps * 1.3 + position.y * 5.0) * 0.022 * roba;
                 transformed.z += sin(uTemps * 1.7 + position.y * 4.0 + position.x * 6.0) * 0.018 * roba;
@@ -137,6 +155,51 @@ export function Figura3D({ estat, onError }: Props) {
         const grup = new THREE.Group();
         grup.add(gltf.scene);
         escena.add(grup);
+
+        // El fanal (foto retallada) i el punt de llum groc d'espelma al seu voltant. Si el fanal no
+        // es pot carregar, la figura es veu igualment.
+        const actius: { dispose: () => void }[] = [];
+        let fanal: import("three").Sprite | null = null;
+        let resplendor: import("three").Sprite | null = null;
+        try {
+          const textura = await new THREE.TextureLoader().loadAsync(IMATGE_FANAL);
+          textura.colorSpace = THREE.SRGBColorSpace;
+          const imatge = textura.image as { width: number; height: number };
+          const materialFanal = new THREE.SpriteMaterial({ map: textura, transparent: true });
+          fanal = new THREE.Sprite(materialFanal);
+          fanal.scale.set((FANAL.alcada * imatge.width) / imatge.height, FANAL.alcada, 1);
+          fanal.position.set(FANAL.x, FANAL.y, FANAL.z);
+          fanal.renderOrder = 2;
+          grup.add(fanal);
+
+          const llum = document.createElement("canvas");
+          llum.width = llum.height = 128;
+          const c2 = llum.getContext("2d");
+          if (c2) {
+            const g = c2.createRadialGradient(64, 64, 0, 64, 64, 64);
+            g.addColorStop(0, "rgba(255, 232, 150, 1)");
+            g.addColorStop(0.22, "rgba(255, 196, 88, 0.55)");
+            g.addColorStop(1, "rgba(255, 150, 40, 0)");
+            c2.fillStyle = g;
+            c2.fillRect(0, 0, 128, 128);
+          }
+          const texturaLlum = new THREE.CanvasTexture(llum);
+          texturaLlum.colorSpace = THREE.SRGBColorSpace;
+          const materialLlum = new THREE.SpriteMaterial({
+            map: texturaLlum,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+          });
+          resplendor = new THREE.Sprite(materialLlum);
+          resplendor.scale.set(0.5, 0.5, 1);
+          resplendor.position.set(FANAL.x, FANAL.y - 0.02, FANAL.z + 0.03);
+          resplendor.renderOrder = 3;
+          grup.add(resplendor);
+          actius.push(textura, materialFanal, texturaLlum, materialLlum);
+        } catch {
+          // Sense fanal: només la figura.
+        }
 
         let amplada = 0;
         let alcada = 0;
@@ -174,6 +237,16 @@ export function Figura3D({ estat, onError }: Props) {
             // Mira cap a la càmera, amb un petit balanceig.
             grup.rotation.y = Math.atan2(-x, -z) + GIR_DAVANT_GRAUS * RAD + Math.sin(t * 0.5 + e.llavor) * 0.06;
             for (const m of materials) m.opacity = e.alfa;
+            // La flama de l'espelma tremola i el fanal es balanceja una mica.
+            const flama = 0.8 + 0.12 * Math.sin(t * 7.3) + 0.08 * Math.sin(t * 13.7 + 1.3) + 0.05 * Math.sin(t * 23);
+            if (fanal) {
+              fanal.material.opacity = e.alfa;
+              fanal.material.rotation = Math.sin(t * 1.4 + e.llavor) * 0.05;
+            }
+            if (resplendor) {
+              resplendor.material.opacity = e.alfa * flama;
+              resplendor.scale.setScalar(0.46 + 0.06 * flama);
+            }
             renderer.render(escena, camera);
             pintat = true;
           }
@@ -192,6 +265,7 @@ export function Figura3D({ estat, onError }: Props) {
             (m as import("three").MeshBasicMaterial).map?.dispose();
             m.dispose();
           }
+          for (const a of actius) a.dispose();
           renderer.dispose();
         };
       } catch {
