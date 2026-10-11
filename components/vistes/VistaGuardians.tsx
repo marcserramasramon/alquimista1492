@@ -36,8 +36,8 @@ export function VistaGuardians() {
   const [veientVideo, setVeientVideo] = useState(true);
   return (
     <>
-      {/* Primer el vídeo (amb el seu so) a sobre de tot; la música i la veu del text ja
-          sonen des que comença. En acabar o tancar-lo, es veu la pantalla. */}
+      {/* Primer el vídeo (amb el seu so) a sobre de tot; la música sona des que comença i la veu
+          del text hi entra als 5 s. En acabar o tancar-lo, es veu la pantalla. */}
       {veientVideo && <VideoPantallaCompleta src={VIDEO_FINAL} onAcabat={() => setVeientVideo(false)} />}
       <div
         aria-hidden
@@ -81,7 +81,7 @@ export function VistaGuardians() {
         <div className="animate-entrar [animation-delay:200ms]">
           <Marca petita sobreFosc />
         </div>
-        <Narracio text={GUARDIANS} className="animate-entrar [animation-delay:350ms]">
+        <Narracio text={GUARDIANS} retardVeu={5000} className="animate-entrar [animation-delay:350ms]">
           <div className="mt-5 border-t-2 border-dashed border-ink/20 pt-4 text-center">
             <p className="font-display text-lg font-extrabold italic">{GUARDIANS.lema}</p>
             <p className="mt-1 text-base text-ink-soft">{GUARDIANS.traduccioLema}</p>
