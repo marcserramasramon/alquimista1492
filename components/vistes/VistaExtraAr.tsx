@@ -30,6 +30,9 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
   const { mirada, estat: estatSensors, demanar } = useOrientacio();
   const [figura3D, setFigura3D] = useState(false);
   const estatFigura = useRef(estatFigura3DInicial());
+  // ?debug=1 a l'adreça: mostra a la pantalla l'estat de la figura i de la mirada.
+  const depuracio = useRef("");
+  const [textDepuracio, setTextDepuracio] = useState<string | null>(null);
   const alPasses = useCallback((pan: number, duradaMs: number) => sonarPassesAr(pan, duradaMs), []);
 
   // Els sensors, la càmera i el so es demanen en tocar el botó (iOS i Android ho exigeixen).
@@ -38,6 +41,7 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
     // Figura en 3D si l'extra ho demana, no s'ha forçat la plana (?figura=plana) i el mòbil pot.
     const forcadaPlana = new URLSearchParams(window.location.search).get("figura") === "plana";
     setFigura3D(extra.figura === "3d" && !forcadaPlana && webglDisponible());
+    if (new URLSearchParams(window.location.search).get("debug") === "1") setTextDepuracio("");
     setIniciat(true);
     await demanar();
     try {
@@ -57,6 +61,13 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
     if (!directa) return;
     queueMicrotask(() => setFigura3D(extra.figura === "3d" && webglDisponible()));
   }, [directa, extra.figura]);
+
+  const depuracioActiva = textDepuracio !== null;
+  useEffect(() => {
+    if (!depuracioActiva) return;
+    const interval = setInterval(() => setTextDepuracio(depuracio.current), 200);
+    return () => clearInterval(interval);
+  }, [depuracioActiva]);
 
   useEffect(() => {
     if (camera === "activa" && video.current && flux.current) {
@@ -84,8 +95,15 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
           mirada={mirada}
           arrossegar={estatSensors !== "actiu"}
           figura3D={figura3D ? estatFigura : null}
+          depuracio={textDepuracio === null ? null : depuracio}
           alPasses={alPasses}
         />}
+
+      {textDepuracio !== null && (
+        <pre className="pointer-events-none absolute inset-x-2 bottom-24 z-10 rounded-lg bg-black/70 p-2 font-mono text-xs leading-tight text-lime-300">
+          {textDepuracio}
+        </pre>
+      )}
 
       {iniciat && figura3D && <Figura3D estat={estatFigura} onError={() => setFigura3D(false)} />}
 

@@ -31,6 +31,8 @@ interface Props {
    * on és i quant es veu. Si és nul, es dibuixa la figura plana (la imatge).
    */
   figura3D?: RefObject<EstatFigura3D> | null;
+  /** Depuració (?debug=1): l'escena hi escriu l'estat de la figura i de la mirada. */
+  depuracio?: RefObject<string> | null;
   /** Per al so: la figura és a punt d'aparèixer i s'acosta pel costat `pan` (-1 esquerra, 1 dreta). */
   alPasses?: (pan: number, duradaMs: number) => void;
 }
@@ -137,7 +139,7 @@ function nou(v: Varietat, espera: number, ara: number): Personatge {
 }
 
 function durada(p: Personatge, fase: "apareix" | "fuig"): number {
-  if (fase === "apareix") return p.v.tipus === "ulls" ? 900 : 2800;
+  if (fase === "apareix") return p.v.tipus === "ulls" ? 900 : 1500;
   if (p.v.tipus === "ulls") return 300;
   return 700;
 }
@@ -201,7 +203,7 @@ function actualitza(
       if (ara - p.desde >= durada(p, "apareix")) {
         p.fase = "present";
         p.desde = ara;
-        p.fins = ara + (p.v.tipus === "silueta" ? aleatori(8000, 14_000) : aleatori(14_000, 26_000));
+        p.fins = p.v.tipus === "silueta" ? Infinity : ara + aleatori(14_000, 26_000);
       }
       break;
     case "present":
@@ -236,21 +238,16 @@ function actualitza(
   }
 
   if (p.fase !== "present") return;
+  // La figura es queda: un cop apareix al davant no desapareix ni en mirar-la ni amb el temps.
+  if (p.v.tipus === "silueta") return;
 
+  // Només els ulls: si els mires fix, se n'adonen i desapareixen.
   const dx = diferenciaRumb(p.rumb, mirada.rumb);
-  const alturaCap = p.v.tipus === "silueta" ? p.v.alcada * 0.86 : p.alt;
-  const elevacio = Math.atan((alturaCap - ALCADA_CAMERA) / p.dist) / RAD;
+  const elevacio = Math.atan((p.alt - ALCADA_CAMERA) / p.dist) / RAD;
   const dy = Math.abs(elevacio - mirada.elevacio);
-
-  // Si el mires fix, se n'adona i fuig.
-  // La figura té un con de mirada més ample i s'espanta abans que els ulls.
-  const con = p.v.tipus === "ulls" ? { dx: 9, dy: 16, llindar: 800 } : { dx: 16, dy: 26, llindar: 600 };
-  // Com que apareix al davant, els primers segons no s'espanta: li dona temps de veure-la.
-  const ambGracia = p.v.tipus === "silueta" && ara - p.desde < 3000;
-  if (!ambGracia && Math.abs(dx) < con.dx && dy < con.dy) {
+  if (Math.abs(dx) < 9 && dy < 16) {
     p.mirat += dt;
-    const llindar = con.llindar;
-    if (p.mirat > llindar) {
+    if (p.mirat > 800) {
       p.fase = "fuig";
       p.motiu = "mirat";
       p.desde = ara;
@@ -369,18 +366,20 @@ function dibuixaSilueta(
   ctx.globalAlpha = 1;
 }
 
-export function EscenaUlls({ mirada, arrossegar, figura3D = null, alPasses }: Props) {
+export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = null, alPasses }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const manual = useRef<Mirada>({ rumb: 0, elevacio: 0 });
   const arrossegarRef = useRef(arrossegar);
   const passesRef = useRef(alPasses);
   const figura3DRef = useRef(figura3D);
+  const depuracioRef = useRef(depuracio);
 
   useEffect(() => {
     arrossegarRef.current = arrossegar;
     passesRef.current = alPasses;
     figura3DRef.current = figura3D;
-  }, [arrossegar, alPasses, figura3D]);
+    depuracioRef.current = depuracio;
+  }, [arrossegar, alPasses, figura3D, depuracio]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -471,6 +470,16 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, alPasses }: Pr
           const peus = yDe(0);
           dibuixaSilueta(ctx, x, peus, peus - yDe(p.v.alcada), alfa, ara, p, figura);
         }
+      }
+      const dep = depuracioRef.current;
+      if (dep) {
+        const f = personatges.find((q) => q.v.tipus === "silueta");
+        dep.current = f
+          ? `fase ${f.fase}
+sensors ${arrossegarRef.current ? "NO (arrossegar)" : "sí"}
+mirada rumb ${Math.round(lectura.rumb)}°  elev ${Math.round(lectura.elevacio)}°
+figura a ${Math.round(diferenciaRumb(f.rumb, lectura.rumb))}° del centre, a ${f.dist.toFixed(1)} m`
+          : "";
       }
       frame = requestAnimationFrame(dibuixa);
     }
