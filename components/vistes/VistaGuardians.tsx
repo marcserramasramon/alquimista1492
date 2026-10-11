@@ -36,8 +36,8 @@ export function VistaGuardians() {
   const [veientVideo, setVeientVideo] = useState(true);
   return (
     <>
-      {/* Primer el vídeo (amb el seu so) a sobre de tot; la música ja sona des que comença. En
-          acabar o tancar-lo, es veu la pantalla, la veu del text arrenca llavors. */}
+      {/* Primer el vídeo (amb el seu so) a sobre de tot; la música i la veu del text ja
+          sonen des que comença. En acabar o tancar-lo, es veu la pantalla. */}
       {veientVideo && <VideoPantallaCompleta src={VIDEO_FINAL} onAcabat={() => setVeientVideo(false)} />}
       <div
         aria-hidden
@@ -81,14 +81,12 @@ export function VistaGuardians() {
         <div className="animate-entrar [animation-delay:200ms]">
           <Marca petita sobreFosc />
         </div>
-        {!veientVideo && (
-          <Narracio text={GUARDIANS} className="animate-entrar [animation-delay:350ms]">
-            <div className="mt-5 border-t-2 border-dashed border-ink/20 pt-4 text-center">
-              <p className="font-display text-lg font-extrabold italic">{GUARDIANS.lema}</p>
-              <p className="mt-1 text-base text-ink-soft">{GUARDIANS.traduccioLema}</p>
-            </div>
-          </Narracio>
-        )}
+        <Narracio text={GUARDIANS} className="animate-entrar [animation-delay:350ms]">
+          <div className="mt-5 border-t-2 border-dashed border-ink/20 pt-4 text-center">
+            <p className="font-display text-lg font-extrabold italic">{GUARDIANS.lema}</p>
+            <p className="mt-1 text-base text-ink-soft">{GUARDIANS.traduccioLema}</p>
+          </div>
+        </Narracio>
 
         {/* El joc amagat (ou de pasqua): ara que són alquimistes, tenen el seu propi laboratori. */}
         <section className="flex animate-entrar flex-col gap-3 text-center [animation-delay:500ms]">
