@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EscenaUlls } from "@/components/ar/EscenaUlls";
 import { estatFigura3DInicial, Figura3D, webglDisponible } from "@/components/ar/Figura3D";
-import type { ExtraAr } from "@/content/public/extres";
+import { rumbCami, type ExtraAr } from "@/content/public/extres";
 import { useOrientacio } from "@/lib/orientacio";
 import { aturarSoAr, iniciarSoAr, sonarPassesAr } from "@/lib/sorollAr";
 
@@ -96,6 +96,7 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
           arrossegar={estatSensors !== "actiu"}
           figura3D={figura3D ? estatFigura : null}
           depuracio={textDepuracio === null ? null : depuracio}
+          rumbCami={rumbCami(extra)}
           alPasses={alPasses}
         />}
 

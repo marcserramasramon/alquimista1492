@@ -31,6 +31,11 @@ interface Props {
    * on és i quant es veu. Si és nul, es dibuixa la figura plana (la imatge).
    */
   figura3D?: RefObject<EstatFigura3D> | null;
+  /**
+   * Rumb del camí que fa el jugador (graus des del nord). Si hi és, la figura apareix en aquesta
+   * direcció o a la contrària; si és nul, on mira el mòbil.
+   */
+  rumbCami?: number | null;
   /** Depuració (?debug=1): l'escena hi escriu l'estat de la figura i de la mirada. */
   depuracio?: RefObject<string> | null;
   /** Per al so: la figura és a punt d'aparèixer i s'acosta pel costat `pan` (-1 esquerra, 1 dreta). */
@@ -166,6 +171,7 @@ function actualitza(
   ara: number,
   dt: number,
   figuraActiva: boolean,
+  rumbCami: number | null,
   alPasses?: (pan: number, duradaMs: number) => void
 ) {
   // Mentre hi ha la figura (o se'n senten les passes) no hi ha ulls a la foscor.
@@ -185,16 +191,25 @@ function actualitza(
         aparicio(p, mirada, ara);
         if (p.v.tipus === "silueta") {
           p.fase = "passes";
-          // Les passes vénen del davant, un pèl cap a un costat.
-          alPasses?.(aleatori(-0.35, 0.35), DURADA_PASSES_MS);
+          if (rumbCami !== null) {
+            // Al davant del camí o al darrere, el que quedi més a prop d'on mira ara el jugador.
+            const davant = rumbCami;
+            const darrere = (rumbCami + 180) % 360;
+            const triaDavant = Math.abs(diferenciaRumb(davant, mirada.rumb)) <= Math.abs(diferenciaRumb(darrere, mirada.rumb));
+            p.rumb = ((triaDavant ? davant : darrere) + aleatori(-6, 6) + 360) % 360;
+            // Les passes vénen d'aquella banda.
+            alPasses?.(Math.max(-1, Math.min(1, diferenciaRumb(p.rumb, mirada.rumb) / 70)), DURADA_PASSES_MS);
+          } else {
+            alPasses?.(aleatori(-0.35, 0.35), DURADA_PASSES_MS);
+          }
         }
       }
       return;
     case "passes":
       // Només es senten uns peus que s'acosten; la figura encara no es veu.
       if (ara - p.desde >= DURADA_PASSES_MS) {
-        // Apareix al davant, on mira ara el jugador (no on mirava quan van començar les passes).
-        p.rumb = (mirada.rumb + aleatori(-8, 8) + 360) % 360;
+        // Sense camí, apareix al davant, on mira ara el jugador; amb camí, ja té el seu rumb.
+        if (rumbCami === null) p.rumb = (mirada.rumb + aleatori(-8, 8) + 360) % 360;
         p.fase = "apareix";
         p.desde = ara;
       }
@@ -366,20 +381,22 @@ function dibuixaSilueta(
   ctx.globalAlpha = 1;
 }
 
-export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = null, alPasses }: Props) {
+export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = null, rumbCami = null, alPasses }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const manual = useRef<Mirada>({ rumb: 0, elevacio: 0 });
   const arrossegarRef = useRef(arrossegar);
   const passesRef = useRef(alPasses);
   const figura3DRef = useRef(figura3D);
   const depuracioRef = useRef(depuracio);
+  const camiRef = useRef(rumbCami);
 
   useEffect(() => {
     arrossegarRef.current = arrossegar;
     passesRef.current = alPasses;
     figura3DRef.current = figura3D;
     depuracioRef.current = depuracio;
-  }, [arrossegar, alPasses, figura3D, depuracio]);
+    camiRef.current = rumbCami;
+  }, [arrossegar, alPasses, figura3D, depuracio, rumbCami]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -433,7 +450,7 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
       // El més llunyà primer, perquè el que és a prop el tapi.
       const ordenats = [...personatges].sort((a, b) => b.dist - a.dist);
       for (const p of ordenats) {
-        actualitza(p, lectura, ara, dt, figuraActiva, passesRef.current);
+        actualitza(p, lectura, ara, dt, figuraActiva, camiRef.current, passesRef.current);
         const alfa = opacitat(p, ara);
         const estat3D = figura3DRef.current;
         if (p.v.tipus === "silueta" && estat3D) {
@@ -478,7 +495,8 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
           ? `fase ${f.fase}
 sensors ${arrossegarRef.current ? "NO (arrossegar)" : "sí"}
 mirada rumb ${Math.round(lectura.rumb)}°  elev ${Math.round(lectura.elevacio)}°
-figura a ${Math.round(diferenciaRumb(f.rumb, lectura.rumb))}° del centre, a ${f.dist.toFixed(1)} m`
+figura a ${Math.round(diferenciaRumb(f.rumb, lectura.rumb))}° del centre, a ${f.dist.toFixed(1)} m
+camí ${camiRef.current === null ? "—" : Math.round(camiRef.current) + "°"}`
           : "";
       }
       frame = requestAnimationFrame(dibuixa);
