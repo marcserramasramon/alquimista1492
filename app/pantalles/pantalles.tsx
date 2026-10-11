@@ -128,7 +128,6 @@ function hub(
       marcadors={marcadors}
       fitaArribadaId={fitaArribadaId}
       onAvis={noop}
-      onExtraAr={noop}
     />
   );
 }
@@ -139,12 +138,11 @@ function hub(
  * previ. Pantalla de regressió: Pentagrama ha de dibuixar-hi les cinc puntes igualment
  * (abans, en desaparèixer un node, l'estrella s'encongia en una creu de quatre puntes).
  */
-function hubAireAmagat(fase: 1 | 2 = 1, veurePas = false) {
+function hubAireAmagat(fase: 1 | 2 = 1) {
   // Fase 2: el pas previ ja és obert i la fita real de l'Aire ja surt (encara tancada).
-  // `veurePas`: fase 1 amb el pas obert i la seva fitxa a la vista (on hi ha el botó de l'extra).
-  const pasObert = fase === 2 || veurePas;
+  const pasObert = fase === 2;
   const estacions: EstacioMapa[] = [
-    ...estacionsAmbProgres(RESOLTES_MITJA_PARTIDA).filter((e) => fase === 2 || e.id !== "aire"),
+    ...estacionsAmbProgres(RESOLTES_MITJA_PARTIDA).filter((e) => pasObert || e.id !== "aire"),
     ...getPassosPrevis().map((p) => ({
       id: p.id,
       nom: p.nom,
@@ -166,9 +164,8 @@ function hubAireAmagat(fase: 1 | 2 = 1, veurePas = false) {
       totesResoltes={false}
       onAnarEstacio={noop}
       onLlegirMissatge={noop}
-      seleccionadaInicialId={fase === 2 ? "aire" : veurePas ? "aire-pas" : null}
+      seleccionadaInicialId={fase === 2 ? "aire" : null}
       marcadors={[]}
-      onExtraAr={noop}
     />
   );
 }
@@ -286,13 +283,12 @@ function pantallesFita(estacio: Estacio): Pantalla[] {
                   id: "fita-aire-arribada",
                   titol: `${estacio.nom} · vídeo d'arribada`,
                   descripcio:
-                    "Només l'Aire: primer el vídeo d'arribada (amb el seu so, si en té), en acabar sona la veu de Fra Francesc i, quan ella acaba, es torna a la pantalla.",
+                    "Només l'Aire: la veu de Fra Francesc sona alhora que el vídeo (amb el seu so ambient al fons); el vídeo es queda a l'últim fotograma fins que la veu acaba i llavors es torna a la pantalla.",
                   render: () => (
                     <VideoFita
                       video="/video/arribada-fita-aire.mp4"
                       veu="/audio/arribada-fita-aire.mp3"
                       ambient
-                      veuDespres
                       etiqueta="Vídeo d'arribada: Fra Francesc"
                       onAcabat={noop}
                     />
@@ -616,11 +612,21 @@ export const PANTALLES: Pantalla[] = [
     render: () => hubAireAmagat(1),
   },
   {
-    id: "hub-aire-pas-1",
+    id: "pas-aire-creu-pujolar",
     grup: "hub",
-    titol: "Hub · pas 1 de l'Aire (Creu del Pujolar), obert",
-    descripcio: "El QR del pas previ ja s'ha escanejat: la fitxa porta el botó «Mirar la foscor», que activa l'extra de realitat augmentada.",
-    render: () => hubAireAmagat(1, true),
+    titol: "Pas 1 de l'Aire · Creu del Pujolar",
+    descripcio: "La pantalla del pas previ (un cop escanejat el QR): porta el botó «Mirar la foscor», que activa l'extra de realitat augmentada.",
+    render: () => {
+      const pas = getPassosPrevis()[0];
+      return (
+        <VistaEstacio
+          {...JOC_BUIT}
+          estacio={{ id: pas.id, nom: pas.nom, entrada: pas.entrada, situacio: pas.situacio, element: pas.element, disponible: true, pasPrevi: true }}
+          error={null}
+          onTornar={noop}
+        />
+      );
+    },
   },
   {
     id: "hub-aire-fase-2",

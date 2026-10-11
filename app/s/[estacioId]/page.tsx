@@ -152,7 +152,6 @@ export default function EstacioPage() {
           video={`/video/arribada-fita-${dades.estacio.element}.mp4`}
           veu={`/audio/arribada-fita-${dades.estacio.element}.mp3`}
           ambient={dades.estacio.element === "aire"}
-          veuDespres={dades.estacio.element === "aire"}
           etiqueta="Vídeo d'arribada: Fra Francesc"
           onAcabat={acabarArribada}
         />
