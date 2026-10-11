@@ -5,6 +5,7 @@ import { EscenaUlls } from "@/components/ar/EscenaUlls";
 import { estatFigura3DInicial, Figura3D, webglDisponible } from "@/components/ar/Figura3D";
 import { rumbCami, type ExtraAr } from "@/content/public/extres";
 import { useOrientacio } from "@/lib/orientacio";
+import { aturarMicroAr, iniciarMicroAr, nivellMicroAr } from "@/lib/microAr";
 import { actualitzarCaminadaAr, aturarSoAr, iniciarAmbientAr, iniciarSoAr, silenciarAr, sonarPassesAr } from "@/lib/sorollAr";
 
 export interface VistaExtraArProps {
@@ -33,6 +34,10 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
   // ?debug=1 a l'adreça: mostra a la pantalla l'estat de la figura i de la mirada.
   const depuracio = useRef("");
   const [silenci, setSilenci] = useState(false);
+  // Micròfon: si no es pot (o es denega), hi ha un botó per cridar. `crit` compta els cops.
+  const [micro, setMicro] = useState<"esperant" | "actiu" | "no">("esperant");
+  const [crit, setCrit] = useState(0);
+  const nivellMicro = useCallback(() => nivellMicroAr(), []);
   const [textDepuracio, setTextDepuracio] = useState<string | null>(null);
   const alCaminar = useCallback((volum: number, pan: number) => actualitzarCaminadaAr(volum, pan), []);
   const alPasses = useCallback((pan: number, duradaMs: number) => sonarPassesAr(pan, duradaMs), []);
@@ -57,6 +62,8 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
     } catch {
       setCamera("no-disponible");
     }
+    // El micròfon, després de la càmera (cada un demana el seu permís).
+    setMicro((await iniciarMicroAr()) ? "actiu" : "no");
   }
 
   // Galeria de pantalles: comença directament a l'escena, així que la decisió es pren en muntar-se.
@@ -82,6 +89,7 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
   useEffect(() => {
     return () => {
       flux.current?.getTracks().forEach((t) => t.stop());
+      aturarMicroAr();
       aturarSoAr();
     };
   }, []);
@@ -102,6 +110,8 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
           rumbCami={rumbCami(extra)}
           alPasses={alPasses}
           alCaminar={alCaminar}
+          nivellMicro={micro === "actiu" ? nivellMicro : null}
+          crit={crit}
         />}
 
       {textDepuracio !== null && (
@@ -141,6 +151,14 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
         >
           {silenci ? "🔇 Sense so" : "🔊 So"}
         </button>
+      )}
+
+      {iniciat && micro === "no" && !directa && (
+        <div className="absolute inset-x-0 bottom-[calc(max(1.25rem,env(safe-area-inset-bottom))+4.5rem)] mx-auto w-full max-w-md px-4">
+          <button type="button" onClick={() => setCrit((n) => n + 1)} className="btn btn-primari">
+            📣 Cridar!
+          </button>
+        </div>
       )}
 
       {iniciat ? (

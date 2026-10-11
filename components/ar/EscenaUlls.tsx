@@ -38,6 +38,10 @@ interface Props {
   rumbCami?: number | null;
   /** Depuració (?debug=1): l'escena hi escriu l'estat de la figura i de la mirada. */
   depuracio?: RefObject<string> | null;
+  /** Micròfon: funció que retorna el volum actual (0-1). Si hi és, un crit espanta la figura. */
+  nivellMicro?: (() => number) | null;
+  /** Compta cops: cada cop que puja, la figura s'espanta (botó de cridar, si no hi ha micròfon). */
+  crit?: number;
   /**
    * Per al so de la caminada: cada fotograma, quant camina la figura (volum 0-1, més fort com més a
    * prop) i cap a quina banda és (-1 esquerra, 1 dreta).
@@ -115,6 +119,10 @@ interface Personatge {
   /** Un ull una mica més gran que l'altre: res no és del tot simètric. */
   asim: number;
   costat: 1 | -1;
+  /** S'ha espantat (crit): es gira i marxa. `gir` és quant s'ha girat (0-1). */
+  espantat: boolean;
+  espantatDesde: number;
+  gir: number;
   /** Distància a la qual ha aparegut (m): serveix per saber quant s'ha acostat. */
   distInici: number;
   /** Quant camina (0-1), suavitzat: arrenca i s'atura a poc a poc. */
@@ -128,6 +136,9 @@ const FIGURA = { ample: 306 / 699 };
 /** Fins on s'acosta la figura caminant (m) i la velocitat a la qual camina (m/s). */
 const DIST_PARADA = 4.5;
 const VELOCITAT_CAMINADA = 0.45;
+/** Quan s'espanta: velocitat amb què marxa (m/s) i quant triga a desaparèixer (ms). */
+const VELOCITAT_FUGIDA = 1.6;
+const TEMPS_FUGIDA_MS = 3500;
 
 const ALCADA_CAMERA = 1.5;
 const FOV_HORITZONTAL = 52;
@@ -154,6 +165,9 @@ function nou(v: Varietat, espera: number, ara: number): Personatge {
     asim: aleatori(0.86, 1.14),
     costat: Math.random() < 0.5 ? -1 : 1,
     camina: 0,
+    espantat: false,
+    espantatDesde: 0,
+    gir: 0,
     distInici: v.distMin,
   };
 }
@@ -170,6 +184,9 @@ function aparicio(p: Personatge, mirada: Mirada, ara: number) {
   p.rumb = (mirada.rumb + costat * aleatori(30, 130) + 720) % 360;
   p.dist = aleatori(p.v.distMin, p.v.distMax);
   p.distInici = p.dist;
+  p.espantat = false;
+  p.gir = 0;
+  p.camina = 0;
   p.alt = p.v.tipus === "ulls" ? aleatori(p.v.altMin, p.v.altMax) : 0;
   p.costat = Math.random() < 0.5 ? -1 : 1;
   p.fase = "apareix";
@@ -263,7 +280,8 @@ function actualitza(
     case "fuig":
       if (ara - p.desde >= durada(p, "fuig")) {
         p.fase = "amagat";
-        p.fins = ara + (p.v.tipus === "silueta" ? aleatori(15_000, 30_000) : aleatori(5000, 12_000));
+        // Un cop marxa (espantada), no torna fins d'aquí una bona estona.
+        p.fins = ara + (p.v.tipus === "silueta" ? aleatori(25_000, 45_000) : aleatori(5000, 12_000));
       }
       return;
   }
@@ -272,6 +290,18 @@ function actualitza(
   // La figura es queda: un cop apareix al davant no desapareix ni en mirar-la ni amb el temps.
   // Camina cap al jugador (caminada falsa, sense esquelet) i s'atura a DIST_PARADA.
   if (p.v.tipus === "silueta") {
+    if (p.espantat) {
+      // Es gira d'esquena i marxa corrent; passats uns segons, s'esvaeix.
+      p.gir = Math.min(1, p.gir + dt / 700);
+      p.camina += (1 - p.camina) * Math.min(1, dt / 250);
+      if (p.gir > 0.5) p.dist += VELOCITAT_FUGIDA * p.camina * (dt / 1000);
+      if (ara - p.espantatDesde > TEMPS_FUGIDA_MS) {
+        p.fase = "fuig";
+        p.motiu = "temps";
+        p.desde = ara;
+      }
+      return;
+    }
     const objectiu = p.dist > DIST_PARADA + 0.05 ? 1 : 0;
     p.camina += (objectiu - p.camina) * Math.min(1, dt / 500);
     p.dist = Math.max(DIST_PARADA, p.dist - VELOCITAT_CAMINADA * p.camina * (dt / 1000));
@@ -436,7 +466,29 @@ function dibuixaVora(ctx: CanvasRenderingContext2D, w: number, h: number, dx: nu
   vora(0, h, 0, h - alt, pesos.baix, 0, h - alt, w, alt);
 }
 
-export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = null, rumbCami = null, alPasses, alCaminar }: Props) {
+/** Espanta la figura si és present i encara no ha marxat. */
+function espantar(p: Personatge, ara: number) {
+  if (p.v.tipus !== "silueta" || p.fase !== "present" || p.espantat) return;
+  p.espantat = true;
+  p.espantatDesde = ara;
+  try {
+    navigator.vibrate?.([80, 40, 80]);
+  } catch {
+    // Sense vibració: no passa res.
+  }
+}
+
+export function EscenaUlls({
+  mirada,
+  arrossegar,
+  figura3D = null,
+  depuracio = null,
+  rumbCami = null,
+  nivellMicro = null,
+  crit = 0,
+  alPasses,
+  alCaminar,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const manual = useRef<Mirada>({ rumb: 0, elevacio: 0 });
   const arrossegarRef = useRef(arrossegar);
@@ -445,6 +497,8 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
   const depuracioRef = useRef(depuracio);
   const camiRef = useRef(rumbCami);
   const caminarRef = useRef(alCaminar);
+  const microRef = useRef(nivellMicro);
+  const critRef = useRef(crit);
 
   useEffect(() => {
     arrossegarRef.current = arrossegar;
@@ -453,7 +507,9 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
     depuracioRef.current = depuracio;
     camiRef.current = rumbCami;
     caminarRef.current = alCaminar;
-  }, [arrossegar, alPasses, figura3D, depuracio, rumbCami, alCaminar]);
+    microRef.current = nivellMicro;
+    critRef.current = crit;
+  }, [arrossegar, alPasses, figura3D, depuracio, rumbCami, alCaminar, nivellMicro, crit]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -485,6 +541,12 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
 
     let anterior = inici;
     let frame = 0;
+    // Detector de crits: el volum de fons s'aprèn a poc a poc i un crit és molt per sobre i dura.
+    let sorollBase = 0.01;
+    let fortMs = 0;
+    let critVist = critRef.current;
+    let nivellActual = 0;
+    let llindarActual = 0.12;
     function dibuixa(ara: number) {
       if (!ctx) return;
       const dt = Math.min(100, ara - anterior);
@@ -503,6 +565,23 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
       ctx.fillRect(0, 0, amplada, alcada);
 
       const fx = amplada / 2 / Math.tan((FOV_HORITZONTAL / 2) * RAD);
+      // Crit del jugador: micròfon (volum sostingut molt per sobre del de fons) o botó de cridar.
+      const lectorMicro = microRef.current;
+      if (lectorMicro) {
+        nivellActual = lectorMicro();
+        sorollBase += (Math.min(nivellActual, sorollBase * 3 + 0.01) - sorollBase) * 0.003;
+        llindarActual = Math.max(0.12, sorollBase * 5);
+        fortMs = nivellActual > llindarActual ? fortMs + dt : Math.max(0, fortMs - dt * 2);
+        if (fortMs > 300) {
+          fortMs = 0;
+          for (const q of personatges) espantar(q, ara);
+        }
+      }
+      if (critRef.current !== critVist) {
+        critVist = critRef.current;
+        for (const q of personatges) espantar(q, ara);
+      }
+
       const figuraActiva = personatges.some((q) => q.v.tipus === "silueta" && q.fase !== "amagat");
       // El més llunyà primer, perquè el que és a prop el tapi.
       const ordenats = [...personatges].sort((a, b) => b.dist - a.dist);
@@ -519,6 +598,7 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
           e.elevacio = lectura.elevacio;
           e.altura = p.v.alcada;
           e.camina = p.camina;
+          e.gir = p.gir;
           e.llavor = p.llavor;
           continue;
         }
@@ -548,7 +628,7 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
       }
       // Resplendor a la vora: guia cap a la figura des que se senten les passes.
       const guia = personatges.find((q) => q.v.tipus === "silueta");
-      if (guia && (guia.fase === "passes" || guia.fase === "apareix" || guia.fase === "present")) {
+      if (guia && !guia.espantat && (guia.fase === "passes" || guia.fase === "apareix" || guia.fase === "present")) {
         const enPasses = guia.fase === "passes";
         const progres = enPasses ? Math.min(1, (ara - guia.desde) / DURADA_PASSES_MS) : 1;
         dibuixaVora(ctx, amplada, alcada, diferenciaRumb(guia.rumb, lectura.rumb), enPasses ? 0.4 + 0.6 * progres : 1, enPasses ? 620 : 1400, ara);
@@ -571,7 +651,8 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
 sensors ${arrossegarRef.current ? "NO (arrossegar)" : "sí"}
 mirada rumb ${Math.round(lectura.rumb)}°  elev ${Math.round(lectura.elevacio)}°
 figura a ${Math.round(diferenciaRumb(f.rumb, lectura.rumb))}° del centre, a ${f.dist.toFixed(1)} m
-camí ${camiRef.current === null ? "—" : Math.round(camiRef.current) + "°"}`
+camí ${camiRef.current === null ? "—" : Math.round(camiRef.current) + "°"}
+micro ${microRef.current ? nivellActual.toFixed(2) + " (llindar " + llindarActual.toFixed(2) + ")" : "no"}${f.espantat ? "  ESPANTAT" : ""}`
           : "";
       }
       frame = requestAnimationFrame(dibuixa);

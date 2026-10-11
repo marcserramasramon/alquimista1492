@@ -45,11 +45,13 @@ export interface EstatFigura3D {
   altura: number;
   /** Quant camina (0 = quieta, 1 = caminant): mou el cos, la capa i els peus. */
   camina: number;
+  /** Quant s'ha girat d'esquena al jugador (0 = de cara, 1 = d'esquena): quan s'espanta. */
+  gir: number;
   llavor: number;
 }
 
 export function estatFigura3DInicial(): EstatFigura3D {
-  return { alfa: 0, dx: 0, dist: 15, elevacio: 0, altura: 1.9, camina: 0, llavor: 0 };
+  return { alfa: 0, dx: 0, dist: 15, elevacio: 0, altura: 1.9, camina: 0, gir: 0, llavor: 0 };
 }
 
 export function webglDisponible(): boolean {
@@ -267,7 +269,11 @@ varying vec3 vPosLocal;`)
             // Mira cap a la càmera, amb un petit balanceig.
             grup.rotation.order = "YXZ";
             grup.rotation.y =
-              Math.atan2(-x, -z) + GIR_DAVANT_GRAUS * RAD + Math.sin(t * 0.5 + e.llavor) * 0.06 + Math.sin(c) * 0.06 * e.camina;
+              Math.atan2(-x, -z) +
+              GIR_DAVANT_GRAUS * RAD +
+              Math.PI * (e.gir * e.gir * (3 - 2 * e.gir)) +
+              Math.sin(t * 0.5 + e.llavor) * 0.06 +
+              Math.sin(c) * 0.06 * e.camina;
             grup.rotation.x = 0.05 * e.camina; // s'inclina una mica cap endavant
             grup.rotation.z = Math.sin(c) * 0.04 * e.camina; // balanceig de costat a costat
             for (const m of materials) m.opacity = e.alfa;

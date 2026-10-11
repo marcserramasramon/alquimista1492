@@ -65,7 +65,7 @@ export const EXTRES_AR: ExtraAr[] = [
     },
     introduccio: {
       titol: "Ulls en la foscor",
-      text: "Aixequeu el mòbil i girau-lo a poc a poc al vostre voltant. Hi ha qui us segueix, però no li agrada que el mirin.",
+      text: "Aixequeu el mòbil i girau-lo a poc a poc al vostre voltant. Hi ha qui us segueix. Si s'acosta massa, crideu perquè marxi: us demanarem el micròfon.",
       boto: "Obrir els ulls",
     },
   },
