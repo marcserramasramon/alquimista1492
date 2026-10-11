@@ -49,6 +49,9 @@ import { VistaEnviarAvis } from "@/components/vistes/VistaEnviarAvis";
 import { VistaAjuda } from "@/components/vistes/VistaAjuda";
 import { VistaBonesPractiques } from "@/components/vistes/VistaBonesPractiques";
 import { GuiaManual } from "@/components/player/GuiaManual";
+import { TargetaExtraAr } from "@/components/player/ExtraAr";
+import { VistaExtraAr } from "@/components/vistes/VistaExtraAr";
+import { EXTRES_AR } from "@/content/public/extres";
 import { MANUAL_ARRIBAR, MANUAL_HUB, MANUAL_RESOLDRE } from "@/content/public/textos";
 import type { AvisEquip } from "@/components/vistes/PanellAvisosMaster";
 import { IndicadorTemps } from "@/components/ui/IndicadorTemps";
@@ -758,6 +761,25 @@ export const PANTALLES: Pantalla[] = [
         <VistaBonesPractiques fixa onAcabar={noop} />
       </>
     ),
+  },
+  {
+    id: "extra-ar-targeta",
+    grup: "hub",
+    titol: "Hub · extra AR (targeta)",
+    descripcio: "En arribar al punt de l'extra (content/public/extres.ts) l'app ofereix mirar els ulls i les siluetes.",
+    render: (dades) => (
+      <>
+        {getPantalla("hub-mitja-partida")?.render(dades)}
+        <TargetaExtraAr extra={EXTRES_AR[0]} onObrir={noop} onDescartar={noop} />
+      </>
+    ),
+  },
+  {
+    id: "extra-ar-escena",
+    grup: "hub",
+    titol: "Extra AR · ulls i siluetes",
+    descripcio: "L'escena sobre fons negre (sense càmera); arrossegueu per mirar al voltant. A l'app real va sobre la càmera.",
+    render: () => <VistaExtraAr extra={EXTRES_AR[0]} onTornar={noop} directa />,
   },
   ...[
     {
