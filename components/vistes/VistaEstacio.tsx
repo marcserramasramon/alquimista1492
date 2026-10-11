@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { VistaJocResposta, type VistaJocRespostaProps } from "@/components/vistes/VistaJocResposta";
 import { AvisError } from "@/components/ui/Pantalla";
 import { Pentagrama } from "@/components/ui/Pentagrama";
 import { Narracio } from "@/components/ui/Narracio";
 import { ELEMENTS, type Element } from "@/content/public/estacions";
+import { getExtraArDelPas } from "@/content/public/extres";
 import { ARRIBADES, ARRIBADES_PAS, CORRECTE_PER_ELEMENT, FRAGMENTS } from "@/content/public/textos";
 import { CelebracioFragment } from "@/components/vistes/CelebracioFragment";
 
@@ -118,6 +120,13 @@ export function VistaEstacio({
         )}
 
         <p className="text-center text-base text-ink-soft">S&apos;ha revelat al mapa on és la propera fita.</p>
+
+        {/* Extra de realitat augmentada d'aquest pas (content/public/extres.ts): no compta per a la partida. */}
+        {getExtraArDelPas(estacio.id) && (
+          <Link href={`/joc/ar/${getExtraArDelPas(estacio.id)?.id}`} className="btn btn-fosc">
+            {getExtraArDelPas(estacio.id)?.boto}
+          </Link>
+        )}
 
         <button onClick={onTornar} className="btn btn-primari">
           Veure-ho al mapa →

@@ -217,7 +217,6 @@ export default function HubPage() {
         onAnarEstacio={anarEstacio}
         onLlegirMissatge={() => router.push("/missatge?tornada=1")}
         onAvis={() => setAjudaOberta(true)}
-        onExtraAr={(id) => router.push(`/joc/ar/${id}`)}
       />
       {escanejant && <ObrirFita onOberta={obertaPerCodi} onTancar={() => setEscanejant(false)} />}
       {bonesPractiques ? (

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getExtraArDelPas } from "@/content/public/extres";
 import { MapaEquip, type EstacioMapa, type MarcadorMapa, type VideoMapa } from "@/components/player/MapaEquip";
 import { BarraFranja, useMostrarAFranja } from "@/components/player/FranjaPartida";
 import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
@@ -25,8 +24,6 @@ export interface VistaHubProps {
   onSeleccionarVideo?: (id: string) => void;
   /** Es crida en tocar el botó "?" del mapa (avisar el màster). Sense aquesta funció, el botó no surt. */
   onAvis?: () => void;
-  /** Obre un extra de realitat augmentada. Sense aquesta funció, la fitxa del pas no en mostra el botó. */
-  onExtraAr?: (id: string) => void;
 }
 
 export function VistaHub({
@@ -40,7 +37,6 @@ export function VistaHub({
   videos,
   onSeleccionarVideo,
   onAvis,
-  onExtraAr,
 }: VistaHubProps) {
   const [seleccionadaId, setSeleccionadaId] = useState<string | null>(seleccionadaInicialId ?? fitaArribadaId);
   // Quan el GPS obre una fita nova, se'n mostra la fitxa encara que n'hi hagués una altra de triada.
@@ -135,7 +131,6 @@ export function VistaHub({
               acabadaDarribar={seleccionada.id === fitaArribadaId}
               onTancar={() => setSeleccionadaId(null)}
               onAnar={() => onAnarEstacio(seleccionada)}
-              onExtraAr={onExtraAr}
             />
           )}
         </section>
@@ -270,7 +265,6 @@ export function FitxaFita({
   acabadaDarribar,
   onTancar,
   onAnar,
-  onExtraAr,
 }: {
   estacio: EstacioMapa;
   /** La fita s'ha revelat a través d'un pas previ (fase 2 d'una fita en dos punts, com l'Aire). */
@@ -278,8 +272,6 @@ export function FitxaFita({
   acabadaDarribar: boolean;
   onTancar: () => void;
   onAnar: () => void;
-  /** Si hi és, i el pas té un extra de realitat augmentada, la fitxa en mostra el botó (un cop obert). */
-  onExtraAr?: (id: string) => void;
 }) {
   const element = estacio.element ? ELEMENTS[estacio.element] : null;
   const color = element?.color ?? "var(--gold)";
@@ -291,8 +283,6 @@ export function FitxaFita({
   // Fita en dos punts (docs/fites-nova.md § AIRE): fase 1 = el pas previ, fase 2 = l'enigma.
   const fase = esPas ? 1 : teniaPasPrevi ? 2 : null;
   const tancada = estacio.oberta === false && !resolta;
-  // L'extra de realitat augmentada d'aquest pas: només un cop s'hi ha arribat (pas obert).
-  const extraAr = esPas && !tancada && onExtraAr ? getExtraArDelPas(estacio.id) : undefined;
   const queFer =
     esPas && tancada
       ? "Seguiu el camí, atents als perills."
@@ -365,12 +355,7 @@ export function FitxaFita({
       </div>
 
       {/* El botó, sempre a la vista. */}
-      <div className="flex shrink-0 flex-col gap-2 px-4 pb-3 pt-1.5">
-        {extraAr && (
-          <button type="button" onClick={() => onExtraAr?.(extraAr.id)} className="btn btn-fosc">
-            {extraAr.boto}
-          </button>
-        )}
+      <div className="shrink-0 px-4 pb-3 pt-1.5">
         <button data-manual="fitxa-boto" onClick={onAnar} disabled={!estacio.disponible} className="btn btn-primari">
           {!estacio.disponible
             ? "🔒 Properament"
