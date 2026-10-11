@@ -196,6 +196,7 @@ export const GRESOL_PASSOS = {
 // 5. Pantalla final
 export const GUARDIANS: TextNarratiu & { lema: string; traduccioLema: string } = {
   titol: "Guardians del Secret",
+  audio: "/audio/guardians-veu.mp3",
   paragrafs: [
     "La matèria ha parlat, i Fra Francesc ha vist el que havia de veure.",
     "Heu reunit l'Aigua, la Terra, el Foc, l'Aire i l'Ànima. Heu sentit l'amenaça i no us heu aturat. Heu confiat els uns en els altres.",

@@ -1,0 +1,434 @@
+<!doctype html><html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ulls en la foscor — demo</title>
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:system-ui,sans-serif}
+#marc{position:relative;height:100dvh;max-width:430px;margin:0 auto;overflow:hidden;background:#02040a}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#inici{position:absolute;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;text-align:center;color:#e8edf3;padding:24px;z-index:5}#inici h1{font:800 44px Georgia,serif;margin:0 0 14px}#inici p{font-size:17px;line-height:1.4;color:#b9c4d0}#inici .p{font-size:13px;opacity:.7}#go{background:#eab308;color:#1b1511;font:800 18px system-ui;border:0;border-radius:16px;padding:16px 28px;margin:10px 0;min-height:52px}#so{position:absolute;top:14px;right:14px;z-index:4;min-height:48px;border-radius:24px;border:2px solid #aab;background:rgba(0,0,0,.6);color:#fff;font:700 16px system-ui;padding:0 16px;display:none}#nota{position:absolute;left:0;right:0;bottom:14px;text-align:center;color:#cfd8e3;font-size:13px;opacity:.75;padding:0 18px;pointer-events:none}
+</style></head><body><div id="marc"><canvas id="fons"></canvas><canvas id="ar"></canvas>
+<div id="inici"><div><h1>Ulls en la foscor</h1><p>Demo de l'escena. La càmera gira sola; pots arrossegar per mirar tu. Si mires fix el que t'espia, s'espanta.</p><button id="go">Obrir els ulls</button><p class="p">Amb so: abans que aparegui la figura se senten passes.</p></div></div>
+<div id="nota">Demo: la càmera gira sola. Arrossega per mirar tu. Si mires fix els ulls, fugen.</div></div>
+<script>
+const diferenciaRumb=(a,b)=>{const d=(((a-b)%360)+540)%360-180;return d===-180?180:d};
+/**
+ * Les passes de l'extra de realitat augmentada: uns peus que s'acosten pel camí abans que
+ * aparegui la figura. Sintetitzades amb Web Audio (sense fitxers) i amb una mica d'estèreo, perquè
+ * se senti pel costat des d'on vindrà. No hi ha cap altre so. Només comença quan l'usuari toca el
+ * botó d'entrada (els navegadors mòbils no deixen sonar abans) i s'atura en sortir.
+ */
+let context = null;
+let soroll = null;
+function obtenirContext() {
+    if (typeof window === "undefined")
+        return null;
+    if (!context) {
+        const Ctor = window.AudioContext ?? window.webkitAudioContext;
+        if (!Ctor)
+            return null;
+        try {
+            context = new Ctor();
+        }
+        catch {
+            return null;
+        }
+    }
+    return context;
+}
+/** Soroll blanc breu, compartit per totes les passes. */
+function bufferSoroll(ctx) {
+    if (soroll)
+        return soroll;
+    const buffer = ctx.createBuffer(1, Math.round(ctx.sampleRate * 0.25), ctx.sampleRate);
+    const dades = buffer.getChannelData(0);
+    for (let i = 0; i < dades.length; i++)
+        dades[i] = Math.random() * 2 - 1;
+    soroll = buffer;
+    return buffer;
+}
+/** Prepara el so. S'ha de cridar dins d'un gest de l'usuari. */
+function iniciarSoAr() {
+    obtenirContext()
+        ?.resume()
+        .catch(() => { });
+}
+function aturarSoAr() {
+    context?.close().catch(() => { });
+    context = null;
+    soroll = null;
+}
+/**
+ * Passes de qui s'acosta caminant durant `duradaMs`: cada pas és un copet greu i un cruixit de
+ * terra, i van pujant de volum. `pan` va de -1 (esquerra) a 1 (dreta).
+ */
+function sonarPassesAr(pan, duradaMs) {
+    const ctx = obtenirContext();
+    if (!ctx || ctx.state !== "running")
+        return;
+    const pas = 0.62;
+    const passos = Math.max(2, Math.floor(duradaMs / 1000 / pas));
+    const inici = ctx.currentTime + 0.1;
+    for (let i = 0; i < passos; i++) {
+        const t = inici + i * pas + (Math.random() - 0.5) * 0.06;
+        const volum = 0.1 + 0.5 * (i / (passos - 1));
+        const sortida = ctx.createGain();
+        sortida.gain.value = 1;
+        if (typeof ctx.createStereoPanner === "function") {
+            const panner = ctx.createStereoPanner();
+            // Un peu cada cop una mica més cap al centre: s'acosta.
+            panner.pan.value = pan * (1 - 0.5 * (i / (passos - 1)));
+            sortida.connect(panner).connect(ctx.destination);
+        }
+        else {
+            sortida.connect(ctx.destination);
+        }
+        // Cruixit de grava: soroll filtrat i molt curt.
+        const font = ctx.createBufferSource();
+        font.buffer = bufferSoroll(ctx);
+        const filtre = ctx.createBiquadFilter();
+        filtre.type = "bandpass";
+        filtre.frequency.value = i % 2 === 0 ? 720 : 560;
+        filtre.Q.value = 0.9;
+        const gc = ctx.createGain();
+        gc.gain.setValueAtTime(0.0001, t);
+        gc.gain.exponentialRampToValueAtTime(volum, t + 0.008);
+        gc.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+        font.connect(filtre).connect(gc).connect(sortida);
+        font.start(t);
+        font.stop(t + 0.14);
+        // Copet greu del taló.
+        const cop = ctx.createOscillator();
+        cop.type = "sine";
+        cop.frequency.setValueAtTime(95, t);
+        cop.frequency.exponentialRampToValueAtTime(52, t + 0.12);
+        const gp = ctx.createGain();
+        gp.gain.setValueAtTime(0.0001, t);
+        gp.gain.exponentialRampToValueAtTime(volum * 0.9, t + 0.006);
+        gp.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+        cop.connect(gp).connect(sortida);
+        cop.start(t);
+        cop.stop(t + 0.18);
+    }
+}
+
+/**
+ * Escena "ulls en la foscor": parells d'ulls que brillen entre les ombres i siluetes que espien
+ * de lluny. Es dibuixa en un canvas transparent sobre el vídeo de la càmera. Els personatges
+ * viuen en un "cel" fix al voltant de l'usuari (no dels metres GPS), així que la tremolor del GPS
+ * no els belluga.
+ *
+ * Fan el que fa algú que et vigila:
+ * - abans que aparegui la figura se senten passes que s'acosten, i mentre és present no hi ha cap
+ *   parell d'ulls a la foscor;
+ * - apareixen a la vora del camp de visió o darrere teu, mai just al davant; els ulls sempre
+ *   molt lluny, com una cosa que et mira des del fons del bosc;
+ * - si els mires fix se n'adonen: els ulls desapareixen de cop, la
+ *   figura es dissol;
+ * - els ulls són una mica diferents: alts, baixos, amb pupil·la de bèstia. La figura és només la
+ *   imatge, sense cap altre element al voltant.
+ */
+/** Temps que se senten les passes abans que aparegui la figura (ms). */
+const DURADA_PASSES_MS = 4800;
+const BASE = {
+    tipus: "ulls",
+    color: "255, 45, 35",
+    distMin: 26,
+    distMax: 38,
+    altMin: 0.8,
+    altMax: 2.2,
+    escala: 1,
+    pupilaVertical: false,
+    alcada: 1.9,
+    ample: 0.42,
+};
+const VARIETATS = {
+    /** Els ulls de sempre: vermells, a alçada de persona. */
+    normal: { ...BASE, escala: 2.2 },
+    /** Petits, junts i a ran de terra, vermell encès: com una rata gran o una cosa que s'arrossega. */
+    baix: { ...BASE, color: "255, 90, 30", distMin: 24, distMax: 34, altMin: 0.15, altMax: 0.45, escala: 2 },
+    /** Enormes i molt amunt, entre les branques: alguna cosa gran que no és d'aquí. */
+    alt: { ...BASE, color: "255, 70, 25", distMin: 34, distMax: 46, altMin: 2.6, altMax: 3.9, escala: 3 },
+    /** Vermell fosc, amb pupil·la vertical de bèstia. */
+    bestia: { ...BASE, color: "235, 20, 45", distMin: 24, distMax: 34, altMin: 0.9, altMax: 1.5, escala: 2.4, pupilaVertical: true },
+    monjo: { ...BASE, tipus: "silueta", distMin: 13, distMax: 20 },
+};
+/** Imatge de la figura (public/images/ar/figura-encaputxada.webp, retallada a la figura) i la seva proporció. */
+const IMATGE_FIGURA = "/images/ar/figura-encaputxada.webp";
+const FIGURA = { ample: 306 / 699 };
+const ALCADA_CAMERA = 1.5;
+const FOV_HORITZONTAL = 52;
+const RAD = Math.PI / 180;
+const aleatori = (min, max) => min + Math.random() * (max - min);
+const mitja = (x) => x * x * (3 - 2 * x);
+function nou(v, espera, ara) {
+    return {
+        v,
+        fase: "amagat",
+        motiu: "temps",
+        rumb: 0,
+        dist: v.distMin,
+        alt: v.altMin,
+        desde: ara,
+        fins: ara + espera,
+        mirat: 0,
+        proximaParpella: 0,
+        parpellaEsq: 0,
+        parpellaDre: 0,
+        llavor: Math.random() * 1000,
+        asim: aleatori(0.86, 1.14),
+        costat: Math.random() < 0.5 ? -1 : 1,
+    };
+}
+function durada(p, fase) {
+    if (fase === "apareix")
+        return p.v.tipus === "ulls" ? 900 : 2800;
+    if (p.v.tipus === "ulls")
+        return 300;
+    return 700;
+}
+function aparicio(p, mirada, ara) {
+    // A la vora o darrere del camp de visió: es noten en girar.
+    const costat = Math.random() < 0.5 ? -1 : 1;
+    p.rumb = (mirada.rumb + costat * aleatori(30, 130) + 720) % 360;
+    p.dist = aleatori(p.v.distMin, p.v.distMax);
+    p.alt = p.v.tipus === "ulls" ? aleatori(p.v.altMin, p.v.altMax) : 0;
+    p.costat = Math.random() < 0.5 ? -1 : 1;
+    p.fase = "apareix";
+    p.motiu = "temps";
+    p.desde = ara;
+    p.mirat = 0;
+    p.proximaParpella = ara + aleatori(1200, 3500);
+    p.parpellaEsq = 0;
+    p.parpellaDre = 0;
+}
+function actualitza(p, mirada, ara, dt, figuraActiva, alPasses) {
+    // Mentre hi ha la figura (o se'n senten les passes) no hi ha ulls a la foscor.
+    if (p.v.tipus === "ulls" && figuraActiva && (p.fase === "apareix" || p.fase === "present")) {
+        p.fase = "fuig";
+        p.motiu = "temps";
+        p.desde = ara;
+        return;
+    }
+    switch (p.fase) {
+        case "amagat":
+            if (ara >= p.fins) {
+                if (p.v.tipus === "ulls" && figuraActiva) {
+                    p.fins = ara + 1500;
+                    return;
+                }
+                aparicio(p, mirada, ara);
+                if (p.v.tipus === "silueta") {
+                    p.fase = "passes";
+                    alPasses?.(Math.max(-1, Math.min(1, diferenciaRumb(p.rumb, mirada.rumb) / 70)), DURADA_PASSES_MS);
+                }
+            }
+            return;
+        case "passes":
+            // Només es senten uns peus que s'acosten; la figura encara no es veu.
+            if (ara - p.desde >= DURADA_PASSES_MS) {
+                p.fase = "apareix";
+                p.desde = ara;
+            }
+            return;
+        case "apareix":
+            if (ara - p.desde >= durada(p, "apareix")) {
+                p.fase = "present";
+                p.desde = ara;
+                p.fins = ara + aleatori(14000, 26000);
+            }
+            break;
+        case "present":
+            if (p.v.tipus === "ulls" && ara >= p.proximaParpella) {
+                const sort = Math.random();
+                if (sort < 0.7) {
+                    p.parpellaEsq = p.parpellaDre = ara + 170;
+                    p.proximaParpella = ara + aleatori(1800, 5000);
+                }
+                else if (sort < 0.85) {
+                    // Doble parpelleig, ràpid, com algú nerviós.
+                    p.parpellaEsq = p.parpellaDre = ara + 130;
+                    p.proximaParpella = ara + 330;
+                }
+                else {
+                    // Només un ull: una clucada que no és de persona.
+                    if (Math.random() < 0.5)
+                        p.parpellaEsq = ara + 260;
+                    else
+                        p.parpellaDre = ara + 260;
+                    p.proximaParpella = ara + aleatori(2500, 5500);
+                }
+            }
+            if (ara >= p.fins) {
+                p.fase = "fuig";
+                p.motiu = "temps";
+                p.desde = ara;
+            }
+            break;
+        case "fuig":
+            if (ara - p.desde >= durada(p, "fuig")) {
+                p.fase = "amagat";
+                p.fins = ara + (p.v.tipus === "silueta" ? aleatori(15000, 30000) : aleatori(5000, 12000));
+            }
+            return;
+    }
+    if (p.fase !== "present")
+        return;
+    const dx = diferenciaRumb(p.rumb, mirada.rumb);
+    const alturaCap = p.v.tipus === "silueta" ? p.v.alcada * 0.86 : p.alt;
+    const elevacio = Math.atan((alturaCap - ALCADA_CAMERA) / p.dist) / RAD;
+    const dy = Math.abs(elevacio - mirada.elevacio);
+    // Si el mires fix, se n'adona i fuig.
+    if (Math.abs(dx) < 9 && dy < 16) {
+        p.mirat += dt;
+        const llindar = p.v.tipus === "ulls" ? 800 : 1300;
+        if (p.mirat > llindar) {
+            p.fase = "fuig";
+            p.motiu = "mirat";
+            p.desde = ara;
+            p.mirat = 0;
+            try {
+                navigator.vibrate?.(35);
+            }
+            catch {
+                // Sense vibració: no passa res.
+            }
+        }
+    }
+    else {
+        p.mirat = Math.max(0, p.mirat - dt * 0.5);
+    }
+}
+/** Opacitat segons la fase. Els ulls espantats s'encenen un instant i desapareixen de cop. */
+function opacitat(p, ara) {
+    const t = ara - p.desde;
+    if (p.fase === "apareix")
+        return mitja(Math.min(1, t / durada(p, "apareix")));
+    if (p.fase === "present")
+        return 1;
+    if (p.fase === "fuig") {
+        if (p.v.tipus === "ulls") {
+            if (p.motiu === "mirat")
+                return t < 150 ? 1 : 0;
+            return Math.max(0, 1 - t / durada(p, "fuig"));
+        }
+        const f = t / durada(p, "fuig");
+        return Math.max(0, 1 - f);
+    }
+    return 0;
+}
+/** Llum que oscil·la i parpelleja una mica: res no brilla amb una intensitat perfecta. */
+function llum(p, ara) {
+    return 0.8 + 0.12 * Math.sin(ara / 430 + p.llavor) + 0.08 * Math.sin(ara / 97 + p.llavor * 3);
+}
+function dibuixaUlls(ctx, x, y, unitatBase, alfa, o) {
+    const unitat = unitatBase;
+    const separacio = unitat * 0.3;
+    const costats = [
+        [-1, 1, o.tancatEsq],
+        [1, o.asim, o.tancatDre],
+    ];
+    for (const [costat, mida, tancat] of costats) {
+        const cx = x + costat * separacio;
+        const meitatAmple = unitat * 0.15 * mida;
+        const meitatAlt = Math.max(0.5, unitat * 0.055 * mida * (1 - tancat));
+        // Llum que se suma a la del voltant, no que la tapa.
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        const halo = ctx.createRadialGradient(cx, y, 0, cx, y, unitat * 0.55 * mida);
+        halo.addColorStop(0, `rgba(${o.color}, ${0.45 * alfa})`);
+        halo.addColorStop(1, `rgba(${o.color}, 0)`);
+        ctx.fillStyle = halo;
+        ctx.fillRect(cx - unitat * 0.6, y - unitat * 0.6, unitat * 1.2, unitat * 1.2);
+        ctx.restore();
+        // Ull amb forma d'ametlla, inclinat amb la cantonada de dins cap avall (mirall horitzontal de la versió anterior).
+        ctx.save();
+        ctx.translate(cx, y);
+        ctx.rotate(-costat * 0.22);
+        ctx.beginPath();
+        ctx.moveTo(-meitatAmple, 0);
+        ctx.quadraticCurveTo(0, -meitatAlt * 2, meitatAmple, 0);
+        ctx.quadraticCurveTo(0, meitatAlt * 2, -meitatAmple, 0);
+        ctx.fillStyle = `rgba(${o.color}, ${alfa})`;
+        ctx.shadowColor = `rgba(${o.color}, ${alfa})`;
+        ctx.shadowBlur = unitat * 0.25;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        // Nucli molt clar al mig.
+        ctx.beginPath();
+        ctx.ellipse(0, 0, meitatAmple * 0.55, Math.max(0.3, meitatAlt * 0.5), 0, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 215, 195, ${alfa * 0.85})`;
+        ctx.fill();
+        // Pupil·la vertical de bèstia, que segueix el jugador.
+        if (o.pupilaVertical && meitatAlt > 2) {
+            ctx.beginPath();
+            ctx.ellipse(o.segueix * meitatAmple * 0.4, 0, meitatAmple * 0.13, meitatAlt * 0.95, 0, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 0, 0, ${alfa * 0.92})`;
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+}
+/** La figura de la imatge, sense res més al voltant. */
+function dibuixaSilueta(ctx, x, yPeus, alcada, alfa, ara, p, imatge) {
+    if (imatge === null || !imatge.complete || imatge.naturalWidth === 0)
+        return;
+    const ample = alcada * FIGURA.ample;
+    const balanceig = Math.sin(ara / 1700 + p.llavor) * alcada * 0.012;
+    ctx.globalAlpha = alfa;
+    ctx.drawImage(imatge, x + balanceig - ample / 2, yPeus - alcada, ample, alcada);
+    ctx.globalAlpha = 1;
+}
+
+const canvas=document.getElementById("ar"), fons=document.getElementById("fons");
+const ctx=canvas.getContext("2d"), cf=fons.getContext("2d");
+let w=0,h=0;
+function mida(){const dpr=Math.min(devicePixelRatio||1,2);w=canvas.clientWidth;h=canvas.clientHeight;for(const c of [canvas,fons]){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);c.getContext("2d").setTransform(dpr,0,0,dpr,0,0)}}
+mida();addEventListener("resize",mida);
+// Arbres i turons fixos per rumb, perquè el fons es mogui amb la mirada.
+const arbres=Array.from({length:70},()=>({r:Math.random()*360,al:2+Math.random()*9,am:1+Math.random()*2.5}));
+function pintaFons(m){
+  const fx=w/2/Math.tan(FOV_HORITZONTAL/2*RAD);
+  const horitzo=h/2-fx*Math.tan((0-m.elevacio)*RAD)+h*0.06;
+  const g=cf.createLinearGradient(0,0,0,h);g.addColorStop(0,"#0a1428");g.addColorStop(Math.min(.95,Math.max(.1,horitzo/h)),"#16243a");g.addColorStop(1,"#05080f");
+  cf.fillStyle=g;cf.fillRect(0,0,w,h);
+  // lluna
+  const dl=diferenciaRumb(40,m.rumb);if(Math.abs(dl)<60){const x=w/2+fx*Math.tan(dl*RAD),y=horitzo-fx*Math.tan(22*RAD);const lg=cf.createRadialGradient(x,y,0,x,y,70);lg.addColorStop(0,"rgba(220,235,255,.9)");lg.addColorStop(.25,"rgba(190,210,240,.25)");lg.addColorStop(1,"rgba(190,210,240,0)");cf.fillStyle=lg;cf.fillRect(x-80,y-80,160,160)}
+  cf.fillStyle="#04070c";cf.fillRect(0,horitzo,w,h-horitzo);
+  for(const a of arbres){const d=diferenciaRumb(a.r,m.rumb);if(Math.abs(d)>45)continue;const x=w/2+fx*Math.tan(d*RAD);const ah=a.al*fx/30,am=a.am*fx/30;cf.fillStyle="#04070c";cf.beginPath();cf.moveTo(x-am,horitzo+4);cf.lineTo(x,horitzo-ah);cf.lineTo(x+am,horitzo+4);cf.closePath();cf.fill()}
+}
+let engegat=false;
+document.getElementById("go").addEventListener("click",()=>{iniciarSoAr();engegat=true;document.getElementById("inici").style.display="none"});
+const alPasses=(pan,ms)=>{if(engegat)sonarPassesAr(pan,ms)};
+const inici=performance.now();
+const figura=new Image();figura.src="data:image/webp;base64,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";const T=performance.now();const ps=[nou(VARIETATS.normal,1500,T),nou(VARIETATS.alt,6000,T),nou(VARIETATS.bestia,12000,T),nou(VARIETATS.monjo,5000,T)];
+let manual={rumb:0,elevacio:0},auto=true,ultimToc=0,ant=inici;
+let drag=null;
+canvas.addEventListener("pointerdown",e=>{drag={x:e.clientX,y:e.clientY};auto=false;ultimToc=performance.now()});
+addEventListener("pointermove",e=>{if(!drag)return;const g=FOV_HORITZONTAL/Math.max(1,canvas.clientWidth);manual={rumb:(manual.rumb-(e.clientX-drag.x)*g+360)%360,elevacio:Math.max(-40,Math.min(40,manual.elevacio+(e.clientY-drag.y)*g))};drag={x:e.clientX,y:e.clientY};ultimToc=performance.now()});
+addEventListener("pointerup",()=>{drag=null});
+function frame(ara){
+  const dt=Math.min(100,ara-ant);ant=ara;
+  if(!auto&&ara-ultimToc>6000)auto=true;
+  if(auto){const t=(ara-inici)/1000;manual={rumb:(manual.rumb+0+360)%360,elevacio:manual.elevacio};
+    // vaivé lent: ara a un costat, ara a l'altre, sense quedar-se fix.
+    const objectiu=60*Math.sin(t/5.2)+35*Math.sin(t/2.3);manual={rumb:(objectiu+360)%360,elevacio:4*Math.sin(t/3.1)}}
+  const m=manual;
+  pintaFons(m);
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle="rgba(0,5,14,0.4)";ctx.fillRect(0,0,w,h);
+  const v=ctx.createRadialGradient(w/2,h/2,h*.25,w/2,h/2,h*.75);v.addColorStop(0,"rgba(0,0,0,0)");v.addColorStop(1,"rgba(0,0,0,0.7)");ctx.fillStyle=v;ctx.fillRect(0,0,w,h);
+  const fx=w/2/Math.tan(FOV_HORITZONTAL/2*RAD);
+  const figuraActiva=ps.some(q=>q.v.tipus==="silueta"&&q.fase!=="amagat");
+  for(const p of [...ps].sort((a,b)=>b.dist-a.dist)){
+    actualitza(p,m,ara,dt,figuraActiva,alPasses);const alfa=opacitat(p,ara);if(alfa<=0)continue;
+    const dx=diferenciaRumb(p.rumb,m.rumb);if(Math.abs(dx)>80)continue;
+    const x=w/2+fx*Math.tan(dx*RAD);
+    const yDe=alt=>{const el=Math.atan((alt-ALCADA_CAMERA)/p.dist)/RAD;return h/2-fx*Math.tan((el-m.elevacio)*RAD)};
+    const tanca=f=>f>ara?1:0;
+    const op={color:p.v.color,pupilaVertical:p.v.pupilaVertical,asim:p.asim,tancatEsq:tanca(p.parpellaEsq),tancatDre:tanca(p.parpellaDre),segueix:Math.max(-1,Math.min(1,-dx/30))};
+    if(p.v.tipus==="ulls")dibuixaUlls(ctx,x,yDe(p.alt),fx/p.dist*p.v.escala,alfa*llum(p,ara),op);
+    else{const peus=yDe(0);dibuixaSilueta(ctx,x,peus,peus-yDe(p.v.alcada),alfa,ara,p,figura)}
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script></body></html>

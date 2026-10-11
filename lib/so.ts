@@ -566,6 +566,8 @@ export function sonarTemps() {
 }
 
 const DURADA_MUSICA = 15;
+/** Volum màxim de la música: baix perquè no tapi la veu de Fra Francesc. */
+const VOLUM_MUSICA = 0.2;
 const FOS_FINAL = 4;
 
 /**
@@ -584,8 +586,8 @@ export function iniciarMusica(nom: NomMusica = "guardians", enAcabar?: () => voi
   const t0 = ctx.currentTime;
   const fi = t0 + DURADA_MUSICA;
   volum.gain.setValueAtTime(0.0001, t0);
-  volum.gain.exponentialRampToValueAtTime(1, t0 + 2);
-  volum.gain.setValueAtTime(1, fi - FOS_FINAL);
+  volum.gain.exponentialRampToValueAtTime(VOLUM_MUSICA, t0 + 2);
+  volum.gain.setValueAtTime(VOLUM_MUSICA, fi - FOS_FINAL);
   volum.gain.exponentialRampToValueAtTime(0.0001, fi);
 
   let aturada = false;
