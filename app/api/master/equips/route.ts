@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
 
   const { data: progres } = await db.from("v2_progres").select("team_id, estacio_id, resolta, pistes_usades");
 
-  const total = getEstacionsJugables().filter((e) => e.disponible).length;
+  const jugables = getEstacionsJugables().filter((e) => e.disponible);
+  const total = jugables.length;
 
   // En l'ordre de content/public/equips.ts, amb el nom d'allà.
   const resultat = EQUIPS.flatMap((def) => {
@@ -33,7 +34,11 @@ export async function GET(request: NextRequest) {
     const seu = (progres ?? []).filter((p) => p.team_id === e.id);
     const resoltes = seu.filter((p) => p.resolta).length;
     const pistes = seu.reduce((suma, p) => suma + (p.pistes_usades ?? 0), 0);
-    return [{ ...resta, name: def.nom, imatge: def.imatge, agafat: claimed_at !== null, resoltes, total, pistes }];
+    // Elements de les fites resoltes, en l'ordre de les fites.
+    const elements = jugables.flatMap((est) =>
+      est.element && seu.some((p) => p.estacio_id === est.id && p.resolta) ? [est.element] : []
+    );
+    return [{ ...resta, name: def.nom, imatge: def.imatge, agafat: claimed_at !== null, resoltes, total, pistes, elements }];
   });
 
   const { data: partida } = await db

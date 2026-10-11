@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { Element } from "@/content/public/estacions";
 
 export interface EquipMaster {
   id: string;
@@ -17,14 +18,12 @@ export interface EquipMaster {
   ubicacio: { lat: number; lng: number; faMinuts: number } | null;
   /** Pistes demanades en total (totes les fites). */
   pistes?: number;
+  /** Elements de les fites resoltes, en l'ordre de les fites. Sense valor = cap. */
+  elements?: Element[];
 }
 
 export interface TargetaEquipMasterProps {
   equip: EquipMaster;
-  partidaIniciada: boolean;
-  /** S'ha esgotat el temps: tots els equips van al Gresol, amb els fragments que tinguin. */
-  tempsEsgotat: boolean;
-  onConsagrar: (teamId: string, consagrar: boolean) => void;
   onAlliberar: (teamId: string) => void;
   onReiniciar: (teamId: string) => void;
 }
@@ -45,23 +44,12 @@ function textEdat(faMinuts: number) {
 
 const BOTO_SECUNDARI = "min-h-12 w-full rounded-xl border-[3px] px-3 text-left text-base font-extrabold";
 
-export function TargetaEquipMaster({
-  equip,
-  partidaIniciada,
-  tempsEsgotat,
-  onConsagrar,
-  onAlliberar,
-  onReiniciar,
-}: TargetaEquipMasterProps) {
+export function TargetaEquipMaster({ equip, onAlliberar, onReiniciar }: TargetaEquipMasterProps) {
   const [mesObert, setMesObert] = useState(false);
   const estat = !equip.agafat ? LLIURE : equip.guardians ? GUARDIANS : ESTATS[equip.status];
 
-  const potConsagrar = equip.agafat && partidaIniciada && !equip.guardians;
-  // Només es destaca quan toca: amb tots els fragments, al Gresol o amb el temps esgotat.
-  const llestPerConsagrar =
-    potConsagrar && (equip.resoltes >= equip.total || equip.status === "final" || tempsEsgotat);
   const potReiniciar = equip.agafat || equip.resoltes > 0 || equip.guardians;
-  const teMes = (potConsagrar && !llestPerConsagrar) || potReiniciar;
+  const teMes = potReiniciar;
 
   function fer(accio: () => void) {
     setMesObert(false);
@@ -96,12 +84,6 @@ export function TargetaEquipMaster({
         ))}
       </div>
 
-      {llestPerConsagrar && (
-        <button type="button" onClick={() => onConsagrar(equip.id, true)} className="btn btn-fosc mt-4">
-          ✨ Consagrar Guardians del Secret
-        </button>
-      )}
-
       <div className="mt-4 flex items-center justify-between gap-3">
         <div className="text-base text-ink-soft">
           <p>📍 {equip.ubicacio ? textEdat(equip.ubicacio.faMinuts) : "sense ubicació"}</p>
@@ -127,24 +109,6 @@ export function TargetaEquipMaster({
 
       {mesObert && (
         <div className="mt-3 flex flex-col gap-2 rounded-xl border-2 border-dashed border-ink/40 p-3">
-          {potConsagrar && !llestPerConsagrar && (
-            <button
-              type="button"
-              onClick={() => fer(() => onConsagrar(equip.id, true))}
-              className={`${BOTO_SECUNDARI} border-ink bg-[#fffdf7] active:bg-ink active:text-paper`}
-            >
-              ✨ Consagrar Guardians del Secret
-            </button>
-          )}
-          {equip.guardians && (
-            <button
-              type="button"
-              onClick={() => fer(() => onConsagrar(equip.id, false))}
-              className={`${BOTO_SECUNDARI} border-ink bg-[#fffdf7] active:bg-ink active:text-paper`}
-            >
-              ↩ Desfer la consagració
-            </button>
-          )}
           {equip.agafat && (
             <button
               type="button"

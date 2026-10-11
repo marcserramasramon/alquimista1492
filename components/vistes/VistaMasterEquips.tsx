@@ -7,6 +7,7 @@ import { PanellMissatgesMaster, type PanellMissatgesMasterProps } from "@/compon
 import { PanellAvisosMaster, type AvisEquip } from "@/components/vistes/PanellAvisosMaster";
 import { PanellRecorregut, type PanellRecorregutProps } from "@/components/vistes/PanellRecorregut";
 import { PanellPartidaMaster } from "@/components/vistes/PanellPartidaMaster";
+import { PanellGuardiansMaster } from "@/components/vistes/PanellGuardiansMaster";
 import { TargetaEquipMaster, type EquipMaster } from "@/components/vistes/TargetaEquipMaster";
 import { Cronometre } from "@/components/ui/Cronometre";
 import { CompteEnrere } from "@/components/ui/CompteEnrere";
@@ -17,7 +18,7 @@ import { FranjaSenseConnexio, PindolaConnexio, useEstatConnexio, type DadesConne
 
 export type { EquipMaster };
 
-export type PestanyaMaster = "equips" | "mapa" | "missatges" | "partida";
+export type PestanyaMaster = "equips" | "guardians" | "mapa" | "missatges" | "partida";
 
 export interface VistaMasterEquipsProps {
   /** null mentre es carrega la primera vegada. */
@@ -80,6 +81,7 @@ export interface VistaMasterEquipsProps {
 
 const PESTANYES: { id: PestanyaMaster; icona: string; nom: string }[] = [
   { id: "equips", icona: "👥", nom: "Equips" },
+  { id: "guardians", icona: "✨", nom: "Guardians" },
   { id: "mapa", icona: "🗺️", nom: "Mapa" },
   { id: "missatges", icona: "✉️", nom: "Missatges" },
   { id: "partida", icona: "⏳", nom: "Partida" },
@@ -181,6 +183,7 @@ export function VistaMasterEquips({
   const pendentConsagrar = (e: EquipMaster) => e.agafat && !e.guardians && e.resoltes >= e.total;
   const equipsOrdenats = equips && [...equips].sort((a, b) => Number(pendentConsagrar(b)) - Number(pendentConsagrar(a)));
   const tempsEsgotat = partidaAcabaAt !== null && tempsRestantMs(partidaAcabaAt, desfasamentMs) === 0;
+  const pendentsConsagrar = agafats.filter(pendentConsagrar).length;
 
   const errorGps = comparteixo && (estatUbicacio === "denegat" || estatUbicacio === "no-disponible");
 
@@ -221,9 +224,6 @@ export function VistaMasterEquips({
               <TargetaEquipMaster
                 key={equip.id}
                 equip={equip}
-                partidaIniciada={partidaIniciadaAt !== null}
-                tempsEsgotat={tempsEsgotat}
-                onConsagrar={onConsagrar}
                 onAlliberar={onAlliberar}
                 onReiniciar={onReiniciar}
               />
@@ -235,6 +235,16 @@ export function VistaMasterEquips({
             </p>
           )}
           {equips === null && <p className="etiqueta text-center">carregant...</p>}
+        </section>
+
+        <section hidden={pestanya !== "guardians"} className="flex flex-col gap-3">
+          <h2 className="sr-only">Guardians</h2>
+          <PanellGuardiansMaster
+            equips={equips}
+            partidaIniciada={partidaIniciadaAt !== null}
+            tempsEsgotat={tempsEsgotat}
+            onConsagrar={onConsagrar}
+          />
         </section>
 
         <section hidden={pestanya !== "mapa"} className="flex flex-col gap-3">
@@ -357,7 +367,7 @@ export function VistaMasterEquips({
         aria-label="Seccions del panell"
         className="fixed inset-x-0 bottom-0 z-20 border-t-[3px] border-ink bg-paper pb-[env(safe-area-inset-bottom)]"
       >
-        <div className="mx-auto grid max-w-2xl grid-cols-4">
+        <div className="mx-auto grid max-w-2xl grid-cols-5">
           {PESTANYES.map((p, i) => {
             const actiu = pestanya === p.id;
             return (
@@ -378,6 +388,12 @@ export function VistaMasterEquips({
                   <span className="absolute right-2 top-1.5 min-w-6 rounded-full border-2 border-ink bg-blood px-1.5 text-sm leading-5 text-white">
                     {fets?.noVistos}
                     <span className="sr-only"> fets nous</span>
+                  </span>
+                )}
+                {p.id === "guardians" && !actiu && pendentsConsagrar > 0 && (
+                  <span className="absolute right-1 top-1.5 min-w-6 rounded-full border-2 border-ink bg-gold px-1.5 text-sm leading-5 text-ink">
+                    {pendentsConsagrar}
+                    <span className="sr-only"> equips per consagrar</span>
                   </span>
                 )}
                 {p.id === "missatges" && !actiu && avisosNoLlegits > 0 && (

@@ -335,6 +335,7 @@ const EQUIPS_MASTER: EquipMaster[] = [
     guardians: false,
     resoltes: 2,
     total: TOTAL_MASTER,
+    elements: ["aigua", "terra"],
     ubicacio: POSICIO_EQUIP && { ...POSICIO_EQUIP, faMinuts: 0 },
   },
   {
@@ -357,6 +358,7 @@ const EQUIPS_MASTER: EquipMaster[] = [
     guardians: true,
     resoltes: TOTAL_MASTER,
     total: TOTAL_MASTER,
+    elements: ["aigua", "terra", "foc", "aire", "anima"],
     ubicacio: propDe("aire") && { ...propDe("aire")!, faMinuts: 4 },
   },
 ];
@@ -1063,6 +1065,25 @@ export const PANTALLES: Pantalla[] = [
     ),
   },
   {
+    id: "master-guardians",
+    grup: "master",
+    titol: "Màster · consagrar Guardians",
+    descripcio: "Pestanya pròpia: una fila per equip amb els elements que té; el botó s'activa quan els té tots.",
+    render: () => (
+      <VistaMasterEquips
+        pestanyaInicial="guardians"
+        {...MASTER_BASE}
+        equips={[
+          ...EQUIPS_MASTER.map((e) => (e.id === "2" ? { ...e, agafat: true, status: "joc" as const, resoltes: 1, elements: ["foc" as const] } : e)),
+          { ...EQUIPS_MASTER[0], id: "4", name: EQUIPS[3].nom, imatge: EQUIPS[3].imatge, resoltes: TOTAL_MASTER, elements: ["aigua", "terra", "foc", "aire", "anima"] },
+        ]}
+        posicioMaster={null}
+        comparteixo={false}
+        estatUbicacio="inactiu"
+      />
+    ),
+  },
+  {
     id: "master-abans-inici",
     grup: "master",
     titol: "Màster · abans d'iniciar",
@@ -1072,7 +1093,7 @@ export const PANTALLES: Pantalla[] = [
         pestanyaInicial="partida"
         {...MASTER_BASE}
         partidaIniciadaAt={null}
-        equips={EQUIPS_MASTER.map((e) => ({ ...e, status: "espera" as const, resoltes: 0 }))}
+        equips={EQUIPS_MASTER.map((e) => ({ ...e, status: "espera" as const, resoltes: 0, elements: [] }))}
         posicioMaster={null}
         comparteixo={false}
         estatUbicacio="inactiu"
@@ -1269,7 +1290,7 @@ export const PANTALLES: Pantalla[] = [
     render: () => (
       <VistaMasterEquips
         {...MASTER_BASE}
-        equips={EQUIPS_MASTER.map((e) => (e.id === "1" ? { ...e, resoltes: e.total } : e))}
+        equips={EQUIPS_MASTER.map((e) => (e.id === "1" ? { ...e, resoltes: e.total, elements: ["aigua", "terra", "foc", "aire", "anima"] as typeof e.elements } : e))}
         posicioMaster={null}
         comparteixo={false}
         estatUbicacio="inactiu"
