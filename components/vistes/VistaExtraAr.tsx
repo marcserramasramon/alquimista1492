@@ -5,7 +5,7 @@ import { EscenaUlls } from "@/components/ar/EscenaUlls";
 import { estatFigura3DInicial, Figura3D, webglDisponible } from "@/components/ar/Figura3D";
 import { rumbCami, type ExtraAr } from "@/content/public/extres";
 import { useOrientacio } from "@/lib/orientacio";
-import { aturarSoAr, iniciarSoAr, sonarPassesAr } from "@/lib/sorollAr";
+import { aturarSoAr, iniciarAmbientAr, iniciarSoAr, silenciarAr, sonarPassesAr } from "@/lib/sorollAr";
 
 export interface VistaExtraArProps {
   extra: ExtraAr;
@@ -32,12 +32,14 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
   const estatFigura = useRef(estatFigura3DInicial());
   // ?debug=1 a l'adreça: mostra a la pantalla l'estat de la figura i de la mirada.
   const depuracio = useRef("");
+  const [silenci, setSilenci] = useState(false);
   const [textDepuracio, setTextDepuracio] = useState<string | null>(null);
   const alPasses = useCallback((pan: number, duradaMs: number) => sonarPassesAr(pan, duradaMs), []);
 
   // Els sensors, la càmera i el so es demanen en tocar el botó (iOS i Android ho exigeixen).
   async function començar() {
     iniciarSoAr();
+    iniciarAmbientAr();
     // Figura en 3D si l'extra ho demana, no s'ha forçat la plana (?figura=plana) i el mòbil pot.
     const forcadaPlana = new URLSearchParams(window.location.search).get("figura") === "plana";
     setFigura3D(extra.figura === "3d" && !forcadaPlana && webglDisponible());
@@ -123,6 +125,20 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
             </p>
           )}
         </div>
+      )}
+
+      {iniciat && !directa && (
+        <button
+          type="button"
+          aria-pressed={silenci}
+          onClick={() => {
+            silenciarAr(!silenci);
+            setSilenci(!silenci);
+          }}
+          className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 z-10 flex h-12 min-w-12 items-center justify-center rounded-full border-2 border-paper-3/60 bg-black/60 px-4 text-lg font-bold"
+        >
+          {silenci ? "🔇 Sense so" : "🔊 So"}
+        </button>
       )}
 
       {iniciat ? (
