@@ -565,16 +565,16 @@ export function sonarTemps() {
   void sonarEfecte("so-temps", sintesiTemps);
 }
 
-const DURADA_MUSICA = 15;
+const DURADA_MUSICA = 120;
 /** Volum màxim de la música: baix perquè no tapi la veu de Fra Francesc. */
 const VOLUM_MUSICA = 0.2;
-const FOS_FINAL = 4;
+const FOS_FINAL = 6;
 
 /**
  * Engega la música (el fitxer si hi és; si no, la sintetitzada) amb una entrada suau.
  * Dura com a màxim DURADA_MUSICA segons i s'apaga amb un fos; llavors avisa `enAcabar`.
  * Si l'àudio encara no està desbloquejat, començarà al primer toc (el rellotge de
- * l'àudio no corre fins llavors, així que els 15 s són sempre de música sonant).
+ * l'àudio no corre fins llavors, així que els 2 minuts són sempre de música sonant).
  * Retorna la funció per aturar-la abans (amb una sortida suau, sense avisar `enAcabar`).
  */
 export function iniciarMusica(nom: NomMusica = "guardians", enAcabar?: () => void): () => void {

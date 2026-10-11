@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { escoltarEstatSo, iniciarMusica, soActiu } from "@/lib/so";
 
 /**
- * Música de fons amb un botó per aturar-la o engegar-la. Dura 15 s com a màxim i
+ * Música de fons amb un botó per aturar-la o engegar-la. Dura 2 minuts com a màxim i
  * s'apaga amb un fos (lib/so.ts); el botó la torna a engegar.
  * Comença sola en obrir la pantalla; si el navegador encara no deixa sonar
  * res (cap toc previ), el botó diu "Engegar" i qualsevol toc la posa en marxa.
