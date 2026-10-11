@@ -6,7 +6,7 @@ import { estatFigura3DInicial, Figura3D, webglDisponible } from "@/components/ar
 import { rumbCami, type ExtraAr } from "@/content/public/extres";
 import { useOrientacio } from "@/lib/orientacio";
 import { aturarMicroAr, iniciarMicroAr, nivellMicroAr } from "@/lib/microAr";
-import { actualitzarCaminadaAr, aturarSoAr, iniciarAmbientAr, iniciarSoAr, silenciarAr, sonarPassesAr } from "@/lib/sorollAr";
+import { actualitzarCaminadaAr, aturarSoAr, sonarVeuAr, iniciarAmbientAr, iniciarSoAr, silenciarAr, sonarPassesAr } from "@/lib/sorollAr";
 
 export interface VistaExtraArProps {
   extra: ExtraAr;
@@ -39,6 +39,7 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
   const [crit, setCrit] = useState(0);
   const nivellMicro = useCallback(() => nivellMicroAr(), []);
   const [textDepuracio, setTextDepuracio] = useState<string | null>(null);
+  const alVeu = useCallback((nom: "on-sou" | "alto" | "a-la-forca") => sonarVeuAr(nom), []);
   const alCaminar = useCallback((volum: number, pan: number) => actualitzarCaminadaAr(volum, pan), []);
   const alPasses = useCallback((pan: number, duradaMs: number) => sonarPassesAr(pan, duradaMs), []);
 
@@ -110,6 +111,7 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
           rumbCami={rumbCami(extra)}
           alPasses={alPasses}
           alCaminar={alCaminar}
+          alVeu={alVeu}
           nivellMicro={micro === "actiu" ? nivellMicro : null}
           crit={crit}
         />}

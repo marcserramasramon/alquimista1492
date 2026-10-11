@@ -42,6 +42,8 @@ interface Props {
   nivellMicro?: (() => number) | null;
   /** Compta cops: cada cop que puja, la figura s'espanta (botó de cridar, si no hi ha micròfon). */
   crit?: number;
+  /** Frases de l'Inquisidor: demana que soni la frase i retorna quant dura (ms). */
+  alVeu?: (nom: "on-sou" | "alto" | "a-la-forca") => number;
   /**
    * Per al so de la caminada: cada fotograma, quant camina la figura (volum 0-1, més fort com més a
    * prop) i cap a quina banda és (-1 esquerra, 1 dreta).
@@ -54,7 +56,7 @@ interface Props {
 type Tipus = "ulls" | "silueta";
 type Fase = "amagat" | "passes" | "apareix" | "present" | "fuig";
 
-/** Temps que se senten les passes abans que aparegui la figura (ms). */
+/** Temps que se senten les passes abans que aparegui la figura (ms), un cop acabada la frase «On sou?». */
 export const DURADA_PASSES_MS = 4800;
 type Motiu = "mirat" | "temps";
 
@@ -119,6 +121,14 @@ interface Personatge {
   /** Un ull una mica més gran que l'altre: res no és del tot simètric. */
   asim: number;
   costat: 1 | -1;
+  /** Guió de la veu: quan comencen les passes (després de «On sou?»), si ja han sonat i per on vénen. */
+  passesInici: number;
+  passesFetes: boolean;
+  panPasses: number;
+  /** «A la força!»: des de quan es pot dir, si ja s'ha dit i quant fa que el jugador l'enfoca. */
+  forcaPermesDesde: number;
+  forcaDita: boolean;
+  enfocatMs: number;
   /** S'ha espantat (crit): es gira i marxa. `gir` és quant s'ha girat (0-1). */
   espantat: boolean;
   espantatDesde: number;
@@ -168,6 +178,12 @@ function nou(v: Varietat, espera: number, ara: number): Personatge {
     espantat: false,
     espantatDesde: 0,
     gir: 0,
+    passesInici: 0,
+    passesFetes: false,
+    panPasses: 0,
+    forcaPermesDesde: 0,
+    forcaDita: false,
+    enfocatMs: 0,
     distInici: v.distMin,
   };
 }
@@ -187,6 +203,8 @@ function aparicio(p: Personatge, mirada: Mirada, ara: number) {
   p.espantat = false;
   p.gir = 0;
   p.camina = 0;
+  p.forcaDita = false;
+  p.enfocatMs = 0;
   p.alt = p.v.tipus === "ulls" ? aleatori(p.v.altMin, p.v.altMax) : 0;
   p.costat = Math.random() < 0.5 ? -1 : 1;
   p.fase = "apareix";
@@ -205,7 +223,8 @@ function actualitza(
   dt: number,
   figuraActiva: boolean,
   rumbCami: number | null,
-  alPasses?: (pan: number, duradaMs: number) => void
+  alPasses?: (pan: number, duradaMs: number) => void,
+  alVeu?: (nom: "on-sou" | "alto" | "a-la-forca") => number
 ) {
   // Mentre hi ha la figura (o se'n senten les passes) no hi ha ulls a la foscor.
   if (p.v.tipus === "ulls" && figuraActiva && (p.fase === "apareix" || p.fase === "present")) {
@@ -231,20 +250,31 @@ function actualitza(
             const triaDavant = Math.abs(diferenciaRumb(davant, mirada.rumb)) <= Math.abs(diferenciaRumb(darrere, mirada.rumb));
             p.rumb = ((triaDavant ? davant : darrere) + aleatori(-6, 6) + 360) % 360;
             // Les passes vénen d'aquella banda.
-            alPasses?.(Math.max(-1, Math.min(1, diferenciaRumb(p.rumb, mirada.rumb) / 70)), DURADA_PASSES_MS);
+            p.panPasses = Math.max(-1, Math.min(1, diferenciaRumb(p.rumb, mirada.rumb) / 70));
           } else {
-            alPasses?.(aleatori(-0.35, 0.35), DURADA_PASSES_MS);
+            p.panPasses = aleatori(-0.35, 0.35);
           }
+          // Primer l'Inquisidor: «On sou?»; les passes comencen quan acaba.
+          const durVeu = alVeu?.("on-sou") ?? 0;
+          p.passesInici = ara + (durVeu > 0 ? durVeu + 500 : 0);
+          p.passesFetes = false;
         }
       }
       return;
     case "passes":
-      // Només es senten uns peus que s'acosten; la figura encara no es veu.
-      if (ara - p.desde >= DURADA_PASSES_MS) {
+      // Primer la veu i, després, uns peus que s'acosten; la figura encara no es veu.
+      if (!p.passesFetes && ara >= p.passesInici) {
+        p.passesFetes = true;
+        alPasses?.(p.panPasses, DURADA_PASSES_MS);
+      }
+      if (ara >= p.passesInici + DURADA_PASSES_MS) {
         // Sense camí, apareix al davant, on mira ara el jugador; amb camí, ja té el seu rumb.
         if (rumbCami === null) p.rumb = (mirada.rumb + aleatori(-8, 8) + 360) % 360;
         p.fase = "apareix";
         p.desde = ara;
+        // Quan acaben les passes: «Alto!». «A la força!» ve quan el jugador l'enfoca, passada aquesta frase.
+        const durAlto = alVeu?.("alto") ?? 0;
+        p.forcaPermesDesde = ara + durAlto + 400;
       }
       return;
     case "apareix":
@@ -290,6 +320,16 @@ function actualitza(
   // La figura es queda: un cop apareix al davant no desapareix ni en mirar-la ni amb el temps.
   // Camina cap al jugador (caminada falsa, sense esquelet) i s'atura a DIST_PARADA.
   if (p.v.tipus === "silueta") {
+    // «A la força!»: quan el jugador l'enfoca (la té dins del camp de visió) mig segon.
+    if (!p.espantat && !p.forcaDita && ara >= p.forcaPermesDesde) {
+      const dxF = Math.abs(diferenciaRumb(p.rumb, mirada.rumb));
+      const dyF = Math.abs(Math.atan(((p.v.alcada * 0.86) - ALCADA_CAMERA) / p.dist) / RAD - mirada.elevacio);
+      p.enfocatMs = dxF < 14 && dyF < 28 ? p.enfocatMs + dt : Math.max(0, p.enfocatMs - dt);
+      if (p.enfocatMs > 500) {
+        p.forcaDita = true;
+        alVeu?.("a-la-forca");
+      }
+    }
     if (p.espantat) {
       // Es gira d'esquena i marxa corrent; passats uns segons, s'esvaeix.
       p.gir = Math.min(1, p.gir + dt / 700);
@@ -488,6 +528,7 @@ export function EscenaUlls({
   crit = 0,
   alPasses,
   alCaminar,
+  alVeu,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const manual = useRef<Mirada>({ rumb: 0, elevacio: 0 });
@@ -497,6 +538,7 @@ export function EscenaUlls({
   const depuracioRef = useRef(depuracio);
   const camiRef = useRef(rumbCami);
   const caminarRef = useRef(alCaminar);
+  const veuRef = useRef(alVeu);
   const microRef = useRef(nivellMicro);
   const critRef = useRef(crit);
 
@@ -507,9 +549,10 @@ export function EscenaUlls({
     depuracioRef.current = depuracio;
     camiRef.current = rumbCami;
     caminarRef.current = alCaminar;
+    veuRef.current = alVeu;
     microRef.current = nivellMicro;
     critRef.current = crit;
-  }, [arrossegar, alPasses, figura3D, depuracio, rumbCami, alCaminar, nivellMicro, crit]);
+  }, [arrossegar, alPasses, figura3D, depuracio, rumbCami, alCaminar, nivellMicro, crit, alVeu]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -586,7 +629,7 @@ export function EscenaUlls({
       // El més llunyà primer, perquè el que és a prop el tapi.
       const ordenats = [...personatges].sort((a, b) => b.dist - a.dist);
       for (const p of ordenats) {
-        actualitza(p, lectura, ara, dt, figuraActiva, camiRef.current, passesRef.current);
+        actualitza(p, lectura, ara, dt, figuraActiva, camiRef.current, passesRef.current, veuRef.current);
         const alfa = opacitat(p, ara);
         const estat3D = figura3DRef.current;
         if (p.v.tipus === "silueta" && estat3D) {
@@ -630,7 +673,7 @@ export function EscenaUlls({
       const guia = personatges.find((q) => q.v.tipus === "silueta");
       if (guia && !guia.espantat && (guia.fase === "passes" || guia.fase === "apareix" || guia.fase === "present")) {
         const enPasses = guia.fase === "passes";
-        const progres = enPasses ? Math.min(1, (ara - guia.desde) / DURADA_PASSES_MS) : 1;
+        const progres = enPasses ? Math.max(0, Math.min(1, (ara - guia.passesInici) / DURADA_PASSES_MS)) : 1;
         dibuixaVora(ctx, amplada, alcada, diferenciaRumb(guia.rumb, lectura.rumb), enPasses ? 0.4 + 0.6 * progres : 1, enPasses ? 620 : 1400, ara);
       }
 

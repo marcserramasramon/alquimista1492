@@ -19,12 +19,25 @@ let mestre: GainNode | null = null;
 let soroll: AudioBuffer | null = null;
 let gravacio: AudioBuffer | null = null;
 let silenciat = false;
+const veus: Partial<Record<NomVeuAr, AudioBuffer>> = {};
 let caminada: { gain: GainNode; panner: StereoPannerNode | null } | null = null;
 let voltaCaminada: ReturnType<typeof setTimeout> | null = null;
 let volumCaminada = 0;
 let ambient: { aturar: () => void } | null = null;
 
 const URL_PASSES = "/audio/ar/passes-grava.mp3";
+
+/**
+ * Veu de l'Inquisidor (Fra Francesc disfressat): «On sou?» abans de les primeres passes, «Alto!»
+ * quan acaben i «A la força!» quan el jugador l'enfoca. `defecteMs` és la durada que s'assumeix
+ * mentre el fitxer no s'ha carregat (o no pot sonar), perquè el guió no es desfaci.
+ */
+export type NomVeuAr = "on-sou" | "alto" | "a-la-forca";
+const VEUS: Record<NomVeuAr, { url: string; defecteMs: number }> = {
+  "on-sou": { url: "/audio/ar/inquisidor-on-sou.wav", defecteMs: 4600 },
+  alto: { url: "/audio/ar/inquisidor-alto.wav", defecteMs: 900 },
+  "a-la-forca": { url: "/audio/ar/inquisidor-a-la-forca.wav", defecteMs: 2200 },
+};
 const VOLUM = 1;
 /** Volum màxim de les passes d'abans que aparegui la figura (0-1). */
 const VOLUM_PASSES = 0.4;
@@ -77,6 +90,16 @@ export function iniciarSoAr() {
   if (!ctx) return;
   ctx.resume().catch(() => {});
   // Carrega i descodifica la gravació de passes; si falla, sonaran les sintetitzades.
+  for (const nom of Object.keys(VEUS) as NomVeuAr[]) {
+    if (veus[nom]) continue;
+    fetch(VEUS[nom].url)
+      .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(nom))))
+      .then((dades) => ctx.decodeAudioData(dades))
+      .then((buffer) => {
+        veus[nom] = buffer;
+      })
+      .catch(() => {});
+  }
   if (!gravacio) {
     fetch(URL_PASSES)
       .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error("passes"))))
@@ -99,12 +122,28 @@ export function aturarSoAr() {
   mestre = null;
   soroll = null;
   gravacio = null;
+  for (const nom of Object.keys(veus) as NomVeuAr[]) delete veus[nom];
 }
 
 /** Silencia o torna a activar tot el so de l'extra. */
 export function silenciarAr(si: boolean) {
   silenciat = si;
   if (mestre && context) mestre.gain.setTargetAtTime(si ? 0 : VOLUM, context.currentTime, 0.05);
+}
+
+/**
+ * Fa sonar una frase de l'Inquisidor, a volum ple i al centre. Retorna quant dura (ms), perquè qui
+ * l'ha demanada pugui encadenar el que ve després (les passes, la següent frase...).
+ */
+export function sonarVeuAr(nom: NomVeuAr): number {
+  const buffer = veus[nom];
+  const ctx = context;
+  if (!buffer || !ctx || !mestre || ctx.state !== "running") return VEUS[nom].defecteMs;
+  const font = ctx.createBufferSource();
+  font.buffer = buffer;
+  font.connect(mestre);
+  font.start(ctx.currentTime + 0.03);
+  return buffer.duration * 1000;
 }
 
 // ───────────────────────────── Ambient ─────────────────────────────
