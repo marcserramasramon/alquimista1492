@@ -43,11 +43,13 @@ export interface EstatFigura3D {
   elevacio: number;
   /** Alçada de la figura (m). */
   altura: number;
+  /** Quant camina (0 = quieta, 1 = caminant): mou el cos, la capa i els peus. */
+  camina: number;
   llavor: number;
 }
 
 export function estatFigura3DInicial(): EstatFigura3D {
-  return { alfa: 0, dx: 0, dist: 15, elevacio: 0, altura: 1.9, llavor: 0 };
+  return { alfa: 0, dx: 0, dist: 15, elevacio: 0, altura: 1.9, camina: 0, llavor: 0 };
 }
 
 export function webglDisponible(): boolean {
@@ -105,6 +107,9 @@ export function Figura3D({ estat, onError }: Props) {
         // Textura tal com ve del model (ja porta la llum), una mica atenuada, amb l'ondulació de la
         // capa: la roba es mou més com més a prop és de terra.
         const temps = { value: 0 };
+        // Caminada falsa (sense esquelet): intensitat (0-1) i fase del cicle de pas (radians).
+        const camina = { value: 0 };
+        const cicle = { value: 0 };
         const materials: import("three").Material[] = [];
         gltf.scene.traverse((node) => {
           const malla = node as import("three").Mesh;
@@ -118,6 +123,8 @@ export function Figura3D({ estat, onError }: Props) {
           });
           material.onBeforeCompile = (shader) => {
             shader.uniforms.uTemps = temps;
+            shader.uniforms.uCamina = camina;
+            shader.uniforms.uCicle = cicle;
             // Més contrast i més fosc, i la llum groga de l'espelma sobre la roba a prop del fanal.
             shader.fragmentShader = shader.fragmentShader
               .replace("#include <common>", `#include <common>
@@ -134,6 +141,8 @@ varying vec3 vPosLocal;`)
               );
             shader.vertexShader = shader.vertexShader
               .replace("#include <common>", `#include <common>
+uniform float uCamina;
+uniform float uCicle;
 uniform float uTemps;
 varying vec3 vPosLocal;`)
               .replace(
@@ -143,7 +152,16 @@ varying vec3 vPosLocal;`)
                 float roba = pow(1.0 - clamp(position.y, 0.0, 1.0), 1.6);
                 transformed.x += sin(uTemps * 1.3 + position.y * 5.0) * 0.022 * roba;
                 transformed.z += sin(uTemps * 1.7 + position.y * 4.0 + position.x * 6.0) * 0.018 * roba;
-                transformed.y *= 1.0 + 0.007 * sin(uTemps * 1.1);`
+                transformed.y *= 1.0 + 0.007 * sin(uTemps * 1.1);
+                // Caminada falsa: la roba oscil·la més i els peus s'alternen (un aixeca i avança mentre l'altre queda).
+                transformed.x += sin(uCicle) * 0.02 * roba * uCamina;
+                float cos2 = step(0.0, position.x) * 2.0 - 1.0;
+                float fase = uCicle + (cos2 > 0.0 ? 0.0 : 3.14159);
+                float peu = smoothstep(0.11, 0.0, position.y);
+                float cama = smoothstep(0.40, 0.0, position.y);
+                transformed.y += max(0.0, sin(fase)) * 0.05 * peu * uCamina;
+                transformed.z += sin(fase + 1.5708) * 0.055 * peu * uCamina;
+                transformed.z += sin(fase + 1.5708) * 0.03 * cama * uCamina;`
               );
           };
           malla.material = material;
@@ -206,6 +224,7 @@ varying vec3 vPosLocal;`)
         let amplada = 0;
         let alcada = 0;
         let pintat = false;
+        let anteriorMs = performance.now();
         const inici = performance.now();
 
         const dibuixa = (ara: number) => {
@@ -230,20 +249,33 @@ varying vec3 vPosLocal;`)
           } else {
             const t = (ara - inici) / 1000;
             temps.value = t;
+            const dtS = Math.min(0.1, (ara - anteriorMs) / 1000);
+            anteriorMs = ara;
+            camina.value = e.camina;
+            // 0,7 cicles per segon = 1,4 passos per segon: una caminada lenta, amenaçadora.
+            cicle.value += dtS * Math.PI * 2 * 0.7 * e.camina;
+            const c = cicle.value;
             camera.rotation.x = e.elevacio * RAD;
             const dx = e.dx * RAD;
             const x = e.dist * Math.sin(dx);
             const z = -e.dist * Math.cos(dx);
-            grup.position.set(x, -ALCADA_CAMERA, z);
+            // Cada pas fa botar una mica el cos (dues bots per cicle) i el balanceja de costat a costat.
+            const escala = e.altura / 1.9;
+            const bot = ((1 - Math.cos(2 * c)) / 2) * 0.045 * escala * e.camina;
+            grup.position.set(x, -ALCADA_CAMERA + bot, z);
             grup.scale.setScalar(e.altura / alcadaModel);
             // Mira cap a la càmera, amb un petit balanceig.
-            grup.rotation.y = Math.atan2(-x, -z) + GIR_DAVANT_GRAUS * RAD + Math.sin(t * 0.5 + e.llavor) * 0.06;
+            grup.rotation.order = "YXZ";
+            grup.rotation.y =
+              Math.atan2(-x, -z) + GIR_DAVANT_GRAUS * RAD + Math.sin(t * 0.5 + e.llavor) * 0.06 + Math.sin(c) * 0.06 * e.camina;
+            grup.rotation.x = 0.05 * e.camina; // s'inclina una mica cap endavant
+            grup.rotation.z = Math.sin(c) * 0.04 * e.camina; // balanceig de costat a costat
             for (const m of materials) m.opacity = e.alfa;
             // La flama de l'espelma tremola i el fanal es balanceja una mica.
             const flama = 0.8 + 0.12 * Math.sin(t * 7.3) + 0.08 * Math.sin(t * 13.7 + 1.3) + 0.05 * Math.sin(t * 23);
             if (fanal) {
               fanal.material.opacity = e.alfa;
-              fanal.material.rotation = Math.sin(t * 1.4 + e.llavor) * 0.05;
+              fanal.material.rotation = Math.sin(t * 1.4 + e.llavor) * 0.05 + Math.sin(c + 0.8) * 0.18 * e.camina;
             }
             if (resplendor) {
               resplendor.material.opacity = e.alfa * flama * 0.85;

@@ -110,11 +110,17 @@ interface Personatge {
   /** Un ull una mica més gran que l'altre: res no és del tot simètric. */
   asim: number;
   costat: 1 | -1;
+  /** Quant camina (0-1), suavitzat: arrenca i s'atura a poc a poc. */
+  camina: number;
 }
 
 /** Imatge de la figura (public/images/ar/figura-encaputxada.webp, retallada a la figura) i la seva proporció. */
 export const IMATGE_FIGURA = "/images/ar/figura-encaputxada.webp";
 const FIGURA = { ample: 306 / 699 };
+
+/** Fins on s'acosta la figura caminant (m) i la velocitat a la qual camina (m/s). */
+const DIST_PARADA = 4.5;
+const VELOCITAT_CAMINADA = 0.45;
 
 const ALCADA_CAMERA = 1.5;
 const FOV_HORITZONTAL = 52;
@@ -140,6 +146,7 @@ function nou(v: Varietat, espera: number, ara: number): Personatge {
     llavor: Math.random() * 1000,
     asim: aleatori(0.86, 1.14),
     costat: Math.random() < 0.5 ? -1 : 1,
+    camina: 0,
   };
 }
 
@@ -254,7 +261,13 @@ function actualitza(
 
   if (p.fase !== "present") return;
   // La figura es queda: un cop apareix al davant no desapareix ni en mirar-la ni amb el temps.
-  if (p.v.tipus === "silueta") return;
+  // Camina cap al jugador (caminada falsa, sense esquelet) i s'atura a DIST_PARADA.
+  if (p.v.tipus === "silueta") {
+    const objectiu = p.dist > DIST_PARADA + 0.05 ? 1 : 0;
+    p.camina += (objectiu - p.camina) * Math.min(1, dt / 500);
+    p.dist = Math.max(DIST_PARADA, p.dist - VELOCITAT_CAMINADA * p.camina * (dt / 1000));
+    return;
+  }
 
   // Només els ulls: si els mires fix, se n'adonen i desapareixen.
   const dx = diferenciaRumb(p.rumb, mirada.rumb);
@@ -494,6 +507,7 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
           e.dist = p.dist;
           e.elevacio = lectura.elevacio;
           e.altura = p.v.alcada;
+          e.camina = p.camina;
           e.llavor = p.llavor;
           continue;
         }
