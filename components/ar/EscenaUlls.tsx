@@ -81,7 +81,7 @@ const VARIETATS: Record<string, Varietat> = {
   alt: { ...BASE, color: "255, 70, 25", distMin: 34, distMax: 46, altMin: 2.6, altMax: 3.9, escala: 3 },
   /** Vermell fosc, amb pupil·la vertical de bèstia. */
   bestia: { ...BASE, color: "235, 20, 45", distMin: 24, distMax: 34, altMin: 0.9, altMax: 1.5, escala: 2.4, pupilaVertical: true },
-  monjo: { ...BASE, tipus: "silueta", distMin: 13, distMax: 20 },
+  monjo: { ...BASE, tipus: "silueta", distMin: 6, distMax: 10 },
 };
 
 interface Personatge {
@@ -198,7 +198,7 @@ function actualitza(
       if (ara - p.desde >= durada(p, "apareix")) {
         p.fase = "present";
         p.desde = ara;
-        p.fins = ara + aleatori(14_000, 26_000);
+        p.fins = ara + (p.v.tipus === "silueta" ? aleatori(8000, 14_000) : aleatori(14_000, 26_000));
       }
       break;
     case "present":
@@ -240,9 +240,11 @@ function actualitza(
   const dy = Math.abs(elevacio - mirada.elevacio);
 
   // Si el mires fix, se n'adona i fuig.
-  if (Math.abs(dx) < 9 && dy < 16) {
+  // La figura té un con de mirada més ample i s'espanta abans que els ulls.
+  const con = p.v.tipus === "ulls" ? { dx: 9, dy: 16, llindar: 800 } : { dx: 16, dy: 26, llindar: 600 };
+  if (Math.abs(dx) < con.dx && dy < con.dy) {
     p.mirat += dt;
-    const llindar = p.v.tipus === "ulls" ? 800 : 1300;
+    const llindar = con.llindar;
     if (p.mirat > llindar) {
       p.fase = "fuig";
       p.motiu = "mirat";
@@ -399,12 +401,9 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, alPasses }: Pr
     figura.src = IMATGE_FIGURA;
 
     const inici = performance.now();
-    const personatges: Personatge[] = [
-      nou(VARIETATS.normal, 1500, inici),
-      nou(VARIETATS.alt, 6000, inici),
-      nou(VARIETATS.bestia, 12_000, inici),
-      nou(VARIETATS.monjo, 5000, inici),
-    ];
+    // Només la figura. Els ulls a la foscor (VARIETATS.normal, alt, bestia, baix) continuen
+    // definits: per tornar-los, afegeix-los aquí amb nou(VARIETATS.normal, 1500, inici), etc.
+    const personatges: Personatge[] = [nou(VARIETATS.monjo, 4000, inici)];
 
     let anterior = inici;
     let frame = 0;

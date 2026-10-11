@@ -11,6 +11,9 @@ export const MODEL_FIGURA_3D = "/models/capa-encaputxada.glb";
  */
 const GIR_DAVANT_GRAUS = 0;
 
+/** 1 = tal com ve la textura; menys = més fosca. */
+const BRILLANTOR_FIGURA = 0.75;
+
 const FOV_HORITZONTAL = 52;
 const ALCADA_CAMERA = 1.5;
 const RAD = Math.PI / 180;
@@ -99,13 +102,19 @@ export function Figura3D({ estat, onError }: Props) {
           const original = malla.material as import("three").MeshStandardMaterial;
           const material = new THREE.MeshBasicMaterial({
             map: original.map,
-            // Per sobre d'1: la textura és molt fosca i, de nit i de lluny, es perdria.
-            color: new THREE.Color(1.8, 1.8, 1.8),
+            color: new THREE.Color(0xffffff),
             transparent: true,
             side: THREE.DoubleSide,
           });
           material.onBeforeCompile = (shader) => {
             shader.uniforms.uTemps = temps;
+            // Més contrast i més fosc: es retallen els clars i s'enfosqueix el conjunt.
+            shader.fragmentShader = shader.fragmentShader.replace(
+              "#include <map_fragment>",
+              `#include <map_fragment>
+              diffuseColor.rgb = clamp((diffuseColor.rgb - 0.12) * 1.6 + 0.04, 0.0, 1.0);
+              diffuseColor.rgb *= ${BRILLANTOR_FIGURA.toFixed(2)};`
+            );
             shader.vertexShader = shader.vertexShader
               .replace("#include <common>", "#include <common>\nuniform float uTemps;")
               .replace(
