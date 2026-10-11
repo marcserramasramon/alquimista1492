@@ -49,7 +49,6 @@ import { VistaEnviarAvis } from "@/components/vistes/VistaEnviarAvis";
 import { VistaAjuda } from "@/components/vistes/VistaAjuda";
 import { VistaBonesPractiques } from "@/components/vistes/VistaBonesPractiques";
 import { GuiaManual } from "@/components/player/GuiaManual";
-import { TargetaExtraAr } from "@/components/player/ExtraAr";
 import { VistaExtraAr } from "@/components/vistes/VistaExtraAr";
 import { EXTRES_AR } from "@/content/public/extres";
 import { MANUAL_ARRIBAR, MANUAL_HUB, MANUAL_RESOLDRE } from "@/content/public/textos";
@@ -129,6 +128,7 @@ function hub(
       marcadors={marcadors}
       fitaArribadaId={fitaArribadaId}
       onAvis={noop}
+      onExtraAr={noop}
     />
   );
 }
@@ -139,11 +139,12 @@ function hub(
  * previ. Pantalla de regressió: Pentagrama ha de dibuixar-hi les cinc puntes igualment
  * (abans, en desaparèixer un node, l'estrella s'encongia en una creu de quatre puntes).
  */
-function hubAireAmagat(fase: 1 | 2 = 1) {
+function hubAireAmagat(fase: 1 | 2 = 1, veurePas = false) {
   // Fase 2: el pas previ ja és obert i la fita real de l'Aire ja surt (encara tancada).
-  const pasObert = fase === 2;
+  // `veurePas`: fase 1 amb el pas obert i la seva fitxa a la vista (on hi ha el botó de l'extra).
+  const pasObert = fase === 2 || veurePas;
   const estacions: EstacioMapa[] = [
-    ...estacionsAmbProgres(RESOLTES_MITJA_PARTIDA).filter((e) => pasObert || e.id !== "aire"),
+    ...estacionsAmbProgres(RESOLTES_MITJA_PARTIDA).filter((e) => fase === 2 || e.id !== "aire"),
     ...getPassosPrevis().map((p) => ({
       id: p.id,
       nom: p.nom,
@@ -165,8 +166,9 @@ function hubAireAmagat(fase: 1 | 2 = 1) {
       totesResoltes={false}
       onAnarEstacio={noop}
       onLlegirMissatge={noop}
-      seleccionadaInicialId={fase === 2 ? "aire" : null}
+      seleccionadaInicialId={fase === 2 ? "aire" : veurePas ? "aire-pas" : null}
       marcadors={[]}
+      onExtraAr={noop}
     />
   );
 }
@@ -277,6 +279,27 @@ function pantallesFita(estacio: Estacio): Pantalla[] {
               />
             ),
           },
+          ...(estacio.element === "aire"
+            ? [
+                {
+                  ...base,
+                  id: "fita-aire-arribada",
+                  titol: `${estacio.nom} · vídeo d'arribada`,
+                  descripcio:
+                    "Només l'Aire: primer el vídeo d'arribada (amb el seu so, si en té), en acabar sona la veu de Fra Francesc i, quan ella acaba, es torna a la pantalla.",
+                  render: () => (
+                    <VideoFita
+                      video="/video/arribada-fita-aire.mp4"
+                      veu="/audio/arribada-fita-aire.mp3"
+                      ambient
+                      veuDespres
+                      etiqueta="Vídeo d'arribada: Fra Francesc"
+                      onAcabat={noop}
+                    />
+                  ),
+                },
+              ]
+            : []),
         ]
       : []),
     {
@@ -593,6 +616,13 @@ export const PANTALLES: Pantalla[] = [
     render: () => hubAireAmagat(1),
   },
   {
+    id: "hub-aire-pas-1",
+    grup: "hub",
+    titol: "Hub · pas 1 de l'Aire (Creu del Pujolar), obert",
+    descripcio: "El QR del pas previ ja s'ha escanejat: la fitxa porta el botó «Mirar la foscor», que activa l'extra de realitat augmentada.",
+    render: () => hubAireAmagat(1, true),
+  },
+  {
     id: "hub-aire-fase-2",
     grup: "hub",
     titol: "Hub · l'Aire, pas 2 de 2",
@@ -759,18 +789,6 @@ export const PANTALLES: Pantalla[] = [
       <>
         {getPantalla("hub-mitja-partida")?.render(dades)}
         <VistaBonesPractiques fixa onAcabar={noop} />
-      </>
-    ),
-  },
-  {
-    id: "extra-ar-targeta",
-    grup: "hub",
-    titol: "Hub · extra AR (targeta)",
-    descripcio: "En arribar al punt de l'extra (content/public/extres.ts) l'app ofereix mirar els ulls i les siluetes.",
-    render: (dades) => (
-      <>
-        {getPantalla("hub-mitja-partida")?.render(dades)}
-        <TargetaExtraAr extra={EXTRES_AR[0]} onObrir={noop} onDescartar={noop} />
       </>
     ),
   },

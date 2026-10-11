@@ -110,7 +110,8 @@ export default function EstacioPage() {
 
     async function hiHaVideoArribada(data: EstacioData): Promise<boolean> {
       const element = data.estacio.element;
-      if (!element) return false;
+      // El pas previ (check-in) només té la veu de la fitxa, sense vídeo.
+      if (!element || data.estacio.pasPrevi) return false;
       const hiEs = await fetch(`/video/arribada-fita-${element}.mp4`, { method: "HEAD" })
         .then((r) => r.ok && (r.headers.get("content-type") ?? "").startsWith("video"))
         .catch(() => false);
@@ -150,6 +151,8 @@ export default function EstacioPage() {
         <VideoFita
           video={`/video/arribada-fita-${dades.estacio.element}.mp4`}
           veu={`/audio/arribada-fita-${dades.estacio.element}.mp3`}
+          ambient={dades.estacio.element === "aire"}
+          veuDespres={dades.estacio.element === "aire"}
           etiqueta="Vídeo d'arribada: Fra Francesc"
           onAcabat={acabarArribada}
         />

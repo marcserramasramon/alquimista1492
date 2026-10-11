@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import type { EstacioMapa, MarcadorMapa, VideoMapa } from "@/components/player/MapaEquip";
 import { EnviarAvis } from "@/components/player/EnviarAvis";
 import { ObrirFita } from "@/components/player/ObrirFita";
-import { ExtraAr } from "@/components/player/ExtraAr";
 import { EVENT_MISSATGE_LLEGIT } from "@/components/player/MissatgesMaster";
 import { VistaAjuda } from "@/components/vistes/VistaAjuda";
 import { VistaHub } from "@/components/vistes/VistaHub";
@@ -218,9 +217,9 @@ export default function HubPage() {
         onAnarEstacio={anarEstacio}
         onLlegirMissatge={() => router.push("/missatge?tornada=1")}
         onAvis={() => setAjudaOberta(true)}
+        onExtraAr={(id) => router.push(`/joc/ar/${id}`)}
       />
       {escanejant && <ObrirFita onOberta={obertaPerCodi} onTancar={() => setEscanejant(false)} />}
-      <ExtraAr posicio={posicio} onObrir={(id) => router.push(`/joc/ar/${id}`)} />
       {bonesPractiques ? (
         <VistaBonesPractiques onAcabar={acabarBonesPractiques} />
       ) : (

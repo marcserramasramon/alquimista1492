@@ -14,6 +14,8 @@ export interface VideoFitaProps {
   veu?: string;
   /** El vídeo té el seu so ambient a part (/audio/video/*.mp3); sona al 33%, sota la veu. Els d'arribada no en tenen: només la veu. */
   ambient?: boolean;
+  /** La veu no sona amb el vídeo sinó després: primer el vídeo (amb el seu so, a volum ple), en acabar arrenca la veu i, quan ella acaba, es crida `onAcabat`. */
+  veuDespres?: boolean;
   /** Text per a lectors de pantalla. */
   etiqueta?: string;
   /** Element de la fita resolta: en acabar el vídeo surt l'animació de fita completada (AnimacioFitaCompleta). */
@@ -36,13 +38,13 @@ const MINIM_ANIMACIO_MS = 4_000;
  * congelat a l'últim fotograma fins que la veu acaba, i només llavors es passa a la pantalla de la fita.
  * Si el fitxer de vídeo no hi és o falla, `onAcabat` es crida de seguida i la veu continua a la fita.
  */
-export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del fragment trobat", animacio, resolts, onAcabat }: VideoFitaProps) {
+export function VideoFita({ video, veu, ambient = false, veuDespres = false, etiqueta = "Vídeo del fragment trobat", animacio, resolts, onAcabat }: VideoFitaProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [animant, setAnimant] = useState(false);
   // Sense animació no hi ha mínim a esperar.
   const minimFet = useRef(!animacio);
   const acabatCridat = useRef(false);
-  useSoVideo(videoRef, video, { volum: 0.33, actiu: ambient });
+  useSoVideo(videoRef, video, { volum: veuDespres ? 1 : 0.33, actiu: ambient });
 
   function acabar() {
     if (acabatCridat.current) return;
@@ -58,8 +60,11 @@ export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del 
     if (videoAcabat.current && !veuPendent.current && minimFet.current) acabar();
   }
 
-  useEffect(() => {
-    if (!veu) return;
+  const veuEngegada = useRef(false);
+
+  function engegarVeu() {
+    if (!veu || veuEngegada.current) return;
+    veuEngegada.current = true;
     veuPendent.current = true;
     marcarEscoltada(veu);
     void sonarVeu(veu, 0, () => {
@@ -71,6 +76,11 @@ export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del 
       veuPendent.current = false;
       provarAcabar();
     });
+  }
+
+  // Per defecte la veu arrenca amb el vídeo; amb `veuDespres` ho fa en acabar-se (enAcabar).
+  useEffect(() => {
+    if (!veuDespres) engegarVeu();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [veu]);
 
@@ -83,13 +93,16 @@ export function VideoFita({ video, veu, ambient = false, etiqueta = "Vídeo del 
     // Vídeo fallit (sense fitxer, corrupte): no hi ha fotograma a congelar, es passa de seguida.
     const enError = () => {
       clearTimeout(reserva);
-      acabar();
+      // Amb veu darrere el vídeo, encara cal que soni abans de tornar a la pantalla.
+      if (veuDespres && veu) enAcabar();
+      else acabar();
     };
     // Vídeo acabat: es queda l'últim fotograma fins que la veu s'acabi. La reserva cobreix una veu que no arribi mai al final.
     const enAcabar = () => {
       clearTimeout(reserva);
       videoAcabat.current = true;
       reserva = setTimeout(acabar, RESERVA_VEU_MS);
+      if (veuDespres) engegarVeu();
       // L'animació surt sobre l'últim fotograma: dura fins que s'acabi la veu, i mai menys del mínim.
       if (animacio) {
         setAnimant(true);
