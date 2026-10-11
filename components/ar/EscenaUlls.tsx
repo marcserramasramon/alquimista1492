@@ -183,13 +183,16 @@ function actualitza(
         aparicio(p, mirada, ara);
         if (p.v.tipus === "silueta") {
           p.fase = "passes";
-          alPasses?.(Math.max(-1, Math.min(1, diferenciaRumb(p.rumb, mirada.rumb) / 70)), DURADA_PASSES_MS);
+          // Les passes vénen del davant, un pèl cap a un costat.
+          alPasses?.(aleatori(-0.35, 0.35), DURADA_PASSES_MS);
         }
       }
       return;
     case "passes":
       // Només es senten uns peus que s'acosten; la figura encara no es veu.
       if (ara - p.desde >= DURADA_PASSES_MS) {
+        // Apareix al davant, on mira ara el jugador (no on mirava quan van començar les passes).
+        p.rumb = (mirada.rumb + aleatori(-8, 8) + 360) % 360;
         p.fase = "apareix";
         p.desde = ara;
       }
@@ -242,7 +245,9 @@ function actualitza(
   // Si el mires fix, se n'adona i fuig.
   // La figura té un con de mirada més ample i s'espanta abans que els ulls.
   const con = p.v.tipus === "ulls" ? { dx: 9, dy: 16, llindar: 800 } : { dx: 16, dy: 26, llindar: 600 };
-  if (Math.abs(dx) < con.dx && dy < con.dy) {
+  // Com que apareix al davant, els primers segons no s'espanta: li dona temps de veure-la.
+  const ambGracia = p.v.tipus === "silueta" && ara - p.desde < 3000;
+  if (!ambGracia && Math.abs(dx) < con.dx && dy < con.dy) {
     p.mirat += dt;
     const llindar = con.llindar;
     if (p.mirat > llindar) {
