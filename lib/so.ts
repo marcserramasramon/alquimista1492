@@ -568,6 +568,23 @@ export function sonarTemps() {
 const DURADA_MUSICA = 120;
 /** Volum màxim de la música: baix perquè no tapi la veu de Fra Francesc. */
 const VOLUM_MUSICA = 0.2;
+/** Cap on es puja la música quan acaba la veu (volum complet) i en quants segons hi arriba. */
+const VOLUM_MUSICA_PLE = 1;
+const PUJADA_MUSICA = 6;
+
+/** Nivell de la música que sona ara (null si no sona): el que `pujarMusica` fa créixer. */
+let nivellMusica: GainNode | null = null;
+
+/** Puja la música de fons, progressivament, del volum baix al complet. No fa res si no sona. */
+export function pujarMusica(segons = PUJADA_MUSICA) {
+  const nivell = nivellMusica;
+  const ctx = context;
+  if (!nivell || !ctx) return;
+  const ara = ctx.currentTime;
+  nivell.gain.cancelScheduledValues(ara);
+  nivell.gain.setValueAtTime(nivell.gain.value, ara);
+  nivell.gain.linearRampToValueAtTime(VOLUM_MUSICA_PLE, ara + segons);
+}
 const FOS_FINAL = 6;
 
 /**
@@ -586,9 +603,15 @@ export function iniciarMusica(nom: NomMusica = "guardians", enAcabar?: () => voi
   const t0 = ctx.currentTime;
   const fi = t0 + DURADA_MUSICA;
   volum.gain.setValueAtTime(0.0001, t0);
-  volum.gain.exponentialRampToValueAtTime(VOLUM_MUSICA, t0 + 2);
-  volum.gain.setValueAtTime(VOLUM_MUSICA, fi - FOS_FINAL);
+  volum.gain.exponentialRampToValueAtTime(1, t0 + 2);
+  volum.gain.setValueAtTime(1, fi - FOS_FINAL);
   volum.gain.exponentialRampToValueAtTime(0.0001, fi);
+
+  // Volum de fons (el que puja quan acaba la veu), a part de l'entrada i el fos de `volum`.
+  const nivell = ctx.createGain();
+  nivell.gain.value = VOLUM_MUSICA;
+  volum.connect(nivell);
+  nivellMusica = nivell;
 
   let aturada = false;
   let aturarFont: (() => void) | null = null;
@@ -607,7 +630,11 @@ export function iniciarMusica(nom: NomMusica = "guardians", enAcabar?: () => voi
     } catch {
       // Ja aturat.
     }
-    setTimeout(() => volum.disconnect(), 1600);
+    setTimeout(() => {
+      volum.disconnect();
+      nivell.disconnect();
+      if (nivellMusica === nivell) nivellMusica = null;
+    }, 1600);
     enAcabar?.();
   };
   rellotge.start(t0);
@@ -617,7 +644,7 @@ export function iniciarMusica(nom: NomMusica = "guardians", enAcabar?: () => voi
     if (aturada) return;
     try {
       if (buffer) {
-        volum.connect(ctx.destination);
+        nivell.connect(ctx.destination);
         const font = ctx.createBufferSource();
         font.buffer = buffer;
         font.loop = true;
@@ -625,7 +652,7 @@ export function iniciarMusica(nom: NomMusica = "guardians", enAcabar?: () => voi
         font.start();
         aturarFont = () => font.stop(ctx.currentTime + 1.5);
       } else {
-        volum.connect(sortida(ctx));
+        nivell.connect(sortida(ctx));
         aturarFont = SINTESI_MUSICA[nom](ctx, volum, ctx.currentTime + 0.05);
       }
     } catch {
@@ -654,7 +681,11 @@ export function iniciarMusica(nom: NomMusica = "guardians", enAcabar?: () => voi
     } catch {
       // Ja aturat.
     }
-    setTimeout(() => volum.disconnect(), 1600);
+    setTimeout(() => {
+      volum.disconnect();
+      nivell.disconnect();
+      if (nivellMusica === nivell) nivellMusica = null;
+    }, 1600);
   };
 }
 

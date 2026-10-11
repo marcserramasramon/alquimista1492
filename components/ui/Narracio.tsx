@@ -28,18 +28,25 @@ export function marcarEscoltada(src: string) {
  * un text a la sessió, la veu sona sola si l'àudio ja està desbloquejat (hi ha hagut
  * un toc); si no, cal tocar el botó. Si el fitxer no existeix, el botó no surt.
  */
-export function BotoVeu({ src, retard = 0 }: { src: string; retard?: number }) {
+export function BotoVeu({ src, retard = 0, alAcabar }: { src: string; retard?: number; alAcabar?: () => void }) {
   const [estat, setEstat] = useState<Estat>("carregant");
   const reproduccio = useRef<Reproduccio | null>(null);
   const posicio = useRef(0);
   const muntat = useRef(true);
+  const alAcabarRef = useRef(alAcabar);
+  useEffect(() => {
+    alAcabarRef.current = alAcabar;
+  });
 
   async function engegar() {
     setEstat("sonant");
     const r = await sonarVeu(src, posicio.current, () => {
       posicio.current = 0;
       reproduccio.current = null;
-      if (muntat.current) setEstat("aturada");
+      if (muntat.current) {
+        setEstat("aturada");
+        alAcabarRef.current?.();
+      }
     });
     if (!muntat.current) {
       r?.aturar();
@@ -123,6 +130,7 @@ export function Narracio({
   etiqueta,
   color,
   retardVeu,
+  alAcabarVeu,
   accio,
   children,
   className = "",
@@ -132,6 +140,8 @@ export function Narracio({
   color?: string;
   /** Mil·lisegons d'espera abans que la veu soni sola (per no trepitjar un so de la pantalla). */
   retardVeu?: number;
+  /** Quan la veu s'acaba sola (no si es pausa). */
+  alAcabarVeu?: () => void;
   /** Botó a la cantonada quan el text no té àudio (p. ex. tornar a veure el vídeo). */
   accio?: React.ReactNode;
   /** Contingut extra al final (signatura, lema...). */
@@ -154,7 +164,7 @@ export function Narracio({
       {text.audio || accio ? (
         <div className="flex items-start justify-between gap-3">
           {capcalera || <span />}
-          {text.audio ? <BotoVeu src={text.audio} retard={retardVeu} /> : accio}
+          {text.audio ? <BotoVeu src={text.audio} retard={retardVeu} alAcabar={alAcabarVeu} /> : accio}
         </div>
       ) : (
         capcalera

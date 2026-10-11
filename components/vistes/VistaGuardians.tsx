@@ -7,6 +7,7 @@ import { BotoMusica } from "@/components/ui/BotoMusica";
 import { Narracio } from "@/components/ui/Narracio";
 import { Marca } from "@/components/ui/Pantalla";
 import { MARGE_MARC_FINAL_PX, MarcFinal } from "@/components/ui/MarcFinal";
+import { pujarMusica } from "@/lib/so";
 import { GUARDIANS, LABORATORI } from "@/content/public/textos";
 
 const VIDEO_FINAL = "/video/final-guardians.mp4";
@@ -37,7 +38,7 @@ export function VistaGuardians() {
   return (
     <>
       {/* Primer el vídeo (amb el seu so) a sobre de tot; la música sona des que comença i la veu
-          del text hi entra als 5 s. En acabar o tancar-lo, es veu la pantalla. */}
+          del text hi entra als 5 s; quan la veu acaba, la música puja al 100%. En acabar o tancar-lo, es veu la pantalla. */}
       {veientVideo && <VideoPantallaCompleta src={VIDEO_FINAL} onAcabat={() => setVeientVideo(false)} />}
       <div
         aria-hidden
@@ -58,9 +59,9 @@ export function VistaGuardians() {
         {/* Pedra a la mateixa mida que el pentagrama del Pla del Masset (VistaFinal). */}
         <div className="relative mx-auto w-64 max-w-full">
           <img
-            src="/images/pedra-filosofal.webp"
+            src="/images/logo/pentagon-blanc-blau.webp"
             alt="La Pedra Filosofal"
-            className="w-full animate-segellar drop-shadow-[0_0_20px_rgb(234_179_8/0.55)]"
+            className="w-full animate-segellar drop-shadow-[0_0_20px_rgb(139_176_211/0.7)]"
           />
           {ESPURNES.map((e, i) => (
             <span
@@ -81,7 +82,7 @@ export function VistaGuardians() {
         <div className="animate-entrar [animation-delay:200ms]">
           <Marca petita sobreFosc />
         </div>
-        <Narracio text={GUARDIANS} retardVeu={5000} className="animate-entrar [animation-delay:350ms]">
+        <Narracio text={GUARDIANS} retardVeu={5000} alAcabarVeu={pujarMusica} className="animate-entrar [animation-delay:350ms]">
           <div className="mt-5 border-t-2 border-dashed border-ink/20 pt-4 text-center">
             <p className="font-display text-lg font-extrabold italic">{GUARDIANS.lema}</p>
             <p className="mt-1 text-base text-ink-soft">{GUARDIANS.traduccioLema}</p>
