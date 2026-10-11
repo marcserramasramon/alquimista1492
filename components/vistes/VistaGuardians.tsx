@@ -34,10 +34,11 @@ const ESPURNES = [
  */
 export function VistaGuardians() {
   const [veientVideo, setVeientVideo] = useState(true);
-  // Primer el vídeo (amb el seu so) i, en acabar o tancar-lo, la pantalla final amb la música.
-  if (veientVideo) return <VideoPantallaCompleta src={VIDEO_FINAL} onAcabat={() => setVeientVideo(false)} />;
   return (
     <>
+      {/* Primer el vídeo (amb el seu so) a sobre de tot; la música ja sona des que comença. En
+          acabar o tancar-lo, es veu la pantalla, la veu del text arrenca llavors. */}
+      {veientVideo && <VideoPantallaCompleta src={VIDEO_FINAL} onAcabat={() => setVeientVideo(false)} />}
       <div
         aria-hidden
         className="fixed inset-0"
@@ -80,12 +81,14 @@ export function VistaGuardians() {
         <div className="animate-entrar [animation-delay:200ms]">
           <Marca petita sobreFosc />
         </div>
-        <Narracio text={GUARDIANS} className="animate-entrar [animation-delay:350ms]">
-          <div className="mt-5 border-t-2 border-dashed border-ink/20 pt-4 text-center">
-            <p className="font-display text-lg font-extrabold italic">{GUARDIANS.lema}</p>
-            <p className="mt-1 text-base text-ink-soft">{GUARDIANS.traduccioLema}</p>
-          </div>
-        </Narracio>
+        {!veientVideo && (
+          <Narracio text={GUARDIANS} className="animate-entrar [animation-delay:350ms]">
+            <div className="mt-5 border-t-2 border-dashed border-ink/20 pt-4 text-center">
+              <p className="font-display text-lg font-extrabold italic">{GUARDIANS.lema}</p>
+              <p className="mt-1 text-base text-ink-soft">{GUARDIANS.traduccioLema}</p>
+            </div>
+          </Narracio>
+        )}
 
         {/* El joc amagat (ou de pasqua): ara que són alquimistes, tenen el seu propi laboratori. */}
         <section className="flex animate-entrar flex-col gap-3 text-center [animation-delay:500ms]">
