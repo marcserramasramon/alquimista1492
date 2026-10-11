@@ -13,6 +13,20 @@ export interface PuntGps {
   longitud: number;
 }
 
+export interface IntroduccioAr {
+  titol: string;
+  /** Una línia sota el títol, abans dels passos. */
+  entrada: string;
+  /** Com funciona, en poques línies, cadascuna amb la seva icona. */
+  passos: { icona: string; text: string }[];
+  /** Què demanarà el mòbil i per què, perquè els avisos del navegador no sorprenguin ningú. */
+  permisos: { titol: string; items: { icona: string; text: string }[]; nota: string };
+  consells: string[];
+  /** Línia final: l'extra no afecta la partida. */
+  nota: string;
+  boto: string;
+}
+
 export interface ExtraAr {
   id: string;
   /**
@@ -35,8 +49,8 @@ export interface ExtraAr {
   cami?: { des: PuntGps; cap: PuntGps };
   /** Text del botó de la fitxa del pas. */
   boto: string;
-  /** Pantalla d'entrada de l'extra, abans de demanar càmera i sensors. */
-  introduccio: { titol: string; text: string; boto: string };
+  /** Pantalla d'entrada de l'extra, abans de demanar càmera i sensors: explica com funciona. */
+  introduccio: IntroduccioAr;
 }
 
 export const EXTRES_AR: ExtraAr[] = [
@@ -53,7 +67,26 @@ export const EXTRES_AR: ExtraAr[] = [
     boto: "👁 Mirar la foscor",
     introduccio: {
       titol: "Ulls en la foscor",
-      text: "Aixequeu el mòbil i girau-lo a poc a poc al vostre voltant. Hi ha qui us segueix. Si s'acosta massa, crideu perquè marxi: us demanarem el micròfon.",
+      entrada: "Hi ha algú que us vigila. Això és el que heu de fer:",
+      passos: [
+        { icona: "👀", text: "Aixequeu el mòbil i gireu-lo a poc a poc al vostre voltant." },
+        { icona: "🔴", text: "Quan una vora de la pantalla es posa vermella, gireu-vos cap a aquell costat." },
+        { icona: "📣", text: "Si s'acosta massa, crideu perquè marxi." },
+      ],
+      permisos: {
+        titol: "El mòbil us demanarà permís per a:",
+        items: [
+          { icona: "📷", text: "Càmera: per veure el que teniu al davant." },
+          { icona: "🧭", text: "Moviment i brúixola: per saber cap a on mireu." },
+          { icona: "🎤", text: "Micròfon: només mesura el volum del crit. No es grava res ni s'envia enlloc." },
+        ],
+        nota: "Si no en voleu donar algun, es pot jugar igualment: arrossegueu el dit per mirar i toqueu «Cridar!».",
+      },
+      consells: [
+        "Mireu on trepitgeu: no camineu mentre mireu la pantalla.",
+        "Si hi ha gent a prop, parleu baix. El botó 🔊 de dalt silencia el so.",
+      ],
+      nota: "És només un extra: no canvia res de la partida.",
       boto: "Obrir els ulls",
     },
   },

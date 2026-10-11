@@ -170,19 +170,68 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
           </button>
         </div>
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/90 px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <div className="flex w-full max-w-md flex-col items-center gap-5 text-center">
-            <p className="font-display text-5xl font-extrabold text-paper">{extra.introduccio.titol}</p>
-            <p className="text-lg leading-snug text-paper-3">{extra.introduccio.text}</p>
-            <p className="text-sm text-paper-3/80">
-              És només un extra per divertir-vos: no canvia res de la partida.
-            </p>
-            <button type="button" onClick={començar} className="btn btn-primari w-full">
-              {extra.introduccio.boto}
-            </button>
-            <button type="button" onClick={onTornar} className="btn btn-fosc w-full">
-              Tornar al joc
-            </button>
+        <div className="absolute inset-0 flex flex-col bg-black/95 pt-[max(1rem,env(safe-area-inset-top))]">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-4">
+            <div className="mx-auto flex w-full max-w-md flex-col gap-5">
+              <div className="text-center">
+                <p className="font-display text-5xl font-extrabold text-paper">{extra.introduccio.titol}</p>
+                <p className="mt-2 text-lg leading-snug text-paper-3">{extra.introduccio.entrada}</p>
+              </div>
+
+              <ol className="flex flex-col gap-3">
+                {extra.introduccio.passos.map((pas, i) => (
+                  <li key={pas.text} className="flex items-start gap-3 rounded-2xl bg-paper/10 px-3.5 py-3">
+                    <span aria-hidden className="text-3xl leading-none">
+                      {pas.icona}
+                    </span>
+                    <p className="text-lg leading-snug text-paper">
+                      <span className="sr-only">Pas {i + 1}: </span>
+                      {pas.text}
+                    </p>
+                  </li>
+                ))}
+              </ol>
+
+              <section aria-labelledby="extra-ar-permisos" className="rounded-2xl border-2 border-paper-3/40 px-3.5 py-3">
+                <h2 id="extra-ar-permisos" className="text-base font-extrabold text-gold">
+                  {extra.introduccio.permisos.titol}
+                </h2>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {extra.introduccio.permisos.items.map((item) => (
+                    <li key={item.text} className="flex items-start gap-2.5 text-base leading-snug text-paper-3">
+                      <span aria-hidden className="text-xl leading-snug">
+                        {item.icona}
+                      </span>
+                      <span>{item.text}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2.5 text-sm leading-snug text-paper-3/80">{extra.introduccio.permisos.nota}</p>
+              </section>
+
+              <ul className="flex flex-col gap-1.5 text-base leading-snug text-paper-3">
+                {extra.introduccio.consells.map((consell) => (
+                  <li key={consell} className="flex gap-2">
+                    <span aria-hidden>•</span>
+                    <span>{consell}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <p className="text-center text-sm text-paper-3/80">{extra.introduccio.nota}</p>
+            </div>
+          </div>
+
+          {/* Els botons, sempre a la vista, sota el text que es desplaça. */}
+          <div className="shrink-0 border-t-2 border-paper-3/20 bg-black px-5 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <div className="mx-auto flex w-full max-w-md flex-col gap-2.5">
+              <button type="button" onClick={començar} className="btn btn-primari w-full">
+                {extra.introduccio.boto}
+              </button>
+              <button type="button" onClick={onTornar} className="btn btn-fosc w-full">
+                Tornar al joc
+              </button>
+            </div>
           </div>
         </div>
       )}

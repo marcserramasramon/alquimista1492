@@ -801,6 +801,13 @@ export const PANTALLES: Pantalla[] = [
     ),
   },
   {
+    id: "extra-ar-introduccio",
+    grup: "hub",
+    titol: "Extra AR · explicació abans de la càmera",
+    descripcio: "Com funciona, què demanarà el mòbil i consells; es veu abans d'obrir la càmera. El text és a content/public/extres.ts.",
+    render: () => <VistaExtraAr extra={EXTRES_AR[0]} onTornar={noop} />,
+  },
+  {
     id: "extra-ar-escena",
     grup: "hub",
     titol: "Extra AR · ulls i siluetes",
