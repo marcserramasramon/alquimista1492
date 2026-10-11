@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Pantalla, Marca } from "@/components/ui/Pantalla";
+import { BONES_PRACTIQUES } from "@/content/public/textos";
 
 export const metadata: Metadata = {
   title: "Condicions | Els Guardians del Secret de Sentfores",
@@ -56,6 +57,16 @@ export default function CondicionsPage() {
             irregular. Cada participant (o, si és menor, la persona adulta responsable) hi pren part sota la seva
             pròpia responsabilitat, i ha d&apos;adaptar el ritme i el recorregut a les seves capacitats físiques.
           </p>
+        </Apartat>
+
+        <Apartat titol="Guia de bones pràctiques">
+          <ul className="flex list-disc flex-col gap-2 pl-5">
+            {BONES_PRACTIQUES.punts.map((p) => (
+              <li key={p.negreta}>
+                <span className="font-bold text-ink">{p.negreta}</span> {p.resta}
+              </li>
+            ))}
+          </ul>
         </Apartat>
 
         <Apartat titol="Ubicació (GPS)">

@@ -318,6 +318,15 @@ h3 {
   }
 }
 
+@keyframes buidar {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 @keyframes pujar {
   from {
     transform: translateY(100%);

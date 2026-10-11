@@ -245,6 +245,43 @@ export const PISTES = {
   confirmar: "Sí, mostra-la",
 };
 
+/** Guia de bones pràctiques: surt abans del manual la primera vegada i és a les condicions. */
+export const BONES_PRACTIQUES = {
+  titol: "Bones pràctiques",
+  punts: [
+    {
+      emoji: "🤫",
+      negreta: "No xafeu el joc.",
+      resta: "No reveleu solucions ni pistes als altres equips, i deixeu que cadascú faci el seu recorregut.",
+    },
+    {
+      emoji: "📜",
+      negreta: "Deixeu la fita tal com l'heu trobada.",
+      resta: "No manipuleu, moveu, arrenqueu ni espatlleu el cartell, i si heu tocat res, deixeu-ho al seu lloc abans de marxar.",
+    },
+    {
+      emoji: "🔒",
+      negreta: "Tanqueu de nou el candau",
+      resta: "de la caixa de la fita quan hàgiu acabat, perquè els equips següents la trobin com cal.",
+    },
+    {
+      emoji: "🎭",
+      negreta: "Respecteu els actors.",
+      resta: "Són persones que col·laboren a fer possible el joc: tracteu-los amb educació i no els feu sortir del seu paper.",
+    },
+    {
+      emoji: "🌿",
+      negreta: "Respecteu el medi ambient.",
+      resta: "No xafeu els conreus ni la vegetació, no deixeu cap deixalla i no us emporteu res de l'entorn.",
+    },
+    {
+      emoji: "🌙",
+      negreta: "No crideu i respecteu el silenci.",
+      resta: "Es juga de nit prop de cases i de zones naturals: parleu baix, sobretot en passar pel poble.",
+    },
+  ],
+};
+
 // Manual d'ús: bombolles que apareixen sobre l'app real, assenyalen una peça (la que porta
 // `data-manual="<objectiu>"`) i s'esvaeixen soles. `objectiu: null` = nota solta, sense peça.
 // TEXT PROVISIONAL: pendent de validar.

@@ -49,3 +49,6 @@ supabase/.temp/
 
 # còpies dels vídeos originals (pesades)
 /backup-video-original/
+
+# prototip experimental: no forma part del joc i no s'ha de publicar mai
+/app/prova-conjuncio/

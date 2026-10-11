@@ -47,6 +47,7 @@ import { MISSATGES_MASTER, TITOL_TEXT_LLIURE } from "@/content/public/missatgesM
 import type { MissatgeEnviat } from "@/components/vistes/PanellMissatgesMaster";
 import { VistaEnviarAvis } from "@/components/vistes/VistaEnviarAvis";
 import { VistaAjuda } from "@/components/vistes/VistaAjuda";
+import { VistaBonesPractiques } from "@/components/vistes/VistaBonesPractiques";
 import { GuiaManual } from "@/components/player/GuiaManual";
 import { MANUAL_ARRIBAR, MANUAL_HUB, MANUAL_RESOLDRE } from "@/content/public/textos";
 import type { AvisEquip } from "@/components/vistes/PanellAvisosMaster";
@@ -743,6 +744,18 @@ export const PANTALLES: Pantalla[] = [
       <>
         {getPantalla("hub-mitja-partida")?.render(dades)}
         <VistaAjuda onManual={noop} onEscriureMissatge={noop} onTancar={noop} />
+      </>
+    ),
+  },
+  {
+    id: "bones-practiques",
+    grup: "hub",
+    titol: "Hub · bones pràctiques",
+    descripcio: "Surt la primera vegada, 5 segons abans que comenci el manual d'ús (aquí es queda fins que es toca «Entès!»).",
+    render: (dades) => (
+      <>
+        {getPantalla("hub-mitja-partida")?.render(dades)}
+        <VistaBonesPractiques fixa onAcabar={noop} />
       </>
     ),
   },

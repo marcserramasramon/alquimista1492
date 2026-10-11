@@ -8,6 +8,7 @@ import { ObrirFita } from "@/components/player/ObrirFita";
 import { EVENT_MISSATGE_LLEGIT } from "@/components/player/MissatgesMaster";
 import { VistaAjuda } from "@/components/vistes/VistaAjuda";
 import { VistaHub } from "@/components/vistes/VistaHub";
+import { VistaBonesPractiques } from "@/components/vistes/VistaBonesPractiques";
 import { GuiaManual } from "@/components/player/GuiaManual";
 import { VistaMissatgeVideo } from "@/components/vistes/VistaMissatgeVideo";
 import { VistaCarregant } from "@/components/vistes/VistaCarregant";
@@ -52,6 +53,23 @@ async function obrirPerGps(estacio: EstacioMapa, posicio: Ubicacio): Promise<boo
   return Boolean(res?.ok);
 }
 
+const CLAU_BONES_PRACTIQUES = "bones-practiques-vistes";
+
+/** Només és una comoditat: si el navegador no deixa guardar-ho, la guia simplement torna a sortir. */
+function llegirBonesPractiquesVistes(): boolean {
+  try {
+    return localStorage.getItem(CLAU_BONES_PRACTIQUES) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function recordarBonesPractiquesVistes() {
+  try {
+    localStorage.setItem(CLAU_BONES_PRACTIQUES, "1");
+  } catch {}
+}
+
 /** Escenes del manual d'aquesta pantalla (estables: el component les compara per referència). */
 const ESCENES_MANUAL = [MANUAL_HUB, MANUAL_ARRIBAR];
 
@@ -70,6 +88,12 @@ export default function HubPage() {
   const [avisant, setAvisant] = useState(false);
   /** Cada cop que puja, el manual torna a ensenyar les bombolles (botó "Com es juga" de l'ajuda). */
   const [reiniciManual, setReiniciManual] = useState(0);
+  /** La primera vegada, la guia de bones pràctiques surt 5 segons abans que comenci el manual. */
+  const [bonesPractiques, setBonesPractiques] = useState(() => !llegirBonesPractiquesVistes());
+  const acabarBonesPractiques = useCallback(() => {
+    recordarBonesPractiquesVistes();
+    setBonesPractiques(false);
+  }, []);
   const intentsGps = useRef(new Map<string, number>());
 
   const carregar = useCallback(
@@ -195,7 +219,11 @@ export default function HubPage() {
         onAvis={() => setAjudaOberta(true)}
       />
       {escanejant && <ObrirFita onOberta={obertaPerCodi} onTancar={() => setEscanejant(false)} />}
-      <GuiaManual escenes={ESCENES_MANUAL} reinici={reiniciManual} />
+      {bonesPractiques ? (
+        <VistaBonesPractiques onAcabar={acabarBonesPractiques} />
+      ) : (
+        <GuiaManual escenes={ESCENES_MANUAL} reinici={reiniciManual} />
+      )}
       {ajudaOberta && (
         <VistaAjuda
           onManual={() => {
