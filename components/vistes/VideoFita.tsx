@@ -34,8 +34,8 @@ const MINIM_ANIMACIO_MS = 4_000;
 
 /**
  * Vídeo de la fita resolta, entre la pantalla de fita completa (CelebracioFragment) i la de la fita
- * amb el text del fragment. La veu del fragment arrenca amb el vídeo; quan el vídeo s'acaba, es queda
- * congelat a l'últim fotograma fins que la veu acaba, i només llavors es passa a la pantalla de la fita.
+ * amb el text del fragment. La veu del fragment arrenca amb el vídeo; quan el vídeo s'acaba, es passa
+ * de seguida a la pantalla de la fita i la veu hi continua (amb `veuDespres`, primer s'espera la veu).
  * Si el fitxer de vídeo no hi és o falla, `onAcabat` es crida de seguida i la veu continua a la fita.
  */
 export function VideoFita({ video, veu, ambient = false, veuDespres = false, etiqueta = "Vídeo del fragment trobat", animacio, resolts, onAcabat }: VideoFitaProps) {
@@ -52,12 +52,13 @@ export function VideoFita({ video, veu, ambient = false, veuDespres = false, eti
     onAcabat();
   }
 
-  // Mentre la veu no ha acabat (o no se sap si sonarà), el vídeo acabat es queda congelat a l'últim fotograma.
+  // Amb `veuDespres` s'espera que la veu acabi abans de sortir; si no, en acabar el vídeo es passa a la
+  // pantalla de la fita i la veu hi continua (sonarVeu és global: no s'atura en desmuntar-se).
   const veuPendent = useRef(!!veu);
   const videoAcabat = useRef(false);
 
   function provarAcabar() {
-    if (videoAcabat.current && !veuPendent.current && minimFet.current) acabar();
+    if (videoAcabat.current && (!veuDespres || !veuPendent.current) && minimFet.current) acabar();
   }
 
   const veuEngegada = useRef(false);
