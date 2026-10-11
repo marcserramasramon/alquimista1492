@@ -218,6 +218,7 @@ export default function HubPage() {
       )}
       {ajudaOberta && (
         <VistaAjuda
+          nomEquip={estat.equip.name}
           onManual={() => {
             setAjudaOberta(false);
             setReiniciManual((n) => n + 1);

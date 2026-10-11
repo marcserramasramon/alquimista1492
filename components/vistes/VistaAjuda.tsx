@@ -30,6 +30,8 @@ const PREGUNTES: PreguntaFreqüent[] = [
 ];
 
 export interface VistaAjudaProps {
+  /** Nom de l'equip d'aquest mòbil, perquè sàpiga de qui parla si escriu al màster. */
+  nomEquip?: string;
   /** Torna a obrir el manual d'ús. */
   onManual: () => void;
   onEscriureMissatge: () => void;
@@ -40,7 +42,7 @@ export interface VistaAjudaProps {
  * Pop-up del botó "?" del mapa: primer les preguntes freqüents (es responen soles, sense
  * amoïnar el màster); si cap no encaixa, el botó de sota porta al formulari real (VistaEnviarAvis).
  */
-export function VistaAjuda({ onManual, onEscriureMissatge, onTancar }: VistaAjudaProps) {
+export function VistaAjuda({ nomEquip, onManual, onEscriureMissatge, onTancar }: VistaAjudaProps) {
   const [obertaId, setObertaId] = useState<string | null>(null);
 
   return (
@@ -59,6 +61,14 @@ export function VistaAjuda({ onManual, onEscriureMissatge, onTancar }: VistaAjud
             ✕
           </button>
         </div>
+
+        {nomEquip && (
+          <p className="text-center text-lg font-extrabold leading-snug">
+            <span className="etiqueta text-gold-deep">El vostre equip</span>
+            <br />
+            {nomEquip}
+          </p>
+        )}
 
         <button type="button" onClick={onManual} className="btn btn-secundari">
           📖 Manual d&apos;ús
