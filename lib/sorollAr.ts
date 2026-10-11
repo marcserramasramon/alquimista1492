@@ -19,10 +19,15 @@ let mestre: GainNode | null = null;
 let soroll: AudioBuffer | null = null;
 let gravacio: AudioBuffer | null = null;
 let silenciat = false;
+let caminada: { gain: GainNode; panner: StereoPannerNode | null } | null = null;
+let voltaCaminada: ReturnType<typeof setTimeout> | null = null;
+let volumCaminada = 0;
 let ambient: { aturar: () => void } | null = null;
 
 const URL_PASSES = "/audio/ar/passes-grava.mp3";
 const VOLUM = 1;
+/** Volum màxim de les passes d'abans que aparegui la figura (0-1). */
+const VOLUM_PASSES = 0.4;
 
 function obtenirContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -85,6 +90,10 @@ export function iniciarSoAr() {
 
 export function aturarSoAr() {
   aturarAmbientAr();
+  if (voltaCaminada) clearTimeout(voltaCaminada);
+  voltaCaminada = null;
+  caminada = null;
+  volumCaminada = 0;
   context?.close().catch(() => {});
   context = null;
   mestre = null;
@@ -266,6 +275,60 @@ export function aturarAmbientAr() {
   ambient = null;
 }
 
+// ───────────────────────── Passes mentre camina ─────────────────────────
+
+/** Una còpia de la gravació amb fos d'entrada i de sortida, cap al volum de la caminada. */
+function copiaCaminada(ctx: AudioContext, buffer: AudioBuffer, desti: AudioNode) {
+  const solapament = 0.25;
+  const t = ctx.currentTime + 0.02;
+  const font = ctx.createBufferSource();
+  font.buffer = buffer;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(1, t + solapament);
+  g.gain.setValueAtTime(1, t + buffer.duration - solapament);
+  g.gain.linearRampToValueAtTime(0.0001, t + buffer.duration);
+  font.connect(g).connect(desti);
+  font.start(t, Math.random() * 0.4);
+  font.stop(t + buffer.duration);
+  return (buffer.duration - solapament) * 1000;
+}
+
+/**
+ * Passes de la figura mentre camina: la gravació en bucle, a un volum que va de 0 (quieta) a 1.
+ * S'ha de cridar a cada fotograma mentre la figura és present; `pan` va de -1 a 1. Quan el volum
+ * baixa a 0 (s'atura), s'esvaeix i deixa de repetir la gravació.
+ */
+export function actualitzarCaminadaAr(volum: number, pan: number) {
+  const ctx = context;
+  if (!ctx || !mestre || ctx.state !== "running" || !gravacio) return;
+  if (!caminada) {
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    let panner: StereoPannerNode | null = null;
+    if (typeof ctx.createStereoPanner === "function") {
+      panner = ctx.createStereoPanner();
+      gain.connect(panner).connect(mestre);
+    } else {
+      gain.connect(mestre);
+    }
+    caminada = { gain, panner };
+  }
+  volumCaminada = Math.max(0, Math.min(1, volum));
+  caminada.gain.gain.setTargetAtTime(volumCaminada, ctx.currentTime, 0.2);
+  caminada.panner?.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), ctx.currentTime, 0.2);
+
+  if (volumCaminada > 0.02 && voltaCaminada === null) {
+    const torn = () => {
+      voltaCaminada = null;
+      if (!context || !caminada || !gravacio || volumCaminada <= 0.02) return;
+      const espera = copiaCaminada(context, gravacio, caminada.gain);
+      voltaCaminada = setTimeout(torn, espera);
+    };
+    torn();
+  }
+}
+
 // ───────────────────────────── Passes ─────────────────────────────
 
 /**
@@ -277,9 +340,9 @@ function sonarGravacio(ctx: AudioContext, buffer: AudioBuffer, pan: number, dura
   const t0 = ctx.currentTime + 0.05;
 
   const gMestre = ctx.createGain();
-  gMestre.gain.setValueAtTime(0.15, t0);
-  gMestre.gain.linearRampToValueAtTime(1, t0 + dur * 0.85);
-  gMestre.gain.setValueAtTime(1, t0 + dur - 0.01);
+  gMestre.gain.setValueAtTime(VOLUM_PASSES * 0.15, t0);
+  gMestre.gain.linearRampToValueAtTime(VOLUM_PASSES, t0 + dur * 0.85);
+  gMestre.gain.setValueAtTime(VOLUM_PASSES, t0 + dur - 0.01);
   gMestre.gain.linearRampToValueAtTime(0.0001, t0 + dur + 0.4);
   if (typeof ctx.createStereoPanner === "function") {
     const panner = ctx.createStereoPanner();
@@ -325,7 +388,7 @@ export function sonarPassesAr(pan: number, duradaMs: number) {
 
   for (let i = 0; i < passos; i++) {
     const t = inici + i * pas + (Math.random() - 0.5) * 0.06;
-    const volum = 0.1 + 0.5 * (i / (passos - 1));
+    const volum = (0.1 + 0.5 * (i / (passos - 1))) * VOLUM_PASSES;
     // Una mica cada cop més cap al centre: s'acosta.
     const s = sortida(ctx, pan * (1 - 0.5 * (i / (passos - 1))));
 

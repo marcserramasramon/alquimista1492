@@ -5,7 +5,7 @@ import { EscenaUlls } from "@/components/ar/EscenaUlls";
 import { estatFigura3DInicial, Figura3D, webglDisponible } from "@/components/ar/Figura3D";
 import { rumbCami, type ExtraAr } from "@/content/public/extres";
 import { useOrientacio } from "@/lib/orientacio";
-import { aturarSoAr, iniciarAmbientAr, iniciarSoAr, silenciarAr, sonarPassesAr } from "@/lib/sorollAr";
+import { actualitzarCaminadaAr, aturarSoAr, iniciarAmbientAr, iniciarSoAr, silenciarAr, sonarPassesAr } from "@/lib/sorollAr";
 
 export interface VistaExtraArProps {
   extra: ExtraAr;
@@ -34,6 +34,7 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
   const depuracio = useRef("");
   const [silenci, setSilenci] = useState(false);
   const [textDepuracio, setTextDepuracio] = useState<string | null>(null);
+  const alCaminar = useCallback((volum: number, pan: number) => actualitzarCaminadaAr(volum, pan), []);
   const alPasses = useCallback((pan: number, duradaMs: number) => sonarPassesAr(pan, duradaMs), []);
 
   // Els sensors, la càmera i el so es demanen en tocar el botó (iOS i Android ho exigeixen).
@@ -100,6 +101,7 @@ export function VistaExtraAr({ extra, onTornar, directa = false }: VistaExtraArP
           depuracio={textDepuracio === null ? null : depuracio}
           rumbCami={rumbCami(extra)}
           alPasses={alPasses}
+          alCaminar={alCaminar}
         />}
 
       {textDepuracio !== null && (

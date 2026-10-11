@@ -38,6 +38,11 @@ interface Props {
   rumbCami?: number | null;
   /** Depuració (?debug=1): l'escena hi escriu l'estat de la figura i de la mirada. */
   depuracio?: RefObject<string> | null;
+  /**
+   * Per al so de la caminada: cada fotograma, quant camina la figura (volum 0-1, més fort com més a
+   * prop) i cap a quina banda és (-1 esquerra, 1 dreta).
+   */
+  alCaminar?: (volum: number, pan: number) => void;
   /** Per al so: la figura és a punt d'aparèixer i s'acosta pel costat `pan` (-1 esquerra, 1 dreta). */
   alPasses?: (pan: number, duradaMs: number) => void;
 }
@@ -110,6 +115,8 @@ interface Personatge {
   /** Un ull una mica més gran que l'altre: res no és del tot simètric. */
   asim: number;
   costat: 1 | -1;
+  /** Distància a la qual ha aparegut (m): serveix per saber quant s'ha acostat. */
+  distInici: number;
   /** Quant camina (0-1), suavitzat: arrenca i s'atura a poc a poc. */
   camina: number;
 }
@@ -147,6 +154,7 @@ function nou(v: Varietat, espera: number, ara: number): Personatge {
     asim: aleatori(0.86, 1.14),
     costat: Math.random() < 0.5 ? -1 : 1,
     camina: 0,
+    distInici: v.distMin,
   };
 }
 
@@ -161,6 +169,7 @@ function aparicio(p: Personatge, mirada: Mirada, ara: number) {
   const costat = Math.random() < 0.5 ? -1 : 1;
   p.rumb = (mirada.rumb + costat * aleatori(30, 130) + 720) % 360;
   p.dist = aleatori(p.v.distMin, p.v.distMax);
+  p.distInici = p.dist;
   p.alt = p.v.tipus === "ulls" ? aleatori(p.v.altMin, p.v.altMax) : 0;
   p.costat = Math.random() < 0.5 ? -1 : 1;
   p.fase = "apareix";
@@ -427,7 +436,7 @@ function dibuixaVora(ctx: CanvasRenderingContext2D, w: number, h: number, dx: nu
   vora(0, h, 0, h - alt, pesos.baix, 0, h - alt, w, alt);
 }
 
-export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = null, rumbCami = null, alPasses }: Props) {
+export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = null, rumbCami = null, alPasses, alCaminar }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const manual = useRef<Mirada>({ rumb: 0, elevacio: 0 });
   const arrossegarRef = useRef(arrossegar);
@@ -435,6 +444,7 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
   const figura3DRef = useRef(figura3D);
   const depuracioRef = useRef(depuracio);
   const camiRef = useRef(rumbCami);
+  const caminarRef = useRef(alCaminar);
 
   useEffect(() => {
     arrossegarRef.current = arrossegar;
@@ -442,7 +452,8 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
     figura3DRef.current = figura3D;
     depuracioRef.current = depuracio;
     camiRef.current = rumbCami;
-  }, [arrossegar, alPasses, figura3D, depuracio, rumbCami]);
+    caminarRef.current = alCaminar;
+  }, [arrossegar, alPasses, figura3D, depuracio, rumbCami, alCaminar]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -541,6 +552,15 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
         const enPasses = guia.fase === "passes";
         const progres = enPasses ? Math.min(1, (ara - guia.desde) / DURADA_PASSES_MS) : 1;
         dibuixaVora(ctx, amplada, alcada, diferenciaRumb(guia.rumb, lectura.rumb), enPasses ? 0.4 + 0.6 * progres : 1, enPasses ? 620 : 1400, ara);
+      }
+
+      // So de la caminada: les passes se senten mentre camina, més fortes com més a prop.
+      const caminant = personatges.find((q) => q.v.tipus === "silueta" && q.fase === "present");
+      if (caminant && caminarRef.current) {
+        const recorregut = Math.max(0.01, caminant.distInici - DIST_PARADA);
+        const aprop = 1 - Math.max(0, Math.min(1, (caminant.dist - DIST_PARADA) / recorregut));
+        const dxC = diferenciaRumb(caminant.rumb, lectura.rumb);
+        caminarRef.current(caminant.camina * (0.28 + 0.3 * aprop), dxC / 60);
       }
 
       const dep = depuracioRef.current;
