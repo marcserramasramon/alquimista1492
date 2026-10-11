@@ -191,17 +191,9 @@ export default function HubPage() {
     setEscanejant(true);
   }
 
-  // Un pas previ (check-in) no porta a cap prova: es queda al mapa, sona i en desbloqueja
-  // una altra (la fitxa en fa l'avís). Una fita normal escanejada hi entra directament.
+  // Tant una fita com un pas previ (check-in) s'obren a la seva pantalla: el pas previ hi mostra
+  // el text de Fra Francesc amb la veu, i des d'allà es torna al mapa on ja surt la fita desbloquejada.
   function obertaPerCodi(estacioId: string) {
-    const oberta = estat!.estacions.find((e) => e.id === estacioId);
-    if (oberta?.tipus === "pas") {
-      setEscanejant(false);
-      sonarArribada();
-      setArribadaId(estacioId);
-      carregar();
-      return;
-    }
     router.push(`/s/${estacioId}`);
   }
 
