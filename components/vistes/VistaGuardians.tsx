@@ -1,9 +1,15 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { VideoPantallaCompleta } from "@/components/ui/VideoPantallaCompleta";
 import { BotoMusica } from "@/components/ui/BotoMusica";
 import { Narracio } from "@/components/ui/Narracio";
 import { Marca } from "@/components/ui/Pantalla";
 import { MARGE_MARC_FINAL_PX, MarcFinal } from "@/components/ui/MarcFinal";
 import { GUARDIANS, LABORATORI } from "@/content/public/textos";
+
+const VIDEO_FINAL = "/video/final-guardians.mp4";
 
 /** Pergamí més fosc que la resta de pantalles per al marc: és el final de la nit. */
 const FONS = "#d9bd84";
@@ -22,10 +28,14 @@ const ESPURNES = [
 /**
  * 5. Pantalla final: l'equip esdevé Guardians del Secret i obté la Pedra Filosofal. Surt a /final
  * quan el LED del Gresol s'ha encès i Fra Francesc consagra l'equip des del màster.
+ * Primer es veu el vídeo final a pantalla completa; després, la pantalla.
  * Sona música èpica en bucle (public/audio/guardians.mp3 o, si no hi és, la sintetitzada de lib/so.ts).
  * Com les pantalles del Pla de Masset, té el marc de runes; al final, l'enllaç al laboratori (/gresol).
  */
 export function VistaGuardians() {
+  const [veientVideo, setVeientVideo] = useState(true);
+  // Primer el vídeo (amb el seu so) i, en acabar o tancar-lo, la pantalla final amb la música.
+  if (veientVideo) return <VideoPantallaCompleta src={VIDEO_FINAL} onAcabat={() => setVeientVideo(false)} />;
   return (
     <>
       <div
