@@ -381,6 +381,39 @@ function dibuixaSilueta(
   ctx.globalAlpha = 1;
 }
 
+/**
+ * Resplendor vermell a la vora de la pantalla que diu cap a on girar-se per trobar la figura: a
+ * l'esquerra o a la dreta segons convingui; quan és a la vista, a tots els marges. `dx` són els
+ * graus fins a la figura (positiu = a la dreta) i `periodeMs` el ritme del batec.
+ */
+function dibuixaVora(ctx: CanvasRenderingContext2D, w: number, h: number, dx: number, intensitat: number, periodeMs: number, ara: number) {
+  // A la vista (dins del camp de visió, amb una mica de marge): es il·luminen tots els marges.
+  const enVista = Math.max(0, Math.min(1, (30 - Math.abs(dx)) / 8));
+  const fora = 1 - enVista;
+  const pesos = {
+    esquerra: Math.max(enVista, dx < 0 ? fora : 0),
+    dreta: Math.max(enVista, dx > 0 ? fora : 0),
+    dalt: enVista,
+    baix: enVista,
+  };
+  const batec = 0.75 + 0.25 * Math.sin((ara / periodeMs) * Math.PI * 2);
+  const alfa = 0.75 * intensitat * batec;
+  const vora = (x0: number, y0: number, x1: number, y1: number, pes: number, rx: number, ry: number, rw: number, rh: number) => {
+    if (pes <= 0.01) return;
+    const g = ctx.createLinearGradient(x0, y0, x1, y1);
+    g.addColorStop(0, `rgba(255, 24, 24, ${alfa * pes})`);
+    g.addColorStop(1, "rgba(255, 24, 24, 0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(rx, ry, rw, rh);
+  };
+  const ample = w * 0.3;
+  const alt = h * 0.12;
+  vora(0, 0, ample, 0, pesos.esquerra, 0, 0, ample, h);
+  vora(w, 0, w - ample, 0, pesos.dreta, w - ample, 0, ample, h);
+  vora(0, 0, 0, alt, pesos.dalt, 0, 0, w, alt);
+  vora(0, h, 0, h - alt, pesos.baix, 0, h - alt, w, alt);
+}
+
 export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = null, rumbCami = null, alPasses }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const manual = useRef<Mirada>({ rumb: 0, elevacio: 0 });
@@ -488,6 +521,14 @@ export function EscenaUlls({ mirada, arrossegar, figura3D = null, depuracio = nu
           dibuixaSilueta(ctx, x, peus, peus - yDe(p.v.alcada), alfa, ara, p, figura);
         }
       }
+      // Resplendor a la vora: guia cap a la figura des que se senten les passes.
+      const guia = personatges.find((q) => q.v.tipus === "silueta");
+      if (guia && (guia.fase === "passes" || guia.fase === "apareix" || guia.fase === "present")) {
+        const enPasses = guia.fase === "passes";
+        const progres = enPasses ? Math.min(1, (ara - guia.desde) / DURADA_PASSES_MS) : 1;
+        dibuixaVora(ctx, amplada, alcada, diferenciaRumb(guia.rumb, lectura.rumb), enPasses ? 0.4 + 0.6 * progres : 1, enPasses ? 620 : 1400, ara);
+      }
+
       const dep = depuracioRef.current;
       if (dep) {
         const f = personatges.find((q) => q.v.tipus === "silueta");
