@@ -14,10 +14,12 @@ const GIR_DAVANT_GRAUS = 0;
 /** Fanal que porta la figura (public/images/ar/fanal.webp), amb una espelma a dins. */
 const IMATGE_FANAL = "/images/ar/fanal.webp";
 /**
- * On és, en unitats del model (alçada del model = 1). X negatiu = a l'esquerra de qui mira la
- * figura, que és la mà dreta de la figura; `alcada` és la del fanal.
+ * On és el fanal, en unitats del model (alçada del model = 1). La mà dreta de la figura (a
+ * l'esquerra de qui la mira) és a (-0,13, 0,45, 0,10): el fanal hi penja amb l'anella a l'alçada de
+ * la mà i una mica endavant, de manera que la mà queda darrere. `FLAMA` és on crema l'espelma.
  */
-const FANAL = { x: -0.17, y: 0.33, z: 0.11, alcada: 0.17 };
+const FANAL = { x: -0.13, y: 0.37, z: 0.16, alcada: 0.17 };
+const FLAMA = { x: -0.13, y: 0.34, z: 0.15 };
 
 /** 1 = tal com ve la textura; menys = més fosca. */
 const BRILLANTOR_FIGURA = 0.75;
@@ -126,9 +128,9 @@ varying vec3 vPosLocal;`)
                 `#include <map_fragment>
                 diffuseColor.rgb = clamp((diffuseColor.rgb - 0.12) * 1.6 + 0.04, 0.0, 1.0);
                 diffuseColor.rgb *= ${BRILLANTOR_FIGURA.toFixed(2)};
-                float dFanal = distance(vPosLocal, vec3(${FANAL.x.toFixed(3)}, ${FANAL.y.toFixed(3)}, ${FANAL.z.toFixed(3)}));
+                float dFanal = distance(vPosLocal, vec3(${FLAMA.x.toFixed(3)}, ${FLAMA.y.toFixed(3)}, ${FLAMA.z.toFixed(3)}));
                 float flama = 0.8 + 0.12 * sin(uTemps * 7.3) + 0.08 * sin(uTemps * 13.7 + 1.3) + 0.05 * sin(uTemps * 23.0);
-                diffuseColor.rgb += vec3(1.0, 0.68, 0.26) * 0.9 * exp(-dFanal * dFanal * 30.0) * flama;`
+                diffuseColor.rgb += vec3(1.0, 0.68, 0.26) * 0.5 * exp(-dFanal * dFanal * 55.0) * flama;`
               );
             shader.vertexShader = shader.vertexShader
               .replace("#include <common>", `#include <common>
@@ -192,8 +194,8 @@ varying vec3 vPosLocal;`)
             depthWrite: false,
           });
           resplendor = new THREE.Sprite(materialLlum);
-          resplendor.scale.set(0.5, 0.5, 1);
-          resplendor.position.set(FANAL.x, FANAL.y - 0.02, FANAL.z + 0.03);
+          resplendor.scale.set(0.3, 0.3, 1);
+          resplendor.position.set(FLAMA.x, FLAMA.y, FLAMA.z + 0.03);
           resplendor.renderOrder = 3;
           grup.add(resplendor);
           actius.push(textura, materialFanal, texturaLlum, materialLlum);
@@ -244,8 +246,8 @@ varying vec3 vPosLocal;`)
               fanal.material.rotation = Math.sin(t * 1.4 + e.llavor) * 0.05;
             }
             if (resplendor) {
-              resplendor.material.opacity = e.alfa * flama;
-              resplendor.scale.setScalar(0.46 + 0.06 * flama);
+              resplendor.material.opacity = e.alfa * flama * 0.85;
+              resplendor.scale.setScalar(0.27 + 0.04 * flama);
             }
             renderer.render(escena, camera);
             pintat = true;
