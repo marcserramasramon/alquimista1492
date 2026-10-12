@@ -164,6 +164,7 @@ export const PASSOS_PREVIS: PasPrevi[] = [
     nom: "Creu del Pujolar",
     situacio: "Al camí de Can Ros, direcció la Creu del Pujolar.",
     entrada: "Seguiu el camí, atents als perills.",
+    imatge: "/images/aire-pas.webp",
     latitud: 41.911628,
     longitud: 2.226846,
     disponible: true,

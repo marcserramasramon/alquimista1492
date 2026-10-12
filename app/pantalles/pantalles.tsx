@@ -626,7 +626,7 @@ export const PANTALLES: Pantalla[] = [
       return (
         <VistaEstacio
           {...JOC_BUIT}
-          estacio={{ id: pas.id, nom: pas.nom, entrada: pas.entrada, situacio: pas.situacio, element: pas.element, disponible: true, pasPrevi: true }}
+          estacio={{ id: pas.id, nom: pas.nom, entrada: pas.entrada, situacio: pas.situacio, imatge: pas.imatge, element: pas.element, disponible: true, pasPrevi: true }}
           error={null}
           onTornar={noop}
         />

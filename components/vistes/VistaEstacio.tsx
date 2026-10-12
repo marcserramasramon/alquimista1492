@@ -115,11 +115,19 @@ export function VistaEstacio({
           )}
         </div>
 
+        {estacio.imatge && (
+          <img
+            src={estacio.imatge}
+            alt={estacio.nom}
+            className="aspect-video w-full rounded-3xl border-[3px] border-ink object-cover shadow-[0_5px_0_var(--ink)]"
+          />
+        )}
+
         {ARRIBADES_PAS[estacio.id] && (
           <Narracio text={ARRIBADES_PAS[estacio.id]} etiqueta="fra francesc" color={color} className="animate-entrar" />
         )}
 
-        <p className="text-center text-base text-ink-soft">S&apos;ha revelat al mapa on és la propera fita.</p>
+        <p className="text-center text-xl font-extrabold text-ink-soft">S&apos;ha revelat al mapa on és la propera fita.</p>
 
         {/* Extra de realitat augmentada d'aquest pas (content/public/extres.ts): no compta per a la partida. */}
         {getExtraArDeFita(estacio.id) && (
