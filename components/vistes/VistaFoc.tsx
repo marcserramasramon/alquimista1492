@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EscenaFoc } from "@/components/ar/EscenaFoc";
-import type { EstatContorn } from "@/components/ar/foc/contorn";
+import { precarregaContorn, type EstatContorn } from "@/components/ar/foc/contorn";
 import type { EsdevenimentSalt } from "@/components/ar/foc/mon";
 import { IntroduccioExtraAr } from "@/components/vistes/IntroduccioExtraAr";
 import type { ExtraAr } from "@/content/public/extres";
@@ -61,6 +61,11 @@ export function VistaFoc({ extra, onTornar, directa = false }: VistaFocProps) {
     const interval = setInterval(() => setTextDepuracio(depuracio.current), 300);
     return () => clearInterval(interval);
   }, [depuracioActiva]);
+
+  // Mentre es llegeix la introducció, ja es baixa el model dels contorns.
+  useEffect(() => {
+    precarregaContorn();
+  }, []);
 
   useEffect(() => {
     if (camera === "activa" && video.current && flux.current) {

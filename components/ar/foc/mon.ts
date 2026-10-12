@@ -14,9 +14,9 @@ const ALCADA_ULLS = 1.5;
 export const FOV_HORITZONTAL = 52;
 
 /** Arcs que hi ha alhora i marge de temps entre un salt i el següent (s). */
-const ARCS_MAX = 4;
-const ESPERA_MIN = 0.6;
-const ESPERA_MAX = 1.5;
+const ARCS_MAX = 1;
+const ESPERA_MIN = 1.2;
+const ESPERA_MAX = 3;
 /** Partícules màximes (mòbils modestos). */
 const PARTICULES_MAX = 850;
 /** Temps que el rastre de l'arc encara es veu quan el cap ja ha tornat a terra (s). */
@@ -103,13 +103,13 @@ export class MonFoc {
   private nouArc(rumbMirada: number) {
     // Sovint cap on mira el jugador, perquè els vegi; de tant en tant al voltant.
     const rumbCentre = (Math.random() < 0.7 ? rumbMirada + alea(-55, 55) : alea(0, 360)) * RAD;
-    const dist = alea(5, 13);
+    const dist = alea(14, 28);
     const ce = Math.sin(rumbCentre) * dist;
     const cn = Math.cos(rumbCentre) * dist;
     // Direcció del salt: aproximadament perpendicular a la visual, amb una mica de biaix.
     const dir = rumbCentre + Math.PI / 2 + alea(-0.6, 0.6);
-    const mig = alea(1.6, 2.8);
-    const alt = alea(1.8, 3.2);
+    const mig = alea(3, 4.5);
+    const alt = alea(3.5, 5.5);
     const arc: Arc = {
       e0: ce - Math.sin(dir) * mig,
       n0: cn - Math.cos(dir) * mig,
@@ -140,12 +140,13 @@ export class MonFoc {
     for (let i = 0; i < 28; i++) {
       const a = Math.random() * Math.PI * 2;
       const v = alea(0.6, 2.6);
-      this.emet(e, 0.05, n, Math.cos(a) * v, alea(1, 3.8), Math.sin(a) * v, alea(0.5, 1.1), alea(0.12, 0.3));
+      this.emet(e, 0.05, n, Math.cos(a) * v, alea(1, 3.8), Math.sin(a) * v, alea(0.5, 1.1), alea(0.2, 0.5));
     }
   }
 
   private actualitza(dt: number, rumbMirada: number) {
-    this.espera -= dt;
+    // La pausa fins al salt següent només compta quan no n'hi ha cap en marxa.
+    if (this.arcs.length === 0) this.espera -= dt;
     if (this.espera <= 0 && this.arcs.length < ARCS_MAX) {
       this.nouArc(rumbMirada);
       this.espera = alea(ESPERA_MIN, ESPERA_MAX);
@@ -172,7 +173,7 @@ export class MonFoc {
             alea(0.1, 0.5),
             alea(-0.15, 0.15),
             alea(0.9, 1.5),
-            alea(0.3, 0.5),
+            alea(0.5, 0.8),
           );
         }
       } else if (!arc.sortit) {
@@ -192,7 +193,7 @@ export class MonFoc {
               alea(0.7, 1.4),
               alea(-0.1, 0.1),
               alea(0.5, 0.9),
-              alea(0.25, 0.45),
+              alea(0.4, 0.7),
             );
           }
         }

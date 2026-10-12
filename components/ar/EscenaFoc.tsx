@@ -46,8 +46,8 @@ export function EscenaFoc({ mirada, arrossegar, video, alSalt, alEstatContorn, d
     const mon = new MonFoc((e) => saltRef.current?.(e));
     const contorn = new ContornPersones();
     let ultimEstat: EstatContorn | null = null;
-    // El model només es carrega quan la càmera ja dóna imatge: sense ella no hi ha res a contornar.
-    let carregat = false;
+    // El model es comença a carregar de seguida, mentre el mòbil encara demana el permís de la càmera.
+    void contorn.iniciar();
 
     let frame = 0;
     let anterior = performance.now();
@@ -62,10 +62,6 @@ export function EscenaFoc({ mirada, arrossegar, video, alSalt, alEstatContorn, d
       }
       ctx.clearRect(0, 0, w, h);
       const v = videoRef.current?.current;
-      if (v && !carregat) {
-        carregat = true;
-        void contorn.iniciar();
-      }
       if (v && w > 0 && h > 0) {
         contorn.actualitza(v, w, h, ara);
         contorn.pinta(ctx, w, h, ara);

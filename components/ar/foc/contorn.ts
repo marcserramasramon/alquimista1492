@@ -19,7 +19,18 @@ const AMPLADA_ENTRADA = 192;
 /** Mínim de temps entre dues segmentacions (ms). */
 const INTERVAL_MS = 70;
 /** Gruix de la vora en píxels de la imatge petita. */
-const GRUIX = 2;
+const GRUIX = 1;
+
+/**
+ * Baixa per avançat el motor i el model (queden a la memòria cau del navegador), perquè quan es
+ * toqui el botó d'entrada el contorn ja estigui gairebé a punt. Si falla, no passa res.
+ */
+export function precarregaContorn() {
+  for (const url of [URL_MODEL, `${URL_WASM}/vision_wasm_internal.js`, `${URL_WASM}/vision_wasm_internal.wasm`]) {
+    fetch(url).catch(() => {});
+  }
+  void import("@mediapipe/tasks-vision").catch(() => {});
+}
 
 export type EstatContorn = "carregant" | "actiu" | "no";
 
@@ -168,15 +179,19 @@ export class ContornPersones {
     ctx.globalCompositeOperation = "lighter";
     ctx.imageSmoothingEnabled = true;
     const escala = w / 400;
-    const pols = 0.75 + 0.25 * Math.sin(ara / 90) + 0.1 * Math.sin(ara / 37);
+    const pols = 0.8 + 0.2 * Math.sin(ara / 90) + 0.08 * Math.sin(ara / 37);
 
-    // Resplendor vermell ample, i després un de més estret i més calent.
-    ctx.globalAlpha = 0.85;
-    ctx.shadowColor = "rgba(255,30,0,0.95)";
-    ctx.shadowBlur = 34 * escala * pols;
+    // Resplendor ample darrere de la persona (vermell fosc), un de mitjà, i la línia fina i calenta.
+    ctx.globalAlpha = 0.9;
+    ctx.shadowColor = "rgba(200,10,0,0.9)";
+    ctx.shadowBlur = 70 * escala * pols;
     ctx.drawImage(this.vora, 0, 0, w, h);
+    ctx.shadowColor = "rgba(255,35,0,0.95)";
+    ctx.shadowBlur = 36 * escala * pols;
+    ctx.drawImage(this.vora, 0, 0, w, h);
+    ctx.globalAlpha = 0.85;
     ctx.shadowColor = "rgba(255,120,0,1)";
-    ctx.shadowBlur = 11 * escala;
+    ctx.shadowBlur = 9 * escala;
     ctx.drawImage(this.vora, 0, 0, w, h);
 
     // Còpies que pugen i s'esvaeixen, com flames que s'enlairen del cos.
