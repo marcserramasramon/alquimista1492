@@ -139,10 +139,18 @@ export class ContornPersones {
     if (!this.suau || this.suau.length !== valors.length) this.suau = new Float32Array(valors.length);
     const suau = this.suau;
     // Mitjana amb el fotograma anterior: la vora no tremola.
+    let max = 0;
+    let suma = 0;
+    for (let i = 0; i < valors.length; i++) {
+      if (valors[i] > max) max = valors[i];
+      suma += valors[i];
+    }
+    // Llindar normal 0,5; si el model dóna valors baixos (màxim < 0,5) s'abaixa a la meitat del màxim.
+    const llindar = max >= 0.5 ? 0.5 : Math.max(0.05, max * 0.5);
     let dins = 0;
     for (let i = 0; i < valors.length; i++) {
       suau[i] += (valors[i] - suau[i]) * 0.6;
-      if (suau[i] > 0.5) dins++;
+      if (suau[i] > llindar) dins++;
     }
     // Si el model dóna el fons en lloc de la persona (gairebé tot ple), s'inverteix.
     const invertir = dins > valors.length * 0.85;
@@ -165,7 +173,7 @@ export class ContornPersones {
     const pp = imatgePle.data;
     const persona = (x: number, y: number) => {
       if (x < 0 || y < 0 || x >= mw || y >= mh) return true;
-      return suau[y * mw + x] > 0.5 !== invertir;
+      return suau[y * mw + x] > llindar !== invertir;
     };
     let vores = 0;
     for (let y = 0; y < mh; y++) {
@@ -187,7 +195,7 @@ export class ContornPersones {
     this.hiHaVora = vores > 0;
     this.info = `fot ${this.fotogrames} · masques ${nMasques} · ${mw}x${mh} · persona ${Math.round(
       (dins / valors.length) * 100,
-    )}%${invertir ? " (invertit)" : ""} · vora ${vores}px`;
+    )}%${invertir ? " (invertit)" : ""} · vora ${vores}px · val max ${max.toFixed(2)} mitja ${(suma / valors.length).toFixed(2)} llindar ${llindar.toFixed(2)}`;
   }
 
   /** Esborra de l'escena el que cau darrere de les persones: les flames són un element del fons. */
