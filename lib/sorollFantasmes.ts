@@ -4,10 +4,12 @@
  * So de l'extra de les ànimes (fantasmes), amb gravacions de public/audio/ar/fantasmes/
  * (dragon-studio i freesound_community, via Pixabay):
  * - **Fons**: els tres àudios llargs (uns 13 s, 22 s i 1 min 30 s) sonen un darrere l'altre,
- *   amb fosos entre ells, a un volum màxim del 20 %. Es llegeixen en streaming (element
- *   d'àudio) perquè el de 1 min 30 s descodificat ocuparia molta memòria al mòbil.
+ *   amb fosos entre ells. Es llegeixen en streaming (element d'àudio) perquè el de 1 min 30 s
+ *   descodificat ocuparia molta memòria al mòbil.
  * - **Curts**: els cinc àudios curts s'alternen (mai el mateix dos cops seguits) quan el jugador
  *   enfoca un fantasma de prop o un fantasma s'acosta. Mai més d'un cada pocs segons.
+ * - **Volum**: el màxim és el 60 %, i com més llarg és un so, més baix: 20 %, 30 %, 40 %, 50 % i 60 %
+ *   (vegeu VOLUM).
  * Tot passa per un volum mestre que es pot silenciar. Només comença quan l'usuari toca el botó
  * d'entrada (els navegadors mòbils no deixen sonar abans).
  */
@@ -16,9 +18,20 @@ const BASE = "/audio/ar/fantasmes/";
 const FONS = ["fons-veus.mp3", "fons-agut.mp3", "fons-fantasma.mp3"];
 const CURTS = ["sospir.mp3", "trist.mp3", "xiuxiueig-llarg.mp3", "xiuxiueig-curt.mp3", "horror.mp3"];
 
-/** Volum màxim dels fons (0-1) i dels sons curts. */
-const VOLUM_FONS = 0.2;
-const VOLUM_CURTS = 0.7;
+/**
+ * Volum de cada so (0-1): com més llarg, més baix, amb un màxim del 60 %.
+ * 1 min 30 s → 20 %; 22 s → 30 %; 13 s → 40 %; 8 s → 50 %; els de 5 s o menys → 60 %.
+ */
+const VOLUM: Record<string, number> = {
+  "fons-veus.mp3": 0.2,
+  "fons-agut.mp3": 0.3,
+  "fons-fantasma.mp3": 0.4,
+  "xiuxiueig-llarg.mp3": 0.5,
+  "sospir.mp3": 0.6,
+  "trist.mp3": 0.6,
+  "xiuxiueig-curt.mp3": 0.6,
+  "horror.mp3": 0.6,
+};
 /** Temps mínim entre dos sons curts (ms) i fos entre fons (s). */
 const ENTRE_CURTS_MS = 5000;
 const FOS_FONS_S = 3;
@@ -57,7 +70,7 @@ function obtenirContext(): AudioContext | null {
       mestre.gain.value = silenciat ? 0 : 1;
       mestre.connect(context.destination);
       gFons = context.createGain();
-      gFons.gain.value = VOLUM_FONS;
+      gFons.gain.value = 1;
       gFons.connect(mestre);
     } catch {
       context = null;
@@ -87,7 +100,7 @@ function arrencaFons() {
     elementsFons.delete(el);
     return;
   }
-  g.gain.linearRampToValueAtTime(1, ctx.currentTime + FOS_FONS_S);
+  g.gain.linearRampToValueAtTime(VOLUM[nom] ?? 0.2, ctx.currentTime + FOS_FONS_S);
   let seguent = false;
   const alAcabar = () => {
     elementsFons.delete(el);
@@ -182,7 +195,7 @@ export function sonarFantasma(pan: number): boolean {
   const font = ctx.createBufferSource();
   font.buffer = buffer;
   const g = ctx.createGain();
-  g.gain.value = VOLUM_CURTS;
+  g.gain.value = VOLUM[nom] ?? 0.5;
   font.connect(g);
   if (typeof ctx.createStereoPanner === "function") {
     const panner = ctx.createStereoPanner();
