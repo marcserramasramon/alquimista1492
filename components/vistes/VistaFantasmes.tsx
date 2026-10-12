@@ -20,7 +20,7 @@ export interface VistaFantasmesProps {
 type EstatCamera = "esperant" | "activa" | "no-disponible";
 
 /** Fantasmes que hi ha alhora (els que es dissolen tornen més tard). */
-const QUANTITAT = 11;
+const QUANTITAT = 3;
 /** Temps de recàrrega del flaix (ms). */
 const RECARREGA_FLAIX_MS = 2500;
 

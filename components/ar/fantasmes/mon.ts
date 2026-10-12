@@ -33,6 +33,11 @@ export interface EsdevenimentFantasma {
 
 export interface OpcionsMon {
   quantitat: number;
+  /**
+   * Mode guia: sense portals ni esperits, els fantasmes surten d'entre els jugadors i volen en línia
+   * recta cap on van (rumb en graus des del nord), es difuminen lluny i tornen a sortir.
+   */
+  guia?: { rumb: number };
   alEsdeveniment?: (e: EsdevenimentFantasma) => void;
 }
 
@@ -164,7 +169,8 @@ const FRAGMENT = `
 // ───────────────────────────── fantasma ─────────────────────────────
 
 // emergeix: puja del terra per un portal; enfonsa: va a un portal i s'hi enfonsa.
-type Estat = "ocult" | "emergeix" | "deriva" | "curios" | "dissolt" | "fuig" | "enfonsa" | "persegueix" | "porta";
+// guia: vola en línia recta cap al final del camí (només en mode guia).
+type Estat = "ocult" | "emergeix" | "deriva" | "curios" | "dissolt" | "fuig" | "enfonsa" | "persegueix" | "porta" | "guia";
 
 class Fantasma {
   readonly grup: THREE.Group;
@@ -308,7 +314,7 @@ class Fantasma {
       let sx: number;
       let sy: number;
       let sz: number;
-      if (this.estat === "curios" || this.estat === "fuig" || this.estat === "emergeix" || this.estat === "enfonsa" || this.estat === "persegueix" || this.estat === "porta") {
+      if (this.estat === "curios" || this.estat === "fuig" || this.estat === "emergeix" || this.estat === "enfonsa" || this.estat === "persegueix" || this.estat === "porta" || this.estat === "guia") {
         sx = this.objectiu.x;
         sy = this.objectiu.y;
         sz = this.objectiu.z;
@@ -324,7 +330,7 @@ class Fantasma {
       vel.z += (sz - head.z) * kk;
       vel.multiplyScalar(Math.pow(0.9, k));
       const maxVel =
-        this.estat === "fuig" ? 0.3 : this.estat === "curios" ? 0.06 : this.estat === "enfonsa" ? 0.035 : this.estat === "emergeix" ? 0.03 : this.estat === "persegueix" ? 0.115 : this.estat === "porta" ? 0.07 : 0.04;
+        this.estat === "fuig" ? 0.3 : this.estat === "curios" ? 0.06 : this.estat === "enfonsa" ? 0.035 : this.estat === "emergeix" ? 0.03 : this.estat === "persegueix" ? 0.115 : this.estat === "porta" ? 0.07 : this.estat === "guia" ? 0.032 : 0.04;
       const vl = vel.length();
       if (vl > maxVel) vel.multiplyScalar(maxVel / vl);
       head.addScaledVector(vel, k);
@@ -570,7 +576,7 @@ class Portal {
 // ───────────────────────────── esperits (els fantasmes d'abans) ─────────────────────────────
 
 /** Esperits que hi ha alhora. */
-const QUANTITAT_ESPERITS = 10;
+const QUANTITAT_ESPERITS = 5;
 /** Cada quants segons arriba un esperit de fora, i a quina distància del jugador apareix (m). */
 const ESPERIT_CADA_S = 5;
 const ESPERIT_DIST_FORA: [number, number] = [34, 42];
@@ -871,6 +877,8 @@ export class MonFantasmes {
   private readonly mapHalo: THREE.Texture;
   private readonly uTime = { value: 0 };
   private readonly avant: THREE.Vector3;
+  /** Direcció (unitària, en el pla XZ del món) cap on guien els fantasmes, o null si no hi ha mode guia. */
+  private readonly guia: { x: number; z: number } | null;
   private readonly alEsdeveniment?: (e: EsdevenimentFantasma) => void;
   private ultimMs = 0;
   private t = 0;
@@ -884,6 +892,8 @@ export class MonFantasmes {
   constructor(T: Tres, canvas: HTMLCanvasElement, opcions: OpcionsMon) {
     this.T = T;
     this.alEsdeveniment = opcions.alEsdeveniment;
+    // Nord = -Z, est = +X: un rumb r apunta a (sin r, -cos r).
+    this.guia = opcions.guia ? { x: Math.sin(opcions.guia.rumb * RAD), z: -Math.cos(opcions.guia.rumb * RAD) } : null;
     this.renderer = new T.WebGLRenderer({ canvas, alpha: true, antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
     this.renderer.setClearColor(0x000000, 0);
@@ -930,7 +940,7 @@ export class MonFantasmes {
       [COLOR_LILA, COLOR_CIAN],
       [COLOR_CIAN, COLOR_LILA],
     ];
-    parells.forEach(([anell, columna], i) => {
+    (this.guia ? [] : parells).forEach(([anell, columna], i) => {
       const rumb = base + (i * Math.PI * 2) / parells.length + alea(-0.5, 0.5);
       const r = alea(PORTAL_DIST_MIN, PORTAL_DIST_MAX);
       this.portals.push(
@@ -945,12 +955,20 @@ export class MonFantasmes {
       f.home.y = h.y;
       f.home.z = h.z;
       f.colloca(h.x, h.y, h.z);
-      f.espera = 0.4 + i * 0.55; // surten a poc a poc, no tots alhora
+      f.espera = this.guia ? 0.4 + i * 1.3 : 0.4 + i * 0.55; // surten a poc a poc, no tots alhora
       this.fantasmes.push(f);
     }
-    for (let i = 0; i < QUANTITAT_ESPERITS; i++) {
+    for (let i = 0; i < (this.guia ? 0 : QUANTITAT_ESPERITS); i++) {
       const e = new Esperit(T, i, this.geo, this.circle, this.mapUll, this.mapHalo, this.uTime, this.escena);
-      e.espera = 1.5 + i * 1.2;
+      // Des del principi ja hi són, repartits a l'atzar dins la zona.
+      const rumb = Math.random() * Math.PI * 2;
+      const r = alea(RADI_MIN, RADI_MAX * 0.85);
+      e.home.x = Math.sin(rumb) * r;
+      e.home.y = alea(1.2, 3.6);
+      e.home.z = -Math.cos(rumb) * r;
+      e.colloca(e.home.x, e.home.y, e.home.z);
+      e.estat = "deriva";
+      e.fade = 1;
       this.esperits.push(e);
     }
   }
@@ -1220,7 +1238,7 @@ export class MonFantasmes {
     this.proximCacaT -= dt;
     if (this.proximCacaT <= 0) {
       this.proximCacaT = alea(4, 8);
-      this.triaCaca();
+      if (!this.guia) this.triaCaca();
     }
 
     // Crit del jugador.
@@ -1246,7 +1264,23 @@ export class MonFantasmes {
       switch (f.estat) {
         case "ocult":
           f.espera -= dt;
-          if (f.espera <= 0) {
+          if (f.espera <= 0 && this.guia) {
+            // Surt a prop dels jugadors, una mica al davant i a un costat, i vola camí avall.
+            const g = this.guia;
+            const davant = alea(2, 8);
+            const lateral = alea(1.6, 4.5) * (Math.random() < 0.5 ? -1 : 1);
+            const x = g.x * davant - g.z * lateral;
+            const z = g.z * davant + g.x * lateral;
+            const y = alea(1.5, 3.2);
+            f.colloca(x, y, z);
+            f.objectiu.set(x + g.x * 80, y + alea(-0.4, 0.6), z + g.z * 80);
+            f.estat = "guia";
+            f.fade = 0;
+            f.glow = 1.4;
+            f.t = 0;
+            f.mirat = 0;
+            f.enfocatDit = false;
+          } else if (f.espera <= 0) {
             // Surt d'un portal: puja des de sota terra (el terra el talla) fins a una alçada, i després va al seu punt.
             const h = this.triaHome(f);
             f.home.x = h.x;
@@ -1261,6 +1295,16 @@ export class MonFantasmes {
             f.t = 0;
             f.mirat = 0;
             f.enfocatDit = false;
+          }
+          break;
+        case "guia":
+          f.t += dt;
+          if (f.t < 1.6) f.fade = Math.min(1, f.t / 1.6);
+          else if (Math.hypot(f.head.x, f.head.z) > 42) f.fade -= dt / 1.6;
+          if (f.t >= 1.6 && f.fade <= 0) {
+            f.fade = 0;
+            f.estat = "ocult";
+            f.espera = alea(0.4, 2.2);
           }
           break;
         case "emergeix":
@@ -1318,7 +1362,10 @@ export class MonFantasmes {
           break;
       }
       // Llum de vora que dona el portal més proper: com més a prop, més se'n veu el fantasma.
-      f.llum = 0.9 * Math.pow(limita(1 - this.portalProper(f.head.x, f.head.z).distancia(f.head.x, f.head.z) / 10, 0, 1), 1.5);
+      // En mode guia no hi ha portals: una llum de vora fixa perquè destaquin sobre la càmera.
+      f.llum = this.portals.length
+        ? 0.9 * Math.pow(limita(1 - this.portalProper(f.head.x, f.head.z).distancia(f.head.x, f.head.z) / 10, 0, 1), 1.5)
+        : 0.5;
       f.actualitza(dt, this.t, cam);
       f.glow += (1 - f.glow) * Math.min(1, dt * 3);
 
@@ -1350,7 +1397,7 @@ export class MonFantasmes {
       }
     }
 
-    this.actualitzaEsperits(dt, cam);
+    if (!this.guia) this.actualitzaEsperits(dt, cam);
 
     // Els més llunyans primer, perquè els de davant els tapin (els ulls van sense prova de profunditat).
     const ordenats = [...this.fantasmes].sort((a, b) => b.dist - a.dist);
