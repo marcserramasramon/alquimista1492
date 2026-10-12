@@ -3,6 +3,8 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { ContornPersones, type EstatContorn } from "@/components/ar/foc/contorn";
 import type { Mirada } from "@/lib/orientacio";
+import { dibuixaVora } from "@/components/ar/voraGuia";
+import { diferenciaRumb } from "@/lib/orientacio";
 import { desferLleo, passesLleo, rugitLleo } from "@/lib/sorollArAigua";
 
 /** Camp de visió horitzontal que s'assumeix (el mateix que l'escena 3D). */
@@ -107,6 +109,9 @@ export function EscenaAigua({ mirada, arrossegar, video, alEstatContorn, alError
           } catch {
             // Un error a la silueta no ha d'aturar el bucle.
           }
+          // Vora blava que guia cap al lleó; per damunt de tot, també de les persones.
+          const guia = aigua.guiaLleo();
+          if (guia) dibuixaVora(ctx, w, h, diferenciaRumb(guia.rumb, lectura.rumb), guia.intensitat, 1100, ara, "70, 160, 255");
         }
         frame = requestAnimationFrame(bucle);
       };

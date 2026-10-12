@@ -59,7 +59,7 @@ function bombolla() {
   osc.frequency.exponentialRampToValueAtTime(base * 2.2, t + 0.1);
   const gain = c.createGain();
   gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(0.02 + Math.random() * 0.025, t + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.012 + Math.random() * 0.015, t + 0.015);
   gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
   osc.connect(gain).connect(mestre);
   osc.start(t);
@@ -77,7 +77,7 @@ function esquitxada() {
   filtre.frequency.value = 1500 + Math.random() * 2500;
   const gain = c.createGain();
   gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(0.06 + Math.random() * 0.06, t + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.035 + Math.random() * 0.035, t + 0.02);
   gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.18 + Math.random() * 0.2);
   font.connect(filtre).connect(gain).connect(mestre);
   font.start(t, Math.random(), 0.5);
@@ -109,11 +109,11 @@ export function iniciarSoAigua() {
   filtreCos.frequency.value = 650;
   filtreCos.Q.value = 0.45;
   const gainCos = c.createGain();
-  gainCos.gain.value = 0.15;
+  gainCos.gain.value = 0.07;
   const lfo = c.createOscillator();
   lfo.frequency.value = 0.35;
   const profunditat = c.createGain();
-  profunditat.gain.value = 0.04;
+  profunditat.gain.value = 0.02;
   lfo.connect(profunditat).connect(gainCos.gain);
   cos.connect(filtreCos).connect(gainCos).connect(mestre);
 
@@ -123,7 +123,7 @@ export function iniciarSoAigua() {
   filtreEscuma.type = "highpass";
   filtreEscuma.frequency.value = 3000;
   const gainEscuma = c.createGain();
-  gainEscuma.gain.value = 0.035;
+  gainEscuma.gain.value = 0.016;
   escuma.connect(filtreEscuma).connect(gainEscuma).connect(mestre);
 
   cos.start();

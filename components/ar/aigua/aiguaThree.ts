@@ -298,6 +298,11 @@ export class AiguaThree {
     }
   }
 
+  /** Cap a on mirar per veure el lleó i la força de l'avís a la vora de la pantalla; null si no n'hi ha. */
+  guiaLleo(): { rumb: number; intensitat: number } | null {
+    return this.lleo?.guia ?? null;
+  }
+
   /** Mida del dibuix en píxels (el canvas fora de pantalla). */
   redimensiona(w: number, h: number) {
     if (w === this.w && h === this.h) return;
@@ -364,7 +369,7 @@ export class AiguaThree {
     }
     this.uniformes.uTime.value += dt;
     this.actualitzaGotes(dt);
-    this.lleo?.actualitza(dt);
+    this.lleo?.actualitza(dt, mirada.rumb);
     this.camera.rotation.y = -mirada.rumb * RAD;
     this.camera.rotation.x = mirada.elevacio * RAD;
     this.renderer.render(this.escena, this.camera);

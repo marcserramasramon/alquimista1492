@@ -198,6 +198,7 @@ export const EXTRES_AR: ExtraAr[] = [
         { icona: "👇", text: "Abaixeu el mòbil cap als peus i gireu-lo a poc a poc al vostre voltant." },
         { icona: "🌊", text: "Un riu de ràpids d'uns 3 metres d'ample us passa pels peus: ones, escuma i esquitxades." },
         { icona: "🧍", text: "Els companys es queden per damunt de l'aigua, com si hi caminessin." },
+        { icona: "🦁", text: "Quan una vora de la pantalla es posa blava, gireu-vos cap a aquell costat: un lleó d'aigua hi sortirà. Vindrà dues vegades, des de dos costats oposats." },
       ],
       permisos: {
         titol: "El mòbil us demanarà permís per a:",

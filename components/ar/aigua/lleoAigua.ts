@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { diferenciaRumb } from "@/lib/orientacio";
 
 /**
  * El lleó d'aigua: un lleó animat (esquelet de 27 ossos i un sol cicle de caminar, sense avançar) amb la pell
@@ -128,7 +129,7 @@ const FRAGMENT = /* glsl */ `
   }
 `;
 
-type Fase = "pausa" | "camina" | "para" | "rugeix" | "desfa";
+type Fase = "pausa" | "avis" | "camina" | "para" | "rugeix" | "desfa" | "fi";
 
 export class LleoAigua {
   readonly arrel = new THREE.Group();
@@ -147,6 +148,14 @@ export class LleoAigua {
   private enfonsat = 0;
   private pas = 0;
   private rugitDit = false;
+  /** Costats des d'on vindrà, en graus respecte de l'eix del riu: primer l'eix i després l'oposat, un cop cadascun. */
+  private readonly ordre = [0, 180];
+  private torn = 0;
+  private mirat = 0;
+  /** Direcció (unitària) i rumb en graus des d'on arriba en aquest torn. */
+  private dx = 0;
+  private dz = -1;
+  private rumbTorn = 0;
   private passosSonant = false;
   private acumulat = 0;
   private escala = 1;
@@ -245,7 +254,31 @@ export class LleoAigua {
   }
 
   private rumbCapAlJugador() {
-    return Math.atan2(-this.mon.dirX, -this.mon.dirZ) + GIR_MODEL;
+    return Math.atan2(-this.dx, -this.dz) + GIR_MODEL;
+  }
+
+  /** Tria el costat del torn i en dóna l'avís (la vora blava) fins que el jugador hi mira. */
+  private iniciaTorn() {
+    if (this.torn >= this.ordre.length) {
+      this.canviaFase("fi");
+      return;
+    }
+    const r = Math.atan2(this.mon.dirX, -this.mon.dirZ) + (this.ordre[this.torn] * Math.PI) / 180;
+    this.dx = Math.sin(r);
+    this.dz = -Math.cos(r);
+    this.rumbTorn = ((((r * 180) / Math.PI) % 360) + 360) % 360;
+    this.mirat = 0;
+    this.canviaFase("avis");
+  }
+
+  /**
+   * Cap a on s'ha de mirar per veure'l (rumb) i amb quina força s'il·lumina la vora de la pantalla: des de
+   * l'avís fins que es desfà del tot. Null quan no hi ha res a indicar.
+   */
+  get guia(): { rumb: number; intensitat: number } | null {
+    if (this.fase === "pausa" || this.fase === "fi") return null;
+    const intensitat = this.fase === "desfa" ? 1 - ease(this.tFase / 4.2) : 1;
+    return intensitat > 0.02 ? { rumb: this.rumbTorn, intensitat } : null;
   }
 
   private reinicia() {
@@ -256,7 +289,7 @@ export class LleoAigua {
     this.rugitDit = false;
     this.arrel.visible = true;
     this.material.uniforms.uShow.value = 0;
-    this.onada(this.mon.dirX * this.dist, this.mon.dirZ * this.dist);
+    this.onada(this.dx * this.dist, this.dz * this.dist);
     this.canviaFase("camina");
   }
 
@@ -269,7 +302,7 @@ export class LleoAigua {
     this.mon.gotes(x + lx + Math.sin(cap) * alea(-0.3, 0.4) * K, 0.05, z + lz + Math.cos(cap) * alea(-0.3, 0.4) * K, 14, 0, alea(2.5, 4.5), 0, 2.2);
   }
 
-  actualitza(dt: number) {
+  actualitza(dt: number, rumbMirada: number) {
     this.temps += dt;
     this.tFase += dt;
     const t = this.tFase;
@@ -282,7 +315,20 @@ export class LleoAigua {
 
     switch (this.fase) {
       case "pausa":
-        if (t > (this.temps < 4 ? 1.2 : 3.2)) this.reinicia();
+        if (t > (this.temps < 4 ? 1.2 : 3.2)) this.iniciaTorn();
+        break;
+
+      case "avis":
+        // Espera que el jugador giri cap al costat i hi miri un moment: llavors surt.
+        if (t > 2.5 && Math.abs(diferenciaRumb(this.rumbTorn, rumbMirada)) < 24) this.mirat += dt;
+        else this.mirat = Math.max(0, this.mirat - dt);
+        if (this.mirat > 0.7) {
+          this.torn++;
+          this.reinicia();
+        }
+        break;
+
+      case "fi":
         break;
 
       case "camina": {
@@ -296,7 +342,7 @@ export class LleoAigua {
         this.pas += dt * velocitatClip * 4;
         if (this.pas >= 1) {
           this.pas -= 1;
-          this.esquitxaPeus(this.mon.dirX * this.dist, this.mon.dirZ * this.dist);
+          this.esquitxaPeus(this.dx * this.dist, this.dz * this.dist);
         }
         if (this.dist <= DIST_PARADA) this.canviaFase("para");
         break;
@@ -331,7 +377,7 @@ export class LleoAigua {
         if (t > 3.2) {
           this.canviaFase("desfa");
           this.mon.esdeveniment("desfer");
-          this.onada(this.mon.dirX * this.dist, this.mon.dirZ * this.dist);
+          this.onada(this.dx * this.dist, this.dz * this.dist);
         }
         break;
       }
@@ -347,9 +393,9 @@ export class LleoAigua {
         if (n > 0 && show > 0.05) {
           const alt = Math.min(1, show / MOSTRA_PLENA) * ALCADA;
           this.mon.gotes(
-            this.mon.dirX * this.dist + alea(-0.45, 0.45) * K,
+            this.dx * this.dist + alea(-0.45, 0.45) * K,
             alea(0.1, Math.max(0.2, alt)),
-            this.mon.dirZ * this.dist + alea(-0.45, 0.45) * K,
+            this.dz * this.dist + alea(-0.45, 0.45) * K,
             n,
             0,
             alea(-0.5, 1.5),
@@ -357,7 +403,7 @@ export class LleoAigua {
             2,
           );
         }
-        if (t > 3.0 && t - dt <= 3.0) this.onada(this.mon.dirX * this.dist, this.mon.dirZ * this.dist);
+        if (t > 3.0 && t - dt <= 3.0) this.onada(this.dx * this.dist, this.dz * this.dist);
         if (t > 4.4) {
           this.arrel.visible = false;
           this.canviaFase("pausa");
@@ -380,7 +426,7 @@ export class LleoAigua {
     this.posa(rugit, anticip, pesCamina);
 
     const tot = this.arrel;
-    tot.position.set(this.mon.dirX * this.dist, -this.enfonsat, this.mon.dirZ * this.dist);
+    tot.position.set(this.dx * this.dist, -this.enfonsat, this.dz * this.dist);
     tot.rotation.y = this.yaw;
     tot.scale.setScalar(this.escala * (1 + 0.025 * Math.sin(this.temps * 41) * rugit));
     this.material.uniforms.uShow.value = show;
