@@ -81,13 +81,11 @@ const COLORS_SOROLL = [
   "#b5291b", // vermell terracota
 ];
 
-/** Blaus dels símbols del soroll: més clars que el blau fosc de la resposta. */
+/** Blaus dels símbols del soroll: 3 tons clars, tots més clars que el blau fosc de la resposta. */
 const BLAUS_SIMBOLS = [
-  "#7fb2f5", // blau clar
-  "#8cbcf7", // blau cel
-  "#74a8ee", // blau suau
-  "#93b9f0", // blau pàl·lid
-  "#80aee6", // blau acer clar
+  "#7fb2f5", // blau clar (el més clar)
+  "#639ced", // blau clar mitjà
+  "#4d8ae3", // blau clar més intens
 ];
 
 const SIMBOLS: FormaSimbol[] = ["foc", "aigua", "aire", "terra", "sol", "lluna", "sofre", "sal", "estrella"];
@@ -147,7 +145,7 @@ export function generaSoroll({
   // la seva forma pel component), tots de la mateixa mida i del blau de la
   // resposta.
   const pasHalftone = 9;
-  const radiHalftone = 4.2;
+  const radiHalftone = 3.6;
   const margeHalftone = midaObjectiuFinal * 0.65;
   const minXHalftone = Math.max(0, xObjectiu - margeHalftone);
   const maxXHalftone = Math.min(amplada, xObjectiu + margeHalftone);
