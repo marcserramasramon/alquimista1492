@@ -2,7 +2,7 @@ import type * as THREE from "three";
 
 /**
  * Món de les ànimes guia: esperits petits de boira lluminosa (cos allargat amb cua que s'arrossega,
- * ulls vermells gairebé sempre tancats) que surten d'entre els jugadors i volen en línia recta cap on
+ * ulls vermells gairebé sempre tancats) que surten per darrere dels jugadors i volen en línia recta cap on
  * van, es difuminen lluny i tornen a sortir. Escena pròpia, independent de la dels fantasmes de la
  * fita d'Ànima (components/ar/fantasmes/mon.ts), de la qual només copia l'aspecte dels esperits.
  *
@@ -336,10 +336,11 @@ export class MonGuies {
     this.camera.updateProjectionMatrix();
   }
 
-  /** Surt una ànima una mica al davant i a un costat, a l'alçada de la vista, i vola camí avall. */
+  /** Surt una ànima per darrere del jugador, a un costat i a l'alçada de la vista, i vola camí avall: el
+   * supera i continua, de manera que en girar-se se li veuen els ulls (miren sempre cap a la càmera). */
   private surt(e: Guia) {
     const d = this.dir;
-    const davant = alea(2.5, 7);
+    const davant = -alea(3.5, 8);
     const lateral = alea(1.2, 3.5) * (Math.random() < 0.5 ? -1 : 1);
     const x = d.x * davant - d.z * lateral;
     const z = d.z * davant + d.x * lateral;
