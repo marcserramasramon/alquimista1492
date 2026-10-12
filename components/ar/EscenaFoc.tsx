@@ -62,10 +62,7 @@ export function EscenaFoc({ mirada, arrossegar, video, alSalt, alEstatContorn, d
       }
       ctx.clearRect(0, 0, w, h);
       const v = videoRef.current?.current;
-      if (v && w > 0 && h > 0) {
-        contorn.actualitza(v, w, h, ara);
-        contorn.pinta(ctx, w, h, ara);
-      }
+      if (v && w > 0 && h > 0) contorn.actualitza(v, w, h, ara);
       if (depuracioRef.current) {
         depuracioRef.current.current = `${contorn.estat} · vídeo ${v ? `${v.videoWidth}x${v.videoHeight} rs${v.readyState}` : "no"}
 ${contorn.info}`;
@@ -75,7 +72,12 @@ ${contorn.info}`;
         estatRef.current?.(contorn.estat);
       }
       const lectura = arrossegarRef.current ? manual.current : (mirada.current ?? manual.current);
+      // Primer les flames (fons), després s'hi retalla la silueta de les persones i, a sobre, el seu contorn.
       mon.pinta(ctx, w, h, dt, lectura);
+      if (v && w > 0 && h > 0) {
+        contorn.tapa(ctx, w, h);
+        contorn.pinta(ctx, w, h, ara);
+      }
       frame = requestAnimationFrame(bucle);
     };
     frame = requestAnimationFrame(bucle);

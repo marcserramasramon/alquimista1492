@@ -39,6 +39,8 @@ export class ContornPersones {
   private segmentador: ImageSegmenter | null = null;
   private entrada: HTMLCanvasElement;
   private vora: HTMLCanvasElement;
+  /** Silueta plena de les persones, per tapar el que hi ha darrere seu. */
+  private ple: HTMLCanvasElement;
   private suau: Float32Array | null = null;
   private ultim = 0;
   private hiHaVora = false;
@@ -51,6 +53,7 @@ export class ContornPersones {
   constructor() {
     this.entrada = document.createElement("canvas");
     this.vora = document.createElement("canvas");
+    this.ple = document.createElement("canvas");
   }
 
   async iniciar(): Promise<void> {
@@ -146,8 +149,16 @@ export class ContornPersones {
     }
     const g = this.vora.getContext("2d");
     if (!g) return;
+    if (this.ple.width !== mw || this.ple.height !== mh) {
+      this.ple.width = mw;
+      this.ple.height = mh;
+    }
+    const gp = this.ple.getContext("2d");
+    if (!gp) return;
     const imatge = g.createImageData(mw, mh);
     const px = imatge.data;
+    const imatgePle = gp.createImageData(mw, mh);
+    const pp = imatgePle.data;
     const persona = (x: number, y: number) => {
       if (x < 0 || y < 0 || x >= mw || y >= mh) return true;
       return suau[y * mw + x] > 0.5 !== invertir;
@@ -156,6 +167,7 @@ export class ContornPersones {
     for (let y = 0; y < mh; y++) {
       for (let x = 0; x < mw; x++) {
         if (!persona(x, y)) continue;
+        pp[(y * mw + x) * 4 + 3] = 255;
         if (persona(x - GRUIX, y) && persona(x + GRUIX, y) && persona(x, y - GRUIX) && persona(x, y + GRUIX)) continue;
         const k = (y * mw + x) * 4;
         px[k] = 255;
@@ -166,10 +178,21 @@ export class ContornPersones {
       }
     }
     g.putImageData(imatge, 0, 0);
+    gp.putImageData(imatgePle, 0, 0);
     this.hiHaVora = vores > 0;
     this.info = `fot ${this.fotogrames} · masques ${nMasques} · ${mw}x${mh} · persona ${Math.round(
       (dins / valors.length) * 100,
     )}%${invertir ? " (invertit)" : ""} · vora ${vores}px`;
+  }
+
+  /** Esborra de l'escena el que cau darrere de les persones: les flames són un element del fons. */
+  tapa(ctx: CanvasRenderingContext2D, w: number, h: number) {
+    if (!this.hiHaVora) return;
+    ctx.save();
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(this.ple, 0, 0, w, h);
+    ctx.restore();
   }
 
   /** Dibuixa la vora amb resplendor i flames que pugen, sobre un context transparent. */
