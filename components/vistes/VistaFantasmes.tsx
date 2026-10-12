@@ -125,6 +125,7 @@ export function VistaFantasmes({ extra, onTornar, directa = false }: VistaFantas
           arrossegar={estatSensors !== "actiu"}
           nivellMicro={micro === "actiu" ? nivellMicro : null}
           quantitat={QUANTITAT}
+          puntLlum={extra.puntLlum}
           alEsdeveniment={alEsdeveniment}
           alControl={alControl}
           onError={() => setErrorEscena(true)}

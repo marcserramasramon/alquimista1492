@@ -431,8 +431,8 @@ const COLUMNA_FRAGMENT = `
 
 /** Portal de llum al terra: anell, columna que s'esvaeix cap amunt i partícules que pugen. */
 class Portal {
-  readonly x: number;
-  readonly z: number;
+  x: number;
+  z: number;
   private readonly grup: THREE.Group;
   private readonly anell: THREE.Mesh;
   private readonly matAnell: THREE.MeshBasicMaterial;
@@ -555,6 +555,13 @@ class Portal {
       this.pos[i * 3 + 2] = Math.sin(this.angle[i]) * r;
     }
     this.geoPunts.attributes.position.needsUpdate = true;
+  }
+
+  /** Canvia el portal de lloc (metres respecte al jugador: est i nord). */
+  mou(x: number, z: number) {
+    this.x = x;
+    this.z = z;
+    this.grup.position.set(x, 0, z);
   }
 
   /** Distància horitzontal d'un punt al portal. */
@@ -1120,6 +1127,22 @@ export class MonFantasmes {
         f.objectiu.set(v.portal.x, Math.max(f.head.y, 1.8), v.portal.z);
       }
     }
+  }
+
+  /** El primer portal, el «punt de llum», va al lloc que toca per GPS: `est` i `nord` en metres respecte al jugador. */
+  fixaPuntLlum(est: number, nord: number) {
+    this.portals[0]?.mou(est, -nord);
+  }
+
+  /** El «punt de llum» a `dist` m davant del jugador, segons el rumb (graus des del nord). */
+  fixaPuntLlumDavant(rumb: number, dist: number) {
+    this.portals[0]?.mou(Math.sin(rumb * RAD) * dist, -Math.cos(rumb * RAD) * dist);
+  }
+
+  /** Posició actual del punt de llum (est, nord), per no moure'l per un no res. */
+  get puntLlum(): { est: number; nord: number } | null {
+    const p = this.portals[0];
+    return p ? { est: p.x, nord: -p.z } : null;
   }
 
   /** El portal més proper a un punt. */

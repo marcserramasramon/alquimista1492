@@ -47,6 +47,8 @@ export interface ExtraAr {
    * Sense camí, apareix on mira el mòbil.
    */
   cami?: { des: PuntGps; cap: PuntGps };
+  /** Només per a "fantasmes": el punt de llum (portal) es col·loca a aquesta posició GPS; si no es pot, davant del jugador. */
+  puntLlum?: PuntGps;
   /** Text del botó de la pantalla de la fita (o del pas). */
   boto: string;
   /** Pantalla d'entrada de l'extra, abans de demanar càmera i sensors: explica com funciona. */
@@ -94,6 +96,7 @@ export const EXTRES_AR: ExtraAr[] = [
     id: "anima-fantasmes",
     fitaId: "anima",
     escena: "fantasmes",
+    puntLlum: { latitud: 41.910375056093535, longitud: 2.2300781047600005 },
     boto: "👻 Mirar les ànimes",
     introduccio: {
       titol: "Ànimes a la foscor",
@@ -109,6 +112,7 @@ export const EXTRES_AR: ExtraAr[] = [
           { icona: "📷", text: "Càmera: per veure el que teniu al davant." },
           { icona: "🧭", text: "Moviment i brúixola: per saber cap a on mireu." },
           { icona: "🎤", text: "Micròfon: només mesura el volum del crit. No es grava res ni s'envia enlloc." },
+          { icona: "📍", text: "Ubicació: per posar el punt de llum al seu lloc. No es desa ni s'envia enlloc." },
         ],
         nota: "Si no en voleu donar algun, es pot jugar igualment: arrossegueu el dit per mirar i toqueu «Cridar!».",
       },
