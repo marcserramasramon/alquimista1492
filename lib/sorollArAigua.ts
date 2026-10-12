@@ -234,6 +234,25 @@ function rugitSintetic() {
   gr.start(t, Math.random(), durada);
 }
 
+/** L'onada gegant que s'aixeca: un retruny greu que creix durant uns 3,5 s. */
+export function onadaLleo() {
+  const c = context;
+  if (!c || !mestre || !soroll) return;
+  const t = c.currentTime;
+  const font = fontSoroll(c, true);
+  const filtre = c.createBiquadFilter();
+  filtre.type = "lowpass";
+  filtre.frequency.setValueAtTime(180, t);
+  filtre.frequency.exponentialRampToValueAtTime(900, t + 3.4);
+  const gain = c.createGain();
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(0.7, t + 3.2);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 4.2);
+  font.connect(filtre).connect(gain).connect(mestre);
+  font.start(t, Math.random());
+  font.stop(t + 4.3);
+}
+
 /** El lleó es desfà en aigua: una onada greu i una pluja d'esquitxades. */
 export function desferLleo() {
   const c = context;

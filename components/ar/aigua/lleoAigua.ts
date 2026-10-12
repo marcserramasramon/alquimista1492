@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { diferenciaRumb } from "@/lib/orientacio";
+import { OnadaGegant, type EstatOnada } from "@/components/ar/aigua/onadaGegant";
 
 /**
  * El lleó d'aigua: un lleó animat (esquelet de 27 ossos i un sol cicle de caminar, sense avançar) amb la pell
@@ -11,7 +12,7 @@ import { diferenciaRumb } from "@/lib/orientacio";
  * damunt del clip amb ossos procedurals (respiració, rugit, cua).
  */
 
-export type EsdevenimentLleo = "rugit" | "desfer";
+export type EsdevenimentLleo = "rugit" | "desfer" | "onada";
 
 /** El que el lleó necessita del món on viu. */
 export interface MonLleo {
@@ -40,6 +41,10 @@ const GIR_MODEL = 0;
 const AMUNT = -1;
 
 const MOSTRA_PLENA = 1.15;
+/** L'onada gegant: més alta que el lleó, i d'on surt (m darrere seu) i fins on arriba davant seu. */
+const ONADA_ALT = ALCADA * 1.3;
+const ONADA_DARRERE = 8;
+const ONADA_DAVANT = -8;
 
 const ease = (x: number) => {
   const t = Math.min(1, Math.max(0, x));
@@ -148,6 +153,9 @@ export class LleoAigua {
   private enfonsat = 0;
   private pas = 0;
   private rugitDit = false;
+  private desferDit = false;
+  private readonly onadaGegant: OnadaGegant;
+  private acumulatOnada = 0;
   /** Costats des d'on vindrà, en graus respecte de l'eix del riu: primer l'eix i després l'oposat, un cop cadascun. */
   private readonly ordre = [0, 180];
   private torn = 0;
@@ -226,6 +234,7 @@ export class LleoAigua {
       this.lliberables.push(mat);
     }
 
+    this.onadaGegant = new OnadaGegant(uTime);
     this.arrel.visible = false;
     this.material.uniforms.uShow.value = 0;
   }
@@ -239,6 +248,7 @@ export class LleoAigua {
   afegeixA(escena: THREE.Scene) {
     escena.add(this.arrel);
     for (const o of this.onades) escena.add(o.malla);
+    escena.add(this.onadaGegant.malla);
   }
 
   private onada(x: number, z: number) {
@@ -287,6 +297,7 @@ export class LleoAigua {
     this.enfonsat = 0;
     this.pas = 0;
     this.rugitDit = false;
+    this.desferDit = false;
     this.arrel.visible = true;
     this.material.uniforms.uShow.value = 0;
     this.onada(this.dx * this.dist, this.dz * this.dist);
@@ -312,6 +323,7 @@ export class LleoAigua {
     let rugit = 0;
     let anticip = 0;
     let volumPassos = 0;
+    let onada: { alt: number; corba: number; opacitat: number; desp: number } | null = null;
 
     switch (this.fase) {
       case "pausa":
@@ -362,6 +374,13 @@ export class LleoAigua {
         if (t >= 0.3 && !this.rugitDit) {
           this.rugitDit = true;
           this.mon.esdeveniment("rugit");
+          this.mon.esdeveniment("onada");
+        }
+        // Mentre rugeix, una onada més alta que ell s'aixeca al seu darrere.
+        if (t >= 0.3) {
+          const r = ease((t - 0.3) / 2.8);
+          onada = { alt: ONADA_ALT * (0.1 + 0.9 * r), corba: 0.1 * r, opacitat: ease((t - 0.3) / 0.6), desp: ONADA_DARRERE };
+          this.salpicaOnada(onada, dt * 40);
         }
         if (t > 0.4 && t < 2.5) {
           this.acumulat += dt * 110;
@@ -376,14 +395,26 @@ export class LleoAigua {
         }
         if (t > 3.2) {
           this.canviaFase("desfa");
-          this.mon.esdeveniment("desfer");
-          this.onada(this.dx * this.dist, this.dz * this.dist);
         }
         break;
       }
 
       case "desfa": {
-        const d = ease(t / 4.2);
+        // L'onada avança i s'abat sobre el lleó (el creua cap als 1,1 s); ell es desfà quan ja és dins l'aigua.
+        const avanc = ease(Math.min(1, t / 2.4));
+        onada = {
+          alt: t < 2.2 ? ONADA_ALT : ONADA_ALT * (1 - ease((t - 2.2) / 1.8)),
+          corba: 0.1 + 0.9 * ease(t / 1.6),
+          opacitat: t < 3.4 ? 1 : 1 - ease((t - 3.4) / 1.0),
+          desp: ONADA_DARRERE + (ONADA_DAVANT - ONADA_DARRERE) * avanc - Math.max(0, t - 2.4) * 2,
+        };
+        if (t > 0.5 && t < 3) this.salpicaOnada(onada, dt * 160);
+        if (t >= 0.7 && !this.desferDit) {
+          this.desferDit = true;
+          this.mon.esdeveniment("desfer");
+        }
+        if (t >= 1.1 && t - dt < 1.1) this.onada(this.dx * this.dist, this.dz * this.dist);
+        const d = ease((t - 1.0) / 3.0);
         show = MOSTRA_PLENA * (1 - d);
         this.enfonsat = d * 0.45 * K;
         // Gotes que cauen del cos que es deshà.
@@ -424,6 +455,7 @@ export class LleoAigua {
     this.mixer.update(dt);
     for (const [os, q] of this.base) q.copy(os.quaternion);
     this.posa(rugit, anticip, pesCamina);
+    this.onadaGegant.posa(onada ? this.estatOnada(onada) : null);
 
     const tot = this.arrel;
     tot.position.set(this.dx * this.dist, -this.enfonsat, this.dz * this.dist);
@@ -443,6 +475,32 @@ export class LleoAigua {
     }
   }
 
+  /** Posició i orientació de l'onada al món: la cresta és `desp` m darrere del lleó (negatiu: davant) i viatja cap al jugador. */
+  private estatOnada(o: { alt: number; corba: number; opacitat: number; desp: number }): EstatOnada {
+    const a = this.dist + o.desp;
+    return { x: this.dx * a, z: this.dz * a, yaw: Math.atan2(-this.dx, -this.dz), alt: o.alt, corba: o.corba, opacitat: o.opacitat };
+  }
+
+  /** Esprai de la cresta de l'onada: gotes al llarg d'ella que surten cap endavant. */
+  private salpicaOnada(o: { alt: number; corba: number; opacitat: number; desp: number }, quantitat: number) {
+    this.acumulatOnada += quantitat;
+    const n = Math.floor(this.acumulatOnada);
+    this.acumulatOnada -= n;
+    if (n <= 0) return;
+    const a = this.dist + o.desp;
+    const lateral = alea(-0.35, 0.35) * 46;
+    this.mon.gotes(
+      this.dx * a - this.dz * lateral,
+      o.alt * alea(0.55, 1),
+      this.dz * a + this.dx * lateral,
+      n,
+      -this.dx * alea(3, 9),
+      alea(-1, 3),
+      -this.dz * alea(3, 9),
+      2.5,
+    );
+  }
+
   /** Gest per damunt del clip: respiració, rugit i cua. */
   private posa(rugit: number, anticip: number, pesCamina: number) {
     const t = this.temps;
@@ -458,6 +516,7 @@ export class LleoAigua {
   }
 
   dispose() {
+    this.onadaGegant.dispose();
     this.mixer.stopAllAction();
     this.arrel.parent?.remove(this.arrel);
     for (const o of this.onades) o.malla.parent?.remove(o.malla);
