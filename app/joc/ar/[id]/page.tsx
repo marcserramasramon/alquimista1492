@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { VistaExtraAr } from "@/components/vistes/VistaExtraAr";
 import { VistaFantasmes } from "@/components/vistes/VistaFantasmes";
+import { VistaAigua } from "@/components/vistes/VistaAigua";
 import { VistaFoc } from "@/components/vistes/VistaFoc";
 import { VistaGuiesAnimes } from "@/components/vistes/VistaGuiesAnimes";
 import { getExtraAr } from "@/content/public/extres";
@@ -26,6 +27,8 @@ export default function ExtraArPage() {
         ? VistaFoc
         : extra.escena === "guies"
           ? VistaGuiesAnimes
-          : VistaExtraAr;
+          : extra.escena === "aigua"
+            ? VistaAigua
+            : VistaExtraAr;
   return <Vista extra={extra} onTornar={() => router.push("/joc")} />;
 }

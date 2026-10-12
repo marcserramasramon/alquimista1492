@@ -6,7 +6,7 @@
  * Res d'aquí és una solució: es pot enviar al client sense risc.
  */
 
-export type EscenaAr = "ulls-siluetes" | "fantasmes" | "foc" | "guies";
+export type EscenaAr = "ulls-siluetes" | "fantasmes" | "foc" | "guies" | "aigua";
 
 export interface PuntGps {
   latitud: number;
@@ -157,6 +157,38 @@ export const EXTRES_AR: ExtraAr[] = [
       ],
       nota: "És només un extra: no canvia res de la partida.",
       boto: "Encendre el foc",
+    },
+  },
+  {
+    // Ràpids de riu que passen pels peus: s'activa un cop resolta la fita de la Font del Lleó.
+    id: "aigua-rapids",
+    fitaId: "font-ferro",
+    escena: "aigua",
+    boto: "🌊 Mirar l'aigua als peus",
+    introduccio: {
+      titol: "Ràpids als peus",
+      entrada: "L'aigua us corre pels peus. Això és el que veureu:",
+      passos: [
+        { icona: "👇", text: "Abaixeu el mòbil cap als peus i gireu-lo a poc a poc al vostre voltant." },
+        { icona: "🌊", text: "Un riu de ràpids us passa pel davant: escuma, roques i esquitxades." },
+        { icona: "🧍", text: "Els companys es queden per damunt de l'aigua, com si hi caminessin." },
+      ],
+      permisos: {
+        titol: "El mòbil us demanarà permís per a:",
+        items: [
+          { icona: "📷", text: "Càmera: per veure el que teniu al davant. La imatge no es grava ni s'envia enlloc." },
+          { icona: "🧭", text: "Moviment i brúixola: per saber cap a on mireu." },
+        ],
+        nota: "Si no en voleu donar algun, es pot veure igualment: arrossegueu el dit per mirar. Sense càmera no es distingeixen les persones.",
+      },
+      consells: [
+        "Mireu on trepitgeu: no camineu mentre mireu la pantalla.",
+        "Activeu el so: sense ell, els ràpids perden la meitat de la gràcia.",
+        "Cal xarxa: les persones es separen de l'aigua amb un model que es baixa en obrir l'extra.",
+        "Això no té res a veure amb la prova de la fita: no hi trobareu cap pista.",
+      ],
+      nota: "És només un extra: no canvia res de la partida.",
+      boto: "Deixar córrer l'aigua",
     },
   },
   {

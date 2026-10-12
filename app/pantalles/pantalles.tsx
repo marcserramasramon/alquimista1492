@@ -53,6 +53,7 @@ import { VistaExtraAr } from "@/components/vistes/VistaExtraAr";
 import { VistaFantasmes } from "@/components/vistes/VistaFantasmes";
 import { VistaGuiesAnimes } from "@/components/vistes/VistaGuiesAnimes";
 import { VistaFoc } from "@/components/vistes/VistaFoc";
+import { VistaAigua } from "@/components/vistes/VistaAigua";
 import { EXTRES_AR, getExtraAr } from "@/content/public/extres";
 import { MANUAL_ARRIBAR, MANUAL_HUB, MANUAL_RESOLDRE } from "@/content/public/textos";
 import type { AvisEquip } from "@/components/vistes/PanellAvisosMaster";
@@ -845,6 +846,20 @@ export const PANTALLES: Pantalla[] = [
     titol: "Extra foc · arcs de flames",
     descripcio: "L'escena sobre fons negre (sense càmera ni contorns); arrossegueu per mirar al voltant.",
     render: () => <VistaFoc extra={EXTRES_AR[2]} onTornar={noop} directa />,
+  },
+  {
+    id: "extra-aigua-introduccio",
+    grup: "hub",
+    titol: "Extra aigua · explicació abans de la càmera",
+    descripcio: "Fita de l'Aigua: ràpids de riu als peus; què demanarà el mòbil. El text és a content/public/extres.ts.",
+    render: () => <VistaAigua extra={getExtraAr("aigua-rapids")!} onTornar={noop} />,
+  },
+  {
+    id: "extra-aigua-escena",
+    grup: "hub",
+    titol: "Extra aigua · ràpids",
+    descripcio: "L'escena sobre fons negre (sense càmera); arrossegueu per mirar al voltant, sobretot cap avall.",
+    render: () => <VistaAigua extra={getExtraAr("aigua-rapids")!} onTornar={noop} directa />,
   },
   {
     id: "extra-ar-escena",
