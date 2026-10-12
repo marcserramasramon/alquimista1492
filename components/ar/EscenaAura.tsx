@@ -79,7 +79,14 @@ ${errorContorn}` : ""}`;
       }
       const lectura = arrossegarRef.current ? manual.current : (mirada.current ?? manual.current);
       // Primer les llums (fons), després s'hi retalla la silueta de les persones i, a sobre, el seu contorn.
-      mon.pinta(ctx, w, h, dt, lectura, ara);
+      try {
+        mon.pinta(ctx, w, h, dt, lectura, ara);
+      } catch (e) {
+        if (depuracioRef.current) {
+          depuracioRef.current.current += `
+llums: ${e instanceof Error ? e.message : String(e)}`;
+        }
+      }
       // Un error al contorn no ha d'aturar el bucle ni les llums.
       try {
         if (v && w > 0 && h > 0) {
