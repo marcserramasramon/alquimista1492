@@ -51,6 +51,7 @@ export class ContornPersones {
   info = "";
   private error = "";
   private fotogrames = 0;
+  private llumEntrada = -1;
 
   constructor() {
     this.entrada = document.createElement("canvas");
@@ -60,21 +61,35 @@ export class ContornPersones {
     this.halo = document.createElement("canvas");
   }
 
+  private fitxers: Awaited<ReturnType<typeof import("@mediapipe/tasks-vision").FilesetResolver.forVisionTasks>> | null = null;
+  private delegat: "GPU" | "CPU" = "CPU";
+  /** Fotogrames seguits amb la màscara a zero (el delegat actual no funciona en aquest mòbil). */
+  private zeros = 0;
+  private provatAmbTots = false;
+
+  private async creaSegmentador(delegat: "GPU" | "CPU"): Promise<ImageSegmenter> {
+    const { ImageSegmenter } = await import("@mediapipe/tasks-vision");
+    if (!this.fitxers) throw new Error("sense motor");
+    return ImageSegmenter.createFromOptions(this.fitxers, {
+      baseOptions: { modelAssetPath: URL_MODEL, delegate: delegat },
+      runningMode: "VIDEO",
+      outputConfidenceMasks: true,
+      outputCategoryMask: false,
+    });
+  }
+
+  /** Comença amb la CPU (més fiable); si la màscara surt sempre buida, prova l'altre delegat. */
   async iniciar(): Promise<void> {
     try {
-      const { FilesetResolver, ImageSegmenter } = await import("@mediapipe/tasks-vision");
-      const fitxers = await FilesetResolver.forVisionTasks(URL_WASM);
-      const opcions = (delegate: "GPU" | "CPU") => ({
-        baseOptions: { modelAssetPath: URL_MODEL, delegate },
-        runningMode: "VIDEO" as const,
-        outputConfidenceMasks: true,
-        outputCategoryMask: false,
-      });
+      const { FilesetResolver } = await import("@mediapipe/tasks-vision");
+      this.fitxers = await FilesetResolver.forVisionTasks(URL_WASM);
       let s: ImageSegmenter;
       try {
-        s = await ImageSegmenter.createFromOptions(fitxers, opcions("GPU"));
+        s = await this.creaSegmentador("CPU");
+        this.delegat = "CPU";
       } catch {
-        s = await ImageSegmenter.createFromOptions(fitxers, opcions("CPU"));
+        s = await this.creaSegmentador("GPU");
+        this.delegat = "GPU";
       }
       if (this.tancat) {
         s.close();
@@ -85,6 +100,30 @@ export class ContornPersones {
     } catch (e) {
       this.estat = "no";
       this.error = `carrega: ${e instanceof Error ? e.message : String(e)}`;
+      this.info = this.error;
+    }
+  }
+
+  /** Canvia de delegat (una sola vegada) quan el actual només dóna màscares buides. */
+  private async canviaDelegat() {
+    if (this.provatAmbTots) return;
+    this.provatAmbTots = true;
+    const vell = this.segmentador;
+    this.segmentador = null;
+    vell?.close();
+    try {
+      const nou = this.delegat === "CPU" ? "GPU" : "CPU";
+      const s = await this.creaSegmentador(nou);
+      if (this.tancat) {
+        s.close();
+        return;
+      }
+      this.delegat = nou;
+      this.zeros = 0;
+      this.segmentador = s;
+    } catch (e) {
+      this.estat = "no";
+      this.error = `canvi delegat: ${e instanceof Error ? e.message : String(e)}`;
       this.info = this.error;
     }
   }
@@ -117,6 +156,12 @@ export class ContornPersones {
     if (vw / vh > cw / ch) sw = vh * (cw / ch);
     else sh = vw / (cw / ch);
     g.drawImage(video, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, W, H);
+    if (this.fotogrames % 20 === 0) {
+      const mostra = g.getImageData(0, 0, W, H).data;
+      let suma = 0;
+      for (let i = 0; i < mostra.length; i += 4 * 97) suma += mostra[i] + mostra[i + 1] + mostra[i + 2];
+      this.llumEntrada = Math.round(suma / (3 * Math.ceil(mostra.length / (4 * 97))));
+    }
 
     try {
       s.segmentForVideo(this.entrada, ara, (res) => {
@@ -146,6 +191,9 @@ export class ContornPersones {
       suma += valors[i];
     }
     // Llindar normal 0,5; si el model dóna valors baixos (màxim < 0,5) s'abaixa a la meitat del màxim.
+    if (max === 0) {
+      if (++this.zeros === 20) void this.canviaDelegat();
+    } else this.zeros = 0;
     const llindar = max >= 0.5 ? 0.5 : Math.max(0.05, max * 0.5);
     let dins = 0;
     for (let i = 0; i < valors.length; i++) {
@@ -195,7 +243,7 @@ export class ContornPersones {
     this.hiHaVora = vores > 0;
     this.info = `fot ${this.fotogrames} · masques ${nMasques} · ${mw}x${mh} · persona ${Math.round(
       (dins / valors.length) * 100,
-    )}%${invertir ? " (invertit)" : ""} · vora ${vores}px · val max ${max.toFixed(2)} mitja ${(suma / valors.length).toFixed(2)} llindar ${llindar.toFixed(2)}`;
+    )}%${invertir ? " (invertit)" : ""} · vora ${vores}px · ${this.delegat} · entrada llum ${this.llumEntrada} · val max ${max.toFixed(2)} mitja ${(suma / valors.length).toFixed(2)} llindar ${llindar.toFixed(2)}`;
   }
 
   /** Esborra de l'escena el que cau darrere de les persones: les flames són un element del fons. */
