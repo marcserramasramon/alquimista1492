@@ -1,10 +1,10 @@
 import type { ImageSegmenter } from "@mediapipe/tasks-vision";
 
 /**
- * Llum difuminada sobre les persones que surten a la càmera. Un model de segmentació de persones
- * (MediaPipe, tot dins del mòbil: la imatge no surt ni es grava) dóna una màscara. D'aquesta en fem un
- * filtre fluix de color taronja-vermell sobre el cos, que s'esvaeix cap a fora, i una llum més càlida
- * que realça els nuclis (les parts més gruixudes: el tors) sense cap vora rígida.
+ * Contorn de foc a les persones que surten a la càmera. Un model de segmentació de persones (MediaPipe,
+ * tot dins del mòbil: la imatge no surt ni es grava) dóna una màscara; d'aquesta en traiem la vora i
+ * la dibuixem amb un resplendor vermell i flames que pugen. Si el model no es pot carregar (sense
+ * xarxa, mòbil massa antic), l'escena continua només amb els arcs.
  *
  * El motor (wasm) i el model es baixen en obrir l'extra des de jsdelivr i Google.
  */
@@ -18,10 +18,8 @@ const URL_MODEL =
 const AMPLADA_ENTRADA = 192;
 /** Mínim de temps entre dues segmentacions (ms). */
 const INTERVAL_MS = 70;
-/** Respiració lenta de la llum (0-1), amb un cicle d'uns 5 segons. */
-function respiracio(ara: number): number {
-  return 0.5 + 0.5 * Math.sin((ara / 5000) * Math.PI * 2);
-}
+/** Gruix de la vora en píxels de la imatge petita. */
+const GRUIX = 1;
 
 /**
  * Baixa per avançat el motor i el model (queden a la memòria cau del navegador), perquè quan es
@@ -40,16 +38,15 @@ export class ContornPersones {
   estat: EstatContorn = "carregant";
   private segmentador: ImageSegmenter | null = null;
   private entrada: HTMLCanvasElement;
-  /** Silueta plena de les persones. */
+  private vora: HTMLCanvasElement;
+  /** Silueta plena de les persones, per tapar el que hi ha darrere seu. */
   private ple: HTMLCanvasElement;
-  /** Resplendor ample i difús (taronja-vermell), dins i fora del cos. */
-  private difus: HTMLCanvasElement;
-  /** Llum càlida només a dins del cos: més forta on el cos és més gruixut (els nuclis). */
-  private nuclis: HTMLCanvasElement;
+  private magia: HTMLCanvasElement;
+  private halo: HTMLCanvasElement;
   private suau: Float32Array | null = null;
   private llis: Float32Array | null = null;
   private ultim = 0;
-  private hiHaCos = false;
+  private hiHaVora = false;
   private tancat = false;
   /** Resum de l'últim fotograma i de l'últim error, per a ?debug=1. */
   info = "";
@@ -59,9 +56,10 @@ export class ContornPersones {
 
   constructor() {
     this.entrada = document.createElement("canvas");
+    this.vora = document.createElement("canvas");
     this.ple = document.createElement("canvas");
-    this.difus = document.createElement("canvas");
-    this.nuclis = document.createElement("canvas");
+    this.magia = document.createElement("canvas");
+    this.halo = document.createElement("canvas");
   }
 
   private fitxers: Awaited<ReturnType<typeof import("@mediapipe/tasks-vision").FilesetResolver.forVisionTasks>> | null = null;
@@ -177,7 +175,7 @@ export class ContornPersones {
       });
     } catch (e) {
       this.estat = "no";
-      this.hiHaCos = false;
+      this.hiHaVora = false;
       this.error = `segmenta: ${e instanceof Error ? e.message : String(e)}`;
       this.info = this.error;
     }
@@ -186,18 +184,18 @@ export class ContornPersones {
   private processa(valors: Float32Array, mw: number, mh: number, nMasques: number) {
     if (!this.suau || this.suau.length !== valors.length) this.suau = new Float32Array(valors.length);
     const suau = this.suau;
+    // Mitjana amb el fotograma anterior: la vora no tremola.
     let max = 0;
     let suma = 0;
     for (let i = 0; i < valors.length; i++) {
       if (valors[i] > max) max = valors[i];
       suma += valors[i];
     }
+    // Llindar normal 0,5; si el model dóna valors baixos (màxim < 0,5) s'abaixa a la meitat del màxim.
     if (max === 0) {
       if (++this.zeros === 20) void this.canviaDelegat();
     } else this.zeros = 0;
-    // Llindar normal 0,5; si el model dóna valors baixos (màxim < 0,5) s'abaixa a la meitat del màxim.
     const llindar = max >= 0.5 ? 0.5 : Math.max(0.05, max * 0.5);
-    // Mitjana amb el fotograma anterior: la llum no tremola.
     let dins = 0;
     for (let i = 0; i < valors.length; i++) {
       suau[i] += (valors[i] - suau[i]) * 0.6;
@@ -206,15 +204,23 @@ export class ContornPersones {
     // Si el model dóna el fons en lloc de la persona (gairebé tot ple), s'inverteix.
     const invertir = dins > valors.length * 0.85;
 
+    if (this.vora.width !== mw || this.vora.height !== mh) {
+      this.vora.width = mw;
+      this.vora.height = mh;
+    }
+    const g = this.vora.getContext("2d");
+    if (!g) return;
     if (this.ple.width !== mw || this.ple.height !== mh) {
       this.ple.width = mw;
       this.ple.height = mh;
     }
     const gp = this.ple.getContext("2d");
     if (!gp) return;
+    const imatge = g.createImageData(mw, mh);
+    const px = imatge.data;
     const imatgePle = gp.createImageData(mw, mh);
     const pp = imatgePle.data;
-    // Mitjana 3x3 de la màscara abans de tallar-la: la silueta surt arrodonida i no a graons.
+    // Mitjana 3x3 de la màscara abans de tallar-la: la vora surt arrodonida i no a graons.
     if (!this.llis || this.llis.length !== suau.length) this.llis = new Float32Array(suau.length);
     const llis = this.llis;
     for (let y = 0; y < mh; y++) {
@@ -234,74 +240,159 @@ export class ContornPersones {
         llis[y * mw + x] = t / n;
       }
     }
-    let cos = 0;
-    for (let i = 0; i < llis.length; i++) {
-      if (llis[i] > llindar !== invertir) {
-        pp[i * 4 + 3] = 255;
-        cos++;
+    const persona = (x: number, y: number) => {
+      if (x < 0 || y < 0 || x >= mw || y >= mh) return true;
+      return llis[y * mw + x] > llindar !== invertir;
+    };
+    let vores = 0;
+    for (let y = 0; y < mh; y++) {
+      for (let x = 0; x < mw; x++) {
+        if (!persona(x, y)) continue;
+        pp[(y * mw + x) * 4 + 3] = 255;
+        if (persona(x - GRUIX, y) && persona(x + GRUIX, y) && persona(x, y - GRUIX) && persona(x, y + GRUIX)) continue;
+        const k = (y * mw + x) * 4;
+        px[k] = 255;
+        px[k + 1] = 70 + ((x * 7 + y * 13) % 50);
+        px[k + 2] = 30;
+        px[k + 3] = 255;
+        vores++;
       }
     }
+    g.putImageData(imatge, 0, 0);
     gp.putImageData(imatgePle, 0, 0);
-    this.hiHaCos = cos > 0;
-    if (cos > 0) this.creaLlum(mw, mh);
+    this.creaResplendor(mw, mh);
+    this.hiHaVora = vores > 0;
     this.info = `fot ${this.fotogrames} · masques ${nMasques} · ${mw}x${mh} · persona ${Math.round(
       (dins / valors.length) * 100,
-    )}%${invertir ? " (invertit)" : ""} · cos ${cos}px · ${this.delegat} · entrada llum ${this.llumEntrada} · val max ${max.toFixed(2)} mitja ${(suma / valors.length).toFixed(2)} llindar ${llindar.toFixed(2)}`;
+    )}%${invertir ? " (invertit)" : ""} · vora ${vores}px · ${this.delegat} · entrada llum ${this.llumEntrada} · val max ${max.toFixed(2)} mitja ${(suma / valors.length).toFixed(2)} llindar ${llindar.toFixed(2)}`;
+  }
+
+  /** Esborra de l'escena el que cau darrere de les persones: les flames són un element del fons. */
+  tapa(ctx: CanvasRenderingContext2D, w: number, h: number) {
+    if (!this.hiHaVora) return;
+    ctx.save();
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(this.ple, 0, 0, w, h);
+    ctx.restore();
   }
 
   /**
-   * Les dues llums, calculades una vegada per màscara i a mida petita (els desenfocaments són cars:
-   * fer-los a pantalla completa a cada fotograma ofega un mòbil). El truc de l'ombra: la silueta es
-   * dibuixa fora del llenç i només en entra l'ombra, que és la silueta de color i desenfocada.
+   * Efecte màgic a dins de la silueta: energia vermella que puja, espurnes que brillen i un resplendor
+   * que entra des de la vora. Es dibuixa en una imatge petita i es retalla amb la silueta.
    */
-  private creaLlum(mw: number, mh: number) {
-    for (const c of [this.difus, this.nuclis]) {
-      if (c.width !== mw || c.height !== mh) {
-        c.width = mw;
-        c.height = mh;
-      }
+  pintaMagia(ctx: CanvasRenderingContext2D, w: number, h: number, ara: number) {
+    if (!this.hiHaVora) return;
+    const mw = this.ple.width;
+    const mh = this.ple.height;
+    if (this.magia.width !== mw || this.magia.height !== mh) {
+      this.magia.width = mw;
+      this.magia.height = mh;
     }
-    const ombra = (c: HTMLCanvasElement, color: string, desenfocament: number) => {
-      const g = c.getContext("2d");
-      if (!g) return null;
-      g.clearRect(0, 0, mw, mh);
-      g.shadowColor = color;
-      g.shadowBlur = desenfocament;
-      g.shadowOffsetX = mw * 3;
-      g.drawImage(this.ple, -mw * 3, 0);
-      g.shadowColor = "transparent";
-      g.shadowBlur = 0;
-      g.shadowOffsetX = 0;
-      return g;
-    };
-    // Resplendor taronja-vermell, ample i suau: tenyeix el cos i s'esvaeix cap a fora.
-    ombra(this.difus, "rgba(255,85,15,1)", 30);
-    // Nuclis: una ombra més estreta de to or; a dins del cos és més intensa on hi ha més massa.
-    const g = ombra(this.nuclis, "rgba(255,190,80,1)", 26);
-    if (g) {
-      g.globalCompositeOperation = "destination-in";
-      g.drawImage(this.ple, 0, 0);
-      g.globalCompositeOperation = "source-over";
-    }
-  }
+    const g = this.magia.getContext("2d");
+    if (!g) return;
+    g.globalCompositeOperation = "source-over";
+    g.clearRect(0, 0, mw, mh);
 
-  /** Dibuixa el filtre taronja i els nuclis, amb una lleu respiració i un moviment lent. */
-  pinta(ctx: CanvasRenderingContext2D, w: number, h: number, ara: number) {
-    if (!this.hiHaCos) return;
-    const respira = respiracio(ara);
-    const respira2 = respiracio(ara + 2200);
-    // Petit vaivé perquè no es vegi rígid.
-    const dx = Math.sin(ara / 2300) * 0.004 * w;
-    const dy = Math.cos(ara / 2900) * 0.003 * h;
+    // Ones d'energia que pugen pel cos.
+    const t = ara / 1000;
+    const desplacament = (t * 70) % (mh * 0.5);
+    const ones = g.createLinearGradient(0, -desplacament, 0, mh * 0.5 - desplacament);
+    ones.addColorStop(0, "rgba(255,60,0,0.05)");
+    ones.addColorStop(0.5, "rgba(255,120,20,0.4)");
+    ones.addColorStop(1, "rgba(255,60,0,0.05)");
+    g.fillStyle = ones;
+    g.fillRect(0, 0, mw, mh);
+    // El gradient només cobreix mitja alçada: es repeteix movent-lo una alçada més avall.
+    g.save();
+    g.translate(0, mh * 0.5);
+    g.fillRect(0, -mh * 0.5, mw, mh);
+    g.restore();
+
+    // Resplendor que entra des de la vora.
+    g.globalCompositeOperation = "lighter";
+    g.shadowColor = "rgba(255,70,0,0.9)";
+    g.shadowBlur = 9;
+    g.globalAlpha = 0.8;
+    g.drawImage(this.vora, 0, 0);
+    g.shadowBlur = 0;
+    g.globalAlpha = 1;
+
+    // Espurnes que pugen i brillen.
+    for (let i = 0; i < 70; i++) {
+      const a = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+      const b = Math.abs(Math.sin(i * 78.233) * 12345.6789) % 1;
+      const x = a * mw + Math.sin(t * 1.5 + i) * 3;
+      const velocitat = 14 + b * 30;
+      const y = mh - ((t * velocitat + b * mh) % (mh + 10));
+      const brill = 0.5 + 0.5 * Math.sin(t * (3 + (i % 5)) + i);
+      g.globalAlpha = brill;
+      g.fillStyle = i % 3 === 0 ? "rgb(255,240,190)" : "rgb(255,150,40)";
+      const mida = 0.8 + b * 1.6;
+      g.fillRect(x, y, mida, mida);
+    }
+    g.globalAlpha = 1;
+
+    // Només a dins de la silueta.
+    g.globalCompositeOperation = "destination-in";
+    g.drawImage(this.ple, 0, 0);
+    g.globalCompositeOperation = "source-over";
+
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     ctx.imageSmoothingEnabled = true;
-    ctx.globalAlpha = 0.34 + 0.1 * respira;
-    ctx.drawImage(this.difus, dx, dy, w, h);
-    ctx.globalAlpha = 0.14 + 0.06 * respira2;
-    ctx.drawImage(this.difus, -dx * 1.6, -dy * 1.6, w, h);
-    ctx.globalAlpha = 0.5 + 0.18 * respira2;
-    ctx.drawImage(this.nuclis, dx * 0.6, dy * 0.6, w, h);
+    ctx.globalAlpha = 0.8;
+    ctx.drawImage(this.magia, 0, 0, w, h);
+    ctx.restore();
+  }
+
+  /**
+   * Resplendor de la vora, calculat una vegada per màscara i a mida petita (els desenfocaments són
+   * cars: fer-los a pantalla completa a cada fotograma ofega un mòbil).
+   */
+  private creaResplendor(mw: number, mh: number) {
+    if (this.halo.width !== mw || this.halo.height !== mh) {
+      this.halo.width = mw;
+      this.halo.height = mh;
+    }
+    const g = this.halo.getContext("2d");
+    if (!g) return;
+    g.clearRect(0, 0, mw, mh);
+    g.globalCompositeOperation = "lighter";
+    // Resplendor ample darrere de la persona (vermell fosc), un de mitjà, i la línia fina i calenta.
+    const passes: [string, number, number][] = [
+      ["rgba(200,0,0,1)", 30, 1],
+      ["rgba(230,0,0,1)", 22, 1],
+      ["rgba(255,20,0,1)", 12, 1],
+      ["rgba(255,70,10,1)", 4, 0.95],
+    ];
+    for (const [color, blur, alfa] of passes) {
+      g.shadowColor = color;
+      g.shadowBlur = blur;
+      g.globalAlpha = alfa;
+      g.drawImage(this.vora, 0, 0);
+    }
+    g.shadowBlur = 0;
+    g.globalAlpha = 1;
+  }
+
+  /** Dibuixa la vora amb resplendor i flames que pugen, sobre un context transparent. */
+  pinta(ctx: CanvasRenderingContext2D, w: number, h: number, ara: number) {
+    if (!this.hiHaVora) return;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.imageSmoothingEnabled = true;
+    const pols = 0.8 + 0.2 * Math.sin(ara / 90) + 0.08 * Math.sin(ara / 37);
+    ctx.globalAlpha = Math.min(1, pols);
+    ctx.drawImage(this.halo, 0, 0, w, h);
+
+    // Còpies que pugen i s'esvaeixen, com flames que s'enlairen del cos.
+    for (let k = 0; k < 4; k++) {
+      const fase = (ara / 1100 + k / 4) % 1;
+      ctx.globalAlpha = (1 - fase) * 0.5;
+      const dx = Math.sin(ara / 230 + k * 2.1) * 5 * (w / 400) * fase;
+      ctx.drawImage(this.halo, dx, -fase * h * 0.07, w, h);
+    }
     ctx.restore();
   }
 }

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { VistaExtraAr } from "@/components/vistes/VistaExtraAr";
 import { VistaFantasmes } from "@/components/vistes/VistaFantasmes";
-import { VistaAura } from "@/components/vistes/VistaAura";
+import { VistaFoc } from "@/components/vistes/VistaFoc";
 import { VistaGuiesAnimes } from "@/components/vistes/VistaGuiesAnimes";
 import { getExtraAr } from "@/content/public/extres";
 
@@ -22,8 +22,8 @@ export default function ExtraArPage() {
   const Vista =
     extra.escena === "fantasmes"
       ? VistaFantasmes
-      : extra.escena === "aura"
-        ? VistaAura
+      : extra.escena === "foc"
+        ? VistaFoc
         : extra.escena === "guies"
           ? VistaGuiesAnimes
           : VistaExtraAr;

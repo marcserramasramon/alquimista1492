@@ -1,41 +1,48 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { EscenaAura } from "@/components/ar/EscenaAura";
-import { precarregaContorn, type EstatContorn } from "@/components/ar/aura/contorn";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { EscenaFoc } from "@/components/ar/EscenaFoc";
+import { precarregaContorn, type EstatContorn } from "@/components/ar/foc/contorn";
+import type { EsdevenimentSalt } from "@/components/ar/foc/mon";
 import { IntroduccioExtraAr } from "@/components/vistes/IntroduccioExtraAr";
 import type { ExtraAr } from "@/content/public/extres";
+import { useOrientacio } from "@/lib/orientacio";
+import { aturarSoFoc, iniciarSoFoc, silenciarFoc, sonarSaltFoc } from "@/lib/sorollArFoc";
 
-export interface VistaAuraProps {
+export interface VistaFocProps {
   extra: ExtraAr;
   /** Torna a la partida. */
   onTornar: () => void;
-  /** Galeria de pantalles: comença directament a l'escena, sense demanar càmera. */
+  /** Galeria de pantalles: comença directament a l'escena, sense demanar càmera ni sensors. */
   directa?: boolean;
 }
 
 type EstatCamera = "esperant" | "activa" | "no-disponible";
 
 /**
- * Extra de la llum (fita de Foc): càmera de fons i, sobre les persones, un filtre difús taronja-vermell
- * que realça els nuclis del cos. No hi ha res més a l'escena. És un divertimento: no desa res ni arriba
- * al servidor.
+ * Extra del foc (fita de Foc): càmera de fons i, a sobre, un contorn de flames a les persones i arcs
+ * de foc que surten de terra i hi tornen a entrar. És un divertimento: no desa res ni arriba al servidor.
  */
-export function VistaAura({ extra, onTornar, directa = false }: VistaAuraProps) {
+export function VistaFoc({ extra, onTornar, directa = false }: VistaFocProps) {
   const [iniciat, setIniciat] = useState(directa);
   const [camera, setCamera] = useState<EstatCamera>("esperant");
   const video = useRef<HTMLVideoElement>(null);
   const flux = useRef<MediaStream | null>(null);
+  const { mirada, estat: estatSensors, demanar } = useOrientacio();
+  const [silenci, setSilenci] = useState(false);
   const [contorn, setContorn] = useState<EstatContorn>("carregant");
 
-  // ?debug=1 a l'adreça: mostra a la pantalla l'estat del model.
+  // ?debug=1 a l'adreça: mostra a la pantalla l'estat del contorn.
   const depuracio = useRef("");
   const [textDepuracio, setTextDepuracio] = useState<string | null>(null);
+  const alSalt = useCallback((e: EsdevenimentSalt) => sonarSaltFoc(e.pan), []);
 
-  // La càmera es demana en tocar el botó (iOS i Android ho exigeixen).
+  // Els sensors, la càmera i el so es demanen en tocar el botó (iOS i Android ho exigeixen).
   async function començar() {
+    iniciarSoFoc();
     if (new URLSearchParams(window.location.search).get("debug") === "1") setTextDepuracio("");
     setIniciat(true);
+    await demanar();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: "environment" } },
@@ -55,7 +62,7 @@ export function VistaAura({ extra, onTornar, directa = false }: VistaAuraProps) 
     return () => clearInterval(interval);
   }, [depuracioActiva]);
 
-  // Mentre es llegeix la introducció, ja es baixa el model.
+  // Mentre es llegeix la introducció, ja es baixa el model dels contorns.
   useEffect(() => {
     precarregaContorn();
   }, []);
@@ -70,8 +77,11 @@ export function VistaAura({ extra, onTornar, directa = false }: VistaAuraProps) 
   useEffect(() => {
     return () => {
       flux.current?.getTracks().forEach((p) => p.stop());
+      aturarSoFoc();
     };
   }, []);
+
+  const sensorsFallen = estatSensors === "no-disponible" || estatSensors === "denegat";
 
   return (
     <div className="fixed inset-0 z-[300] overflow-hidden bg-black text-paper">
@@ -79,7 +89,16 @@ export function VistaAura({ extra, onTornar, directa = false }: VistaAuraProps) 
         <video ref={video} playsInline muted autoPlay className="absolute inset-0 h-full w-full object-cover" />
       )}
 
-      {iniciat && <EscenaAura video={video} alEstatContorn={setContorn} depuracio={depuracioActiva ? depuracio : null} />}
+      {iniciat && (
+        <EscenaFoc
+          mirada={mirada}
+          arrossegar={estatSensors !== "actiu"}
+          video={video}
+          alSalt={alSalt}
+          alEstatContorn={setContorn}
+          depuracio={depuracioActiva ? depuracio : null}
+        />
+      )}
 
       {textDepuracio !== null && (
         <pre className="pointer-events-none absolute inset-x-2 bottom-24 z-10 whitespace-pre-wrap rounded-lg bg-black/70 p-2 font-mono text-xs leading-tight text-lime-300">
@@ -88,21 +107,42 @@ export function VistaAura({ extra, onTornar, directa = false }: VistaAuraProps) 
       )}
 
       {iniciat && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center gap-2 pr-24 pl-5 pt-[max(1rem,env(safe-area-inset-top))]">
           {camera === "no-disponible" && (
             <p className="rounded-xl bg-black/60 px-3 py-2 text-center text-sm font-bold">
-              No hi ha càmera: no hi ha res a il·luminar.
+              No hi ha càmera: només es veuen els arcs de foc.
             </p>
           )}
           {camera === "activa" && contorn === "carregant" && (
-            <p className="rounded-xl bg-black/60 px-3 py-2 text-center text-sm font-bold">Encenent la llum…</p>
+            <p className="rounded-xl bg-black/60 px-3 py-2 text-center text-sm font-bold">Encenent els contorns…</p>
           )}
           {camera === "activa" && contorn === "no" && (
             <p className="rounded-xl bg-black/60 px-3 py-2 text-center text-sm font-bold">
-              Aquest mòbil no pot detectar les persones (o no hi ha xarxa).
+              Aquest mòbil no pot dibuixar els contorns (o no hi ha xarxa).
+            </p>
+          )}
+          {sensorsFallen && (
+            <p className="rounded-xl bg-black/60 px-3 py-2 text-center text-sm font-bold">
+              {estatSensors === "denegat"
+                ? "Sense permís per a la brúixola: arrossegueu el dit per mirar al voltant."
+                : "Arrossegueu el dit per mirar al voltant."}
             </p>
           )}
         </div>
+      )}
+
+      {iniciat && !directa && (
+        <button
+          type="button"
+          aria-pressed={silenci}
+          onClick={() => {
+            silenciarFoc(!silenci);
+            setSilenci(!silenci);
+          }}
+          className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 z-10 flex h-12 min-w-12 items-center justify-center rounded-full border-2 border-paper-3/60 bg-black/60 px-4 text-lg font-bold"
+        >
+          {silenci ? "🔇 Sense so" : "🔊 So"}
+        </button>
       )}
 
       {iniciat ? (
