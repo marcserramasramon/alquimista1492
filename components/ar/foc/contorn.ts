@@ -32,6 +32,10 @@ export class ContornPersones {
   private ultim = 0;
   private hiHaVora = false;
   private tancat = false;
+  /** Resum de l'últim fotograma i de l'últim error, per a ?debug=1. */
+  info = "";
+  private error = "";
+  private fotogrames = 0;
 
   constructor() {
     this.entrada = document.createElement("canvas");
@@ -60,8 +64,10 @@ export class ContornPersones {
       }
       this.segmentador = s;
       this.estat = "actiu";
-    } catch {
+    } catch (e) {
       this.estat = "no";
+      this.error = `carrega: ${e instanceof Error ? e.message : String(e)}`;
+      this.info = this.error;
     }
   }
 
@@ -100,15 +106,18 @@ export class ContornPersones {
         if (!masques || masques.length === 0) return;
         // Dos mapes (fons, persona): el de la persona és el segon. Amb un de sol, és el de la persona.
         const mascara = masques[masques.length > 1 ? 1 : 0];
-        this.processa(mascara.getAsFloat32Array(), mascara.width, mascara.height);
+        this.fotogrames++;
+        this.processa(mascara.getAsFloat32Array(), mascara.width, mascara.height, masques.length);
       });
-    } catch {
+    } catch (e) {
       this.estat = "no";
       this.hiHaVora = false;
+      this.error = `segmenta: ${e instanceof Error ? e.message : String(e)}`;
+      this.info = this.error;
     }
   }
 
-  private processa(valors: Float32Array, mw: number, mh: number) {
+  private processa(valors: Float32Array, mw: number, mh: number, nMasques: number) {
     if (!this.suau || this.suau.length !== valors.length) this.suau = new Float32Array(valors.length);
     const suau = this.suau;
     // Mitjana amb el fotograma anterior: la vora no tremola.
@@ -147,6 +156,9 @@ export class ContornPersones {
     }
     g.putImageData(imatge, 0, 0);
     this.hiHaVora = vores > 0;
+    this.info = `fot ${this.fotogrames} · masques ${nMasques} · ${mw}x${mh} · persona ${Math.round(
+      (dins / valors.length) * 100,
+    )}%${invertir ? " (invertit)" : ""} · vora ${vores}px`;
   }
 
   /** Dibuixa la vora amb resplendor i flames que pugen, sobre un context transparent. */

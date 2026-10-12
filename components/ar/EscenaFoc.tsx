@@ -14,26 +14,30 @@ interface Props {
   video: RefObject<HTMLVideoElement | null> | null;
   alSalt?: (e: EsdevenimentSalt) => void;
   alEstatContorn?: (estat: EstatContorn) => void;
+  /** ?debug=1: aquí s'hi escriu l'estat del contorn. */
+  depuracio?: RefObject<string> | null;
 }
 
 /** Resolució del dibuix respecte de la pantalla: els resplendors no necessiten píxels de sobra. */
 const RESOLUCIO = 0.75;
 
 /** Escena del foc sobre la càmera: contorn de les persones i arcs de flames. Canvas 2D transparent. */
-export function EscenaFoc({ mirada, arrossegar, video, alSalt, alEstatContorn }: Props) {
+export function EscenaFoc({ mirada, arrossegar, video, alSalt, alEstatContorn, depuracio }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const manual = useRef<Mirada>({ rumb: 0, elevacio: 0 });
   const arrossegarRef = useRef(arrossegar);
   const videoRef = useRef(video);
   const saltRef = useRef(alSalt);
   const estatRef = useRef(alEstatContorn);
+  const depuracioRef = useRef(depuracio);
 
   useEffect(() => {
     arrossegarRef.current = arrossegar;
     videoRef.current = video;
     saltRef.current = alSalt;
     estatRef.current = alEstatContorn;
-  }, [arrossegar, video, alSalt, alEstatContorn]);
+    depuracioRef.current = depuracio;
+  }, [arrossegar, video, alSalt, alEstatContorn, depuracio]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -65,6 +69,10 @@ export function EscenaFoc({ mirada, arrossegar, video, alSalt, alEstatContorn }:
       if (v && w > 0 && h > 0) {
         contorn.actualitza(v, w, h, ara);
         contorn.pinta(ctx, w, h, ara);
+      }
+      if (depuracioRef.current) {
+        depuracioRef.current.current = `${contorn.estat} · vídeo ${v ? `${v.videoWidth}x${v.videoHeight} rs${v.readyState}` : "no"}
+${contorn.info}`;
       }
       if (contorn.estat !== ultimEstat) {
         ultimEstat = contorn.estat;

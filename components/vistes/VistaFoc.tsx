@@ -32,11 +32,15 @@ export function VistaFoc({ extra, onTornar, directa = false }: VistaFocProps) {
   const [silenci, setSilenci] = useState(false);
   const [contorn, setContorn] = useState<EstatContorn>("carregant");
 
+  // ?debug=1 a l'adreça: mostra a la pantalla l'estat del contorn.
+  const depuracio = useRef("");
+  const [textDepuracio, setTextDepuracio] = useState<string | null>(null);
   const alSalt = useCallback((e: EsdevenimentSalt) => sonarSaltFoc(e.pan), []);
 
   // Els sensors, la càmera i el so es demanen en tocar el botó (iOS i Android ho exigeixen).
   async function començar() {
     iniciarSoFoc();
+    if (new URLSearchParams(window.location.search).get("debug") === "1") setTextDepuracio("");
     setIniciat(true);
     await demanar();
     try {
@@ -50,6 +54,13 @@ export function VistaFoc({ extra, onTornar, directa = false }: VistaFocProps) {
       setCamera("no-disponible");
     }
   }
+
+  const depuracioActiva = textDepuracio !== null;
+  useEffect(() => {
+    if (!depuracioActiva) return;
+    const interval = setInterval(() => setTextDepuracio(depuracio.current), 300);
+    return () => clearInterval(interval);
+  }, [depuracioActiva]);
 
   useEffect(() => {
     if (camera === "activa" && video.current && flux.current) {
@@ -80,7 +91,14 @@ export function VistaFoc({ extra, onTornar, directa = false }: VistaFocProps) {
           video={video}
           alSalt={alSalt}
           alEstatContorn={setContorn}
+          depuracio={depuracioActiva ? depuracio : null}
         />
+      )}
+
+      {textDepuracio !== null && (
+        <pre className="pointer-events-none absolute inset-x-2 bottom-24 z-10 whitespace-pre-wrap rounded-lg bg-black/70 p-2 font-mono text-xs leading-tight text-lime-300">
+          {textDepuracio}
+        </pre>
       )}
 
       {iniciat && (
