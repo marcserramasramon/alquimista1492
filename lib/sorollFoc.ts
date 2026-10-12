@@ -65,8 +65,8 @@ const PROPORCIO_MIDA_OBJECTIU = 1.14;
 /** Fracció de les xifres vermelles originals que es dibuixen. */
 const PROPORCIO_VERMELLS = 0.75;
 
-/** Color de la resposta: un blau fosc, més fosc que el dels símbols del soroll (BLAUS_SIMBOLS). */
-export const BLAU_OBJECTIU = "#0b2a6b";
+/** Color de la resposta: un blau mitjà, més fosc que el dels símbols del soroll (BLAUS_SIMBOLS). */
+export const BLAU_OBJECTIU = "#2f63c0";
 
 /** Radi dels punts de la trama de la resposta. */
 export const RADI_PUNTS_OBJECTIU = 3.6;
