@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { Mirada } from "@/lib/orientacio";
+import { LleoAigua, type EsdevenimentLleo } from "@/components/ar/aigua/lleoAigua";
 
 /**
  * Ràpids de riu en 3D (three.js): una cinta d'aigua estreta (uns 3 m d'ample) amb ones, escuma a les
@@ -20,9 +21,9 @@ export const FOV_HORITZONTAL = 52;
 export const AMPLE_RIU = 3;
 /** Ample de la transició entre el riu i l'explanada, en metres de corrent. */
 const TRANSICIO = 8;
-const LLARG = 60;
+const LLARG = 220;
 const MARGE = 0.9;
-const GOTES_MAX = 180;
+const GOTES_MAX = 700;
 
 // Les ones es calculen igual al vèrtex (relleu) i al fragment (normal i escuma).
 const COMU = /* glsl */ `
@@ -159,7 +160,7 @@ export class AiguaThree {
   readonly canvas: HTMLCanvasElement;
   private readonly renderer: THREE.WebGLRenderer;
   private readonly escena = new THREE.Scene();
-  private readonly camera = new THREE.PerspectiveCamera(60, 1, 0.1, 120);
+  private readonly camera = new THREE.PerspectiveCamera(60, 1, 0.1, 160);
   private readonly uniformes = {
     uTime: { value: 0 },
     uFlow: { value: new THREE.Vector2(1, 0) },
@@ -172,6 +173,12 @@ export class AiguaThree {
   private readonly gotesAttr: THREE.BufferAttribute;
   private readonly gotesGeo: THREE.BufferGeometry;
   private readonly aigua: THREE.Mesh;
+  private lleo: LleoAigua | null = null;
+  private morta = false;
+  /** Avís dels moments del lleó (rugit, desfer-se) perquè qui l'usa hi posi el so. */
+  alLleo?: (e: EsdevenimentLleo) => void;
+  /** Volum (0-1) de les passes del lleó, cada quadre mentre camina. */
+  alPassesLleo?: (volum: number) => void;
   private flux: number | null = null;
   private fx = 1;
   private fz = 0;
@@ -190,6 +197,8 @@ export class AiguaThree {
     explanada?: { distancia: number; radi: number },
   ) {
     this.uniformes.uAmple.value = ample;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const self = this;
     if (explanada) this.uniformes.uExplanada.value.set(explanada.distancia, explanada.radi);
     this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: "high-performance" });
     this.canvas = this.renderer.domElement;
@@ -202,7 +211,16 @@ export class AiguaThree {
     const mitjaMax = Math.max(this.uniformes.uAmple.value / 2, explanada?.radi ?? 0);
     const amplada = 2 * (mitjaMax + MARGE);
     const cella = explanada ? 0.2 : 0.17;
-    const geoAigua = new THREE.PlaneGeometry(amplada, LLARG, Math.round(amplada / cella), Math.round(LLARG / 0.33));
+    // Files denses prop del jugador (0,33 m) i cada cop més espaiades lluny: el riu és llarg i no cal el
+    // mateix detall a 80 m. `u` va de -1 a 1 i es deforma amb un cub.
+    const dens = 0.25;
+    const geoAigua = new THREE.PlaneGeometry(amplada, LLARG, Math.round(amplada / cella), Math.round((LLARG * dens) / 0.33));
+    const pos = geoAigua.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const u = pos.getY(i) / (LLARG / 2);
+      pos.setY(i, (LLARG / 2) * (dens * u + (1 - dens) * u * u * u));
+    }
+    pos.needsUpdate = true;
     geoAigua.rotateX(-Math.PI / 2);
     const matAigua = new THREE.ShaderMaterial({
       uniforms: this.uniformes,
@@ -226,7 +244,7 @@ export class AiguaThree {
     const textura = crearTexturaGota();
     const matGota = new THREE.PointsMaterial({
       map: textura,
-      size: 0.16,
+      size: 0.3,
       sizeAttenuation: true,
       transparent: true,
       depthWrite: false,
@@ -237,6 +255,47 @@ export class AiguaThree {
     punts.renderOrder = 3;
     this.escena.add(punts);
     this.liberables.push(this.gotesGeo, matGota, textura);
+
+    // El lleó d'aigua es baixa a part; mentrestant el riu ja es veu.
+    void LleoAigua.carrega(this.uniformes.uTime, {
+      get dirX() {
+        return self.fx;
+      },
+      get dirZ() {
+        return self.fz;
+      },
+      gotes: (x, y, z, n, vx, vy, vz, dispersio) => this.afegeixGotes(x, y, z, n, vx, vy, vz, dispersio),
+      esdeveniment: (e) => this.alLleo?.(e),
+      passes: (v) => this.alPassesLleo?.(v),
+    })
+      .then((lleo) => {
+        if (this.morta) {
+          lleo.dispose();
+          return;
+        }
+        lleo.afegeixA(this.escena);
+        this.lleo = lleo;
+      })
+      .catch(() => {
+        // Sense el model, el riu es veu igualment.
+      });
+  }
+
+  /** Gotes que surten d'un punt amb una velocitat i una dispersió. */
+  private afegeixGotes(x: number, y: number, z: number, n: number, vx: number, vy: number, vz: number, dispersio: number) {
+    for (let k = 0; k < n && this.gotes.length < GOTES_MAX; k++) {
+      const i = this.gotes.length;
+      this.gotes.push({
+        vida: alea(0.5, 1.1),
+        edat: 0,
+        vx: vx + alea(-dispersio, dispersio),
+        vy: vy + alea(-dispersio, dispersio) * 0.5,
+        vz: vz + alea(-dispersio, dispersio),
+      });
+      this.gotesPos[i * 3] = x + alea(-0.05, 0.05);
+      this.gotesPos[i * 3 + 1] = y;
+      this.gotesPos[i * 3 + 2] = z + alea(-0.05, 0.05);
+    }
   }
 
   /** Mida del dibuix en píxels (el canvas fora de pantalla). */
@@ -305,12 +364,15 @@ export class AiguaThree {
     }
     this.uniformes.uTime.value += dt;
     this.actualitzaGotes(dt);
+    this.lleo?.actualitza(dt);
     this.camera.rotation.y = -mirada.rumb * RAD;
     this.camera.rotation.x = mirada.elevacio * RAD;
     this.renderer.render(this.escena, this.camera);
   }
 
   dispose() {
+    this.morta = true;
+    this.lleo?.dispose();
     for (const o of this.liberables) o.dispose();
     this.renderer.dispose();
   }

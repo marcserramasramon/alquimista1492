@@ -3,6 +3,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { ContornPersones, type EstatContorn } from "@/components/ar/foc/contorn";
 import type { Mirada } from "@/lib/orientacio";
+import { desferLleo, passesLleo, rugitLleo } from "@/lib/sorollArAigua";
 
 /** Camp de visió horitzontal que s'assumeix (el mateix que l'escena 3D). */
 const FOV_HORITZONTAL = 52;
@@ -66,6 +67,8 @@ export function EscenaAigua({ mirada, arrossegar, video, alEstatContorn, alError
         const { AiguaThree } = await import("@/components/ar/aigua/aiguaThree");
         if (cancel) return;
         aigua = new AiguaThree(rumbRiu, ampleRiu, explanada);
+        aigua.alLleo = (e) => (e === "rugit" ? rugitLleo() : desferLleo());
+        aigua.alPassesLleo = passesLleo;
       } catch {
         errorRef.current?.();
         return;
