@@ -7,7 +7,7 @@ import { IntroduccioExtraAr } from "@/components/vistes/IntroduccioExtraAr";
 import type { ExtraAr } from "@/content/public/extres";
 import { useOrientacio } from "@/lib/orientacio";
 import { aturarMicroAr, iniciarMicroAr, nivellMicroAr } from "@/lib/microAr";
-import { aturarSoFantasmes, iniciarSoFantasmes, silenciarFantasmes, sonarFantasma } from "@/lib/sorollFantasmes";
+import { aturarSoFantasmes, iniciarSoFantasmes, silenciarFantasmes, sonarCrit, sonarFantasma } from "@/lib/sorollFantasmes";
 
 export interface VistaFantasmesProps {
   extra: ExtraAr;
@@ -192,7 +192,14 @@ export function VistaFantasmes({ extra, onTornar, directa = false }: VistaFantas
 
       {iniciat && micro === "no" && !directa && (
         <div className="absolute inset-x-0 bottom-[calc(max(1.25rem,env(safe-area-inset-bottom))+5.25rem)] mx-auto w-full max-w-md px-4">
-          <button type="button" onClick={() => control.current?.crida()} className="btn btn-primari">
+          <button
+            type="button"
+            onClick={() => {
+              sonarCrit();
+              control.current?.crida();
+            }}
+            className="btn btn-primari"
+          >
             📣 Cridar!
           </button>
         </div>

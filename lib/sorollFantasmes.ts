@@ -17,6 +17,8 @@
 const BASE = "/audio/ar/fantasmes/";
 const FONS = ["fons-veus.mp3", "fons-agut.mp3", "fons-fantasma.mp3"];
 const CURTS = ["sospir.mp3", "trist.mp3", "xiuxiueig-llarg.mp3", "xiuxiueig-curt.mp3", "horror.mp3"];
+/** Crits del botó «Cridar!» (només hi és si no hi ha permís de micròfon): en sona un d'aquests, sense repetir-ne cap dos cops seguits. */
+const CRITS = ["crit-sobresalt.mp3", "crit-80s.mp3", "crit-divertit.mp3", "crit-home.mp3"];
 
 /**
  * Volum de cada so (0-1): com més llarg, més baix, amb un màxim del 60 %.
@@ -31,6 +33,10 @@ const VOLUM: Record<string, number> = {
   "trist.mp3": 0.6,
   "xiuxiueig-curt.mp3": 0.6,
   "horror.mp3": 0.6,
+  "crit-sobresalt.mp3": 0.6,
+  "crit-80s.mp3": 0.6,
+  "crit-divertit.mp3": 0.6,
+  "crit-home.mp3": 0.6,
 };
 /** Temps mínim entre dos sons curts (ms) i fos entre fons (s). */
 const ENTRE_CURTS_MS = 5000;
@@ -45,6 +51,8 @@ let actiu = false;
 let cuaCurts: string[] = [];
 let ultimCurt: string | null = null;
 let ultimCurtT = 0;
+let cuaCrits: string[] = [];
+let ultimCrit: string | null = null;
 let ordreFons: string[] = [];
 let indexFons = 0;
 const elementsFons = new Set<HTMLAudioElement>();
@@ -145,7 +153,8 @@ export function iniciarSoFantasmes() {
   ordreFons = barreja(FONS);
   indexFons = 0;
   cuaCurts = [];
-  for (const nom of CURTS) void descodifica(nom);
+  cuaCrits = [];
+  for (const nom of [...CURTS, ...CRITS]) void descodifica(nom);
   arrencaFons();
 }
 
@@ -169,6 +178,29 @@ export function aturarSoFantasmes() {
 export function silenciarFantasmes(si: boolean) {
   silenciat = si;
   if (mestre && context) mestre.gain.setTargetAtTime(si ? 0 : 1, context.currentTime, 0.05);
+}
+
+/** Fa sonar un dels crits (s'alternen sense repetir-ne cap dos cops seguits). Retorna si ha sonat. */
+export function sonarCrit(): boolean {
+  const ctx = context;
+  if (!ctx || !mestre || ctx.state !== "running") return false;
+  const disponibles = CRITS.filter((n) => buffers.has(n));
+  if (!disponibles.length) return false;
+  if (!cuaCrits.length) {
+    cuaCrits = barreja(disponibles);
+    if (cuaCrits.length > 1 && cuaCrits[0] === ultimCrit) cuaCrits.push(cuaCrits.shift() as string);
+  }
+  const nom = cuaCrits.shift() as string;
+  const buffer = buffers.get(nom);
+  if (!buffer) return false;
+  ultimCrit = nom;
+  const font = ctx.createBufferSource();
+  font.buffer = buffer;
+  const g = ctx.createGain();
+  g.gain.value = VOLUM[nom] ?? 0.6;
+  font.connect(g).connect(mestre);
+  font.start();
+  return true;
 }
 
 /**
