@@ -107,7 +107,7 @@ export const EXTRES_AR: ExtraAr[] = [
       passos: [
         { icona: "👀", text: "Aixequeu el mòbil i gireu-lo a poc a poc: els fantasmes us observen des de lluny." },
         { icona: "🌀", text: "Els portals de llum són per on surten els fantasmes grans, que caçaran les ànimes petites i se les enduran." },
-        { icona: "📷", text: "Toqueu el botó de la càmera (a baix a la dreta) per fer un flaix: els fantasmes grans que il·lumini es dissoldran." },
+        { icona: "💥", text: "Toqueu el botó 💥 (a baix a la dreta) per fer un flaix: els fantasmes grans que il·lumini es dissoldran." },
         { icona: "📣", text: "Si en voleu fer marxar, crideu." },
       ],
       permisos: {

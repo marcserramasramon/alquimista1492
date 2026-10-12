@@ -78,12 +78,25 @@ export function VistaFantasmes({ extra, onTornar, directa = false }: VistaFantas
     setMicro((await iniciarMicroAr()) ? "actiu" : "no");
   }
 
+  /** El flaix de veritat: encén la llanterna del mòbil un instant (només on el navegador ho permet, p. ex. Chrome d'Android). */
+  function encendreLlanterna() {
+    const pista = flux.current?.getVideoTracks()[0];
+    if (!pista) return;
+    const aplicar = (torch: boolean) =>
+      pista.applyConstraints({ advanced: [{ torch } as MediaTrackConstraintSet] }).catch(() => {});
+    const capacitats = pista.getCapabilities?.() as (MediaTrackCapabilities & { torch?: boolean }) | undefined;
+    if (!capacitats?.torch) return;
+    void aplicar(true);
+    programa(() => void aplicar(false), 450);
+  }
+
   function dispararFlaix() {
     if (recarregant) return;
     setRecarregant(true);
     programa(() => setRecarregant(false), RECARREGA_FLAIX_MS);
     setBlanc(true);
     programa(() => setBlanc(false), 420);
+    encendreLlanterna();
     try {
       navigator.vibrate?.(40);
     } catch {
@@ -197,7 +210,7 @@ export function VistaFantasmes({ extra, onTornar, directa = false }: VistaFantas
             aria-label="Fer un flaix"
             className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-[3px] border-paper bg-white/15 text-3xl backdrop-blur-sm transition-opacity active:scale-95 disabled:opacity-40"
           >
-            📷
+            💥
           </button>
         </div>
       ) : (
