@@ -44,6 +44,7 @@ export class ContornPersones {
   private magia: HTMLCanvasElement;
   private halo: HTMLCanvasElement;
   private suau: Float32Array | null = null;
+  private llis: Float32Array | null = null;
   private ultim = 0;
   private hiHaVora = false;
   private tancat = false;
@@ -219,9 +220,29 @@ export class ContornPersones {
     const px = imatge.data;
     const imatgePle = gp.createImageData(mw, mh);
     const pp = imatgePle.data;
+    // Mitjana 3x3 de la màscara abans de tallar-la: la vora surt arrodonida i no a graons.
+    if (!this.llis || this.llis.length !== suau.length) this.llis = new Float32Array(suau.length);
+    const llis = this.llis;
+    for (let y = 0; y < mh; y++) {
+      for (let x = 0; x < mw; x++) {
+        let t = 0;
+        let n = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          const yy = y + dy;
+          if (yy < 0 || yy >= mh) continue;
+          for (let dx = -1; dx <= 1; dx++) {
+            const xx = x + dx;
+            if (xx < 0 || xx >= mw) continue;
+            t += suau[yy * mw + xx];
+            n++;
+          }
+        }
+        llis[y * mw + x] = t / n;
+      }
+    }
     const persona = (x: number, y: number) => {
       if (x < 0 || y < 0 || x >= mw || y >= mh) return true;
-      return suau[y * mw + x] > llindar !== invertir;
+      return llis[y * mw + x] > llindar !== invertir;
     };
     let vores = 0;
     for (let y = 0; y < mh; y++) {
@@ -231,8 +252,8 @@ export class ContornPersones {
         if (persona(x - GRUIX, y) && persona(x + GRUIX, y) && persona(x, y - GRUIX) && persona(x, y + GRUIX)) continue;
         const k = (y * mw + x) * 4;
         px[k] = 255;
-        px[k + 1] = 190 + ((x * 7 + y * 13) % 50);
-        px[k + 2] = 110;
+        px[k + 1] = 70 + ((x * 7 + y * 13) % 50);
+        px[k + 2] = 30;
         px[k + 3] = 255;
         vores++;
       }
@@ -340,9 +361,10 @@ export class ContornPersones {
     g.globalCompositeOperation = "lighter";
     // Resplendor ample darrere de la persona (vermell fosc), un de mitjà, i la línia fina i calenta.
     const passes: [string, number, number][] = [
-      ["rgba(200,10,0,0.9)", 20, 0.9],
-      ["rgba(255,35,0,0.95)", 10, 0.9],
-      ["rgba(255,120,0,1)", 3, 0.85],
+      ["rgba(200,0,0,1)", 30, 1],
+      ["rgba(230,0,0,1)", 22, 1],
+      ["rgba(255,20,0,1)", 12, 1],
+      ["rgba(255,70,10,1)", 4, 0.95],
     ];
     for (const [color, blur, alfa] of passes) {
       g.shadowColor = color;
