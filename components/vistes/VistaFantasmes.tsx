@@ -20,13 +20,13 @@ export interface VistaFantasmesProps {
 type EstatCamera = "esperant" | "activa" | "no-disponible";
 
 /** Fantasmes grans (caçadors) que hi ha alhora; els que es dissolen tornen més tard. Les ànimes petites són a mon.ts. */
-const QUANTITAT = 3;
+const QUANTITAT = 5;
 /** Temps de recàrrega del flaix (ms). */
 const RECARREGA_FLAIX_MS = 2500;
 
 /**
- * Extra de les ànimes de la pista de skate (fita d'Ànima): càmera de fons i, a sobre, tres fantasmes
- * grans que caminen pels portals de llum i cacen cinc ànimes petites. És un divertimento: no desa res
+ * Extra de les ànimes de la pista de skate (fita d'Ànima): càmera de fons i, a sobre, cinc fantasmes
+ * grans que patrullen entre els portals de llum i cacen cinc ànimes petites. És un divertimento: no desa res
  * ni arriba al servidor. Un botó a baix a la dreta fa un flaix, cridar els fa marxar, i quan un
  * s'acosta o s'en enfoca un de prop, sona una veu. (Les ànimes que guien pel Camí de Malla són un altre
  * extra, a part.)

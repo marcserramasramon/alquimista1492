@@ -205,6 +205,8 @@ class Fantasma {
   /** Portal on s'enfonsa i si encara hi va (0) o ja s'hi enfonsa (1). */
   portalDesti: { x: number; z: number } | null = null;
   fase2 = 0;
+  /** Temps fins al proper punt de la ronda (s), quan patrulla. */
+  patrulla = 0;
   /** L'esperit que persegueix (estat "persegueix"). */
   victima: Esperit | null = null;
 
@@ -324,7 +326,7 @@ class Fantasma {
       vel.z += (sz - head.z) * kk;
       vel.multiplyScalar(Math.pow(0.9, k));
       const maxVel =
-        this.estat === "fuig" ? 0.3 : this.estat === "curios" ? 0.06 : this.estat === "enfonsa" ? 0.035 : this.estat === "emergeix" ? 0.03 : this.estat === "persegueix" ? 0.115 : this.estat === "porta" ? 0.07 : 0.04;
+        this.estat === "fuig" ? 0.3 : this.estat === "curios" ? 0.06 : this.estat === "enfonsa" ? 0.035 : this.estat === "emergeix" ? 0.03 : this.estat === "persegueix" ? 0.115 : this.estat === "porta" ? 0.07 : 0.03;
       const vl = vel.length();
       if (vl > maxVel) vel.multiplyScalar(maxVel / vl);
       head.addScaledVector(vel, k);
@@ -707,7 +709,7 @@ class Esperit {
     // Ulls vermells, ovals i gairebé sempre tancats, com els de la versió treballada.
     this.cara = new T.Group();
     this.cara.rotation.order = "YXZ";
-    this.matUlls = new T.MeshBasicMaterial({ map: mapUll, transparent: true, opacity: 0, depthWrite: false, depthTest: false, blending: T.AdditiveBlending });
+    this.matUlls = new T.MeshBasicMaterial({ map: mapUll, transparent: true, opacity: 0, depthWrite: false, blending: T.AdditiveBlending }); // amb prova de profunditat: un fantasma gran els tapa
     this.ullL = new T.Mesh(circle, this.matUlls);
     this.ullR = new T.Mesh(circle, this.matUlls);
     this.ullL.position.set(-0.2, 0.25, 0.73);
@@ -756,10 +758,16 @@ class Esperit {
       this.grup.scale.setScalar(s * (0.35 + 0.65 * this.fade));
       vel.set(0, 0, 0);
     } else if (this.estat === "capturat" && caçador) {
-      // El fantasma gran el du agafat, una mica per sota del cap.
-      head.x += (caçador.head.x + Math.sin(t * 5 + this.fase) * 0.25 - head.x) * Math.min(1, 0.25 * k);
-      head.y += (caçador.head.y - 0.5 - head.y) * Math.min(1, 0.25 * k);
-      head.z += (caçador.head.z + Math.cos(t * 4.3 + this.fase) * 0.25 - head.z) * Math.min(1, 0.25 * k);
+      // El fantasma gran el du agafat, davant seu (cap al jugador), perquè es vegi i no quedi dins la capa.
+      let ax = cam.x - caçador.head.x;
+      let az = cam.z - caçador.head.z;
+      const ah = Math.hypot(ax, az) || 1;
+      const davant = 0.9 + 1.2 * caçador.s;
+      ax = (ax / ah) * davant;
+      az = (az / ah) * davant;
+      head.x += (caçador.head.x + ax + Math.sin(t * 5 + this.fase) * 0.2 - head.x) * Math.min(1, 0.25 * k);
+      head.y += (caçador.head.y - 0.2 - head.y) * Math.min(1, 0.25 * k);
+      head.z += (caçador.head.z + az + Math.cos(t * 4.3 + this.fase) * 0.2 - head.z) * Math.min(1, 0.25 * k);
       vel.set(0, 0, 0);
     } else if (this.estat !== "ocult") {
       let sx: number;
@@ -1345,6 +1353,18 @@ export class MonFantasmes {
             f.espera = alea(9, 15);
           }
           break;
+        case "deriva": {
+          // Patrulla: va d'un punt a un altre de la zona, sense aturar-se gaire.
+          f.patrulla -= dt;
+          if (f.patrulla <= 0 || Math.hypot(f.head.x - f.home.x, f.head.z - f.home.z) < 2.2) {
+            const h = this.triaHome(f);
+            f.home.x = h.x;
+            f.home.y = h.y;
+            f.home.z = h.z;
+            f.patrulla = alea(14, 26);
+          }
+          break;
+        }
         default:
           break;
       }
