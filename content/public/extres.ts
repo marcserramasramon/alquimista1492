@@ -2,11 +2,11 @@
  * Extres de realitat augmentada — contingut públic.
  *
  * Són un divertimento: no compten per a res del joc (ni progrés, ni punts, ni pistes) i el
- * servidor no en sap res. S'activen amb un botó a la fitxa del pas previ d'una fita.
+ * servidor no en sap res. S'activen amb un botó a la pantalla de la fita (o del seu pas previ).
  * Res d'aquí és una solució: es pot enviar al client sense risc.
  */
 
-export type EscenaAr = "ulls-siluetes";
+export type EscenaAr = "ulls-siluetes" | "fantasmes";
 
 export interface PuntGps {
   latitud: number;
@@ -30,24 +30,24 @@ export interface IntroduccioAr {
 export interface ExtraAr {
   id: string;
   /**
-   * Pas previ (check-in) de la fita on s'activa l'extra: a la fitxa d'aquest pas, un cop obert,
-   * surt un botó per començar-lo (components/vistes/VistaHub.tsx, FitxaFita). No s'activa per GPS.
+   * Fita (o pas previ d'una fita) on s'activa l'extra: a la seva pantalla (components/vistes/
+   * VistaEstacio.tsx) surt un botó per començar-lo. No s'activa per GPS.
    */
   fitaId: string;
   escena: EscenaAr;
   /**
-   * Com es dibuixa la figura: en "3d" amb el model GLB (components/ar/Figura3D) i, si el mòbil no
-   * pot, amb la imatge plana; en "plana", sempre la imatge. Amb `?figura=plana` a l'adreça es
-   * força la plana per provar.
+   * Només per a "ulls-siluetes": com es dibuixa la figura. En "3d", amb el model GLB (components/ar/
+   * Figura3D) i, si el mòbil no pot, amb la imatge plana; en "plana", sempre la imatge. Amb
+   * `?figura=plana` a l'adreça es força la plana per provar.
    */
-  figura: "3d" | "plana";
+  figura?: "3d" | "plana";
   /**
    * Direcció del camí que fa el jugador, de `des` cap a `cap`. La figura apareix en aquesta
    * direcció (al davant) o a la contrària (al darrere), la que quedi més a prop d'on mira el jugador.
    * Sense camí, apareix on mira el mòbil.
    */
   cami?: { des: PuntGps; cap: PuntGps };
-  /** Text del botó de la fitxa del pas. */
+  /** Text del botó de la pantalla de la fita (o del pas). */
   boto: string;
   /** Pantalla d'entrada de l'extra, abans de demanar càmera i sensors: explica com funciona. */
   introduccio: IntroduccioAr;
@@ -90,15 +90,46 @@ export const EXTRES_AR: ExtraAr[] = [
       boto: "Obrir els ulls",
     },
   },
+  {
+    id: "anima-fantasmes",
+    fitaId: "anima",
+    escena: "fantasmes",
+    boto: "👻 Mirar les ànimes",
+    introduccio: {
+      titol: "Ànimes a la foscor",
+      entrada: "Hi ha ànimes errants al vostre voltant. Això és el que podeu fer:",
+      passos: [
+        { icona: "👀", text: "Aixequeu el mòbil i gireu-lo a poc a poc: les ànimes us observen des de lluny." },
+        { icona: "📷", text: "Toqueu el botó de la càmera (a baix a la dreta) per fer un flaix: les ànimes que il·lumini es dissoldran." },
+        { icona: "📣", text: "Si en voleu fer marxar, crideu." },
+      ],
+      permisos: {
+        titol: "El mòbil us demanarà permís per a:",
+        items: [
+          { icona: "📷", text: "Càmera: per veure el que teniu al davant." },
+          { icona: "🧭", text: "Moviment i brúixola: per saber cap a on mireu." },
+          { icona: "🎤", text: "Micròfon: només mesura el volum del crit. No es grava res ni s'envia enlloc." },
+        ],
+        nota: "Si no en voleu donar algun, es pot jugar igualment: arrossegueu el dit per mirar i toqueu «Cridar!».",
+      },
+      consells: [
+        "Mireu on trepitgeu: no camineu mentre mireu la pantalla.",
+        "Si hi ha gent a prop, parleu baix. El botó 🔊 de dalt silencia el so.",
+        "Això no té res a veure amb la prova de la fita: no hi trobareu cap pista.",
+      ],
+      nota: "És només un extra: no canvia res de la partida.",
+      boto: "Obrir els ulls",
+    },
+  },
 ];
 
 export function getExtraAr(id: string): ExtraAr | undefined {
   return EXTRES_AR.find((e) => e.id === id);
 }
 
-/** L'extra que s'activa des de la fitxa d'un pas previ, si en té. */
-export function getExtraArDelPas(pasId: string): ExtraAr | undefined {
-  return EXTRES_AR.find((e) => e.fitaId === pasId);
+/** L'extra que s'activa des de la pantalla d'una fita o d'un pas previ, si en té. */
+export function getExtraArDeFita(fitaId: string): ExtraAr | undefined {
+  return EXTRES_AR.find((e) => e.fitaId === fitaId);
 }
 
 /** Rumb (graus des del nord, sentit horari) del camí d'un extra, o null si no en té. */

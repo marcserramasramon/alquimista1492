@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { VistaExtraAr } from "@/components/vistes/VistaExtraAr";
+import { VistaFantasmes } from "@/components/vistes/VistaFantasmes";
 import { getExtraAr } from "@/content/public/extres";
 
 /** Extra de realitat augmentada (content/public/extres.ts): no toca el progrés de la partida. */
@@ -16,5 +17,6 @@ export default function ExtraArPage() {
   }, [extra, router]);
 
   if (!extra) return null;
-  return <VistaExtraAr extra={extra} onTornar={() => router.push("/joc")} />;
+  const Vista = extra.escena === "fantasmes" ? VistaFantasmes : VistaExtraAr;
+  return <Vista extra={extra} onTornar={() => router.push("/joc")} />;
 }

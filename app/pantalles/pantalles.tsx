@@ -50,6 +50,7 @@ import { VistaAjuda } from "@/components/vistes/VistaAjuda";
 import { VistaBonesPractiques } from "@/components/vistes/VistaBonesPractiques";
 import { GuiaManual } from "@/components/player/GuiaManual";
 import { VistaExtraAr } from "@/components/vistes/VistaExtraAr";
+import { VistaFantasmes } from "@/components/vistes/VistaFantasmes";
 import { EXTRES_AR } from "@/content/public/extres";
 import { MANUAL_ARRIBAR, MANUAL_HUB, MANUAL_RESOLDRE } from "@/content/public/textos";
 import type { AvisEquip } from "@/components/vistes/PanellAvisosMaster";
@@ -806,6 +807,13 @@ export const PANTALLES: Pantalla[] = [
     titol: "Extra AR · explicació abans de la càmera",
     descripcio: "Com funciona, què demanarà el mòbil i consells; es veu abans d'obrir la càmera. El text és a content/public/extres.ts.",
     render: () => <VistaExtraAr extra={EXTRES_AR[0]} onTornar={noop} />,
+  },
+  {
+    id: "extra-fantasmes-introduccio",
+    grup: "hub",
+    titol: "Extra ànimes · explicació abans de la càmera",
+    descripcio: "Fita d'Ànima: com funciona l'extra dels fantasmes, què demanarà el mòbil i consells. El text és a content/public/extres.ts.",
+    render: () => <VistaFantasmes extra={EXTRES_AR[1]} onTornar={noop} />,
   },
   {
     id: "extra-ar-escena",
