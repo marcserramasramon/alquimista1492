@@ -85,6 +85,7 @@ export function VistaAigua({ extra, onTornar, directa = false }: VistaAiguaProps
           alError={() => setSense3d(true)}
           rumbRiu={rumbCami(extra)}
           ampleRiu={extra.ampleRiu}
+          explanada={extra.explanada}
         />
       )}
 

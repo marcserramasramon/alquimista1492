@@ -20,6 +20,8 @@ interface Props {
   /** Cap a on corre el riu (rumb en graus, p. ex. el del carrer) i quin ample té (m). */
   rumbRiu?: number | null;
   ampleRiu?: number;
+  /** Aigües amunt el riu s'obre en una bassa (una explanada). */
+  explanada?: { distancia: number; radi: number };
 }
 
 /** Resolució del dibuix respecte de la pantalla. */
@@ -29,9 +31,9 @@ const RESOLUCIO = 0.75;
  * Escena de l'aigua sobre la càmera: ràpids en 3D (three.js) al terra, amb les persones per damunt.
  * Three.js dibuixa en un canvas fora de pantalla; aquí es copia al canvas visible i s'hi retallen les persones.
  */
-export function EscenaAigua({ mirada, arrossegar, video, alEstatContorn, alError, rumbRiu = null, ampleRiu }: Props) {
+export function EscenaAigua({ mirada, arrossegar, video, alEstatContorn, alError, rumbRiu = null, ampleRiu, explanada }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const manual = useRef<Mirada>({ rumb: 0, elevacio: -35 });
+  const manual = useRef<Mirada>({ rumb: rumbRiu ?? 0, elevacio: -35 });
   const arrossegarRef = useRef(arrossegar);
   const videoRef = useRef(video);
   const estatRef = useRef(alEstatContorn);
@@ -63,7 +65,7 @@ export function EscenaAigua({ mirada, arrossegar, video, alEstatContorn, alError
         // Three.js es carrega només quan es fa servir aquesta pantalla.
         const { AiguaThree } = await import("@/components/ar/aigua/aiguaThree");
         if (cancel) return;
-        aigua = new AiguaThree(rumbRiu, ampleRiu);
+        aigua = new AiguaThree(rumbRiu, ampleRiu, explanada);
       } catch {
         errorRef.current?.();
         return;
@@ -114,7 +116,7 @@ export function EscenaAigua({ mirada, arrossegar, video, alEstatContorn, alError
       alliberar();
       persones.tanca();
     };
-  }, [mirada, rumbRiu, ampleRiu]);
+  }, [mirada, rumbRiu, ampleRiu, explanada]);
 
   // Sense sensors: arrossegar gira la mirada (rumb amb l'horitzontal, inclinació amb la vertical).
   const punter = useRef<{ x: number; y: number } | null>(null);

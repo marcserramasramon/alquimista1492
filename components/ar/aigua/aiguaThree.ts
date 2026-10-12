@@ -18,6 +18,8 @@ export const FOV_HORITZONTAL = 52;
 
 /** Ample per defecte del riu (m), llargada de la cinta i marge de malla a cada costat. */
 export const AMPLE_RIU = 3;
+/** Ample de la transició entre el riu i l'explanada, en metres de corrent. */
+const TRANSICIO = 8;
 const LLARG = 60;
 const MARGE = 0.9;
 const GOTES_MAX = 180;
@@ -27,6 +29,8 @@ const COMU = /* glsl */ `
   uniform float uTime;
   uniform vec2 uFlow;
   uniform float uAmple;
+  // x = on comença l'explanada aigües amunt (m darrere del jugador), y = el seu semiample (m); 0 = no n'hi ha.
+  uniform vec2 uExplanada;
 
   float hash(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
@@ -45,8 +49,14 @@ const COMU = /* glsl */ `
     return vec2(dot(p, uFlow), dot(p, vec2(-uFlow.y, uFlow.x)));
   }
   // 1 dins del riu, 0 fora, amb una vora suau; i s'apaga als extrems de la cinta.
+  // Semiample del riu a cada punt del corrent: s'obre en una bassa gran aigües amunt (l'explanada).
+  float semiAmple(float x) {
+    float obert = 1.0 - smoothstep(-uExplanada.x - ${TRANSICIO.toFixed(1)}, -uExplanada.x, x);
+    return mix(uAmple * 0.5, max(uExplanada.y, uAmple * 0.5), obert);
+  }
   float riu(vec2 q) {
-    float vora = 1.0 - smoothstep(uAmple * 0.5 - 0.3, uAmple * 0.5 + 0.1, abs(q.y));
+    float mig = semiAmple(q.x);
+    float vora = 1.0 - smoothstep(mig - 0.3, mig + 0.1, abs(q.y));
     float cap = 1.0 - smoothstep(${(LLARG / 2 * 0.7).toFixed(1)}, ${(LLARG / 2 * 0.97).toFixed(1)}, abs(q.x));
     return vora * cap;
   }
@@ -94,7 +104,8 @@ const FRAGMENT = /* glsl */ `
     escuma += smoothstep(0.58, 0.85, ratlla * 2.3) * 0.45;
 
     // Escuma a les vores del riu, on l'aigua es trenca contra la riba.
-    float vora = smoothstep(uAmple * 0.5 - 0.7, uAmple * 0.5 - 0.05, abs(q.y));
+    float mig = semiAmple(q.x);
+    float vora = smoothstep(mig - 0.7, mig - 0.05, abs(q.y));
     escuma = max(escuma, vora * smoothstep(0.25, 0.6, noise(vec2(q.x * 1.6 - t * 4.0, q.y * 6.0)) + 0.25));
     escuma = clamp(escuma, 0.0, 1.0);
 
@@ -153,6 +164,7 @@ export class AiguaThree {
     uTime: { value: 0 },
     uFlow: { value: new THREE.Vector2(1, 0) },
     uAmple: { value: AMPLE_RIU },
+    uExplanada: { value: new THREE.Vector2(0, 0) },
   };
   private readonly liberables: { dispose(): void }[] = [];
   private readonly gotes: Gota[] = [];
@@ -168,11 +180,17 @@ export class AiguaThree {
 
   /**
    * `rumbRiu`: cap a on corre el riu (graus des del nord, sentit horari), p. ex. el del carrer; sense
-   * ell, corre cap on mira el jugador en la primera lectura. `ample`: ample del riu (m).
+   * ell, corre cap on mira el jugador en la primera lectura. `ample`: ample del riu (m). `explanada`:
+   * aigües amunt el riu s'obre en una bassa (`distancia` m darrere del jugador, `radi` de semiample).
    * Llança si el mòbil no pot crear un context WebGL.
    */
-  constructor(private readonly rumbRiu: number | null = null, ample: number = AMPLE_RIU) {
+  constructor(
+    private readonly rumbRiu: number | null = null,
+    ample: number = AMPLE_RIU,
+    explanada?: { distancia: number; radi: number },
+  ) {
     this.uniformes.uAmple.value = ample;
+    if (explanada) this.uniformes.uExplanada.value.set(explanada.distancia, explanada.radi);
     this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: "high-performance" });
     this.canvas = this.renderer.domElement;
     this.renderer.setPixelRatio(1);
@@ -181,8 +199,10 @@ export class AiguaThree {
     this.camera.position.set(0, ALCADA_ULLS, 0);
 
     // Aigua.
-    const amplada = this.uniformes.uAmple.value + 2 * MARGE;
-    const geoAigua = new THREE.PlaneGeometry(amplada, LLARG, Math.round(amplada / 0.17), Math.round(LLARG / 0.33));
+    const mitjaMax = Math.max(this.uniformes.uAmple.value / 2, explanada?.radi ?? 0);
+    const amplada = 2 * (mitjaMax + MARGE);
+    const cella = explanada ? 0.2 : 0.17;
+    const geoAigua = new THREE.PlaneGeometry(amplada, LLARG, Math.round(amplada / cella), Math.round(LLARG / 0.33));
     geoAigua.rotateX(-Math.PI / 2);
     const matAigua = new THREE.ShaderMaterial({
       uniforms: this.uniformes,

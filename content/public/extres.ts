@@ -54,6 +54,11 @@ export interface ExtraAr {
    * (si n'hi ha: el carrer on som) i passa pels peus del jugador.
    */
   ampleRiu?: number;
+  /**
+   * Només per a "aigua": aigües amunt (darrere del jugador, contra el corrent) el riu s'obre en una
+   * bassa: comença `distancia` m darrere seu i té `radi` m de semiample. Sense, el riu és sempre estret.
+   */
+  explanada?: { distancia: number; radi: number };
   /** Només per a "fantasmes": el punt de llum (portal) es col·loca a aquesta posició GPS; si no es pot, davant del jugador. */
   puntLlum?: PuntGps;
   /** Text del botó de la pantalla de la fita (o del pas), o del vídeo del màster que hi porta. */
@@ -170,7 +175,14 @@ export const EXTRES_AR: ExtraAr[] = [
     fitaId: "font-ferro",
     escena: "aigua",
     ampleRiu: 3,
-    // PENDENT: `cami` amb dos punts GPS del carrer (com a "aire-ulls") perquè el riu en segueixi la direcció.
+    // Carrer del Call: el riu baixa pel carrer (rumb ≈ 148°, cap al SE, cap al Carrer Major) i els
+    // jugadors són a dalt (41°54'53.1"N 2°13'39.1"E). Darrere seu, al final del carrer, hi ha una
+    // explanada que queda plena d'aigua: la distància i el radi són estimats, es retoquen aquí.
+    cami: {
+      des: { latitud: 41.91474257278738, longitud: 2.227530891604852 },
+      cap: { latitud: 41.914111267352745, longitud: 2.2280573189292294 },
+    },
+    explanada: { distancia: 6, radi: 12 },
     boto: "🌊 Mirar l'aigua als peus",
     introduccio: {
       titol: "Ràpids als peus",
