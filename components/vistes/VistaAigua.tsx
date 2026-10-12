@@ -150,7 +150,7 @@ export function VistaAigua({ extra, onTornar, directa = false }: VistaAiguaProps
             <div className="rounded-2xl bg-black/70 px-4 py-3 text-center">
               {estatSensors === "actiu" ? (
                 <>
-                  <p className="text-lg font-extrabold">Calibrem el riu</p>
+                  <p className="text-lg font-extrabold">Centrar el riu</p>
                   <p className="mt-1 text-base">{extra.calibratge?.indicacio}</p>
                 </>
               ) : (
@@ -188,7 +188,7 @@ export function VistaAigua({ extra, onTornar, directa = false }: VistaAiguaProps
           }}
           className="absolute top-[max(4.5rem,calc(env(safe-area-inset-top)+3.5rem))] right-4 z-10 flex h-10 items-center justify-center rounded-full border-2 border-paper-3/60 bg-black/60 px-3 text-sm font-bold"
         >
-          🧭 Recalibrar
+          🧭 Centrar el riu
         </button>
       )}
 
