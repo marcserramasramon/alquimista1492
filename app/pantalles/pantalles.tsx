@@ -51,8 +51,9 @@ import { VistaBonesPractiques } from "@/components/vistes/VistaBonesPractiques";
 import { GuiaManual } from "@/components/player/GuiaManual";
 import { VistaExtraAr } from "@/components/vistes/VistaExtraAr";
 import { VistaFantasmes } from "@/components/vistes/VistaFantasmes";
+import { VistaGuiesAnimes } from "@/components/vistes/VistaGuiesAnimes";
 import { VistaFoc } from "@/components/vistes/VistaFoc";
-import { EXTRES_AR } from "@/content/public/extres";
+import { EXTRES_AR, getExtraAr } from "@/content/public/extres";
 import { MANUAL_ARRIBAR, MANUAL_HUB, MANUAL_RESOLDRE } from "@/content/public/textos";
 import type { AvisEquip } from "@/components/vistes/PanellAvisosMaster";
 import { IndicadorTemps } from "@/components/ui/IndicadorTemps";
@@ -817,6 +818,21 @@ export const PANTALLES: Pantalla[] = [
     render: () => <VistaFantasmes extra={EXTRES_AR[1]} onTornar={noop} />,
   },
   {
+    id: "guies-anima-introduccio",
+    grup: "hub",
+    titol: "Ànimes guia · explicació (Camí de Malla)",
+    descripcio:
+      "Es veu en tocar el botó del vídeo «anima-cami-malla»: explica que les ànimes guien els jugadors camí avall cap a la fita d'Ànima. El text és a content/public/extres.ts (extra «anima-guies»).",
+    render: () => <VistaGuiesAnimes extra={getExtraAr("anima-guies")!} onTornar={noop} />,
+  },
+  {
+    id: "guies-anima-escena",
+    grup: "hub",
+    titol: "Ànimes guia · escena",
+    descripcio: "Ànimes petites que volen en línia recta pel camí (rumb ≈ 166°). Sense càmera ni sensors: arrossegueu per girar.",
+    render: () => <VistaGuiesAnimes extra={getExtraAr("anima-guies")!} onTornar={noop} directa />,
+  },
+  {
     id: "extra-foc-introduccio",
     grup: "hub",
     titol: "Extra foc · explicació abans de la càmera",
@@ -938,7 +954,13 @@ export const PANTALLES: Pantalla[] = [
       return (
         <>
           {getPantalla("hub-mitja-partida")?.render(dades)}
-          <VistaMissatgeVideo titol={missatge.titol} text={missatge.text} video={missatge.video!} onAcceptar={noop} />
+          <VistaMissatgeVideo
+            titol={missatge.titol}
+            text={missatge.text}
+            video={missatge.video!}
+            onAcceptar={noop}
+            accioAr={missatge.ar}
+          />
         </>
       );
     },

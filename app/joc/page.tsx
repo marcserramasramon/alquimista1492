@@ -238,6 +238,7 @@ export default function HubPage() {
           text={missatgeReobert.text}
           video={missatgeReobert.video}
           onAcceptar={() => setVideoReobert(null)}
+          accioAr={missatgeReobert.ar}
         />
       )}
     </>

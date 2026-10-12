@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useSoVideo } from "@/lib/useSoVideo";
 
 export interface VistaMissatgeVideoProps {
@@ -12,6 +13,8 @@ export interface VistaMissatgeVideoProps {
   /** Mentre es desa que s'ha llegit. */
   enviant?: boolean;
   onAcceptar: () => void;
+  /** Botó extra que porta a un extra de realitat augmentada (p. ex. "/joc/ar/anima-guies"). */
+  accioAr?: { boto: string; href: string; onClick?: () => void };
 }
 
 /**
@@ -32,6 +35,7 @@ export function VistaMissatgeVideo({
   pendents = 1,
   enviant = false,
   onAcceptar,
+  accioAr,
 }: VistaMissatgeVideoProps) {
   const boto = useRef<HTMLButtonElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -118,6 +122,11 @@ export function VistaMissatgeVideo({
           <p id="missatge-video-text" className="whitespace-pre-line text-2xl font-bold leading-snug text-ink">
             {text}
           </p>
+          {accioAr && (
+            <Link href={accioAr.href} onClick={accioAr.onClick} className="btn btn-secundari">
+              {accioAr.boto}
+            </Link>
+          )}
           <button ref={boto} type="button" onClick={onAcceptar} disabled={enviant} className="btn btn-primari mt-2">
             D&apos;acord
           </button>
@@ -194,6 +203,11 @@ export function VistaMissatgeVideo({
         <p id="missatge-video-text" className="whitespace-pre-line text-lg leading-snug text-ink">
           {text}
         </p>
+        {accioAr && (
+          <Link href={accioAr.href} onClick={accioAr.onClick} className="btn btn-secundari">
+            {accioAr.boto}
+          </Link>
+        )}
         <button ref={boto} type="button" onClick={onAcceptar} disabled={enviant} className="btn btn-primari mt-1">
           D&apos;acord
         </button>

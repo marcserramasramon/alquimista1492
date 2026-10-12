@@ -6,7 +6,7 @@
  * Res d'aquí és una solució: es pot enviar al client sense risc.
  */
 
-export type EscenaAr = "ulls-siluetes" | "fantasmes" | "foc";
+export type EscenaAr = "ulls-siluetes" | "fantasmes" | "foc" | "guies";
 
 export interface PuntGps {
   latitud: number;
@@ -31,9 +31,11 @@ export interface ExtraAr {
   id: string;
   /**
    * Fita (o pas previ d'una fita) on s'activa l'extra: a la seva pantalla (components/vistes/
-   * VistaEstacio.tsx) surt un botó per començar-lo. No s'activa per GPS.
+   * VistaEstacio.tsx) surt un botó per començar-lo. No s'activa per GPS. Sense `fitaId`, l'extra
+   * s'obre des d'un altre lloc (p. ex. el botó d'un vídeo del màster, vegeu `ar` a
+   * content/public/missatgesMaster.ts), cap a /joc/ar/{id}.
    */
-  fitaId: string;
+  fitaId?: string;
   escena: EscenaAr;
   /**
    * Només per a "ulls-siluetes": com es dibuixa la figura. En "3d", amb el model GLB (components/ar/
@@ -42,14 +44,14 @@ export interface ExtraAr {
    */
   figura?: "3d" | "plana";
   /**
-   * Direcció del camí que fa el jugador, de `des` cap a `cap`. La figura apareix en aquesta
+   * Només per a "ulls-siluetes" i "guies". En "ulls-siluetes": direcció del camí que fa el jugador, de `des` cap a `cap`. La figura apareix en aquesta
    * direcció (al davant) o a la contrària (al darrere), la que quedi més a prop d'on mira el jugador.
    * Sense camí, apareix on mira el mòbil.
    */
   cami?: { des: PuntGps; cap: PuntGps };
   /** Només per a "fantasmes": el punt de llum (portal) es col·loca a aquesta posició GPS; si no es pot, davant del jugador. */
   puntLlum?: PuntGps;
-  /** Text del botó de la pantalla de la fita (o del pas). */
+  /** Text del botó de la pantalla de la fita (o del pas), o del vídeo del màster que hi porta. */
   boto: string;
   /** Pantalla d'entrada de l'extra, abans de demanar càmera i sensors: explica com funciona. */
   introduccio: IntroduccioAr;
@@ -155,6 +157,42 @@ export const EXTRES_AR: ExtraAr[] = [
       ],
       nota: "És només un extra: no canvia res de la partida.",
       boto: "Encendre el foc",
+    },
+  },
+  {
+    // Les ànimes guia del Camí de Malla, cap a la fita d'Ànima: ànimes petites que volen en línia recta
+    // pel camí perquè els jugadors les segueixin. S'hi arriba des del botó del vídeo «anima-cami-malla».
+    // No té res a veure amb l'extra «anima-fantasmes» (pista de skate).
+    id: "anima-guies",
+    escena: "guies",
+    // El camí és recte: les ànimes volen de `des` cap a `cap` (rumb ≈ 166°).
+    cami: {
+      des: { latitud: 41.91204496697212, longitud: 2.229078742596555 },
+      cap: { latitud: 41.91042050733091, longitud: 2.2296204391033148 },
+    },
+    boto: "👻 Veure les ànimes guiar-nos",
+    introduccio: {
+      titol: "Les ànimes us guien",
+      entrada: "Les ànimes d'aquest camí saben on és la fita i us hi acompanyen. Això és el que veureu:",
+      passos: [
+        { icona: "👻", text: "Unes ànimes petites sorgeixen al vostre voltant i volen camí avall, cap a la fita d'Ànima." },
+        { icona: "🚶", text: "Seguiu-les: el camí és recte i us hi duen." },
+        { icona: "🧭", text: "Aixequeu el mòbil i gireu-lo a poc a poc. Si no en veieu cap, un avís us dirà cap a on mirar." },
+      ],
+      permisos: {
+        titol: "El mòbil us demanarà permís per a:",
+        items: [
+          { icona: "📷", text: "Càmera: per veure el camí amb les ànimes al damunt. La imatge no es grava ni s'envia enlloc." },
+          { icona: "🧭", text: "Moviment i brúixola: per saber cap a on mireu." },
+        ],
+        nota: "Si no en voleu donar algun, es pot veure igualment: arrossegueu el dit per mirar al voltant.",
+      },
+      consells: [
+        "Mireu on trepitgeu: no camineu mentre mireu la pantalla. Atureu-vos per mirar i després seguiu.",
+        "Si hi ha gent a prop, parleu baix.",
+      ],
+      nota: "És només un extra: no canvia res de la partida.",
+      boto: "Veure les ànimes",
     },
   },
 ];

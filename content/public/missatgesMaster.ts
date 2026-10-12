@@ -48,6 +48,8 @@ export interface MissatgeMaster {
   text: string;
   video?: string;
   geofence?: { lat: number; lng: number; radiMetres: number };
+  /** Botó extra del pop-up de vídeo que porta a una pantalla de realitat augmentada. */
+  ar?: { href: string; boto: string };
 }
 
 export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
@@ -114,6 +116,8 @@ export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
     text: "Heu vist l'Ànima vibrar entre les ombres del camí, una llum porpra que s'esvaeix en veure-us. Continueu.",
     video: "/video/anima-cami-malla.mp4",
     geofence: { lat: 41.912181, lng: 2.229094, radiMetres: 30 },
+    // Les ànimes guien els jugadors camí avall cap a la fita (extra «anima-guies» de content/public/extres.ts).
+    ar: { href: "/joc/ar/anima-guies", boto: "👻 Veure les ànimes guiar-nos" },
   },
   /** Es dispara sol a la Plaça de la Creu, pel camí (no és una fita). Narració pendent amb
    *  scripts/generate-audio-ambient.py (afegir "foc-placa-creu" a AMBIENT_IDS). */

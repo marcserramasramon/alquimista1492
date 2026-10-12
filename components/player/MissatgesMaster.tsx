@@ -88,7 +88,8 @@ export function MissatgesMaster() {
     setEnviant(false);
   }
 
-  const video = actual.clau ? getMissatgeMaster(actual.clau)?.video : undefined;
+  const definicio = actual.clau ? getMissatgeMaster(actual.clau) : undefined;
+  const video = definicio?.video;
 
   if (video) {
     return (
@@ -100,6 +101,7 @@ export function MissatgesMaster() {
         pendents={missatges.length}
         enviant={enviant}
         onAcceptar={acceptar}
+        accioAr={definicio?.ar && { ...definicio.ar, onClick: acceptar }}
       />
     );
   }

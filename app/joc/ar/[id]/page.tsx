@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { VistaExtraAr } from "@/components/vistes/VistaExtraAr";
 import { VistaFantasmes } from "@/components/vistes/VistaFantasmes";
 import { VistaFoc } from "@/components/vistes/VistaFoc";
+import { VistaGuiesAnimes } from "@/components/vistes/VistaGuiesAnimes";
 import { getExtraAr } from "@/content/public/extres";
 
 /** Extra de realitat augmentada (content/public/extres.ts): no toca el progrés de la partida. */
@@ -18,6 +19,13 @@ export default function ExtraArPage() {
   }, [extra, router]);
 
   if (!extra) return null;
-  const Vista = extra.escena === "fantasmes" ? VistaFantasmes : extra.escena === "foc" ? VistaFoc : VistaExtraAr;
+  const Vista =
+    extra.escena === "fantasmes"
+      ? VistaFantasmes
+      : extra.escena === "foc"
+        ? VistaFoc
+        : extra.escena === "guies"
+          ? VistaGuiesAnimes
+          : VistaExtraAr;
   return <Vista extra={extra} onTornar={() => router.push("/joc")} />;
 }

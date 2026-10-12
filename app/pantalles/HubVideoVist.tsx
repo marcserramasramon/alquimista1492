@@ -40,6 +40,7 @@ export function HubVideoVist({ estacions, totesResoltes }: { estacions: EstacioM
           text={reobert.text}
           video={reobert.video}
           onAcceptar={() => setReobertId(null)}
+          accioAr={reobert.ar}
         />
       )}
     </>
