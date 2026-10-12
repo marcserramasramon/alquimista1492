@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alquimista 1492 · Enllaços</title>
+<style>
+  :root { --bg:#14110d; --panel:#1e1913; --ink:#e9dfc9; --dim:#9a8f78; --gold:#c9a24a; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.4 system-ui,sans-serif; display:flex; height:100vh; }
+  nav { width:320px; overflow:auto; padding:16px; background:var(--panel); border-right:1px solid #3a3022; }
+  h1 { font-size:18px; margin:0 0 4px; color:var(--gold); }
+  .dom { color:var(--dim); font-size:12px; margin-bottom:12px; word-break:break-all; }
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.1em; color:var(--dim); margin:18px 0 6px; }
+  a { display:block; padding:6px 10px; border-radius:6px; color:var(--ink); text-decoration:none; }
+  a:hover { background:#2d2519; }
+  a.on { background:var(--gold); color:#14110d; }
+  a small { color:var(--dim); }
+  a.on small { color:#14110d; }
+  main { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:16px; min-width:0; }
+  .bar { width:390px; max-width:100%; display:flex; gap:8px; font-size:12px; color:var(--dim); }
+  .bar span { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar a { display:inline; padding:0 6px; color:var(--gold); }
+  .phone { width:390px; height:min(844px, calc(100vh - 70px)); border:10px solid #000; border-radius:36px; background:#fff; overflow:hidden; box-shadow:0 10px 40px #000a; }
+  iframe { width:100%; height:100%; border:0; display:block; }
+  @media (max-width:760px){ body{flex-direction:column;height:auto} nav{width:auto;border:0} main{padding:16px 0} }
+</style>
+</head>
+<body>
+<nav id="nav">
+  <h1>Alquimista 1492</h1>
+  <div class="dom" id="dom"></div>
+</nav>
+<main>
+  <div class="bar"><span id="cur">—</span><a id="open" href="#" target="_blank">obrir ↗</a></div>
+  <div class="phone"><iframe id="fr" title="Previsualització"></iframe></div>
+</main>
+<script>
+const BASE = location.protocol.startsWith("http") ? location.origin : "https://alquimista1492.vercel.app";
+// [titol, ruta]; les rutes amb [id] demanen el valor en clicar
+const GROUPS = {
+  "Jugadors": [
+    ["Portada","/"],["Anunci","/anunci"],["Condicions","/condicions"],["Equips","/equips"],
+    ["Espera","/espera"],["Joc","/joc"],["Joc AR","/joc/ar/[id]"],["Estació","/s/[estacioId]"],
+    ["Missatge","/missatge"],["Ubicació","/ubicacio"],["Gresol","/gresol"],["Final","/final"]
+  ],
+  "Màster": [
+    ["Màster","/master"],["Login","/master/login"],["Cartells","/master/cartells"],["Codis","/master/codis"]
+  ],
+  "Pantalles": [
+    ["Pantalles","/pantalles"],["Costat","/pantalles/costat"],["Logo","/pantalles/logo"],
+    ["Soroll foc","/pantalles/soroll-foc"],["Soroll foc (comparació)","/pantalles/soroll-foc-comparacio"],
+    ["Vista","/pantalles/vista/[id]"]
+  ],
+  "Proves": [
+    ["Gresol demo","/gresol-demo"],["Prova conjunció","/prova-conjuncio"],["Prova mapa","/prova-mapa"],
+    ["Prova pentagrama runes","/prova-pentagrama-runes"],["Gemma efectes","/proves/gemma-efectes.html"]
+  ]
+};
+document.getElementById("dom").textContent = BASE;
+const nav = document.getElementById("nav"), fr = document.getElementById("fr");
+const cur = document.getElementById("cur"), open = document.getElementById("open");
+let active;
+function go(el, path) {
+  path = path.replace(/\[(\w+)\]/g, (_, n) => prompt("Valor per a " + n + ":") || "");
+  const url = BASE + path;
+  fr.src = url; cur.textContent = url; open.href = url;
+  active && active.classList.remove("on");
+  el.classList.add("on"); active = el;
+}
+for (const [g, items] of Object.entries(GROUPS)) {
+  const h = document.createElement("h2"); h.textContent = g; nav.append(h);
+  for (const [t, p] of items) {
+    const a = document.createElement("a");
+    a.href = BASE + p; a.target = "_blank";
+    a.innerHTML = t + " <small>" + p + "</small>";
+    a.onclick = e => { e.preventDefault(); go(a, p); };
+    nav.append(a);
+  }
+}
+go(nav.querySelector("h2 + a"), "/");
+</script>
+</body>
+</html>
