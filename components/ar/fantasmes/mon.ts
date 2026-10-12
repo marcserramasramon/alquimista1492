@@ -7,6 +7,10 @@ import type * as THREE from "three";
  * sempre tancats, la cua llarga amb física i el to misteriós: observen de lluny, algun s'acosta
  * a poc a poc, es dissolen si se'ls mira fix o amb un flaix, i marxen si es crida.
  *
+ * Tres portals de llum al terra (cian i lila) fan de punts de llum: els fantasmes en surten pujant del
+ * terra i s'hi enfonsen quan els miren fix, i els que són a prop en reben llum de vora, cosa que els
+ * ajuda a destacar sobre una càmera fosca.
+ *
  * Aquí no hi ha res de la interfície de desenvolupament ni de l'escenografia de pistes de tennis:
  * la càmera real fa de fons i la mirada la donen la brúixola i la inclinació del mòbil.
  * Unitats en metres; el món és fix al voltant de l'usuari (nord = -Z, est = +X), i la càmera és a
@@ -45,6 +49,15 @@ const RADI_MIN = 7;
 const RADI_MAX = 22;
 const ALCADA_MIN = 1.0;
 const ALCADA_MAX = 5.2;
+/** Portals: a quina distància del jugador (m) i mides (m). */
+const PORTAL_DIST_MIN = 10;
+const PORTAL_DIST_MAX = 19;
+const PORTAL_RADI_ANELL = 2.7;
+const PORTAL_ALCADA_COLUMNA: [number, number] = [8, 12];
+const PORTAL_PARTICULES = 45;
+/** Colors dels portals (RGB 0-1). Cada portal té l'anell d'un color i la columna que passa a l'altre. */
+const COLOR_CIAN: [number, number, number] = [0.2, 0.85, 1.0];
+const COLOR_LILA: [number, number, number] = [0.62, 0.42, 1.0];
 /** Distància a la qual s'acosta el fantasma curiós (m). */
 const DIST_CURIOS = 5;
 
@@ -150,7 +163,8 @@ const FRAGMENT = `
 
 // ───────────────────────────── fantasma ─────────────────────────────
 
-type Estat = "ocult" | "apareix" | "deriva" | "curios" | "dissolt" | "fuig";
+// emergeix: puja del terra per un portal; enfonsa: va a un portal i s'hi enfonsa.
+type Estat = "ocult" | "emergeix" | "deriva" | "curios" | "dissolt" | "fuig" | "enfonsa";
 
 class Fantasma {
   readonly grup: THREE.Group;
@@ -186,6 +200,11 @@ class Fantasma {
   apropDit = false;
   wob = 0;
   dist = 99;
+  /** Llum de vora que rep d'un portal proper (0-0,9). */
+  llum = 0;
+  /** Portal on s'enfonsa i si encara hi va (0) o ja s'hi enfonsa (1). */
+  portalDesti: { x: number; z: number } | null = null;
+  fase2 = 0;
 
   constructor(
     readonly T: Tres,
@@ -266,9 +285,6 @@ class Fantasma {
 
   /** Posa el fantasma a un nou punt (amb la cua penjant recta) i el deixa invisible. */
   colloca(x: number, y: number, z: number) {
-    this.home.x = x;
-    this.home.y = y;
-    this.home.z = z;
     this.head.set(x, y, z);
     this.vel.set(0, 0, 0);
     const sw = SEG * this.s;
@@ -290,7 +306,7 @@ class Fantasma {
       let sx: number;
       let sy: number;
       let sz: number;
-      if (this.estat === "curios" || this.estat === "fuig") {
+      if (this.estat === "curios" || this.estat === "fuig" || this.estat === "emergeix" || this.estat === "enfonsa") {
         sx = this.objectiu.x;
         sy = this.objectiu.y;
         sz = this.objectiu.z;
@@ -300,12 +316,13 @@ class Fantasma {
         sz = this.home.z + Math.cos(t * this.sp * 0.83 + this.fase * 1.3) * R;
         sy = this.home.y + Math.sin(t * this.sp * 1.7 + this.fase * 0.7) * 0.4 + Math.sin(t * 1.9 + this.fase) * 0.08 * s;
       }
-      const kk = 0.012 * k * (this.estat === "fuig" ? 3 : this.estat === "curios" ? 1.4 : 1);
+      const kk = 0.012 * k * (this.estat === "fuig" ? 3 : this.estat === "curios" || this.estat === "enfonsa" ? 1.4 : 1);
       vel.x += (sx - head.x) * kk;
       vel.y += (sy - head.y) * kk;
       vel.z += (sz - head.z) * kk;
       vel.multiplyScalar(Math.pow(0.9, k));
-      const maxVel = this.estat === "fuig" ? 0.3 : this.estat === "curios" ? 0.06 : 0.04;
+      const maxVel =
+        this.estat === "fuig" ? 0.3 : this.estat === "curios" ? 0.06 : this.estat === "enfonsa" ? 0.035 : this.estat === "emergeix" ? 0.03 : 0.04;
       const vl = vel.length();
       if (vl > maxVel) vel.multiplyScalar(maxVel / vl);
       head.addScaledVector(vel, k);
@@ -359,7 +376,7 @@ class Fantasma {
     const u = this.mat.uniforms;
     u.uWob.value = this.wob;
     u.uFace.value = this.cara.rotation.y;
-    u.uGlow.value = this.glow;
+    u.uGlow.value = this.glow + this.llum;
     u.uFade.value = this.fade;
     this.grup.visible = this.fade > 0.01;
     // Ulls: gairebé sempre tancats; s'obren un moment cada pocs segons, i més quan el miren.
@@ -374,6 +391,180 @@ class Fantasma {
   }
 }
 
+// ───────────────────────────── portals ─────────────────────────────
+
+const COLUMNA_VERTEX = `
+  uniform float uH;
+  varying vec3 vN, vV;
+  varying float vY, vA;
+  void main() {
+    vY = position.y / uH;
+    vA = atan(position.z, position.x);
+    vN = normalize(normalMatrix * normal);
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vV = -mv.xyz;
+    gl_Position = projectionMatrix * mv;
+  }`;
+
+const COLUMNA_FRAGMENT = `
+  uniform vec3 uA, uB;
+  uniform float uTime, uPuls;
+  varying vec3 vN, vV;
+  varying float vY, vA;
+  void main() {
+    float ndv = abs(dot(normalize(vN), normalize(vV)));
+    float vora = pow(ndv, 0.7);                                   // el centre de la columna és més intens que les vores
+    float cap = pow(clamp(1.0 - vY, 0.0, 1.0), 1.5);               // s'esvaeix cap amunt
+    float flux = 0.75 + 0.25 * sin(vA * 5.0 + uTime * 1.1 + vY * 9.0);
+    vec3 col = mix(uA, uB, smoothstep(0.0, 1.0, vY));
+    float a = 0.55 * vora * cap * flux * uPuls * smoothstep(0.0, 0.04, vY);
+    gl_FragColor = vec4(col * 1.25, a);
+  }`;
+
+/** Portal de llum al terra: anell, columna que s'esvaeix cap amunt i partícules que pugen. */
+class Portal {
+  readonly x: number;
+  readonly z: number;
+  private readonly grup: THREE.Group;
+  private readonly anell: THREE.Mesh;
+  private readonly matAnell: THREE.MeshBasicMaterial;
+  private readonly geoAnell: THREE.BufferGeometry;
+  private readonly geoColumna: THREE.BufferGeometry;
+  private readonly matColumna: THREE.ShaderMaterial;
+  private readonly punts: THREE.Points;
+  private readonly geoPunts: THREE.BufferGeometry;
+  private readonly matPunts: THREE.PointsMaterial;
+  private readonly pos: Float32Array;
+  private readonly angle: Float32Array;
+  private readonly radi: Float32Array;
+  private readonly alt: Float32Array;
+  private readonly vy: Float32Array;
+  private readonly alcada: number;
+  private readonly fase = Math.random() * 10;
+
+  constructor(
+    T: Tres,
+    x: number,
+    z: number,
+    colorAnell: [number, number, number],
+    colorColumna: [number, number, number],
+    mapAnell: THREE.Texture,
+    mapPunt: THREE.Texture,
+    uTime: { value: number },
+    escena: THREE.Scene
+  ) {
+    this.x = x;
+    this.z = z;
+    this.alcada = alea(PORTAL_ALCADA_COLUMNA[0], PORTAL_ALCADA_COLUMNA[1]);
+    this.grup = new T.Group();
+    this.grup.position.set(x, 0, z);
+
+    // Anell a terra, pla, amb un nucli suau.
+    this.geoAnell = new T.PlaneGeometry(PORTAL_RADI_ANELL * 2, PORTAL_RADI_ANELL * 2);
+    this.matAnell = new T.MeshBasicMaterial({
+      map: mapAnell,
+      color: new T.Color(colorAnell[0], colorAnell[1], colorAnell[2]),
+      transparent: true,
+      depthWrite: false,
+      blending: T.AdditiveBlending,
+      opacity: 0.9,
+    });
+    this.anell = new T.Mesh(this.geoAnell, this.matAnell);
+    this.anell.rotation.x = -Math.PI / 2;
+    this.anell.position.y = 0.04;
+    this.anell.renderOrder = -2000;
+    this.grup.add(this.anell);
+
+    // Columna de llum: cilindre obert, del color de l'anell a baix al de l'altre a dalt.
+    this.geoColumna = new T.CylinderGeometry(0.6, 1.05, this.alcada, 28, 1, true);
+    this.geoColumna.translate(0, this.alcada / 2, 0);
+    this.matColumna = new T.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      side: T.DoubleSide,
+      blending: T.AdditiveBlending,
+      vertexShader: COLUMNA_VERTEX,
+      fragmentShader: COLUMNA_FRAGMENT,
+      uniforms: {
+        uH: { value: this.alcada },
+        uA: { value: new T.Color(colorAnell[0], colorAnell[1], colorAnell[2]) },
+        uB: { value: new T.Color(colorColumna[0], colorColumna[1], colorColumna[2]) },
+        uTime,
+        uPuls: { value: 1 },
+      },
+    });
+    const columna = new T.Mesh(this.geoColumna, this.matColumna);
+    columna.renderOrder = -1990;
+    columna.frustumCulled = false;
+    this.grup.add(columna);
+
+    // Partícules que pugen per la columna.
+    this.pos = new Float32Array(PORTAL_PARTICULES * 3);
+    this.angle = new Float32Array(PORTAL_PARTICULES);
+    this.radi = new Float32Array(PORTAL_PARTICULES);
+    this.alt = new Float32Array(PORTAL_PARTICULES);
+    this.vy = new Float32Array(PORTAL_PARTICULES);
+    for (let i = 0; i < PORTAL_PARTICULES; i++) {
+      this.angle[i] = Math.random() * Math.PI * 2;
+      this.radi[i] = alea(0.1, 0.85);
+      this.alt[i] = Math.random() * this.alcada * 0.7;
+      this.vy[i] = alea(0.5, 1.4);
+    }
+    this.geoPunts = new T.BufferGeometry();
+    this.geoPunts.setAttribute("position", new T.BufferAttribute(this.pos, 3));
+    this.matPunts = new T.PointsMaterial({
+      map: mapPunt,
+      color: new T.Color(colorColumna[0], colorColumna[1], colorColumna[2]),
+      size: 0.45,
+      sizeAttenuation: true,
+      transparent: true,
+      depthWrite: false,
+      blending: T.AdditiveBlending,
+      opacity: 0.9,
+    });
+    this.punts = new T.Points(this.geoPunts, this.matPunts);
+    this.punts.renderOrder = -1980;
+    this.punts.frustumCulled = false;
+    this.grup.add(this.punts);
+    escena.add(this.grup);
+  }
+
+  actualitza(dt: number, t: number) {
+    const puls = 0.85 + 0.15 * Math.sin(t * 1.6 + this.fase);
+    this.matColumna.uniforms.uPuls.value = puls;
+    this.matAnell.opacity = 0.75 + 0.25 * Math.sin(t * 1.3 + this.fase * 1.7);
+    this.anell.scale.setScalar(1 + 0.03 * Math.sin(t * 1.5 + this.fase));
+    for (let i = 0; i < PORTAL_PARTICULES; i++) {
+      this.alt[i] += this.vy[i] * dt;
+      if (this.alt[i] > this.alcada * 0.7) {
+        this.alt[i] = 0;
+        this.angle[i] = Math.random() * Math.PI * 2;
+      }
+      this.angle[i] += dt * 0.6;
+      const r = this.radi[i] * (1 - this.alt[i] / (this.alcada * 1.2));
+      this.pos[i * 3] = Math.cos(this.angle[i]) * r;
+      this.pos[i * 3 + 1] = this.alt[i];
+      this.pos[i * 3 + 2] = Math.sin(this.angle[i]) * r;
+    }
+    this.geoPunts.attributes.position.needsUpdate = true;
+  }
+
+  /** Distància horitzontal d'un punt al portal. */
+  distancia(x: number, z: number): number {
+    return Math.hypot(x - this.x, z - this.z);
+  }
+
+  dispose(escena: THREE.Scene) {
+    escena.remove(this.grup);
+    this.geoAnell.dispose();
+    this.matAnell.dispose();
+    this.geoColumna.dispose();
+    this.matColumna.dispose();
+    this.geoPunts.dispose();
+    this.matPunts.dispose();
+  }
+}
+
 // ───────────────────────────── món ─────────────────────────────
 
 export class MonFantasmes {
@@ -382,6 +573,9 @@ export class MonFantasmes {
   private readonly escena: THREE.Scene;
   private readonly camera: THREE.PerspectiveCamera;
   private readonly fantasmes: Fantasma[] = [];
+  private readonly portals: Portal[] = [];
+  private readonly mapAnell: THREE.Texture;
+  private readonly mapPunt: THREE.Texture;
   private readonly geo: THREE.BufferGeometry;
   private readonly circle: THREE.BufferGeometry;
   private readonly mapUll: THREE.Texture;
@@ -434,9 +628,34 @@ export class MonFantasmes {
     this.mapUll = this.texturaRadial(["rgba(255,225,205,1)", "rgba(255,80,60,1)", "rgba(225,20,20,0.75)", "rgba(120,0,0,0)"], [0, 0.18, 0.5, 1]);
     this.mapHalo = this.texturaRadial(["rgba(120,220,255,0.9)", "rgba(60,150,255,0.28)", "rgba(20,60,200,0)"], [0, 0.35, 1]);
 
+    // Textura de l'anell (nucli suau, anell brillant i resplendor exterior) i del punt de les partícules.
+    this.mapAnell = this.texturaRadial(
+      ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.05)", "rgba(255,255,255,0.22)", "rgba(255,255,255,1)", "rgba(255,255,255,0.35)", "rgba(255,255,255,0)"],
+      [0, 0.6, 0.74, 0.8, 0.88, 1]
+    );
+    this.mapPunt = this.texturaRadial(["rgba(255,255,255,1)", "rgba(255,255,255,0.45)", "rgba(255,255,255,0)"], [0, 0.3, 1]);
+    // Tres portals al voltant del jugador: sempre un a cada banda aproximadament, amb colors barrejats.
+    const base = Math.random() * Math.PI * 2;
+    const parells: [[number, number, number], [number, number, number]][] = [
+      [COLOR_CIAN, COLOR_LILA],
+      [COLOR_LILA, COLOR_CIAN],
+      [COLOR_CIAN, COLOR_LILA],
+    ];
+    parells.forEach(([anell, columna], i) => {
+      const rumb = base + (i * Math.PI * 2) / parells.length + alea(-0.5, 0.5);
+      const r = alea(PORTAL_DIST_MIN, PORTAL_DIST_MAX);
+      this.portals.push(
+        new Portal(T, Math.sin(rumb) * r, -Math.cos(rumb) * r, anell, columna, this.mapAnell, this.mapPunt, this.uTime, this.escena)
+      );
+    });
+
     for (let i = 0; i < opcions.quantitat; i++) {
       const f = new Fantasma(T, i, this.geo, this.circle, this.mapUll, this.mapHalo, this.uTime, this.escena);
-      this.collocaNou(f);
+      const h = this.triaHome(f);
+      f.home.x = h.x;
+      f.home.y = h.y;
+      f.home.z = h.z;
+      f.colloca(h.x, h.y, h.z);
       f.espera = 0.4 + i * 0.55; // surten a poc a poc, no tots alhora
       this.fantasmes.push(f);
     }
@@ -455,13 +674,24 @@ export class MonFantasmes {
     return new this.T.CanvasTexture(c);
   }
 
-  /** Tria un punt nou, a la zona al voltant del jugador i lluny dels altres fantasmes. */
-  private collocaNou(f: Fantasma) {
+  /**
+   * Tria un punt nou, a la zona al voltant del jugador i lluny dels altres fantasmes. Una part dels
+   * punts cauen a prop d'un portal, perquè hi hagi fantasmes il·luminats.
+   */
+  private triaHome(f: Fantasma): { x: number; y: number; z: number } {
     let millor = { x: 0, y: 3, z: -10, d: -1 };
     for (let intent = 0; intent < 25; intent++) {
-      const rumb = Math.random() * Math.PI * 2;
-      const r = alea(RADI_MIN, RADI_MAX);
-      const p = { x: Math.sin(rumb) * r, y: alea(ALCADA_MIN, ALCADA_MAX), z: -Math.cos(rumb) * r, d: 0 };
+      let p: { x: number; y: number; z: number; d: number };
+      if (this.portals.length && Math.random() < 0.4) {
+        const portal = this.portals[Math.floor(Math.random() * this.portals.length)];
+        const a = Math.random() * Math.PI * 2;
+        const r = alea(2.5, 6);
+        p = { x: portal.x + Math.cos(a) * r, y: alea(1.4, 4.2), z: portal.z + Math.sin(a) * r, d: 0 };
+      } else {
+        const rumb = Math.random() * Math.PI * 2;
+        const r = alea(RADI_MIN, RADI_MAX);
+        p = { x: Math.sin(rumb) * r, y: alea(ALCADA_MIN, ALCADA_MAX), z: -Math.cos(rumb) * r, d: 0 };
+      }
       let dmin = 1e9;
       for (const o of this.fantasmes) {
         if (o === f) continue;
@@ -471,7 +701,21 @@ export class MonFantasmes {
       if (p.d > millor.d) millor = p;
       if (dmin > 5) break;
     }
-    f.colloca(millor.x, millor.y, millor.z);
+    return millor;
+  }
+
+  /** El portal més proper a un punt. */
+  private portalProper(x: number, z: number): Portal {
+    let millor = this.portals[0];
+    let dmin = 1e9;
+    for (const p of this.portals) {
+      const d = p.distancia(x, z);
+      if (d < dmin) {
+        dmin = d;
+        millor = p;
+      }
+    }
+    return millor;
   }
 
   redimensiona(w: number, h: number) {
@@ -572,6 +816,7 @@ export class MonFantasmes {
     this.camera.rotation.set(mirada.elevacio * RAD, -mirada.rumb * RAD, 0);
     this.camera.getWorldDirection(this.avant);
     const cam = this.camera.position;
+    for (const portal of this.portals) portal.actualitza(dt, this.t);
 
     // Crit del jugador.
     if (microActiu) {
@@ -597,18 +842,48 @@ export class MonFantasmes {
         case "ocult":
           f.espera -= dt;
           if (f.espera <= 0) {
-            this.collocaNou(f);
-            f.estat = "apareix";
-            f.fade = 0;
+            // Surt d'un portal: puja des de sota terra (el terra el talla) fins a una alçada, i després va al seu punt.
+            const h = this.triaHome(f);
+            f.home.x = h.x;
+            f.home.y = h.y;
+            f.home.z = h.z;
+            const portal = this.portals[Math.floor(Math.random() * this.portals.length)];
+            f.colloca(portal.x, -TAIL_LEN * f.s - 0.6, portal.z);
+            f.objectiu.set(portal.x, Math.max(h.y, 2.2), portal.z);
+            f.estat = "emergeix";
+            f.fade = 1;
             f.glow = 1;
+            f.t = 0;
             f.mirat = 0;
             f.enfocatDit = false;
           }
           break;
-        case "apareix":
-          f.fade = Math.min(1, f.fade + dt / 2.4);
-          if (f.fade >= 1) f.estat = "deriva";
+        case "emergeix":
+          f.t += dt;
+          if (f.head.y > f.objectiu.y - 0.3 || f.t > 7) f.estat = "deriva";
           break;
+        case "enfonsa": {
+          f.t += dt;
+          const pd = f.portalDesti;
+          if (!pd || f.t > 18) {
+            f.estat = "dissolt";
+            f.duradaDissol = 1.4;
+            f.t = 0;
+            break;
+          }
+          if (f.fase2 === 0) {
+            f.objectiu.set(pd.x, Math.max(f.head.y, 1.8), pd.z);
+            if (Math.hypot(f.head.x - pd.x, f.head.z - pd.z) < 1.8) f.fase2 = 1;
+          } else {
+            f.objectiu.set(pd.x, -TAIL_LEN * f.s - 0.8, pd.z);
+            if (f.head.y < -TAIL_LEN * f.s * 0.6) {
+              f.fade = 0;
+              f.estat = "ocult";
+              f.espera = alea(6, 11);
+            }
+          }
+          break;
+        }
         case "curios":
           f.t += dt;
           if (!f.apropDit && f.dist < 13) {
@@ -637,11 +912,13 @@ export class MonFantasmes {
         default:
           break;
       }
+      // Llum de vora que dona el portal més proper: com més a prop, més se'n veu el fantasma.
+      f.llum = 0.9 * Math.pow(limita(1 - this.portalProper(f.head.x, f.head.z).distancia(f.head.x, f.head.z) / 10, 0, 1), 1.5);
       f.actualitza(dt, this.t, cam);
       f.glow += (1 - f.glow) * Math.min(1, dt * 3);
 
       // Mirada: si el jugador té el fantasma a la mira, ho nota; si l'hi té fix massa estona, es dissol.
-      if (f.fade > 0.6 && f.estat !== "ocult" && f.estat !== "fuig" && f.estat !== "dissolt") {
+      if (f.fade > 0.6 && (f.estat === "deriva" || f.estat === "curios")) {
         const vx = f.head.x - cam.x;
         const vy = f.head.y - cam.y;
         const vz = f.head.z - cam.z;
@@ -654,8 +931,10 @@ export class MonFantasmes {
             this.alEsdeveniment?.({ tipus: "enfoca", pan: this.pan(f) });
           }
           if (f.mirat > 4500) {
-            f.estat = "dissolt";
-            f.duradaDissol = 1.4;
+            // Es cansa que el mirin: va al portal més proper i s'hi enfonsa.
+            f.estat = "enfonsa";
+            f.portalDesti = this.portalProper(f.head.x, f.head.z);
+            f.fase2 = 0;
             f.t = 0;
             f.mirat = 0;
           }
@@ -683,6 +962,9 @@ export class MonFantasmes {
       f.matUlls.dispose();
       f.matHalo.dispose();
     }
+    for (const portal of this.portals) portal.dispose(this.escena);
+    this.mapAnell.dispose();
+    this.mapPunt.dispose();
     this.geo.dispose();
     this.circle.dispose();
     this.mapUll.dispose();
