@@ -52,10 +52,9 @@ const ALCADA_MAX = 5.2;
 /** Portals: a quina distància del jugador (m) i mides (m). */
 const PORTAL_DIST_MIN = 10;
 const PORTAL_DIST_MAX = 19;
-const PORTAL_RADI_ANELL = 2.7;
 const PORTAL_ALCADA_COLUMNA: [number, number] = [8, 12];
 const PORTAL_PARTICULES = 45;
-/** Colors dels portals (RGB 0-1). Cada portal té l'anell d'un color i la columna que passa a l'altre. */
+/** Colors dels portals (RGB 0-1). Cada portal té la base d'un color i la columna que passa a l'altre. */
 const COLOR_CIAN: [number, number, number] = [0.2, 0.85, 1.0];
 const COLOR_LILA: [number, number, number] = [0.62, 0.42, 1.0];
 /** Distància a la qual s'acosta el fantasma curiós (m). */
@@ -421,18 +420,15 @@ const COLUMNA_FRAGMENT = `
     float cap = pow(clamp(1.0 - vY, 0.0, 1.0), 1.5);               // s'esvaeix cap amunt
     float flux = 0.75 + 0.25 * sin(vA * 5.0 + uTime * 1.1 + vY * 9.0);
     vec3 col = mix(uA, uB, smoothstep(0.0, 1.0, vY));
-    float a = 0.55 * vora * cap * flux * uPuls * smoothstep(0.0, 0.04, vY);
+    float a = 0.55 * vora * cap * flux * uPuls * smoothstep(0.0, 0.16, vY);
     gl_FragColor = vec4(col * 1.25, a);
   }`;
 
-/** Portal de llum al terra: anell, columna que s'esvaeix cap amunt i partícules que pugen. */
+/** Portal de llum al terra: columna que s'esvaeix cap amunt i partícules que pugen (sense cercle a terra). */
 class Portal {
   x: number;
   z: number;
   private readonly grup: THREE.Group;
-  private readonly anell: THREE.Mesh;
-  private readonly matAnell: THREE.MeshBasicMaterial;
-  private readonly geoAnell: THREE.BufferGeometry;
   private readonly geoColumna: THREE.BufferGeometry;
   private readonly matColumna: THREE.ShaderMaterial;
   private readonly punts: THREE.Points;
@@ -452,7 +448,6 @@ class Portal {
     z: number,
     colorAnell: [number, number, number],
     colorColumna: [number, number, number],
-    mapAnell: THREE.Texture,
     mapPunt: THREE.Texture,
     uTime: { value: number },
     escena: THREE.Scene
@@ -463,23 +458,7 @@ class Portal {
     this.grup = new T.Group();
     this.grup.position.set(x, 0, z);
 
-    // Anell a terra, pla, amb un nucli suau.
-    this.geoAnell = new T.PlaneGeometry(PORTAL_RADI_ANELL * 2, PORTAL_RADI_ANELL * 2);
-    this.matAnell = new T.MeshBasicMaterial({
-      map: mapAnell,
-      color: new T.Color(colorAnell[0], colorAnell[1], colorAnell[2]),
-      transparent: true,
-      depthWrite: false,
-      blending: T.AdditiveBlending,
-      opacity: 0.9,
-    });
-    this.anell = new T.Mesh(this.geoAnell, this.matAnell);
-    this.anell.rotation.x = -Math.PI / 2;
-    this.anell.position.y = 0.04;
-    this.anell.renderOrder = -2000;
-    this.grup.add(this.anell);
-
-    // Columna de llum: cilindre obert, del color de l'anell a baix al de l'altre a dalt.
+    // Columna de llum: cilindre obert, del color de la base a baix al de l'altre a dalt.
     this.geoColumna = new T.CylinderGeometry(0.6, 1.05, this.alcada, 28, 1, true);
     this.geoColumna.translate(0, this.alcada / 2, 0);
     this.matColumna = new T.ShaderMaterial({
@@ -536,8 +515,6 @@ class Portal {
   actualitza(dt: number, t: number) {
     const puls = 0.85 + 0.15 * Math.sin(t * 1.6 + this.fase);
     this.matColumna.uniforms.uPuls.value = puls;
-    this.matAnell.opacity = 0.75 + 0.25 * Math.sin(t * 1.3 + this.fase * 1.7);
-    this.anell.scale.setScalar(1 + 0.03 * Math.sin(t * 1.5 + this.fase));
     for (let i = 0; i < PORTAL_PARTICULES; i++) {
       this.alt[i] += this.vy[i] * dt;
       if (this.alt[i] > this.alcada * 0.7) {
@@ -567,8 +544,6 @@ class Portal {
 
   dispose(escena: THREE.Scene) {
     escena.remove(this.grup);
-    this.geoAnell.dispose();
-    this.matAnell.dispose();
     this.geoColumna.dispose();
     this.matColumna.dispose();
     this.geoPunts.dispose();
@@ -878,7 +853,6 @@ export class MonFantasmes {
   private readonly esperits: Esperit[] = [];
   private proximCacaT = 4;
   private proximEsperitT = 1;
-  private readonly mapAnell: THREE.Texture;
   private readonly mapPunt: THREE.Texture;
   private readonly geo: THREE.BufferGeometry;
   private readonly circle: THREE.BufferGeometry;
@@ -932,11 +906,7 @@ export class MonFantasmes {
     this.mapUll = this.texturaRadial(["rgba(255,225,205,1)", "rgba(255,80,60,1)", "rgba(225,20,20,0.75)", "rgba(120,0,0,0)"], [0, 0.18, 0.5, 1]);
     this.mapHalo = this.texturaRadial(["rgba(120,220,255,0.9)", "rgba(60,150,255,0.28)", "rgba(20,60,200,0)"], [0, 0.35, 1]);
 
-    // Textura de l'anell (nucli suau, anell brillant i resplendor exterior) i del punt de les partícules.
-    this.mapAnell = this.texturaRadial(
-      ["rgba(255,255,255,0.16)", "rgba(255,255,255,0.05)", "rgba(255,255,255,0.22)", "rgba(255,255,255,1)", "rgba(255,255,255,0.35)", "rgba(255,255,255,0)"],
-      [0, 0.6, 0.74, 0.8, 0.88, 1]
-    );
+    // Textura del punt de les partícules dels portals.
     this.mapPunt = this.texturaRadial(["rgba(255,255,255,1)", "rgba(255,255,255,0.45)", "rgba(255,255,255,0)"], [0, 0.3, 1]);
     // Tres portals al voltant del jugador: sempre un a cada banda aproximadament, amb colors barrejats.
     const base = Math.random() * Math.PI * 2;
@@ -949,7 +919,7 @@ export class MonFantasmes {
       const rumb = base + (i * Math.PI * 2) / parells.length + alea(-0.5, 0.5);
       const r = alea(PORTAL_DIST_MIN, PORTAL_DIST_MAX);
       this.portals.push(
-        new Portal(T, Math.sin(rumb) * r, -Math.cos(rumb) * r, anell, columna, this.mapAnell, this.mapPunt, this.uTime, this.escena)
+        new Portal(T, Math.sin(rumb) * r, -Math.cos(rumb) * r, anell, columna, this.mapPunt, this.uTime, this.escena)
       );
     });
 
@@ -1427,7 +1397,6 @@ export class MonFantasmes {
       e.matHalo.dispose();
     }
     for (const portal of this.portals) portal.dispose(this.escena);
-    this.mapAnell.dispose();
     this.mapPunt.dispose();
     this.geo.dispose();
     this.circle.dispose();
