@@ -210,9 +210,9 @@ export function VistaEstacio({
           </p>
         )}
 
-        {/* Extra de realitat augmentada d'aquesta fita (content/public/extres.ts): disponible abans i després de
-            resoldre la prova, i no compta per a la partida. */}
-        {getExtraArDeFita(estacio.id) && (
+        {/* Extra de realitat augmentada d'aquesta fita (content/public/extres.ts): només un cop resolta la
+            prova (pantalla després de fita completa), i no compta per a la partida. */}
+        {resolta && getExtraArDeFita(estacio.id) && (
           <Link href={`/joc/ar/${getExtraArDeFita(estacio.id)?.id}`} className="btn btn-fosc mb-6">
             {getExtraArDeFita(estacio.id)?.boto}
           </Link>
