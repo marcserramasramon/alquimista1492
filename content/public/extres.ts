@@ -55,6 +55,12 @@ export interface ExtraAr {
    */
   ampleRiu?: number;
   /**
+   * Només per a "aigua": abans de l'escena, el jugador mira al llarg del carrer i toca «Aquí»: la
+   * direcció del riu és la que marca la brúixola en aquell moment (corregeix el seu error de 10-20°).
+   * `indicacio` diu cap a on mirar. Sense sensors, o si es salta, es fa servir `cami`.
+   */
+  calibratge?: { indicacio: string };
+  /**
    * Només per a "aigua": aigües amunt (darrere del jugador, contra el corrent) el riu s'obre en una
    * bassa: comença `distancia` m darrere seu i té `radi` m de semiample. Sense, el riu és sempre estret.
    */
@@ -183,6 +189,7 @@ export const EXTRES_AR: ExtraAr[] = [
       cap: { latitud: 41.914111267352745, longitud: 2.2280573189292294 },
     },
     explanada: { distancia: 6, radi: 12 },
+    calibratge: { indicacio: "Mireu cap avall del carrer, cap al Carrer Major, amb el mòbil dret, i toqueu «Aquí»." },
     boto: "🌊 Mirar l'aigua als peus",
     introduccio: {
       titol: "Ràpids als peus",

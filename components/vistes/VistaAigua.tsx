@@ -31,6 +31,9 @@ export function VistaAigua({ extra, onTornar, directa = false }: VistaAiguaProps
   const [silenci, setSilenci] = useState(false);
   const [contorn, setContorn] = useState<EstatContorn>("carregant");
   const [sense3d, setSense3d] = useState(false);
+  // Calibratge de la direcció del riu: el jugador mira al llarg del carrer i toca «Aquí».
+  const [calibrat, setCalibrat] = useState(false);
+  const [rumbCalibrat, setRumbCalibrat] = useState<number | null>(null);
 
   // Els sensors, la càmera i el so es demanen en tocar el botó (iOS i Android ho exigeixen).
   async function començar() {
@@ -68,6 +71,11 @@ export function VistaAigua({ extra, onTornar, directa = false }: VistaAiguaProps
     };
   }, []);
 
+  // Amb brúixola, abans de l'escena es demana calibrar (la brúixola pot errar 10-20°). Sense sensors,
+  // l'escena usa el rumb del carrer de la configuració i es mira arrossegant el dit.
+  const volCalibrar =
+    !directa && !!extra.calibratge && estatSensors !== "no-disponible" && estatSensors !== "denegat";
+  const esperant = iniciat && volCalibrar && !calibrat;
   const sensorsFallen = estatSensors === "no-disponible" || estatSensors === "denegat";
 
   return (
@@ -76,20 +84,20 @@ export function VistaAigua({ extra, onTornar, directa = false }: VistaAiguaProps
         <video ref={video} playsInline muted autoPlay className="absolute inset-0 h-full w-full object-cover" />
       )}
 
-      {iniciat && (
+      {iniciat && !esperant && (
         <EscenaAigua
           mirada={mirada}
           arrossegar={estatSensors !== "actiu"}
           video={video}
           alEstatContorn={setContorn}
           alError={() => setSense3d(true)}
-          rumbRiu={rumbCami(extra)}
+          rumbRiu={rumbCalibrat ?? rumbCami(extra)}
           ampleRiu={extra.ampleRiu}
           explanada={extra.explanada}
         />
       )}
 
-      {iniciat && (
+      {iniciat && !esperant && (
         <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center gap-2 pr-24 pl-5 pt-[max(1rem,env(safe-area-inset-top))]">
           {sense3d && (
             <p className="rounded-xl bg-black/60 px-3 py-2 text-center text-sm font-bold">
@@ -130,6 +138,57 @@ export function VistaAigua({ extra, onTornar, directa = false }: VistaAiguaProps
           className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 z-10 flex h-12 min-w-12 items-center justify-center rounded-full border-2 border-paper-3/60 bg-black/60 px-4 text-lg font-bold"
         >
           {silenci ? "🔇 Sense so" : "🔊 So"}
+        </button>
+      )}
+
+      {esperant && (
+        <>
+          {estatSensors === "actiu" && (
+            <div className="pointer-events-none absolute inset-y-0 left-1/2 w-0 border-l-2 border-dashed border-paper/80" />
+          )}
+          <div className="absolute inset-x-0 top-[max(1rem,env(safe-area-inset-top))] mx-auto w-full max-w-md pr-24 pl-4">
+            <div className="rounded-2xl bg-black/70 px-4 py-3 text-center">
+              {estatSensors === "actiu" ? (
+                <>
+                  <p className="text-lg font-extrabold">Calibrem el riu</p>
+                  <p className="mt-1 text-base">{extra.calibratge?.indicacio}</p>
+                </>
+              ) : (
+                <p className="text-base font-bold">Preparant la brúixola…</p>
+              )}
+            </div>
+          </div>
+          {estatSensors === "actiu" && (
+            <div className="absolute inset-x-0 bottom-[calc(max(1.25rem,env(safe-area-inset-bottom))+4.5rem)] mx-auto flex w-full max-w-md flex-col gap-2 px-4">
+              <button
+                type="button"
+                className="btn btn-primari"
+                onClick={() => {
+                  if (!mirada.current) return;
+                  setRumbCalibrat(mirada.current.rumb);
+                  setCalibrat(true);
+                }}
+              >
+                Aquí
+              </button>
+              <button type="button" className="btn btn-secundari" onClick={() => setCalibrat(true)}>
+                Saltar (usa la direcció del mapa)
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {iniciat && !esperant && volCalibrar && (
+        <button
+          type="button"
+          onClick={() => {
+            setRumbCalibrat(null);
+            setCalibrat(false);
+          }}
+          className="absolute top-[max(4.5rem,calc(env(safe-area-inset-top)+3.5rem))] right-4 z-10 flex h-10 items-center justify-center rounded-full border-2 border-paper-3/60 bg-black/60 px-3 text-sm font-bold"
+        >
+          🧭 Recalibrar
         </button>
       )}
 
