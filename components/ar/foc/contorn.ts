@@ -1,4 +1,5 @@
 import type { ImageSegmenter } from "@mediapipe/tasks-vision";
+import { crearSpritesFlama } from "@/components/ar/foc/mon";
 
 /**
  * Contorn de foc a les persones que surten a la càmera. Un model de segmentació de persones (MediaPipe,
@@ -32,6 +33,22 @@ export function precarregaContorn() {
   void import("@mediapipe/tasks-vision").catch(() => {});
 }
 
+/** Flames màximes alhora al contorn. */
+const FLAMES_MAX = 520;
+
+interface Flama {
+  /** Posició i velocitat en fracció de la pantalla (velocitat en fraccions per segon). */
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  vida: number;
+  edat: number;
+  /** Radi en fracció de l'amplada. */
+  mida: number;
+  fase: number;
+}
+
 export type EstatContorn = "carregant" | "actiu" | "no";
 
 export class ContornPersones {
@@ -46,6 +63,12 @@ export class ContornPersones {
   private suau: Float32Array | null = null;
   private llis: Float32Array | null = null;
   private ultim = 0;
+  /** Punts de la vora (x, y en fracció de la pantalla) i, d'aquests, els que miren amunt. */
+  private vora2D: number[] = [];
+  private voraAmunt: number[] = [];
+  private flames: Flama[] = [];
+  private sprites: HTMLCanvasElement[] | null = null;
+  private araFlames = 0;
   private hiHaVora = false;
   private tancat = false;
   /** Resum de l'últim fotograma i de l'últim error, per a ?debug=1. */
@@ -245,6 +268,8 @@ export class ContornPersones {
       return llis[y * mw + x] > llindar !== invertir;
     };
     let vores = 0;
+    const punts: number[] = [];
+    const amunt: number[] = [];
     for (let y = 0; y < mh; y++) {
       for (let x = 0; x < mw; x++) {
         if (!persona(x, y)) continue;
@@ -256,12 +281,16 @@ export class ContornPersones {
         px[k + 2] = 30;
         px[k + 3] = 255;
         vores++;
+        punts.push((x + 0.5) / mw, (y + 0.5) / mh);
+        if (!persona(x, y - 2)) amunt.push((x + 0.5) / mw, (y + 0.5) / mh);
       }
     }
     g.putImageData(imatge, 0, 0);
     gp.putImageData(imatgePle, 0, 0);
     this.creaResplendor(mw, mh);
     this.hiHaVora = vores > 0;
+    this.vora2D = punts;
+    this.voraAmunt = amunt;
     this.info = `fot ${this.fotogrames} · masques ${nMasques} · ${mw}x${mh} · persona ${Math.round(
       (dins / valors.length) * 100,
     )}%${invertir ? " (invertit)" : ""} · vora ${vores}px · ${this.delegat} · entrada llum ${this.llumEntrada} · val max ${max.toFixed(2)} mitja ${(suma / valors.length).toFixed(2)} llindar ${llindar.toFixed(2)}`;
@@ -376,6 +405,58 @@ export class ContornPersones {
     g.globalAlpha = 1;
   }
 
+  /**
+   * Flames que neixen del contorn i pugen, amb les mateixes flames que els arcs de foc (blanc-groc al
+   * naixement, taronja i vermell fosc al final). Surten sobretot de les vores que miren amunt.
+   */
+  private pintaFlames(ctx: CanvasRenderingContext2D, w: number, h: number, ara: number) {
+    if (!this.sprites) this.sprites = crearSpritesFlama();
+    const dt = Math.min(0.05, Math.max(0, (ara - this.araFlames) / 1000));
+    this.araFlames = ara;
+
+    const total = this.vora2D.length / 2;
+    if (total > 0) {
+      // Ritme segons la longitud de la vora; més de la meitat surt de dalt (cap, espatlles, braços).
+      let n = Math.min(650, total * 1.4) * dt + Math.random();
+      while (n-- > 1 && this.flames.length < FLAMES_MAX) {
+        const dalt = this.voraAmunt.length > 0 && Math.random() < 0.6;
+        const llista = dalt ? this.voraAmunt : this.vora2D;
+        const i = Math.floor(Math.random() * (llista.length / 2)) * 2;
+        this.flames.push({
+          x: llista[i] + (Math.random() - 0.5) * 0.006,
+          y: llista[i + 1],
+          vx: (Math.random() - 0.5) * 0.06,
+          vy: -(0.1 + Math.random() * 0.2),
+          vida: 0.5 + Math.random() * 0.6,
+          edat: 0,
+          mida: 0.012 + Math.random() * 0.018,
+          fase: Math.random() * Math.PI * 2,
+        });
+      }
+    }
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.imageSmoothingEnabled = true;
+    for (let i = this.flames.length - 1; i >= 0; i--) {
+      const f = this.flames[i];
+      f.edat += dt;
+      if (f.edat >= f.vida) {
+        this.flames[i] = this.flames[this.flames.length - 1];
+        this.flames.pop();
+        continue;
+      }
+      f.x += (f.vx + Math.sin(f.edat * 9 + f.fase) * 0.02) * dt;
+      f.y += f.vy * dt;
+      const k = f.edat / f.vida;
+      const sprite = this.sprites[k < 0.25 ? 0 : k < 0.6 ? 1 : 2];
+      ctx.globalAlpha = Math.min(1, (1 - k) * 1.5);
+      const radi = f.mida * w * (1.5 - k * 0.7);
+      ctx.drawImage(sprite, f.x * w - radi, f.y * h - radi, radi * 2, radi * 2);
+    }
+    ctx.restore();
+  }
+
   /** Dibuixa la vora amb resplendor i flames que pugen, sobre un context transparent. */
   pinta(ctx: CanvasRenderingContext2D, w: number, h: number, ara: number) {
     if (!this.hiHaVora) return;
@@ -385,6 +466,10 @@ export class ContornPersones {
     const pols = 0.8 + 0.2 * Math.sin(ara / 90) + 0.08 * Math.sin(ara / 37);
     ctx.globalAlpha = Math.min(1, pols);
     ctx.drawImage(this.halo, 0, 0, w, h);
+    ctx.restore();
+    this.pintaFlames(ctx, w, h, ara);
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
 
     // Còpies que pugen i s'esvaeixen, com flames que s'enlairen del cos.
     for (let k = 0; k < 4; k++) {

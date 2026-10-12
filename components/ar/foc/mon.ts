@@ -80,6 +80,15 @@ function crearSprite(nucli: string, cos: string, vora: string): HTMLCanvasElemen
   return c;
 }
 
+/** Les tres flames (calenta, mitjana, freda) que fan servir els arcs i el contorn de les persones. */
+export function crearSpritesFlama(): HTMLCanvasElement[] {
+  return [
+    crearSprite("rgba(255,255,235,1)", "rgba(255,225,120,0.95)", "rgba(255,150,30,0.45)"),
+    crearSprite("rgba(255,210,110,0.95)", "rgba(255,120,20,0.85)", "rgba(220,40,0,0.4)"),
+    crearSprite("rgba(255,110,40,0.8)", "rgba(200,30,0,0.65)", "rgba(110,0,0,0.3)"),
+  ];
+}
+
 export class MonFoc {
   private readonly arcs: Arc[] = [];
   private readonly parts: Particula[] = [];
@@ -95,11 +104,7 @@ export class MonFoc {
 
   constructor(alEsdeveniment: (e: EsdevenimentSalt) => void) {
     this.alEsdeveniment = alEsdeveniment;
-    this.sprites = [
-      crearSprite("rgba(255,255,235,1)", "rgba(255,225,120,0.95)", "rgba(255,150,30,0.45)"),
-      crearSprite("rgba(255,210,110,0.95)", "rgba(255,120,20,0.85)", "rgba(220,40,0,0.4)"),
-      crearSprite("rgba(255,110,40,0.8)", "rgba(200,30,0,0.65)", "rgba(110,0,0,0.3)"),
-    ];
+    this.sprites = crearSpritesFlama();
   }
 
   private nouArc(rumbMirada: number) {
