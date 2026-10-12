@@ -56,39 +56,31 @@ export function alcadaSoroll(estil: "imatge" | "fons"): number {
 
 /** Opcions de generaSoroll segons l'estil del cartell. */
 export function opcionsSoroll(estil: "imatge" | "fons") {
-  return { alcada: alcadaSoroll(estil), quantitat: estil === "imatge" ? 680 : 520 };
+  return { alcada: alcadaSoroll(estil), quantitat: estil === "imatge" ? 1100 : 840 };
 }
 
 /** Proporció de l'alçada del cartell que ocupa el número de la resposta (60% de l'1,9 original). */
 const PROPORCIO_MIDA_OBJECTIU = 1.14;
 
 /** Fracció de les xifres vermelles originals que es dibuixen. */
-const PROPORCIO_VERMELLS = 0.75;
+const PROPORCIO_VERMELLS = 1;
 
-/** Color de la resposta: un blau mitjà, més fosc que el dels símbols del soroll (BLAUS_SIMBOLS). */
+/** Color de la resposta: un blau mitjà, l'únic blau del cartell. */
 export const BLAU_OBJECTIU = "#2f63c0";
 
 /** Radi dels punts de la trama de la resposta. */
-export const RADI_PUNTS_OBJECTIU = 3.6;
+export const RADI_PUNTS_OBJECTIU = 2.7;
 
-/** Colors del soroll: variants de vermell (les que es dissolen a través del "paper de foc"), cap que es pugui confondre amb el blau de la resposta. */
+/** Colors del soroll: vermells, taronges i grocs vius (es dissolen a través del "paper de foc"; sense tons foscos, que quedarien foscos sota el filtre), cap que es pugui confondre amb el blau de la resposta. */
 const COLORS_SOROLL = [
-  "#c8231b", // vermell (el "vermell foc" de l'app)
   "#d0021b", // vermell viu
-  "#8f1c14", // vermell fosc
-  "#a8321f", // teula
   "#e13c2b", // vermell taronja
-  "#7a1010", // granat
-  "#c4432c", // òxid
-  "#961b24", // carmesí
-  "#b5291b", // vermell terracota
-];
-
-/** Blaus dels símbols del soroll: 3 tons clars, tots més clars que el blau fosc de la resposta. */
-const BLAUS_SIMBOLS = [
-  "#7fb2f5", // blau clar (el més clar)
-  "#639ced", // blau clar mitjà
-  "#4d8ae3", // blau clar més intens
+  "#e8561f", // taronja vermellós
+  "#f07a1a", // taronja
+  "#f59b1c", // taronja clar
+  "#f7b500", // ambre
+  "#f5c800", // groc daurat
+  "#f2dc1e", // groc
 ];
 
 const SIMBOLS: FormaSimbol[] = ["foc", "aigua", "aire", "terra", "sol", "lluna", "sofre", "sal", "estrella"];
@@ -186,18 +178,18 @@ export function generaSoroll({
       const esXifra = r() < 0.62;
       // Només es queda el 75% de les xifres vermelles que hi havia (la resta de cel·les queden buides).
       if (esXifra && r() >= PROPORCIO_VERMELLS) continue;
-      // Les xifres es queden vermelles (soroll); els símbols són blaus, però
-      // d'un blau diferent al de la resposta (BLAUS_SIMBOLS).
-      const color = esXifra ? tria(COLORS_SOROLL) : tria(BLAUS_SIMBOLS);
+      // Xifres i símbols tenen la mateixa paleta càlida (COLORS_SOROLL): només
+      // la resposta és blava.
+      const color = tria(COLORS_SOROLL);
       peces.push({
         x: cx + entre(-ampladaCella * 0.7, ampladaCella * 0.7),
         y: cy + entre(-alcadaCella * 0.7, alcadaCella * 0.7),
         mida: tria(mides) * entre(0.9, 1.1),
         rotacio: entre(-35, 35),
         color,
-        // Un 30% queda per sota de la resposta (la resposta la tapa a ells) en
+        // Un 8% queda per sota de la resposta (la resposta la tapa a ells) en
         // lloc de per sobre, perquè el camuflatge no sigui una simple pila plana.
-        sotaObjectiu: r() < 0.3,
+        sotaObjectiu: r() < 0.08,
         ...(esXifra ? { xifra: String(Math.floor(r() * 10)) } : { simbol: tria(SIMBOLS) }),
       });
     }
