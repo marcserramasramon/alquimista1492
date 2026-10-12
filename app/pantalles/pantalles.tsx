@@ -835,16 +835,9 @@ export const PANTALLES: Pantalla[] = [
   {
     id: "extra-aura-introduccio",
     grup: "hub",
-    titol: "Extra aura · explicació abans de la càmera",
-    descripcio: "Aura daurada a les persones i llums al fons; què demanarà el mòbil. El text és a content/public/extres.ts.",
+    titol: "Extra llum del foc · explicació abans de la càmera",
+    descripcio: "Fita de Foc: filtre difús taronja sobre les persones; què demanarà el mòbil. El text és a content/public/extres.ts.",
     render: () => <VistaAura extra={EXTRES_AR[2]} onTornar={noop} />,
-  },
-  {
-    id: "extra-aura-escena",
-    grup: "hub",
-    titol: "Extra aura · llums",
-    descripcio: "L'escena sobre fons negre (sense càmera ni aura de persones); arrossegueu per mirar al voltant.",
-    render: () => <VistaAura extra={EXTRES_AR[2]} onTornar={noop} directa />,
   },
   {
     id: "extra-ar-escena",
