@@ -164,7 +164,7 @@ const FRAGMENT = `
 // ───────────────────────────── fantasma ─────────────────────────────
 
 // emergeix: puja del terra per un portal; enfonsa: va a un portal i s'hi enfonsa.
-type Estat = "ocult" | "emergeix" | "deriva" | "curios" | "dissolt" | "fuig" | "enfonsa";
+type Estat = "ocult" | "emergeix" | "deriva" | "curios" | "dissolt" | "fuig" | "enfonsa" | "persegueix";
 
 class Fantasma {
   readonly grup: THREE.Group;
@@ -205,6 +205,8 @@ class Fantasma {
   /** Portal on s'enfonsa i si encara hi va (0) o ja s'hi enfonsa (1). */
   portalDesti: { x: number; z: number } | null = null;
   fase2 = 0;
+  /** L'esperit que persegueix (estat "persegueix"). */
+  victima: Esperit | null = null;
 
   constructor(
     readonly T: Tres,
@@ -306,7 +308,7 @@ class Fantasma {
       let sx: number;
       let sy: number;
       let sz: number;
-      if (this.estat === "curios" || this.estat === "fuig" || this.estat === "emergeix" || this.estat === "enfonsa") {
+      if (this.estat === "curios" || this.estat === "fuig" || this.estat === "emergeix" || this.estat === "enfonsa" || this.estat === "persegueix") {
         sx = this.objectiu.x;
         sy = this.objectiu.y;
         sz = this.objectiu.z;
@@ -316,13 +318,13 @@ class Fantasma {
         sz = this.home.z + Math.cos(t * this.sp * 0.83 + this.fase * 1.3) * R;
         sy = this.home.y + Math.sin(t * this.sp * 1.7 + this.fase * 0.7) * 0.4 + Math.sin(t * 1.9 + this.fase) * 0.08 * s;
       }
-      const kk = 0.012 * k * (this.estat === "fuig" ? 3 : this.estat === "curios" || this.estat === "enfonsa" ? 1.4 : 1);
+      const kk = 0.012 * k * (this.estat === "fuig" ? 3 : this.estat === "curios" || this.estat === "enfonsa" ? 1.4 : this.estat === "persegueix" ? 1.8 : 1);
       vel.x += (sx - head.x) * kk;
       vel.y += (sy - head.y) * kk;
       vel.z += (sz - head.z) * kk;
       vel.multiplyScalar(Math.pow(0.9, k));
       const maxVel =
-        this.estat === "fuig" ? 0.3 : this.estat === "curios" ? 0.06 : this.estat === "enfonsa" ? 0.035 : this.estat === "emergeix" ? 0.03 : 0.04;
+        this.estat === "fuig" ? 0.3 : this.estat === "curios" ? 0.06 : this.estat === "enfonsa" ? 0.035 : this.estat === "emergeix" ? 0.03 : this.estat === "persegueix" ? 0.085 : 0.04;
       const vl = vel.length();
       if (vl > maxVel) vel.multiplyScalar(maxVel / vl);
       head.addScaledVector(vel, k);
@@ -565,6 +567,197 @@ class Portal {
   }
 }
 
+// ───────────────────────────── esperits (els fantasmes d'abans) ─────────────────────────────
+
+const NE = 8;
+const TAIL_E = 2.4;
+const SEG_E = TAIL_E / (NE - 1);
+/** Esperits que hi ha alhora. */
+const QUANTITAT_ESPERITS = 5;
+
+const ESPERIT_VERTEX = `
+  uniform float uTime, uWob;
+  uniform vec3 uOff[${NE}];
+  varying vec3 vN, vV;
+  varying float vW;
+  void main() {
+    vec3 p = position;
+    float w = clamp(-p.y / ${TAIL_E.toFixed(1)}, 0.0, 1.0);
+    float wob = sin(p.y * 3.0 + uTime * 3.0 + p.x * 2.0) * 0.035 + sin(p.x * 4.0 + p.z * 3.0 + uTime * 2.3) * 0.02;
+    p.xz *= 1.0 + wob * (0.4 + w * 1.6) + uWob * 0.12 * sin(p.y * 6.0 - uTime * 14.0);
+    p.x += sin(p.y * 5.0 + uTime * 4.0) * 0.05 * w;
+    p.z += cos(p.y * 4.0 + uTime * 3.4) * 0.05 * w;
+    float f = w * ${(NE - 1).toFixed(1)};
+    vec3 off = uOff[0];
+    for (int i = 0; i < ${NE - 1}; i++) off += (uOff[i + 1] - uOff[i]) * clamp(f - float(i), 0.0, 1.0);
+    p += off;
+    vec3 n = normal;
+    if (position.y < 0.0) n.y *= 0.35;
+    vN = normalize(normalMatrix * n);
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    vV = -mv.xyz;
+    vW = w;
+    gl_Position = projectionMatrix * mv;
+  }`;
+
+const ESPERIT_FRAGMENT = `
+  uniform vec3 uCore, uRim;
+  uniform float uAlpha, uGlow;
+  varying vec3 vN, vV;
+  varying float vW;
+  void main() {
+    float fr = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 2.2);
+    vec3 col = mix(uCore, uRim, fr);
+    float fade = 1.0 - smoothstep(0.25, 1.0, vW) * 0.92;
+    float air = mix(1.0, 0.35, smoothstep(8.0, 48.0, length(vV)));
+    gl_FragColor = vec4(col * uGlow, (0.22 + 0.78 * fr) * fade * uAlpha * air);
+  }`;
+
+// ocult: espera per tornar; deriva: voltant lliure; fuig: corre cap a un portal; absorbit: puja en espiral per la columna.
+type EstatEsperit = "ocult" | "deriva" | "fuig" | "absorbit";
+
+/** Esperit translúcid i cian (el fantasma de la primera versió): els encaputxats el persegueixen i el porten a un portal. */
+class Esperit {
+  readonly grup: THREE.Group;
+  readonly cara: THREE.Group;
+  readonly mat: THREE.ShaderMaterial;
+  readonly matUlls: THREE.MeshBasicMaterial;
+  readonly offs: THREE.Vector3[];
+  readonly cadena: THREE.Vector3[];
+  readonly head: THREE.Vector3;
+  readonly vel: THREE.Vector3;
+  readonly home = { x: 0, y: 2, z: -8 };
+  readonly s: number;
+  readonly fase = Math.random() * 100;
+  readonly sp = 0.18 + Math.random() * 0.22;
+  estat: EstatEsperit = "ocult";
+  fade = 0;
+  t = 0;
+  espera = 0;
+  wob = 0;
+  portal: Portal | null = null;
+  perseguidor: Fantasma | null = null;
+  private angle = 0;
+
+  constructor(T: Tres, geo: THREE.BufferGeometry, circle: THREE.BufferGeometry, mapPunt: THREE.Texture, uTime: { value: number }, scene: THREE.Scene) {
+    this.s = alea(0.5, 0.72);
+    this.head = new T.Vector3();
+    this.vel = new T.Vector3();
+    this.offs = Array.from({ length: NE }, () => new T.Vector3());
+    this.cadena = Array.from({ length: NE }, () => new T.Vector3());
+    const hue = 0.52 + (Math.random() - 0.5) * 0.1;
+    this.mat = new T.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      side: T.DoubleSide,
+      blending: T.AdditiveBlending,
+      vertexShader: ESPERIT_VERTEX,
+      fragmentShader: ESPERIT_FRAGMENT,
+      uniforms: {
+        uTime,
+        uOff: { value: this.offs },
+        uWob: { value: 0 },
+        uCore: { value: new T.Color().setHSL(hue, 0.9, 0.62) },
+        uRim: { value: new T.Color().setHSL(hue, 0.6, 0.93) },
+        uAlpha: { value: 0 },
+        uGlow: { value: 1.2 },
+      },
+    });
+    this.grup = new T.Group();
+    this.grup.scale.setScalar(this.s);
+    const cos = new T.Mesh(geo, this.mat);
+    cos.frustumCulled = false;
+    cos.renderOrder = 5000;
+    this.grup.add(cos);
+    // Dos ulls clars, com el fantasma original.
+    this.cara = new T.Group();
+    this.cara.rotation.order = "YXZ";
+    this.matUlls = new T.MeshBasicMaterial({ map: mapPunt, transparent: true, opacity: 0, depthWrite: false, depthTest: false, blending: T.AdditiveBlending });
+    const ullL = new T.Mesh(circle, this.matUlls);
+    const ullR = new T.Mesh(circle, this.matUlls);
+    ullL.position.set(-0.26, 0.2, 0.72);
+    ullR.position.set(0.26, 0.2, 0.72);
+    ullL.scale.set(0.16, 0.2, 1);
+    ullR.scale.set(0.16, 0.2, 1);
+    ullL.renderOrder = ullR.renderOrder = 5001;
+    this.cara.add(ullL, ullR);
+    this.grup.add(this.cara);
+    this.grup.visible = false;
+    scene.add(this.grup);
+  }
+
+  colloca(x: number, y: number, z: number) {
+    this.head.set(x, y, z);
+    this.vel.set(0, 0, 0);
+    const sw = SEG_E * this.s;
+    for (let i = 0; i < NE; i++) {
+      this.cadena[i].set(x, y - i * sw, z);
+      this.offs[i].set(0, 0, 0);
+    }
+  }
+
+  /** Mou i dibuixa. `portal` és on s'enfila quan és absorbit. */
+  actualitza(dt: number, t: number, cam: THREE.Vector3) {
+    const k = dt * 60;
+    const head = this.head;
+    const vel = this.vel;
+    if (this.estat === "absorbit" && this.portal) {
+      // Puja en espiral per la columna, es fa petit i s'esvaeix.
+      this.t += dt;
+      this.angle += dt * (2.2 + this.t * 1.5);
+      const r = 0.9 * Math.max(0, 1 - this.t / 3.4);
+      head.set(this.portal.x + Math.cos(this.angle) * r, 1.2 + this.t * 2.4, this.portal.z + Math.sin(this.angle) * r);
+      this.fade = Math.max(0, 1 - this.t / 3.2);
+      this.grup.scale.setScalar(this.s * (0.35 + 0.65 * this.fade));
+      vel.set(0, 0, 0);
+    } else if (this.estat !== "ocult") {
+      let sx: number;
+      let sy: number;
+      let sz: number;
+      let kk = 0.012;
+      let maxVel = 0.035;
+      if (this.estat === "fuig" && this.portal) {
+        sx = this.portal.x + Math.sin(t * 3 + this.fase) * 0.8;
+        sz = this.portal.z + Math.cos(t * 2.6 + this.fase) * 0.8;
+        sy = 1.4 + Math.sin(t * 5 + this.fase) * 0.4;
+        kk = 0.03;
+        maxVel = 0.07;
+      } else {
+        sx = this.home.x + Math.sin(t * this.sp + this.fase) * 1.4;
+        sz = this.home.z + Math.cos(t * this.sp * 0.83 + this.fase * 1.3) * 1.4;
+        sy = this.home.y + Math.sin(t * this.sp * 1.7 + this.fase * 0.7) * 0.5;
+      }
+      vel.x += (sx - head.x) * kk * k;
+      vel.y += (sy - head.y) * kk * k;
+      vel.z += (sz - head.z) * kk * k;
+      vel.multiplyScalar(Math.pow(0.9, k));
+      const vl = vel.length();
+      if (vl > maxVel) vel.multiplyScalar(maxVel / vl);
+      head.addScaledVector(vel, k);
+    }
+    this.grup.position.copy(head);
+    this.cara.rotation.y += angDiff(Math.atan2(cam.x - head.x, cam.z - head.z), this.cara.rotation.y) * 0.1;
+
+    // Cua: cada segment segueix l'anterior amb retard.
+    const sw = SEG_E * this.s;
+    const c = this.cadena;
+    c[0].copy(head);
+    const seg = Math.min(1, 0.2 * k);
+    for (let i = 1; i < NE; i++) {
+      c[i].x += (c[i - 1].x - c[i].x) * seg;
+      c[i].y += (c[i - 1].y - sw - c[i].y) * seg;
+      c[i].z += (c[i - 1].z - c[i].z) * seg;
+    }
+    for (let i = 0; i < NE; i++) this.offs[i].set((c[i].x - head.x) / this.s, (c[i].y - (head.y - i * sw)) / this.s, (c[i].z - head.z) / this.s);
+
+    this.wob *= Math.pow(0.93, k);
+    this.mat.uniforms.uWob.value = this.estat === "fuig" ? 0.7 : this.wob;
+    this.mat.uniforms.uAlpha.value = 0.85 * this.fade;
+    this.matUlls.opacity = 0.9 * this.fade;
+    this.grup.visible = this.fade > 0.01;
+  }
+}
+
 // ───────────────────────────── món ─────────────────────────────
 
 export class MonFantasmes {
@@ -574,6 +767,9 @@ export class MonFantasmes {
   private readonly camera: THREE.PerspectiveCamera;
   private readonly fantasmes: Fantasma[] = [];
   private readonly portals: Portal[] = [];
+  private readonly esperits: Esperit[] = [];
+  private readonly geoEsperit: THREE.BufferGeometry;
+  private proximCacaT = 6;
   private readonly mapAnell: THREE.Texture;
   private readonly mapPunt: THREE.Texture;
   private readonly geo: THREE.BufferGeometry;
@@ -624,6 +820,23 @@ export class MonFantasmes {
       pos.setXYZ(i, x, y, z);
     }
     this.geo = g;
+    // Cos dels esperits: esfera amb la cua més curta.
+    const ge = new T.SphereGeometry(0.8, 40, 32);
+    const pe = ge.attributes.position;
+    for (let i = 0; i < pe.count; i++) {
+      let x = pe.getX(i);
+      let y = pe.getY(i);
+      let z = pe.getZ(i);
+      if (y < 0) {
+        y *= 3.0;
+        const sc = Math.min(-y / TAIL_E, 1);
+        const kc = 1 - 0.82 * Math.pow(sc, 0.85);
+        x *= kc;
+        z *= kc;
+      }
+      pe.setXYZ(i, x, y, z);
+    }
+    this.geoEsperit = ge;
     this.circle = new T.CircleGeometry(1, 20);
     this.mapUll = this.texturaRadial(["rgba(255,225,205,1)", "rgba(255,80,60,1)", "rgba(225,20,20,0.75)", "rgba(120,0,0,0)"], [0, 0.18, 0.5, 1]);
     this.mapHalo = this.texturaRadial(["rgba(120,220,255,0.9)", "rgba(60,150,255,0.28)", "rgba(20,60,200,0)"], [0, 0.35, 1]);
@@ -658,6 +871,11 @@ export class MonFantasmes {
       f.colloca(h.x, h.y, h.z);
       f.espera = 0.4 + i * 0.55; // surten a poc a poc, no tots alhora
       this.fantasmes.push(f);
+    }
+    for (let i = 0; i < QUANTITAT_ESPERITS; i++) {
+      const e = new Esperit(T, this.geoEsperit, this.circle, this.mapPunt, this.uTime, this.escena);
+      e.espera = 1.5 + i * 1.2;
+      this.esperits.push(e);
     }
   }
 
@@ -702,6 +920,88 @@ export class MonFantasmes {
       if (dmin > 5) break;
     }
     return millor;
+  }
+
+  /** Un fantasma encaputxat s'engresca amb un esperit: aquest fuig cap a un portal i el fantasma el segueix. */
+  private triaCaca() {
+    const caçadors = this.fantasmes.filter((f) => f.estat === "deriva" && f.fade > 0.9);
+    const presa = this.esperits.filter((e) => e.estat === "deriva" && e.fade > 0.9);
+    if (!caçadors.length || !presa.length) return;
+    let millor: { f: Fantasma; e: Esperit; d: number } | null = null;
+    for (const f of caçadors) {
+      for (const e of presa) {
+        const d = Math.hypot(f.head.x - e.head.x, f.head.z - e.head.z);
+        if (d < 30 && (!millor || d < millor.d)) millor = { f, e, d };
+      }
+    }
+    if (!millor) return;
+    const { f, e } = millor;
+    f.estat = "persegueix";
+    f.victima = e;
+    f.t = 0;
+    e.estat = "fuig";
+    e.perseguidor = f;
+    e.portal = this.portalProper(e.head.x, e.head.z);
+    e.t = 0;
+    e.wob = 0.8;
+    this.alEsdeveniment?.({ tipus: "s-acosta", pan: 0 });
+  }
+
+  /** Esperits: vida pròpia, i què els passa quan els persegueixen. */
+  private actualitzaEsperits(dt: number, cam: THREE.Vector3) {
+    for (const e of this.esperits) {
+      const f = e.perseguidor;
+      if (e.estat === "ocult") {
+        e.espera -= dt;
+        if (e.espera <= 0) {
+          const rumb = Math.random() * Math.PI * 2;
+          const r = alea(RADI_MIN, RADI_MAX * 0.8);
+          e.home.x = Math.sin(rumb) * r;
+          e.home.y = alea(1.2, 3.6);
+          e.home.z = -Math.cos(rumb) * r;
+          e.colloca(e.home.x, e.home.y, e.home.z);
+          e.grup.scale.setScalar(e.s);
+          e.estat = "deriva";
+          e.fade = 0;
+          e.perseguidor = null;
+        }
+      } else if (e.estat === "deriva") {
+        e.fade = Math.min(1, e.fade + dt / 2);
+      } else if (e.estat === "fuig") {
+        e.t += dt;
+        const perduda = !f || f.estat !== "persegueix" || e.t > 40;
+        if (perduda) {
+          e.estat = "deriva";
+          e.perseguidor = null;
+        } else if (e.portal && Math.hypot(e.head.x - e.portal.x, e.head.z - e.portal.z) < 1.6) {
+          e.estat = "absorbit";
+          e.t = 0;
+          this.alEsdeveniment?.({ tipus: "enfoca", pan: 0 });
+        }
+      } else if (e.estat === "absorbit" && e.t > 3.4) {
+        e.estat = "ocult";
+        e.fade = 0;
+        e.espera = alea(9, 16);
+        if (f && f.estat === "persegueix") {
+          f.estat = "deriva";
+          f.victima = null;
+        }
+        e.perseguidor = null;
+      }
+      e.actualitza(dt, this.t, cam);
+    }
+    // Els caçadors segueixen la seva presa; si aquesta ja no és, tornen a voltar.
+    for (const f of this.fantasmes) {
+      if (f.estat !== "persegueix") continue;
+      f.t += dt;
+      const v = f.victima;
+      if (!v || (v.estat !== "fuig" && v.estat !== "absorbit") || f.t > 40) {
+        f.estat = "deriva";
+        f.victima = null;
+      } else {
+        f.objectiu.set(v.head.x, v.head.y + 0.3, v.head.z);
+      }
+    }
   }
 
   /** El portal més proper a un punt. */
@@ -817,6 +1117,11 @@ export class MonFantasmes {
     this.camera.getWorldDirection(this.avant);
     const cam = this.camera.position;
     for (const portal of this.portals) portal.actualitza(dt, this.t);
+    this.proximCacaT -= dt;
+    if (this.proximCacaT <= 0) {
+      this.proximCacaT = alea(10, 18);
+      this.triaCaca();
+    }
 
     // Crit del jugador.
     if (microActiu) {
@@ -945,6 +1250,8 @@ export class MonFantasmes {
       }
     }
 
+    this.actualitzaEsperits(dt, cam);
+
     // Els més llunyans primer, perquè els de davant els tapin (els ulls van sense prova de profunditat).
     const ordenats = [...this.fantasmes].sort((a, b) => b.dist - a.dist);
     ordenats.forEach((f, i) => {
@@ -962,6 +1269,12 @@ export class MonFantasmes {
       f.matUlls.dispose();
       f.matHalo.dispose();
     }
+    for (const e of this.esperits) {
+      this.escena.remove(e.grup);
+      e.mat.dispose();
+      e.matUlls.dispose();
+    }
+    this.geoEsperit.dispose();
     for (const portal of this.portals) portal.dispose(this.escena);
     this.mapAnell.dispose();
     this.mapPunt.dispose();
