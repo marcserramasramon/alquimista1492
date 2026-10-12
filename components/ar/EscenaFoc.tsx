@@ -62,10 +62,16 @@ export function EscenaFoc({ mirada, arrossegar, video, alSalt, alEstatContorn, d
       }
       ctx.clearRect(0, 0, w, h);
       const v = videoRef.current?.current;
-      if (v && w > 0 && h > 0) contorn.actualitza(v, w, h, ara);
+      let errorContorn = "";
+      try {
+        if (v && w > 0 && h > 0) contorn.actualitza(v, w, h, ara);
+      } catch (e) {
+        errorContorn = `actualitza: ${e instanceof Error ? e.message : String(e)}`;
+      }
       if (depuracioRef.current) {
         depuracioRef.current.current = `${contorn.estat} · vídeo ${v ? `${v.videoWidth}x${v.videoHeight} rs${v.readyState}` : "no"}
-${contorn.info}`;
+${contorn.info}${errorContorn ? `
+${errorContorn}` : ""}`;
       }
       if (contorn.estat !== ultimEstat) {
         ultimEstat = contorn.estat;
@@ -74,10 +80,18 @@ ${contorn.info}`;
       const lectura = arrossegarRef.current ? manual.current : (mirada.current ?? manual.current);
       // Primer les flames (fons), després s'hi retalla la silueta de les persones i, a sobre, el seu contorn.
       mon.pinta(ctx, w, h, dt, lectura);
-      if (v && w > 0 && h > 0) {
-        contorn.tapa(ctx, w, h);
-        contorn.pintaMagia(ctx, w, h, ara);
-        contorn.pinta(ctx, w, h, ara);
+      // Un error al contorn no ha d'aturar el bucle ni les flames.
+      try {
+        if (v && w > 0 && h > 0) {
+          contorn.tapa(ctx, w, h);
+          contorn.pintaMagia(ctx, w, h, ara);
+          contorn.pinta(ctx, w, h, ara);
+        }
+      } catch (e) {
+        if (depuracioRef.current) {
+          depuracioRef.current.current += `
+pinta: ${e instanceof Error ? e.message : String(e)}`;
+        }
       }
       frame = requestAnimationFrame(bucle);
     };

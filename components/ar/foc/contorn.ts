@@ -42,6 +42,7 @@ export class ContornPersones {
   /** Silueta plena de les persones, per tapar el que hi ha darrere seu. */
   private ple: HTMLCanvasElement;
   private magia: HTMLCanvasElement;
+  private halo: HTMLCanvasElement;
   private suau: Float32Array | null = null;
   private ultim = 0;
   private hiHaVora = false;
@@ -56,6 +57,7 @@ export class ContornPersones {
     this.vora = document.createElement("canvas");
     this.ple = document.createElement("canvas");
     this.magia = document.createElement("canvas");
+    this.halo = document.createElement("canvas");
   }
 
   async iniciar(): Promise<void> {
@@ -181,6 +183,7 @@ export class ContornPersones {
     }
     g.putImageData(imatge, 0, 0);
     gp.putImageData(imatgePle, 0, 0);
+    this.creaResplendor(mw, mh);
     this.hiHaVora = vores > 0;
     this.info = `fot ${this.fotogrames} · masques ${nMasques} · ${mw}x${mh} · persona ${Math.round(
       (dins / valors.length) * 100,
@@ -266,36 +269,51 @@ export class ContornPersones {
     ctx.restore();
   }
 
+  /**
+   * Resplendor de la vora, calculat una vegada per màscara i a mida petita (els desenfocaments són
+   * cars: fer-los a pantalla completa a cada fotograma ofega un mòbil).
+   */
+  private creaResplendor(mw: number, mh: number) {
+    if (this.halo.width !== mw || this.halo.height !== mh) {
+      this.halo.width = mw;
+      this.halo.height = mh;
+    }
+    const g = this.halo.getContext("2d");
+    if (!g) return;
+    g.clearRect(0, 0, mw, mh);
+    g.globalCompositeOperation = "lighter";
+    // Resplendor ample darrere de la persona (vermell fosc), un de mitjà, i la línia fina i calenta.
+    const passes: [string, number, number][] = [
+      ["rgba(200,10,0,0.9)", 20, 0.9],
+      ["rgba(255,35,0,0.95)", 10, 0.9],
+      ["rgba(255,120,0,1)", 3, 0.85],
+    ];
+    for (const [color, blur, alfa] of passes) {
+      g.shadowColor = color;
+      g.shadowBlur = blur;
+      g.globalAlpha = alfa;
+      g.drawImage(this.vora, 0, 0);
+    }
+    g.shadowBlur = 0;
+    g.globalAlpha = 1;
+  }
+
   /** Dibuixa la vora amb resplendor i flames que pugen, sobre un context transparent. */
   pinta(ctx: CanvasRenderingContext2D, w: number, h: number, ara: number) {
     if (!this.hiHaVora) return;
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     ctx.imageSmoothingEnabled = true;
-    const escala = w / 400;
     const pols = 0.8 + 0.2 * Math.sin(ara / 90) + 0.08 * Math.sin(ara / 37);
-
-    // Resplendor ample darrere de la persona (vermell fosc), un de mitjà, i la línia fina i calenta.
-    ctx.globalAlpha = 0.9;
-    ctx.shadowColor = "rgba(200,10,0,0.9)";
-    ctx.shadowBlur = 70 * escala * pols;
-    ctx.drawImage(this.vora, 0, 0, w, h);
-    ctx.shadowColor = "rgba(255,35,0,0.95)";
-    ctx.shadowBlur = 36 * escala * pols;
-    ctx.drawImage(this.vora, 0, 0, w, h);
-    ctx.globalAlpha = 0.85;
-    ctx.shadowColor = "rgba(255,120,0,1)";
-    ctx.shadowBlur = 9 * escala;
-    ctx.drawImage(this.vora, 0, 0, w, h);
+    ctx.globalAlpha = Math.min(1, pols);
+    ctx.drawImage(this.halo, 0, 0, w, h);
 
     // Còpies que pugen i s'esvaeixen, com flames que s'enlairen del cos.
     for (let k = 0; k < 4; k++) {
       const fase = (ara / 1100 + k / 4) % 1;
-      ctx.globalAlpha = (1 - fase) * 0.55;
-      ctx.shadowColor = "rgba(255,50,0,0.9)";
-      ctx.shadowBlur = 14 * escala;
-      const dx = Math.sin(ara / 230 + k * 2.1) * 5 * escala * fase;
-      ctx.drawImage(this.vora, dx, -fase * h * 0.07, w, h);
+      ctx.globalAlpha = (1 - fase) * 0.5;
+      const dx = Math.sin(ara / 230 + k * 2.1) * 5 * (w / 400) * fase;
+      ctx.drawImage(this.halo, dx, -fase * h * 0.07, w, h);
     }
     ctx.restore();
   }
