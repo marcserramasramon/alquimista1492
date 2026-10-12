@@ -41,6 +41,7 @@ export class ContornPersones {
   private vora: HTMLCanvasElement;
   /** Silueta plena de les persones, per tapar el que hi ha darrere seu. */
   private ple: HTMLCanvasElement;
+  private magia: HTMLCanvasElement;
   private suau: Float32Array | null = null;
   private ultim = 0;
   private hiHaVora = false;
@@ -54,6 +55,7 @@ export class ContornPersones {
     this.entrada = document.createElement("canvas");
     this.vora = document.createElement("canvas");
     this.ple = document.createElement("canvas");
+    this.magia = document.createElement("canvas");
   }
 
   async iniciar(): Promise<void> {
@@ -192,6 +194,75 @@ export class ContornPersones {
     ctx.globalCompositeOperation = "destination-out";
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(this.ple, 0, 0, w, h);
+    ctx.restore();
+  }
+
+  /**
+   * Efecte màgic a dins de la silueta: energia vermella que puja, espurnes que brillen i un resplendor
+   * que entra des de la vora. Es dibuixa en una imatge petita i es retalla amb la silueta.
+   */
+  pintaMagia(ctx: CanvasRenderingContext2D, w: number, h: number, ara: number) {
+    if (!this.hiHaVora) return;
+    const mw = this.ple.width;
+    const mh = this.ple.height;
+    if (this.magia.width !== mw || this.magia.height !== mh) {
+      this.magia.width = mw;
+      this.magia.height = mh;
+    }
+    const g = this.magia.getContext("2d");
+    if (!g) return;
+    g.globalCompositeOperation = "source-over";
+    g.clearRect(0, 0, mw, mh);
+
+    // Ones d'energia que pugen pel cos.
+    const t = ara / 1000;
+    const desplacament = (t * 70) % (mh * 0.5);
+    const ones = g.createLinearGradient(0, -desplacament, 0, mh * 0.5 - desplacament);
+    ones.addColorStop(0, "rgba(255,60,0,0.05)");
+    ones.addColorStop(0.5, "rgba(255,120,20,0.4)");
+    ones.addColorStop(1, "rgba(255,60,0,0.05)");
+    g.fillStyle = ones;
+    g.fillRect(0, 0, mw, mh);
+    // El gradient només cobreix mitja alçada: es repeteix movent-lo una alçada més avall.
+    g.save();
+    g.translate(0, mh * 0.5);
+    g.fillRect(0, -mh * 0.5, mw, mh);
+    g.restore();
+
+    // Resplendor que entra des de la vora.
+    g.globalCompositeOperation = "lighter";
+    g.shadowColor = "rgba(255,70,0,0.9)";
+    g.shadowBlur = 9;
+    g.globalAlpha = 0.8;
+    g.drawImage(this.vora, 0, 0);
+    g.shadowBlur = 0;
+    g.globalAlpha = 1;
+
+    // Espurnes que pugen i brillen.
+    for (let i = 0; i < 70; i++) {
+      const a = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+      const b = Math.abs(Math.sin(i * 78.233) * 12345.6789) % 1;
+      const x = a * mw + Math.sin(t * 1.5 + i) * 3;
+      const velocitat = 14 + b * 30;
+      const y = mh - ((t * velocitat + b * mh) % (mh + 10));
+      const brill = 0.5 + 0.5 * Math.sin(t * (3 + (i % 5)) + i);
+      g.globalAlpha = brill;
+      g.fillStyle = i % 3 === 0 ? "rgb(255,240,190)" : "rgb(255,150,40)";
+      const mida = 0.8 + b * 1.6;
+      g.fillRect(x, y, mida, mida);
+    }
+    g.globalAlpha = 1;
+
+    // Només a dins de la silueta.
+    g.globalCompositeOperation = "destination-in";
+    g.drawImage(this.ple, 0, 0);
+    g.globalCompositeOperation = "source-over";
+
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.imageSmoothingEnabled = true;
+    ctx.globalAlpha = 0.8;
+    ctx.drawImage(this.magia, 0, 0, w, h);
     ctx.restore();
   }
 

@@ -76,6 +76,7 @@ ${contorn.info}`;
       mon.pinta(ctx, w, h, dt, lectura);
       if (v && w > 0 && h > 0) {
         contorn.tapa(ctx, w, h);
+        contorn.pintaMagia(ctx, w, h, ara);
         contorn.pinta(ctx, w, h, ara);
       }
       frame = requestAnimationFrame(bucle);

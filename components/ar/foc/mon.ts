@@ -28,6 +28,8 @@ interface Arc {
   n0: number;
   de: number;
   dn: number;
+  /** Mida de les flames: creix amb la distància perquè lluny es vegin igual. */
+  escala: number;
   alt: number;
   dur: number;
   t: number;
@@ -103,7 +105,7 @@ export class MonFoc {
   private nouArc(rumbMirada: number) {
     // Sovint cap on mira el jugador, perquè els vegi; de tant en tant al voltant.
     const rumbCentre = (Math.random() < 0.7 ? rumbMirada + alea(-55, 55) : alea(0, 360)) * RAD;
-    const dist = alea(12, 24);
+    const dist = alea(35, 60);
     const ce = Math.sin(rumbCentre) * dist;
     const cn = Math.cos(rumbCentre) * dist;
     // Direcció del salt: aproximadament perpendicular a la visual, amb una mica de biaix.
@@ -117,6 +119,7 @@ export class MonFoc {
       de: Math.sin(dir) * mig * 2,
       dn: Math.cos(dir) * mig * 2,
       alt,
+      escala: dist / 18,
       dur: alea(3, 3.6),
       t: 0,
       entrat: false,
@@ -141,16 +144,16 @@ export class MonFoc {
     };
   }
 
-  private emet(e: number, u: number, n: number, ve: number, vu: number, vn: number, vida: number, mida: number) {
+  private emet(e: number, u: number, n: number, ve: number, vu: number, vn: number, vida: number, mida: number, escala = 1) {
     if (this.parts.length >= PARTICULES_MAX) return;
-    this.parts.push({ e, u, n, ve, vu, vn, vida, edat: 0, mida });
+    this.parts.push({ e, u, n, ve, vu, vn, vida, edat: 0, mida: mida * escala });
   }
 
-  private esquitxada(e: number, n: number) {
+  private esquitxada(e: number, n: number, escala: number) {
     for (let i = 0; i < 28; i++) {
       const a = Math.random() * Math.PI * 2;
       const v = alea(0.6, 2.6);
-      this.emet(e, 0.05, n, Math.cos(a) * v, alea(1, 3.8), Math.sin(a) * v, alea(0.5, 1.1), alea(0.2, 0.5));
+      this.emet(e, 0.05, n, Math.cos(a) * v, alea(1, 3.8), Math.sin(a) * v, alea(0.5, 1.1), alea(0.2, 0.5), escala);
     }
   }
 
@@ -168,7 +171,7 @@ export class MonFoc {
       const u = Math.min(1, arc.t / arc.dur);
       if (!arc.entrat) {
         arc.entrat = true;
-        this.esquitxada(arc.e0, arc.n0);
+        this.esquitxada(arc.e0, arc.n0, arc.escala);
       }
       if (arc.t < arc.dur) {
         // El cap de l'arc: flames denses que es queden al rastre.
@@ -184,11 +187,12 @@ export class MonFoc {
             alea(-0.15, 0.15),
             alea(1.6, 2.4),
             alea(0.6, 1.0),
+            arc.escala,
           );
         }
       } else if (!arc.sortit) {
         arc.sortit = true;
-        this.esquitxada(arc.e0 + arc.de, arc.n0 + arc.dn);
+        this.esquitxada(arc.e0 + arc.de, arc.n0 + arc.dn, arc.escala);
       }
       // Flames a terra, als dos punts de l'arc, mentre dura.
       if (arc.t < arc.dur + REMANENT * 0.5) {
@@ -204,6 +208,7 @@ export class MonFoc {
               alea(-0.1, 0.1),
               alea(0.5, 0.9),
               alea(0.4, 0.7),
+              arc.escala,
             );
           }
         }
