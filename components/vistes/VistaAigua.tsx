@@ -30,6 +30,7 @@ export function VistaAigua({ extra, onTornar, directa = false }: VistaAiguaProps
   const { mirada, estat: estatSensors, demanar } = useOrientacio();
   const [silenci, setSilenci] = useState(false);
   const [contorn, setContorn] = useState<EstatContorn>("carregant");
+  const [sense3d, setSense3d] = useState(false);
 
   // Els sensors, la càmera i el so es demanen en tocar el botó (iOS i Android ho exigeixen).
   async function començar() {
@@ -81,11 +82,17 @@ export function VistaAigua({ extra, onTornar, directa = false }: VistaAiguaProps
           arrossegar={estatSensors !== "actiu"}
           video={video}
           alEstatContorn={setContorn}
+          alError={() => setSense3d(true)}
         />
       )}
 
       {iniciat && (
         <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center gap-2 pr-24 pl-5 pt-[max(1rem,env(safe-area-inset-top))]">
+          {sense3d && (
+            <p className="rounded-xl bg-black/60 px-3 py-2 text-center text-sm font-bold">
+              Aquest mòbil no pot dibuixar l'aigua en 3D.
+            </p>
+          )}
           {camera === "no-disponible" && (
             <p className="rounded-xl bg-black/60 px-3 py-2 text-center text-sm font-bold">
               No hi ha càmera: només es veu l'aigua.
