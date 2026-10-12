@@ -92,6 +92,7 @@ export const EXTRES_AR: ExtraAr[] = [
       boto: "Obrir els ulls",
     },
   },
+  // Extra de la pista de skate (fita d'Ànima): fantasmes grans, ànimes petites i portals de llum. No té res a veure amb el mode guia del Camí de Malla (altre extra).
   {
     id: "anima-fantasmes",
     fitaId: "anima",
@@ -100,10 +101,11 @@ export const EXTRES_AR: ExtraAr[] = [
     boto: "👻 Mirar les ànimes",
     introduccio: {
       titol: "Ànimes a la foscor",
-      entrada: "Hi ha ànimes errants al vostre voltant. Això és el que podeu fer:",
+      entrada: "A la pista hi ha fantasmes i ànimes errants. Això és el que veureu i podreu fer:",
       passos: [
-        { icona: "👀", text: "Aixequeu el mòbil i gireu-lo a poc a poc: les ànimes us observen des de lluny." },
-        { icona: "📷", text: "Toqueu el botó de la càmera (a baix a la dreta) per fer un flaix: les ànimes que il·lumini es dissoldran." },
+        { icona: "👀", text: "Aixequeu el mòbil i gireu-lo a poc a poc: els fantasmes us observen des de lluny." },
+        { icona: "🌀", text: "Els portals de llum són per on surten els fantasmes grans, que caçaran les ànimes petites i se les enduran." },
+        { icona: "📷", text: "Toqueu el botó de la càmera (a baix a la dreta) per fer un flaix: els fantasmes grans que il·lumini es dissoldran." },
         { icona: "📣", text: "Si en voleu fer marxar, crideu." },
       ],
       permisos: {
