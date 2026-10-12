@@ -20,7 +20,7 @@ const ESPERA_MAX = 3;
 /** Partícules màximes (mòbils modestos). */
 const PARTICULES_MAX = 850;
 /** Temps que el rastre de l'arc encara es veu quan el cap ja ha tornat a terra (s). */
-const REMANENT = 1.5;
+const REMANENT = 2.2;
 
 interface Arc {
   /** Punt d'entrada a terra i vector cap al punt de sortida (est, nord). */
@@ -103,20 +103,21 @@ export class MonFoc {
   private nouArc(rumbMirada: number) {
     // Sovint cap on mira el jugador, perquè els vegi; de tant en tant al voltant.
     const rumbCentre = (Math.random() < 0.7 ? rumbMirada + alea(-55, 55) : alea(0, 360)) * RAD;
-    const dist = alea(14, 28);
+    const dist = alea(12, 24);
     const ce = Math.sin(rumbCentre) * dist;
     const cn = Math.cos(rumbCentre) * dist;
     // Direcció del salt: aproximadament perpendicular a la visual, amb una mica de biaix.
     const dir = rumbCentre + Math.PI / 2 + alea(-0.6, 0.6);
-    const mig = alea(3, 4.5);
-    const alt = alea(3.5, 5.5);
+    // Una cabriola cap al cel: puja gairebé en vertical uns 15 m i torna a caure a prop d'on ha sortit.
+    const mig = alea(2, 3.5);
+    const alt = alea(14, 16);
     const arc: Arc = {
       e0: ce - Math.sin(dir) * mig,
       n0: cn - Math.cos(dir) * mig,
       de: Math.sin(dir) * mig * 2,
       dn: Math.cos(dir) * mig * 2,
       alt,
-      dur: alea(1.5, 2.1),
+      dur: alea(3, 3.6),
       t: 0,
       entrat: false,
       sortit: false,
@@ -127,8 +128,17 @@ export class MonFoc {
     this.alEsdeveniment({ pan: Math.max(-1, Math.min(1, dif / 70)) });
   }
 
+  /** Punt de la cabriola: paràbola de gran alçada, amb una volta en espiral al voltant del camí. */
   private pos(arc: Arc, u: number) {
-    return { e: arc.e0 + arc.de * u, u: 4 * arc.alt * u * (1 - u), n: arc.n0 + arc.dn * u };
+    const long = Math.hypot(arc.de, arc.dn) || 1;
+    const radi = 0.9 * Math.sin(Math.PI * u);
+    const angle = u * Math.PI * 6;
+    const lateral = Math.sin(angle) * radi;
+    return {
+      e: arc.e0 + arc.de * u - (arc.dn / long) * lateral,
+      u: 4 * arc.alt * u * (1 - u) + Math.cos(angle) * radi,
+      n: arc.n0 + arc.dn * u + (arc.de / long) * lateral,
+    };
   }
 
   private emet(e: number, u: number, n: number, ve: number, vu: number, vn: number, vida: number, mida: number) {
@@ -163,7 +173,7 @@ export class MonFoc {
       if (arc.t < arc.dur) {
         // El cap de l'arc: flames denses que es queden al rastre.
         const p = this.pos(arc, u);
-        const n = Math.max(1, Math.round(dt * 110));
+        const n = Math.max(1, Math.round(dt * 80));
         for (let k = 0; k < n; k++) {
           this.emet(
             p.e + alea(-0.12, 0.12),
@@ -172,8 +182,8 @@ export class MonFoc {
             alea(-0.15, 0.15),
             alea(0.1, 0.5),
             alea(-0.15, 0.15),
-            alea(0.9, 1.5),
-            alea(0.5, 0.8),
+            alea(1.6, 2.4),
+            alea(0.6, 1.0),
           );
         }
       } else if (!arc.sortit) {
