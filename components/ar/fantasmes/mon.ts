@@ -570,7 +570,10 @@ class Portal {
 // ───────────────────────────── esperits (els fantasmes d'abans) ─────────────────────────────
 
 /** Esperits que hi ha alhora. */
-const QUANTITAT_ESPERITS = 6;
+const QUANTITAT_ESPERITS = 10;
+/** Cada quants segons arriba un esperit de fora, i a quina distància del jugador apareix (m). */
+const ESPERIT_CADA_S = 5;
+const ESPERIT_DIST_FORA: [number, number] = [34, 42];
 
 const ESPERIT_VERTEX = `
   uniform float uTime, uWob;
@@ -622,9 +625,9 @@ const ESPERIT_FRAGMENT = `
     gl_FragColor = vec4(col * 1.25, dens * 1.15 * fade * uAlpha * air);
   }`;
 
-// ocult: espera per tornar; deriva: voltant lliure; fuig: corre perquè el persegueixen;
+// ocult: fora de l'escena; arriba: ve de lluny cap a la zona; deriva: voltant lliure; fuig: corre perquè el persegueixen;
 // capturat: el fantasma gran se l'emporta; absorbit: puja en espiral per la columna d'un portal.
-type EstatEsperit = "ocult" | "deriva" | "fuig" | "capturat" | "absorbit";
+type EstatEsperit = "ocult" | "arriba" | "deriva" | "fuig" | "capturat" | "absorbit";
 
 /** Esperit petit de boira lluminosa (el fantasma de la versió anterior): els encaputxats el persegueixen, el capturen i el porten a un portal. */
 class Esperit {
@@ -776,6 +779,12 @@ class Esperit {
         sy = limita(sy, 1.0, 4.5);
         kk = 0.05;
         maxVel = 0.062;
+      } else if (this.estat === "arriba") {
+        sx = this.home.x;
+        sy = this.home.y;
+        sz = this.home.z;
+        kk = 0.02;
+        maxVel = 0.06;
       } else {
         sx = this.home.x + Math.sin(t * this.sp + this.fase) * 1.4;
         sz = this.home.z + Math.cos(t * this.sp * 0.83 + this.fase * 1.3) * 1.4;
@@ -853,6 +862,7 @@ export class MonFantasmes {
   private readonly portals: Portal[] = [];
   private readonly esperits: Esperit[] = [];
   private proximCacaT = 4;
+  private proximEsperitT = 1;
   private readonly mapAnell: THREE.Texture;
   private readonly mapPunt: THREE.Texture;
   private readonly geo: THREE.BufferGeometry;
@@ -1016,22 +1026,33 @@ export class MonFantasmes {
 
   /** Esperits: vida pròpia, fugida, captura i absorció; i els caçadors que els segueixen. */
   private actualitzaEsperits(dt: number, cam: THREE.Vector3) {
+    // Cada 5 s arriba un esperit de fora de la zona, des d'una banda qualsevol, cap a un punt de dins.
+    this.proximEsperitT -= dt;
+    if (this.proximEsperitT <= 0) {
+      this.proximEsperitT = ESPERIT_CADA_S;
+      const e = this.esperits.find((x) => x.estat === "ocult");
+      if (e) {
+        const rumb = Math.random() * Math.PI * 2;
+        const r = alea(ESPERIT_DIST_FORA[0], ESPERIT_DIST_FORA[1]);
+        const rh = alea(RADI_MIN, RADI_MAX * 0.8);
+        const rumbH = rumb + alea(-0.8, 0.8);
+        e.home.x = Math.sin(rumbH) * rh;
+        e.home.y = alea(1.2, 3.6);
+        e.home.z = -Math.cos(rumbH) * rh;
+        e.colloca(Math.sin(rumb) * r, alea(1.5, 4), -Math.cos(rumb) * r);
+        e.grup.scale.setScalar(e.s);
+        e.estat = "arriba";
+        e.fade = 0;
+        e.perseguidor = null;
+      }
+    }
     for (const e of this.esperits) {
       const f = e.perseguidor;
       if (e.estat === "ocult") {
-        e.espera -= dt;
-        if (e.espera <= 0) {
-          const rumb = Math.random() * Math.PI * 2;
-          const r = alea(RADI_MIN, RADI_MAX * 0.8);
-          e.home.x = Math.sin(rumb) * r;
-          e.home.y = alea(1.2, 3.6);
-          e.home.z = -Math.cos(rumb) * r;
-          e.colloca(e.home.x, e.home.y, e.home.z);
-          e.grup.scale.setScalar(e.s);
-          e.estat = "deriva";
-          e.fade = 0;
-          e.perseguidor = null;
-        }
+        // Esperant que arribi el seu torn (vegeu més avall).
+      } else if (e.estat === "arriba") {
+        e.fade = Math.min(1, e.fade + dt);
+        if (Math.hypot(e.head.x - e.home.x, e.head.z - e.home.z) < 4) e.estat = "deriva";
       } else if (e.estat === "deriva") {
         e.fade = Math.min(1, e.fade + dt / 2);
       } else if (e.estat === "fuig") {
@@ -1062,7 +1083,6 @@ export class MonFantasmes {
       } else if (e.estat === "absorbit" && e.t > 3.4) {
         e.estat = "ocult";
         e.fade = 0;
-        e.espera = alea(8, 15);
         e.perseguidor = null;
       }
       e.actualitza(dt, this.t, cam, e.perseguidor);
