@@ -68,6 +68,9 @@ const PROPORCIO_VERMELLS = 0.75;
 /** Color de la resposta: un blau fosc, més fosc que el dels símbols del soroll (BLAUS_SIMBOLS). */
 export const BLAU_OBJECTIU = "#0b2a6b";
 
+/** Radi dels punts de la trama de la resposta. */
+export const RADI_PUNTS_OBJECTIU = 3.6;
+
 /** Colors del soroll: variants de vermell (les que es dissolen a través del "paper de foc"), cap que es pugui confondre amb el blau de la resposta. */
 const COLORS_SOROLL = [
   "#c8231b", // vermell (el "vermell foc" de l'app)
@@ -109,6 +112,8 @@ export function generaSoroll({
   alcada = 440,
   quantitat = 300,
   midaObjectiu,
+  colorObjectiu = BLAU_OBJECTIU,
+  radiPunts = RADI_PUNTS_OBJECTIU,
 }: {
   resposta: string;
   llavor?: number;
@@ -118,6 +123,10 @@ export function generaSoroll({
   quantitat?: number;
   /** Mida de la resposta (per defecte proporcional a `alcada`, veure PROPORCIO_MIDA_OBJECTIU). */
   midaObjectiu?: number;
+  /** Color del número de la resposta i dels seus punts (per defecte BLAU_OBJECTIU). */
+  colorObjectiu?: string;
+  /** Radi dels punts de la trama del número (per defecte RADI_PUNTS_OBJECTIU). */
+  radiPunts?: number;
 }): Soroll {
   const r = prng(llavor);
   const entre = (min: number, max: number) => min + r() * (max - min);
@@ -136,7 +145,7 @@ export function generaSoroll({
     y: yObjectiu,
     mida: midaObjectiuFinal,
     rotacio: 0,
-    color: BLAU_OBJECTIU,
+    color: colorObjectiu,
     xifra: resposta,
     objectiu: true,
   });
@@ -145,7 +154,7 @@ export function generaSoroll({
   // la seva forma pel component), tots de la mateixa mida i del blau de la
   // resposta.
   const pasHalftone = 9;
-  const radiHalftone = 3.6;
+  const radiHalftone = radiPunts;
   const margeHalftone = midaObjectiuFinal * 0.65;
   const minXHalftone = Math.max(0, xObjectiu - margeHalftone);
   const maxXHalftone = Math.min(amplada, xObjectiu + margeHalftone);
@@ -154,7 +163,7 @@ export function generaSoroll({
   const puntsObjectiu: PuntHalftone[] = [];
   for (let y = minYHalftone; y <= maxYHalftone; y += pasHalftone) {
     for (let x = minXHalftone; x <= maxXHalftone; x += pasHalftone) {
-      puntsObjectiu.push({ x, y, r: radiHalftone, color: BLAU_OBJECTIU });
+      puntsObjectiu.push({ x, y, r: radiHalftone, color: colorObjectiu });
     }
   }
 
