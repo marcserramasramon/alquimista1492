@@ -51,6 +51,7 @@ import { VistaBonesPractiques } from "@/components/vistes/VistaBonesPractiques";
 import { GuiaManual } from "@/components/player/GuiaManual";
 import { VistaExtraAr } from "@/components/vistes/VistaExtraAr";
 import { VistaFantasmes } from "@/components/vistes/VistaFantasmes";
+import { VistaFoc } from "@/components/vistes/VistaFoc";
 import { EXTRES_AR } from "@/content/public/extres";
 import { MANUAL_ARRIBAR, MANUAL_HUB, MANUAL_RESOLDRE } from "@/content/public/textos";
 import type { AvisEquip } from "@/components/vistes/PanellAvisosMaster";
@@ -814,6 +815,20 @@ export const PANTALLES: Pantalla[] = [
     titol: "Extra ànimes · explicació abans de la càmera",
     descripcio: "Fita d'Ànima: com funciona l'extra dels fantasmes, què demanarà el mòbil i consells. El text és a content/public/extres.ts.",
     render: () => <VistaFantasmes extra={EXTRES_AR[1]} onTornar={noop} />,
+  },
+  {
+    id: "extra-foc-introduccio",
+    grup: "hub",
+    titol: "Extra foc · explicació abans de la càmera",
+    descripcio: "Fita de Foc: arcs de flames i contorn de foc a les persones; què demanarà el mòbil. El text és a content/public/extres.ts.",
+    render: () => <VistaFoc extra={EXTRES_AR[2]} onTornar={noop} />,
+  },
+  {
+    id: "extra-foc-escena",
+    grup: "hub",
+    titol: "Extra foc · arcs de flames",
+    descripcio: "L'escena sobre fons negre (sense càmera ni contorns); arrossegueu per mirar al voltant.",
+    render: () => <VistaFoc extra={EXTRES_AR[2]} onTornar={noop} directa />,
   },
   {
     id: "extra-ar-escena",

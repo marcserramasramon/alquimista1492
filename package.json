@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "0.10.21",
     "@supabase/supabase-js": "^2.116.0",
     "@yudiel/react-qr-scanner": "^2.6.0",
     "jose": "^6.2.12",
