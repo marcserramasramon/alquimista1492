@@ -206,6 +206,8 @@ class Fantasma {
   fase2 = 0;
   /** Temps fins al proper punt de la ronda (s), quan patrulla. */
   patrulla = 0;
+  /** 0-1: com de cert és que el fantasma el mira el jugador (el té al davant); fa que els ulls es posin ben vermells. */
+  veu = 0;
   /** L'esperit que persegueix (estat "persegueix"). */
   victima: Esperit | null = null;
 
@@ -387,9 +389,13 @@ class Fantasma {
     const cicle = ((t + this.fase) % per) / per;
     let obert = Math.max(0, 1 - Math.abs(cicle - 0.9) / 0.06);
     obert = obert * obert * (3 - 2 * obert);
-    obert = Math.max(obert, limita(this.mirat / 600, 0, 1));
-    this.ullL.scale.y = this.ullR.scale.y = 0.085 * (0.08 + 0.92 * obert);
-    this.matUlls.opacity = (0.3 + 0.7 * obert) * this.fade;
+    obert = Math.max(obert, limita(this.mirat / 600, 0, 1), this.veu);
+    // Vermell apagat per defecte; vermell viu i una mica més grans quan el fantasma mira el jugador.
+    const viu = Math.max(this.veu, limita(this.mirat / 600, 0, 1));
+    this.ullL.scale.x = this.ullR.scale.x = 0.085 * (1 + 0.45 * viu);
+    this.ullL.scale.y = this.ullR.scale.y = 0.085 * (1 + 0.45 * viu) * (0.08 + 0.92 * obert);
+    this.matUlls.color.setRGB(0.5 + 0.5 * viu, 0.12 + 0.13 * viu, 0.12 + 0.13 * viu);
+    this.matUlls.opacity = (0.25 + 0.75 * obert) * (0.5 + 0.5 * viu) * this.fade;
     this.matHalo.opacity = 0.12 * this.fade * Math.min(this.glow, 2);
   }
 }
@@ -1340,6 +1346,16 @@ export class MonFantasmes {
       }
       // Llum de vora que dona el portal més proper: com més a prop, més se'n veu el fantasma.
       f.llum = 0.9 * Math.pow(limita(1 - this.portalProper(f.head.x, f.head.z).distancia(f.head.x, f.head.z) / 10, 0, 1), 1.5);
+      {
+        // El fantasma «mira» el jugador si aquest el té ben davant a la seva mira.
+        const vx = f.head.x - cam.x;
+        const vy = f.head.y - cam.y;
+        const vz = f.head.z - cam.z;
+        const d = Math.hypot(vx, vy, vz) || 1;
+        const cosA = (vx * this.avant.x + vy * this.avant.y + vz * this.avant.z) / d;
+        const mira = f.fade > 0.3 && d < 32 && Math.acos(limita(cosA, -1, 1)) < 28 * RAD ? 1 : 0;
+        f.veu += (mira - f.veu) * Math.min(1, dt * 3);
+      }
       f.actualitza(dt, this.t, cam);
       f.glow += (1 - f.glow) * Math.min(1, dt * 3);
 
