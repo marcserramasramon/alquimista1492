@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { EscenaAigua } from "@/components/ar/EscenaAigua";
 import { precarregaContorn, type EstatContorn } from "@/components/ar/foc/contorn";
 import { IntroduccioExtraAr } from "@/components/vistes/IntroduccioExtraAr";
-import type { ExtraAr } from "@/content/public/extres";
+import { rumbCami, type ExtraAr } from "@/content/public/extres";
 import { useOrientacio } from "@/lib/orientacio";
 import { aturarSoAigua, iniciarSoAigua, silenciarAigua } from "@/lib/sorollArAigua";
 
@@ -83,6 +83,8 @@ export function VistaAigua({ extra, onTornar, directa = false }: VistaAiguaProps
           video={video}
           alEstatContorn={setContorn}
           alError={() => setSense3d(true)}
+          rumbRiu={rumbCami(extra)}
+          ampleRiu={extra.ampleRiu}
         />
       )}
 

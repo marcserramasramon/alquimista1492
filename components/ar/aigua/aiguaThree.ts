@@ -2,8 +2,9 @@ import * as THREE from "three";
 import type { Mirada } from "@/lib/orientacio";
 
 /**
- * Ràpids de riu en 3D (three.js): un terra d'aigua amb ones que es mouen en un sentit fix, roques
- * de debò que trenquen el corrent amb escuma al voltant i gotes que esquitxen. La càmera de three.js
+ * Ràpids de riu en 3D (three.js): una cinta d'aigua estreta (uns 3 m d'ample) amb ones, escuma a les
+ * crestes i a les vores i gotes que esquitxen. El riu va en la direcció d'un rumb donat (el del carrer,
+ * si l'extra el té configurat) i passa pels peus del jugador. La càmera de three.js
  * s'orienta amb la brúixola i la inclinació del mòbil (ulls a 1,5 m), de manera que l'aigua queda
  * ancorada al món i es pot mirar al voltant. Es dibuixa en un canvas fora de pantalla perquè qui l'usa
  * hi pugui retallar les persones. Res d'aquí és una solució ni toca la partida.
@@ -15,16 +16,17 @@ const RAD = Math.PI / 180;
 const ALCADA_ULLS = 1.5;
 export const FOV_HORITZONTAL = 52;
 
-/** Costat del pla d'aigua (m) i subdivisions: prou fi per a les ones, prou lleuger per a un mòbil. */
-const COSTAT = 70;
-const SUBDIVISIONS = 150;
-const ROQUES = 12;
+/** Ample per defecte del riu (m), llargada de la cinta i marge de malla a cada costat. */
+export const AMPLE_RIU = 3;
+const LLARG = 60;
+const MARGE = 0.9;
 const GOTES_MAX = 180;
 
 // Les ones es calculen igual al vèrtex (relleu) i al fragment (normal i escuma).
 const COMU = /* glsl */ `
   uniform float uTime;
   uniform vec2 uFlow;
+  uniform float uAmple;
 
   float hash(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
@@ -42,13 +44,19 @@ const COMU = /* glsl */ `
   vec2 flowCoords(vec2 p) {
     return vec2(dot(p, uFlow), dot(p, vec2(-uFlow.y, uFlow.x)));
   }
+  // 1 dins del riu, 0 fora, amb una vora suau; i s'apaga als extrems de la cinta.
+  float riu(vec2 q) {
+    float vora = 1.0 - smoothstep(uAmple * 0.5 - 0.3, uAmple * 0.5 + 0.1, abs(q.y));
+    float cap = 1.0 - smoothstep(${(LLARG / 2 * 0.7).toFixed(1)}, ${(LLARG / 2 * 0.97).toFixed(1)}, abs(q.x));
+    return vora * cap;
+  }
   float waveHeight(vec2 p) {
     vec2 q = flowCoords(p);
     float t = uTime;
     float h = 0.11 * sin(q.x * 2.1 - t * 3.2 + 1.6 * sin(q.y * 1.2 + t * 0.5));
     h += 0.06 * sin(q.x * 4.3 - t * 5.6 + q.y * 2.3);
     h += 0.10 * (noise(vec2(q.x * 1.3 - t * 3.8, q.y * 2.2)) - 0.5);
-    return h;
+    return h * riu(q);
   }
 `;
 
@@ -56,16 +64,15 @@ const VERTEX = /* glsl */ `
   ${COMU}
   varying vec3 vPos;
   void main() {
-    vec3 p = position;
+    vec3 p = (modelMatrix * vec4(position, 1.0)).xyz;
     p.y = waveHeight(p.xz);
     vPos = p;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+    gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
   }
 `;
 
 const FRAGMENT = /* glsl */ `
   ${COMU}
-  uniform vec4 uRoques[${ROQUES}];
   varying vec3 vPos;
 
   void main() {
@@ -86,19 +93,9 @@ const FRAGMENT = /* glsl */ `
     float escuma = smoothstep(0.0, 0.17, h) * smoothstep(0.3, 0.6, ratlla * 2.3);
     escuma += smoothstep(0.58, 0.85, ratlla * 2.3) * 0.45;
 
-    // Escuma al voltant de cada roca i una estela cap aigües avall.
-    vec2 perp = vec2(-uFlow.y, uFlow.x);
-    for (int i = 0; i < ${ROQUES}; i++) {
-      vec4 r = uRoques[i];
-      vec2 rel = p - r.xy;
-      float dist = length(rel);
-      float anell = 1.0 - smoothstep(0.0, 0.5, dist - r.z);
-      float llarg = dot(rel, uFlow);
-      float ample = dot(rel, perp);
-      float estela = step(0.0, llarg) * exp(-llarg * 0.17) * (1.0 - smoothstep(r.z * 0.7, r.z * 1.5 + llarg * 0.22, abs(ample)));
-      float soroll = 0.55 + 0.9 * noise(vec2(llarg * 1.3 - t * 5.0, ample * 4.5 + float(i)));
-      escuma = max(escuma, max(anell * 0.85, estela * 0.9) * clamp(soroll, 0.0, 1.0));
-    }
+    // Escuma a les vores del riu, on l'aigua es trenca contra la riba.
+    float vora = smoothstep(uAmple * 0.5 - 0.7, uAmple * 0.5 - 0.05, abs(q.y));
+    escuma = max(escuma, vora * smoothstep(0.25, 0.6, noise(vec2(q.x * 1.6 - t * 4.0, q.y * 6.0)) + 0.25));
     escuma = clamp(escuma, 0.0, 1.0);
 
     // Color: fosc al fons dels sots, més clar a les crestes, i el reflex del cel segons l'angle.
@@ -113,9 +110,8 @@ const FRAGMENT = /* glsl */ `
     col = mix(col, vec3(0.95, 0.98, 1.0), escuma);
 
     // Transparent: es veu el terra a través; s'esvaeix cap a la vora del pla.
-    float alfa = clamp(0.5 + fresnel * 0.3 + escuma * 0.45 + brillant * 0.3, 0.0, 0.95);
-    float dist = length(p);
-    alfa *= 1.0 - smoothstep(${((COSTAT / 2) * 0.62).toFixed(1)}, ${((COSTAT / 2) * 0.95).toFixed(1)}, dist);
+    float alfa = clamp(0.55 + fresnel * 0.3 + escuma * 0.45 + brillant * 0.3, 0.0, 0.95);
+    alfa *= riu(q);
     gl_FragColor = vec4(col, alfa);
   }
 `;
@@ -156,22 +152,27 @@ export class AiguaThree {
   private readonly uniformes = {
     uTime: { value: 0 },
     uFlow: { value: new THREE.Vector2(1, 0) },
-    uRoques: { value: Array.from({ length: ROQUES }, () => new THREE.Vector4(1e4, 1e4, 0.1, 0)) },
+    uAmple: { value: AMPLE_RIU },
   };
   private readonly liberables: { dispose(): void }[] = [];
-  private readonly roques: { x: number; z: number; r: number }[] = [];
   private readonly gotes: Gota[] = [];
   private readonly gotesPos: Float32Array;
   private readonly gotesAttr: THREE.BufferAttribute;
   private readonly gotesGeo: THREE.BufferGeometry;
+  private readonly aigua: THREE.Mesh;
   private flux: number | null = null;
   private fx = 1;
   private fz = 0;
   private w = 0;
   private h = 0;
 
-  /** Llança si el mòbil no pot crear un context WebGL. */
-  constructor() {
+  /**
+   * `rumbRiu`: cap a on corre el riu (graus des del nord, sentit horari), p. ex. el del carrer; sense
+   * ell, corre cap on mira el jugador en la primera lectura. `ample`: ample del riu (m).
+   * Llança si el mòbil no pot crear un context WebGL.
+   */
+  constructor(private readonly rumbRiu: number | null = null, ample: number = AMPLE_RIU) {
+    this.uniformes.uAmple.value = ample;
     this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: "high-performance" });
     this.canvas = this.renderer.domElement;
     this.renderer.setPixelRatio(1);
@@ -179,14 +180,9 @@ export class AiguaThree {
     this.camera.rotation.order = "YXZ";
     this.camera.position.set(0, ALCADA_ULLS, 0);
 
-    // Llum de les roques.
-    this.escena.add(new THREE.HemisphereLight(0xcfe6ff, 0x39484c, 1.6));
-    const sol = new THREE.DirectionalLight(0xfff1d6, 1.8);
-    sol.position.set(4, 7, 3);
-    this.escena.add(sol);
-
     // Aigua.
-    const geoAigua = new THREE.PlaneGeometry(COSTAT, COSTAT, SUBDIVISIONS, SUBDIVISIONS);
+    const amplada = this.uniformes.uAmple.value + 2 * MARGE;
+    const geoAigua = new THREE.PlaneGeometry(amplada, LLARG, Math.round(amplada / 0.17), Math.round(LLARG / 0.33));
     geoAigua.rotateX(-Math.PI / 2);
     const matAigua = new THREE.ShaderMaterial({
       uniforms: this.uniformes,
@@ -196,35 +192,11 @@ export class AiguaThree {
       depthWrite: false,
     });
     const aigua = new THREE.Mesh(geoAigua, matAigua);
+    this.aigua = aigua;
     aigua.frustumCulled = false;
     aigua.renderOrder = 2;
     this.escena.add(aigua);
     this.liberables.push(geoAigua, matAigua);
-
-    // Roques, mig enfonsades a l'aigua.
-    const matRoca = new THREE.MeshLambertMaterial({ color: 0x66767b, flatShading: true });
-    this.liberables.push(matRoca);
-    for (let i = 0; i < ROQUES; i++) {
-      const dist = i < 3 ? alea(2, 4.5) : alea(3.5, 16);
-      const angle = Math.random() * Math.PI * 2;
-      const r = alea(0.3, 0.7) * (0.7 + dist / 16);
-      const x = Math.sin(angle) * dist;
-      const z = -Math.cos(angle) * dist;
-      this.roques.push({ x, z, r });
-      this.uniformes.uRoques.value[i].set(x, z, r * 0.9, 0);
-      const geo = new THREE.IcosahedronGeometry(r, 2);
-      const pos = geo.attributes.position;
-      for (let k = 0; k < pos.count; k++) {
-        const f = 1 + alea(-0.13, 0.13);
-        pos.setXYZ(k, pos.getX(k) * f * 1.15, pos.getY(k) * f * 0.8, pos.getZ(k) * f);
-      }
-      geo.computeVertexNormals();
-      const roca = new THREE.Mesh(geo, matRoca);
-      roca.position.set(x, r * 0.15, z);
-      roca.rotation.y = Math.random() * Math.PI;
-      this.escena.add(roca);
-      this.liberables.push(geo);
-    }
 
     // Gotes (punts additius).
     this.gotesPos = new Float32Array(GOTES_MAX * 3).fill(1e4);
@@ -259,22 +231,24 @@ export class AiguaThree {
   }
 
   private actualitzaGotes(dt: number) {
-    // Les roques esquitxen de tant en tant, cap amunt i una mica aigües avall.
-    for (const roca of this.roques) {
-      if (Math.random() < dt * 3.5 && this.gotes.length < GOTES_MAX - 3) {
-        for (let k = 0; k < 3; k++) {
-          const i = this.gotes.length;
-          this.gotes.push({
-            vida: alea(0.5, 1),
-            edat: 0,
-            vx: alea(-0.6, 0.6) + this.fx * 1.2,
-            vy: alea(1.6, 3.4),
-            vz: alea(-0.6, 0.6) + this.fz * 1.2,
-          });
-          this.gotesPos[i * 3] = roca.x + alea(-roca.r, roca.r) * 0.6;
-          this.gotesPos[i * 3 + 1] = roca.r * 0.8;
-          this.gotesPos[i * 3 + 2] = roca.z + alea(-roca.r, roca.r) * 0.6;
-        }
+    // De tant en tant, una esquitxada en un punt del riu (a prop del jugador, on es veu).
+    if (Math.random() < dt * 9 && this.gotes.length < GOTES_MAX - 4) {
+      const llarg = alea(-3, 14);
+      const ample = alea(-0.5, 0.5) * this.uniformes.uAmple.value;
+      const cx = this.fx * llarg - this.fz * ample;
+      const cz = this.fz * llarg + this.fx * ample;
+      for (let k = 0; k < 4; k++) {
+        const i = this.gotes.length;
+        this.gotes.push({
+          vida: alea(0.5, 1),
+          edat: 0,
+          vx: alea(-0.6, 0.6) + this.fx * 1.5,
+          vy: alea(1.6, 3.4),
+          vz: alea(-0.6, 0.6) + this.fz * 1.5,
+        });
+        this.gotesPos[i * 3] = cx + alea(-0.2, 0.2);
+        this.gotesPos[i * 3 + 1] = 0.05;
+        this.gotesPos[i * 3 + 2] = cz + alea(-0.2, 0.2);
       }
     }
     for (let i = this.gotes.length - 1; i >= 0; i--) {
@@ -300,11 +274,14 @@ export class AiguaThree {
   /** Avança la simulació `dt` segons i dibuixa amb la mirada donada al canvas fora de pantalla. */
   pinta(dt: number, mirada: Mirada) {
     if (this.flux === null) {
-      // El corrent va d'esquerra a dreta de la pantalla segons la primera lectura.
-      this.flux = (mirada.rumb + 90) * RAD;
+      // Amb el rumb del carrer, el riu hi va al llarg; sinó, cap endavant de la primera mirada.
+      this.flux = (this.rumbRiu ?? mirada.rumb) * RAD;
       this.fx = Math.sin(this.flux);
       this.fz = -Math.cos(this.flux);
       this.uniformes.uFlow.value.set(this.fx, this.fz);
+      // La cinta (llarga en local z) s'orienta cap al corrent.
+      this.aigua.rotation.y = Math.atan2(this.fx, this.fz);
+      this.aigua.updateMatrixWorld();
     }
     this.uniformes.uTime.value += dt;
     this.actualitzaGotes(dt);

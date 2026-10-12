@@ -44,11 +44,16 @@ export interface ExtraAr {
    */
   figura?: "3d" | "plana";
   /**
-   * Només per a "ulls-siluetes" i "guies". En "ulls-siluetes": direcció del camí que fa el jugador, de `des` cap a `cap`. La figura apareix en aquesta
+   * Només per a "ulls-siluetes", "guies" i "aigua". En "ulls-siluetes": direcció del camí que fa el jugador, de `des` cap a `cap`. La figura apareix en aquesta
    * direcció (al davant) o a la contrària (al darrere), la que quedi més a prop d'on mira el jugador.
    * Sense camí, apareix on mira el mòbil.
    */
   cami?: { des: PuntGps; cap: PuntGps };
+  /**
+   * Només per a "aigua": ample del riu en metres (3 per defecte). El riu corre en el sentit de `cami`
+   * (si n'hi ha: el carrer on som) i passa pels peus del jugador.
+   */
+  ampleRiu?: number;
   /** Només per a "fantasmes": el punt de llum (portal) es col·loca a aquesta posició GPS; si no es pot, davant del jugador. */
   puntLlum?: PuntGps;
   /** Text del botó de la pantalla de la fita (o del pas), o del vídeo del màster que hi porta. */
@@ -164,13 +169,15 @@ export const EXTRES_AR: ExtraAr[] = [
     id: "aigua-rapids",
     fitaId: "font-ferro",
     escena: "aigua",
+    ampleRiu: 3,
+    // PENDENT: `cami` amb dos punts GPS del carrer (com a "aire-ulls") perquè el riu en segueixi la direcció.
     boto: "🌊 Mirar l'aigua als peus",
     introduccio: {
       titol: "Ràpids als peus",
       entrada: "L'aigua us corre pels peus. Això és el que veureu:",
       passos: [
         { icona: "👇", text: "Abaixeu el mòbil cap als peus i gireu-lo a poc a poc al vostre voltant." },
-        { icona: "🌊", text: "Un riu de ràpids us passa pel davant: escuma, roques i esquitxades." },
+        { icona: "🌊", text: "Un riu de ràpids d'uns 3 metres d'ample us passa pels peus: ones, escuma i esquitxades." },
         { icona: "🧍", text: "Els companys es queden per damunt de l'aigua, com si hi caminessin." },
       ],
       permisos: {
