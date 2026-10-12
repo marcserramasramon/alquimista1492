@@ -390,10 +390,11 @@ class Fantasma {
     let obert = Math.max(0, 1 - Math.abs(cicle - 0.9) / 0.06);
     obert = obert * obert * (3 - 2 * obert);
     obert = Math.max(obert, limita(this.mirat / 600, 0, 1), this.veu);
-    // Vermell apagat per defecte; vermell viu i una mica més grans quan el fantasma mira el jugador.
+    // Vermell apagat per defecte; vermell viu i més grans quan el fantasma mira el jugador.
     const viu = Math.max(this.veu, limita(this.mirat / 600, 0, 1));
-    this.ullL.scale.x = this.ullR.scale.x = 0.085 * (1 + 0.45 * viu);
-    this.ullL.scale.y = this.ullR.scale.y = 0.085 * (1 + 0.45 * viu) * (0.08 + 0.92 * obert);
+    // Mirant el jugador: +60 % d'ample i +100 % d'alçada.
+    this.ullL.scale.x = this.ullR.scale.x = 0.085 * (1 + 0.6 * viu);
+    this.ullL.scale.y = this.ullR.scale.y = 0.085 * (1 + 1.0 * viu) * (0.08 + 0.92 * obert);
     this.matUlls.color.setRGB(0.5 + 0.5 * viu, 0.12 + 0.13 * viu, 0.12 + 0.13 * viu);
     this.matUlls.opacity = (0.25 + 0.75 * obert) * (0.5 + 0.5 * viu) * this.fade;
     this.matHalo.opacity = 0.12 * this.fade * Math.min(this.glow, 2);
@@ -1354,7 +1355,7 @@ export class MonFantasmes {
         const d = Math.hypot(vx, vy, vz) || 1;
         const cosA = (vx * this.avant.x + vy * this.avant.y + vz * this.avant.z) / d;
         const mira = f.fade > 0.3 && d < 32 && Math.acos(limita(cosA, -1, 1)) < 28 * RAD ? 1 : 0;
-        f.veu += (mira - f.veu) * Math.min(1, dt * 3);
+        f.veu += limita(mira - f.veu, -dt, dt); // 1 s d'un extrem a l'altre
       }
       f.actualitza(dt, this.t, cam);
       f.glow += (1 - f.glow) * Math.min(1, dt * 3);
