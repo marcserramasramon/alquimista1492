@@ -111,7 +111,7 @@ export function SorollFocSvg({ soroll, className }: { soroll: Soroll; className?
         <PecaNoise key={`sota-${i}`} p={p} />
       ))}
       {objectiu && soroll.puntsObjectiu.length > 0 && (
-        <g clipPath={`url(#${clipObjectiu})`} opacity={0.85}>
+        <g clipPath={`url(#${clipObjectiu})`}>
           {soroll.puntsObjectiu.map((p, i) => (
             <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={p.r.toFixed(2)} fill={p.color} />
           ))}
