@@ -45,6 +45,8 @@ const TAIL_G = TAIL_LEN * 1.5;
 const SEG_G = TAIL_G / (N - 1);
 const NECK = 0.55;
 const ALCADA_CAMERA = 1.5;
+/** Alçada del terra al món (m). La càmera és a 1,5 m, però al mòbil el terra real queda més avall del que sembla: -1,5 el posa 1,5 m més baix. */
+const TERRA_Y = -1.5;
 const FOV_HORITZONTAL = 52;
 
 /** Zona on viuen els fantasmes, al voltant del jugador (m). */
@@ -159,7 +161,7 @@ const FRAGMENT = `
     float thr = (1.0 - uFade) * 1.25 - 0.1;                     // dissolució amb soroll: fade 1 = sencer, 0 = res
     a *= smoothstep(thr - 0.12, thr + 0.12, n2);
     a *= mix(1.0, 0.5, smoothstep(8.0, 48.0, length(vV)));      // perspectiva atmosfèrica
-    a *= smoothstep(0.0, 0.35, vWY);                            // la part que queda sota terra s'amaga
+    a *= smoothstep(${TERRA_Y.toFixed(2)}, ${(TERRA_Y + 0.35).toFixed(2)}, vWY);                            // la part que queda sota terra s'amaga
     gl_FragColor = vec4(col, a);
   }`;
 
@@ -466,7 +468,7 @@ class Portal {
     this.z = z;
     this.alcada = alea(PORTAL_ALCADA_COLUMNA[0], PORTAL_ALCADA_COLUMNA[1]);
     this.grup = new T.Group();
-    this.grup.position.set(x, 0, z);
+    this.grup.position.set(x, TERRA_Y, z);
 
     // Columna de llum: cilindre obert, del color de la base a baix al de l'altre a dalt.
     this.geoColumna = new T.CylinderGeometry(0.6, 1.05, this.alcada, 28, 1, true);
@@ -544,7 +546,7 @@ class Portal {
   mou(x: number, z: number) {
     this.x = x;
     this.z = z;
-    this.grup.position.set(x, 0, z);
+    this.grup.position.set(x, TERRA_Y, z);
   }
 
   /** Distància horitzontal d'un punt al portal. */
@@ -738,7 +740,7 @@ class Esperit {
       this.t += dt;
       this.angle += dt * (2.2 + this.t * 1.5);
       const r = 0.9 * Math.max(0, 1 - this.t / 3.4);
-      head.set(this.portal.x + Math.cos(this.angle) * r, 1.2 + this.t * 2.4, this.portal.z + Math.sin(this.angle) * r);
+      head.set(this.portal.x + Math.cos(this.angle) * r, TERRA_Y + 1.2 + this.t * 2.4, this.portal.z + Math.sin(this.angle) * r);
       this.fade = Math.max(0, 1 - this.t / 3.2);
       this.grup.scale.setScalar(s * (0.35 + 0.65 * this.fade));
       vel.set(0, 0, 0);
@@ -1278,7 +1280,7 @@ export class MonFantasmes {
             f.home.y = h.y;
             f.home.z = h.z;
             const portal = this.portals[Math.floor(Math.random() * this.portals.length)];
-            f.colloca(portal.x, -TAIL_G * f.s - 0.6, portal.z);
+            f.colloca(portal.x, TERRA_Y - TAIL_G * f.s - 0.6, portal.z);
             f.objectiu.set(portal.x, Math.max(h.y, 2.2), portal.z);
             f.estat = "emergeix";
             f.fade = 1;
@@ -1305,8 +1307,8 @@ export class MonFantasmes {
             f.objectiu.set(pd.x, Math.max(f.head.y, 1.8), pd.z);
             if (Math.hypot(f.head.x - pd.x, f.head.z - pd.z) < 1.8) f.fase2 = 1;
           } else {
-            f.objectiu.set(pd.x, -TAIL_G * f.s - 0.8, pd.z);
-            if (f.head.y < -TAIL_G * f.s * 0.6) {
+            f.objectiu.set(pd.x, TERRA_Y - TAIL_G * f.s - 0.8, pd.z);
+            if (f.head.y < TERRA_Y - TAIL_G * f.s * 0.6) {
               f.fade = 0;
               f.estat = "ocult";
               f.espera = alea(6, 11);
