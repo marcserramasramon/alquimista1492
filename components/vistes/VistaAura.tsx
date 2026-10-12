@@ -1,15 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { EscenaFoc } from "@/components/ar/EscenaFoc";
-import { precarregaContorn, type EstatContorn } from "@/components/ar/foc/contorn";
-import type { EsdevenimentSalt } from "@/components/ar/foc/mon";
+import { EscenaAura } from "@/components/ar/EscenaAura";
+import { precarregaContorn, type EstatContorn } from "@/components/ar/aura/contorn";
+import type { EsdevenimentPuls } from "@/components/ar/aura/mon";
 import { IntroduccioExtraAr } from "@/components/vistes/IntroduccioExtraAr";
 import type { ExtraAr } from "@/content/public/extres";
 import { useOrientacio } from "@/lib/orientacio";
-import { aturarSoFoc, iniciarSoFoc, silenciarFoc, sonarSaltFoc } from "@/lib/sorollArFoc";
+import { aturarSoAura, iniciarSoAura, silenciarAura, sonarPulsAura } from "@/lib/sorollAura";
 
-export interface VistaFocProps {
+export interface VistaAuraProps {
   extra: ExtraAr;
   /** Torna a la partida. */
   onTornar: () => void;
@@ -20,10 +20,11 @@ export interface VistaFocProps {
 type EstatCamera = "esperant" | "activa" | "no-disponible";
 
 /**
- * Extra del foc (fita de Foc): càmera de fons i, a sobre, un contorn de flames a les persones i arcs
- * de foc que surten de terra i hi tornen a entrar. És un divertimento: no desa res ni arriba al servidor.
+ * Extra de l'aura: càmera de fons i, a sobre, una aura daurada a les persones (contorn, resplendors,
+ * anells d'energia i un cos de llum), llumetes que s'enlairen i una columna de llum al fons. És un
+ * divertimento: no desa res ni arriba al servidor.
  */
-export function VistaFoc({ extra, onTornar, directa = false }: VistaFocProps) {
+export function VistaAura({ extra, onTornar, directa = false }: VistaAuraProps) {
   const [iniciat, setIniciat] = useState(directa);
   const [camera, setCamera] = useState<EstatCamera>("esperant");
   const video = useRef<HTMLVideoElement>(null);
@@ -35,11 +36,11 @@ export function VistaFoc({ extra, onTornar, directa = false }: VistaFocProps) {
   // ?debug=1 a l'adreça: mostra a la pantalla l'estat del contorn.
   const depuracio = useRef("");
   const [textDepuracio, setTextDepuracio] = useState<string | null>(null);
-  const alSalt = useCallback((e: EsdevenimentSalt) => sonarSaltFoc(e.pan), []);
+  const alPuls = useCallback((e: EsdevenimentPuls) => sonarPulsAura(e.pan), []);
 
   // Els sensors, la càmera i el so es demanen en tocar el botó (iOS i Android ho exigeixen).
   async function començar() {
-    iniciarSoFoc();
+    iniciarSoAura();
     if (new URLSearchParams(window.location.search).get("debug") === "1") setTextDepuracio("");
     setIniciat(true);
     await demanar();
@@ -77,7 +78,7 @@ export function VistaFoc({ extra, onTornar, directa = false }: VistaFocProps) {
   useEffect(() => {
     return () => {
       flux.current?.getTracks().forEach((p) => p.stop());
-      aturarSoFoc();
+      aturarSoAura();
     };
   }, []);
 
@@ -90,11 +91,11 @@ export function VistaFoc({ extra, onTornar, directa = false }: VistaFocProps) {
       )}
 
       {iniciat && (
-        <EscenaFoc
+        <EscenaAura
           mirada={mirada}
           arrossegar={estatSensors !== "actiu"}
           video={video}
-          alSalt={alSalt}
+          alPuls={alPuls}
           alEstatContorn={setContorn}
           depuracio={depuracioActiva ? depuracio : null}
         />
@@ -110,11 +111,11 @@ export function VistaFoc({ extra, onTornar, directa = false }: VistaFocProps) {
         <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center gap-2 pr-24 pl-5 pt-[max(1rem,env(safe-area-inset-top))]">
           {camera === "no-disponible" && (
             <p className="rounded-xl bg-black/60 px-3 py-2 text-center text-sm font-bold">
-              No hi ha càmera: només es veuen els arcs de foc.
+              No hi ha càmera: només es veuen les llums.
             </p>
           )}
           {camera === "activa" && contorn === "carregant" && (
-            <p className="rounded-xl bg-black/60 px-3 py-2 text-center text-sm font-bold">Encenent els contorns…</p>
+            <p className="rounded-xl bg-black/60 px-3 py-2 text-center text-sm font-bold">Despertant l&apos;aura…</p>
           )}
           {camera === "activa" && contorn === "no" && (
             <p className="rounded-xl bg-black/60 px-3 py-2 text-center text-sm font-bold">
@@ -136,7 +137,7 @@ export function VistaFoc({ extra, onTornar, directa = false }: VistaFocProps) {
           type="button"
           aria-pressed={silenci}
           onClick={() => {
-            silenciarFoc(!silenci);
+            silenciarAura(!silenci);
             setSilenci(!silenci);
           }}
           className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 z-10 flex h-12 min-w-12 items-center justify-center rounded-full border-2 border-paper-3/60 bg-black/60 px-4 text-lg font-bold"

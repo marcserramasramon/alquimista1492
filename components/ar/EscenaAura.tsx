@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, type RefObject } from "react";
-import { ContornPersones, type EstatContorn } from "@/components/ar/foc/contorn";
-import { FOV_HORITZONTAL, MonFoc, type EsdevenimentSalt } from "@/components/ar/foc/mon";
+import { ContornPersones, type EstatContorn } from "@/components/ar/aura/contorn";
+import { FOV_HORITZONTAL, MonAura, type EsdevenimentPuls } from "@/components/ar/aura/mon";
 import type { Mirada } from "@/lib/orientacio";
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
   arrossegar: boolean;
   /** Vídeo de la càmera, per treure'n el contorn de les persones; null si no hi ha càmera. */
   video: RefObject<HTMLVideoElement | null> | null;
-  alSalt?: (e: EsdevenimentSalt) => void;
+  alPuls?: (e: EsdevenimentPuls) => void;
   alEstatContorn?: (estat: EstatContorn) => void;
   /** ?debug=1: aquí s'hi escriu l'estat del contorn. */
   depuracio?: RefObject<string> | null;
@@ -21,29 +21,29 @@ interface Props {
 /** Resolució del dibuix respecte de la pantalla: els resplendors no necessiten píxels de sobra. */
 const RESOLUCIO = 0.75;
 
-/** Escena del foc sobre la càmera: contorn de les persones i arcs de flames. Canvas 2D transparent. */
-export function EscenaFoc({ mirada, arrossegar, video, alSalt, alEstatContorn, depuracio }: Props) {
+/** Escena de l'aura sobre la càmera: aura daurada a les persones i llums al fons. Canvas 2D transparent. */
+export function EscenaAura({ mirada, arrossegar, video, alPuls, alEstatContorn, depuracio }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const manual = useRef<Mirada>({ rumb: 0, elevacio: 0 });
   const arrossegarRef = useRef(arrossegar);
   const videoRef = useRef(video);
-  const saltRef = useRef(alSalt);
+  const pulsRef = useRef(alPuls);
   const estatRef = useRef(alEstatContorn);
   const depuracioRef = useRef(depuracio);
 
   useEffect(() => {
     arrossegarRef.current = arrossegar;
     videoRef.current = video;
-    saltRef.current = alSalt;
+    pulsRef.current = alPuls;
     estatRef.current = alEstatContorn;
     depuracioRef.current = depuracio;
-  }, [arrossegar, video, alSalt, alEstatContorn, depuracio]);
+  }, [arrossegar, video, alPuls, alEstatContorn, depuracio]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
-    const mon = new MonFoc((e) => saltRef.current?.(e));
+    const mon = new MonAura((e) => pulsRef.current?.(e));
     const contorn = new ContornPersones();
     let ultimEstat: EstatContorn | null = null;
     // El model es comença a carregar de seguida, mentre el mòbil encara demana el permís de la càmera.
@@ -78,9 +78,9 @@ ${errorContorn}` : ""}`;
         estatRef.current?.(contorn.estat);
       }
       const lectura = arrossegarRef.current ? manual.current : (mirada.current ?? manual.current);
-      // Primer les flames (fons), després s'hi retalla la silueta de les persones i, a sobre, el seu contorn.
-      mon.pinta(ctx, w, h, dt, lectura);
-      // Un error al contorn no ha d'aturar el bucle ni les flames.
+      // Primer les llums (fons), després s'hi retalla la silueta de les persones i, a sobre, el seu contorn.
+      mon.pinta(ctx, w, h, dt, lectura, ara);
+      // Un error al contorn no ha d'aturar el bucle ni les llums.
       try {
         if (v && w > 0 && h > 0) {
           contorn.tapa(ctx, w, h);

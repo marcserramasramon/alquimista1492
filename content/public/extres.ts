@@ -6,7 +6,7 @@
  * Res d'aquí és una solució: es pot enviar al client sense risc.
  */
 
-export type EscenaAr = "ulls-siluetes" | "fantasmes" | "foc" | "guies";
+export type EscenaAr = "ulls-siluetes" | "fantasmes" | "aura" | "guies";
 
 export interface PuntGps {
   latitud: number;
@@ -130,17 +130,17 @@ export const EXTRES_AR: ExtraAr[] = [
     },
   },
   {
-    id: "foc-flames",
+    id: "aura-daurada",
     fitaId: "foc",
-    escena: "foc",
-    boto: "🔥 Mirar a través del foc",
+    escena: "aura",
+    boto: "✨ Veure l'aura",
     introduccio: {
-      titol: "Foc a la foscor",
-      entrada: "El foc us envolta. Això és el que veureu:",
+      titol: "L'aura dels cinc elements",
+      entrada: "Cada ànima desprèn una llum. Això és el que veureu:",
       passos: [
-        { icona: "👀", text: "Aixequeu el mòbil i gireu-lo a poc a poc al vostre voltant." },
-        { icona: "🔥", text: "Arcs de flames surten de terra i hi tornen a entrar, com dofins." },
-        { icona: "🧍", text: "Enfoqueu els companys: el foc els dibuixarà un contorn vermell." },
+        { icona: "👀", text: "Aixequeu el mòbil i gireu-lo a poc a poc: llumetes daurades s'enlairen al vostre voltant." },
+        { icona: "🧍", text: "Enfoqueu els companys: el seu cos s'omplirà de llum i una aura els envoltarà." },
+        { icona: "🌟", text: "Al fons, una columna de llum puja cap al cel. Si la busqueu, la trobareu." },
       ],
       permisos: {
         titol: "El mòbil us demanarà permís per a:",
@@ -148,15 +148,15 @@ export const EXTRES_AR: ExtraAr[] = [
           { icona: "📷", text: "Càmera: per veure el que teniu al davant. La imatge no es grava ni s'envia enlloc." },
           { icona: "🧭", text: "Moviment i brúixola: per saber cap a on mireu." },
         ],
-        nota: "Si no en voleu donar algun, es pot veure igualment: arrossegueu el dit per mirar. Sense càmera no hi ha contorns.",
+        nota: "Si no en voleu donar algun, es pot veure igualment: arrossegueu el dit per mirar. Sense càmera no hi ha aura.",
       },
       consells: [
         "Mireu on trepitgeu: no camineu mentre mireu la pantalla.",
-        "Cal xarxa: els contorns es calculen amb un model que es baixa en obrir l'extra.",
+        "Cal xarxa: l'aura es calcula amb un model que es baixa en obrir l'extra.",
         "Això no té res a veure amb la prova de la fita: no hi trobareu cap pista.",
       ],
       nota: "És només un extra: no canvia res de la partida.",
-      boto: "Encendre el foc",
+      boto: "Despertar l'aura",
     },
   },
   {

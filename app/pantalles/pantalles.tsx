@@ -52,7 +52,7 @@ import { GuiaManual } from "@/components/player/GuiaManual";
 import { VistaExtraAr } from "@/components/vistes/VistaExtraAr";
 import { VistaFantasmes } from "@/components/vistes/VistaFantasmes";
 import { VistaGuiesAnimes } from "@/components/vistes/VistaGuiesAnimes";
-import { VistaFoc } from "@/components/vistes/VistaFoc";
+import { VistaAura } from "@/components/vistes/VistaAura";
 import { EXTRES_AR, getExtraAr } from "@/content/public/extres";
 import { MANUAL_ARRIBAR, MANUAL_HUB, MANUAL_RESOLDRE } from "@/content/public/textos";
 import type { AvisEquip } from "@/components/vistes/PanellAvisosMaster";
@@ -833,18 +833,18 @@ export const PANTALLES: Pantalla[] = [
     render: () => <VistaGuiesAnimes extra={getExtraAr("anima-guies")!} onTornar={noop} directa />,
   },
   {
-    id: "extra-foc-introduccio",
+    id: "extra-aura-introduccio",
     grup: "hub",
-    titol: "Extra foc · explicació abans de la càmera",
-    descripcio: "Fita de Foc: arcs de flames i contorn de foc a les persones; què demanarà el mòbil. El text és a content/public/extres.ts.",
-    render: () => <VistaFoc extra={EXTRES_AR[2]} onTornar={noop} />,
+    titol: "Extra aura · explicació abans de la càmera",
+    descripcio: "Aura daurada a les persones i llums al fons; què demanarà el mòbil. El text és a content/public/extres.ts.",
+    render: () => <VistaAura extra={EXTRES_AR[2]} onTornar={noop} />,
   },
   {
-    id: "extra-foc-escena",
+    id: "extra-aura-escena",
     grup: "hub",
-    titol: "Extra foc · arcs de flames",
-    descripcio: "L'escena sobre fons negre (sense càmera ni contorns); arrossegueu per mirar al voltant.",
-    render: () => <VistaFoc extra={EXTRES_AR[2]} onTornar={noop} directa />,
+    titol: "Extra aura · llums",
+    descripcio: "L'escena sobre fons negre (sense càmera ni aura de persones); arrossegueu per mirar al voltant.",
+    render: () => <VistaAura extra={EXTRES_AR[2]} onTornar={noop} directa />,
   },
   {
     id: "extra-ar-escena",
