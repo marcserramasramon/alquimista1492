@@ -5,6 +5,7 @@ import { MissatgesMaster } from "@/components/player/MissatgesMaster";
 import { MusicaFons } from "@/components/player/MusicaFons";
 import { TempsPartida } from "@/components/player/TempsPartida";
 import { FranjaPartidaProvider } from "@/components/player/FranjaPartida";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 // Títols: gòtica llegible (1472). Text: humanista amb arrel cal·ligràfica.
@@ -69,6 +70,7 @@ export default function RootLayout({
         {/* Música de l'entrada fins a l'espera. */}
         <MusicaFons />
         <BarraScroll />
+        <Analytics />
       </body>
     </html>
   );
