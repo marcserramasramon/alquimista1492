@@ -145,7 +145,7 @@ export function generaSoroll({
   // Trama de punts (halftone) de la resposta: graella de cercles (clipats a
   // la seva forma pel component), tots de la mateixa mida i del blau de la
   // resposta.
-  const pasHalftone = 9;
+  const pasHalftone = 6.5;
   const radiHalftone = radiPunts;
   const margeHalftone = midaObjectiuFinal * 0.65;
   const minXHalftone = Math.max(0, xObjectiu - margeHalftone);
