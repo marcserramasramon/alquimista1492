@@ -40,6 +40,9 @@ const RAD = Math.PI / 180;
 const TAIL_LEN = 3.8;
 const N = 11;
 const SEG = TAIL_LEN / (N - 1);
+/** Els fantasmes grans tenen el cos un 50 % més llarg per sota que les ànimes petites. */
+const TAIL_G = TAIL_LEN * 1.5;
+const SEG_G = TAIL_G / (N - 1);
 const NECK = 0.55;
 const ALCADA_CAMERA = 1.5;
 const FOV_HORITZONTAL = 52;
@@ -75,12 +78,12 @@ const VERTEX = `
   float capaR(float d) {
     float pinch = smoothstep(0.0, 0.18, d);
     float sh = smoothstep(0.10, 0.46, d);
-    float bd = smoothstep(0.5, ${TAIL_LEN.toFixed(2)}, d);
+    float bd = smoothstep(0.5, ${TAIL_G.toFixed(2)}, d);
     float pad = exp(-pow((d - 0.46) / 0.17, 2.0));
     return 0.62 - 0.12 * pinch + 0.52 * sh + 0.14 * pad + 0.22 * bd;
   }
   void main() {
-    float TL = ${TAIL_LEN.toFixed(2)};
+    float TL = ${TAIL_G.toFixed(2)};
     float v = clamp(position.y > 0.0 ? position.y / 1.28 : position.y / TL, -1.0, 1.0);
     float th = atan(position.z, position.x);
     float bk = pow(max(0.0, -sin(th + uFace)), 1.3);
@@ -105,7 +108,7 @@ const VERTEX = `
       nc = normalize(vec3(cos(th), 0.2 + 1.3 * clamp(sl, 0.0, 1.5), sin(th)));
     }
     vec3 p = vec3(cos(th) * R, yy, sin(th) * R);
-    float wn = clamp((${NECK.toFixed(2)} - p.y) / ${(TAIL_LEN + NECK).toFixed(2)}, 0.0, 1.0);
+    float wn = clamp((${NECK.toFixed(2)} - p.y) / ${(TAIL_G + NECK).toFixed(2)}, 0.0, 1.0);
     float wob = sin(p.y * 3.0 + uTime * 3.0 + p.x * 2.0) * 0.035 + sin(p.x * 4.0 + p.z * 3.0 + uTime * 2.3) * 0.02;
     p.xz *= 1.0 + wob * (0.4 + wn * 1.6) + uWob * 0.12 * sin(p.y * 6.0 - uTime * 14.0);
     p.x += sin(p.y * 5.0 + uTime * 4.0) * 0.05 * wn;
@@ -149,7 +152,7 @@ const FRAGMENT = `
     col = mix(col, vec3(0.0), hole);
     vec3 q = vP * 1.7 + vec3(uTime * 0.10, -uTime * 0.38, uTime * 0.07);
     float n2 = vnoise(q) * 0.6 + vnoise(q * 2.3 + 7.0) * 0.4;
-    float mistH = smoothstep(${(-0.62 * TAIL_LEN).toFixed(2)}, ${(-1.04 * TAIL_LEN).toFixed(2)}, vP.y);   // la vora es converteix en boira
+    float mistH = smoothstep(${(-0.62 * TAIL_G).toFixed(2)}, ${(-1.04 * TAIL_G).toFixed(2)}, vP.y);   // la vora es converteix en boira
     col = mix(col, mix(uCore, vec3(1.0), 0.25) * 0.5, mistH * 0.85);
     float a = 0.97 * smoothstep(0.0, 0.2, ndv);                 // contorn que es dissol una mica
     a *= mix(1.0, smoothstep(0.15, 0.75, n2), mistH);
@@ -292,7 +295,7 @@ class Fantasma {
   colloca(x: number, y: number, z: number) {
     this.head.set(x, y, z);
     this.vel.set(0, 0, 0);
-    const sw = SEG * this.s;
+    const sw = SEG_G * this.s;
     for (let i = 0; i < N; i++) {
       this.cadena[i].set(x, y - i * sw, z);
       this.prev[i].copy(this.cadena[i]);
@@ -344,7 +347,7 @@ class Fantasma {
     this.cara.rotation.x += (limita(-Math.atan2(dy, hd), -0.6, 0.6) - this.cara.rotation.x) * 0.1;
 
     // Cua (Verlet), en unitats de món.
-    const sw = SEG * s;
+    const sw = SEG_G * s;
     const c = this.cadena;
     const prev = this.prev;
     c[0].copy(head);
@@ -862,6 +865,7 @@ export class MonFantasmes {
   private proximEsperitT = 1;
   private readonly mapPunt: THREE.Texture;
   private readonly geo: THREE.BufferGeometry;
+  private readonly geoEsperit: THREE.BufferGeometry;
   private readonly circle: THREE.BufferGeometry;
   private readonly mapUll: THREE.Texture;
   private readonly mapHalo: THREE.Texture;
@@ -892,23 +896,8 @@ export class MonFantasmes {
     this.avant = new T.Vector3();
 
     // Geometria del cos: esfera estirada (cap allargat cap amunt i cua llarga que es va afinant).
-    const g = new T.SphereGeometry(0.8, 48, 40);
-    const pos = g.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-      let x = pos.getX(i);
-      let y = pos.getY(i);
-      let z = pos.getZ(i);
-      if (y > 0) y *= 1.6;
-      if (y < 0) {
-        y *= TAIL_LEN / 0.8;
-        const s = Math.min(-y / TAIL_LEN, 1);
-        const k = 1 - 0.82 * Math.pow(s, 0.85);
-        x *= k;
-        z *= k;
-      }
-      pos.setXYZ(i, x, y, z);
-    }
-    this.geo = g;
+    this.geo = this.construeixCos(T, TAIL_G);
+    this.geoEsperit = this.construeixCos(T, TAIL_LEN);
     this.circle = new T.CircleGeometry(1, 20);
     this.mapUll = this.texturaRadial(["rgba(255,225,205,1)", "rgba(255,80,60,1)", "rgba(225,20,20,0.75)", "rgba(120,0,0,0)"], [0, 0.18, 0.5, 1]);
     this.mapHalo = this.texturaRadial(["rgba(120,220,255,0.9)", "rgba(60,150,255,0.28)", "rgba(20,60,200,0)"], [0, 0.35, 1]);
@@ -941,7 +930,7 @@ export class MonFantasmes {
       this.fantasmes.push(f);
     }
     for (let i = 0; i < QUANTITAT_ESPERITS; i++) {
-      const e = new Esperit(T, i, this.geo, this.circle, this.mapUll, this.mapHalo, this.uTime, this.escena);
+      const e = new Esperit(T, i, this.geoEsperit, this.circle, this.mapUll, this.mapHalo, this.uTime, this.escena);
       // Des del principi ja hi són, repartits a l'atzar dins la zona.
       const rumb = Math.random() * Math.PI * 2;
       const r = alea(RADI_MIN, RADI_MAX * 0.85);
@@ -953,6 +942,26 @@ export class MonFantasmes {
       e.fade = 1;
       this.esperits.push(e);
     }
+  }
+
+  private construeixCos(T: Tres, cua: number): THREE.BufferGeometry {
+    const g = new T.SphereGeometry(0.8, 48, 40);
+    const pos = g.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      let x = pos.getX(i);
+      let y = pos.getY(i);
+      let z = pos.getZ(i);
+      if (y > 0) y *= 1.6;
+      if (y < 0) {
+        y *= cua / 0.8;
+        const s = Math.min(-y / cua, 1);
+        const k = 1 - 0.82 * Math.pow(s, 0.85);
+        x *= k;
+        z *= k;
+      }
+      pos.setXYZ(i, x, y, z);
+    }
+    return g;
   }
 
   private texturaRadial(colors: string[], parades: number[]): THREE.Texture {
@@ -1269,7 +1278,7 @@ export class MonFantasmes {
             f.home.y = h.y;
             f.home.z = h.z;
             const portal = this.portals[Math.floor(Math.random() * this.portals.length)];
-            f.colloca(portal.x, -TAIL_LEN * f.s - 0.6, portal.z);
+            f.colloca(portal.x, -TAIL_G * f.s - 0.6, portal.z);
             f.objectiu.set(portal.x, Math.max(h.y, 2.2), portal.z);
             f.estat = "emergeix";
             f.fade = 1;
@@ -1296,8 +1305,8 @@ export class MonFantasmes {
             f.objectiu.set(pd.x, Math.max(f.head.y, 1.8), pd.z);
             if (Math.hypot(f.head.x - pd.x, f.head.z - pd.z) < 1.8) f.fase2 = 1;
           } else {
-            f.objectiu.set(pd.x, -TAIL_LEN * f.s - 0.8, pd.z);
-            if (f.head.y < -TAIL_LEN * f.s * 0.6) {
+            f.objectiu.set(pd.x, -TAIL_G * f.s - 0.8, pd.z);
+            if (f.head.y < -TAIL_G * f.s * 0.6) {
               f.fade = 0;
               f.estat = "ocult";
               f.espera = alea(6, 11);
@@ -1416,6 +1425,7 @@ export class MonFantasmes {
     for (const portal of this.portals) portal.dispose(this.escena);
     this.mapPunt.dispose();
     this.geo.dispose();
+    this.geoEsperit.dispose();
     this.circle.dispose();
     this.mapUll.dispose();
     this.mapHalo.dispose();
