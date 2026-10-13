@@ -60,7 +60,7 @@ export function opcionsSoroll(estil: "imatge" | "fons") {
 }
 
 /** Proporció de l'alçada del cartell que ocupa el número de la resposta (60% de l'1,9 original). */
-const PROPORCIO_MIDA_OBJECTIU = 1.14;
+const PROPORCIO_MIDA_OBJECTIU = 0.76;
 
 /** Fracció de les xifres vermelles originals que es dibuixen. */
 const PROPORCIO_VERMELLS = 1;
