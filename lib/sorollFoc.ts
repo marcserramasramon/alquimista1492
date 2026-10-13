@@ -56,7 +56,7 @@ export function alcadaSoroll(estil: "imatge" | "fons"): number {
 
 /** Opcions de generaSoroll segons l'estil del cartell. */
 export function opcionsSoroll(estil: "imatge" | "fons") {
-  return { alcada: alcadaSoroll(estil), quantitat: estil === "imatge" ? 1100 : 840 };
+  return { alcada: alcadaSoroll(estil), quantitat: estil === "imatge" ? 990 : 756 };
 }
 
 /** Proporció de l'alçada del cartell que ocupa el número de la resposta (60% de l'1,9 original). */
