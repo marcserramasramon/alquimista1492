@@ -65,8 +65,8 @@ const PROPORCIO_MIDA_OBJECTIU = 0.76;
 /** Fracció de les xifres vermelles originals que es dibuixen. */
 const PROPORCIO_VERMELLS = 1;
 
-/** Color de la resposta: un blau clar, l'únic blau del cartell. */
-export const BLAU_OBJECTIU = "#639ced";
+/** Color de la resposta: un blau fosc, l'únic blau del cartell. */
+export const BLAU_OBJECTIU = "#2f63c0";
 
 /** Radi dels punts de la trama de la resposta. */
 export const RADI_PUNTS_OBJECTIU = 2.7;
@@ -106,6 +106,7 @@ export function generaSoroll({
   midaObjectiu,
   colorObjectiu = BLAU_OBJECTIU,
   radiPunts = RADI_PUNTS_OBJECTIU,
+  colorsSoroll = COLORS_SOROLL,
 }: {
   resposta: string;
   llavor?: number;
@@ -119,6 +120,8 @@ export function generaSoroll({
   colorObjectiu?: string;
   /** Radi dels punts de la trama del número (per defecte RADI_PUNTS_OBJECTIU). */
   radiPunts?: number;
+  /** Colors de les xifres i els símbols del soroll; un color repetit pesa més (per defecte COLORS_SOROLL). No canvia la composició, només els colors. */
+  colorsSoroll?: string[];
 }): Soroll {
   const r = prng(llavor);
   const entre = (min: number, max: number) => min + r() * (max - min);
@@ -182,7 +185,7 @@ export function generaSoroll({
       if (esXifra && r() >= PROPORCIO_VERMELLS) continue;
       // Xifres i símbols tenen la mateixa paleta càlida (COLORS_SOROLL): només
       // la resposta és blava.
-      const color = tria(COLORS_SOROLL);
+      const color = tria(colorsSoroll);
       peces.push({
         x: cx + entre(-ampladaCella * 0.7, ampladaCella * 0.7),
         y: cy + entre(-alcadaCella * 0.7, alcadaCella * 0.7),
