@@ -1,5 +1,9 @@
 import { useId } from "react";
+import { Roboto } from "next/font/google";
 import type { FormaSimbol, PecaSoroll, Soroll } from "@/lib/sorollFoc";
+
+/** Tipografia del número amagat (la resposta). */
+const roboto = Roboto({ weight: "400", subsets: ["latin"] });
 
 /**
  * Símbols alquímics dibuixats amb traços (no amb fonts, que no sempre tenen
@@ -100,7 +104,7 @@ export function SorollFocSvg({ soroll, className }: { soroll: Soroll; className?
               textAnchor="middle"
               dominantBaseline="central"
               transform={`rotate(${objectiu.rotacio.toFixed(1)} ${objectiu.x.toFixed(1)} ${objectiu.y.toFixed(1)})`}
-              style={{ fontFamily: "var(--font-alegreya-sans), sans-serif" }}
+              style={{ fontFamily: `${roboto.style.fontFamily}, sans-serif` }}
             >
               {objectiu.xifra}
             </text>
