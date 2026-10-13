@@ -65,8 +65,8 @@ const PROPORCIO_MIDA_OBJECTIU = 0.76;
 /** Fracció de les xifres vermelles originals que es dibuixen. */
 const PROPORCIO_VERMELLS = 1;
 
-/** Color de la resposta: un blau mitjà, l'únic blau del cartell. */
-export const BLAU_OBJECTIU = "#2f63c0";
+/** Color de la resposta: un blau clar, l'únic blau del cartell. */
+export const BLAU_OBJECTIU = "#639ced";
 
 /** Radi dels punts de la trama de la resposta. */
 export const RADI_PUNTS_OBJECTIU = 2.7;
