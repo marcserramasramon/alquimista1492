@@ -19,7 +19,7 @@ export default function SorollFocComparacioPage() {
   return (
     <div className="min-h-dvh bg-paper p-4 text-ink">
       <h1 className="font-display text-xl font-bold">Comparació · número secret de Foc</h1>
-      <p className="mb-4 text-sm text-ink-soft">Mateixa composició, canviant només el color i el radi dels punts del número (27 d&apos;exemple).</p>
+      <p className="mb-4 text-sm text-ink-soft">Mateixa composició, canviant només el color i el radi dels punts del número (273 d&apos;exemple).</p>
       <div className="space-y-6">
         {VARIANTS.map((v) => (
           <section key={v.titol}>
@@ -27,7 +27,7 @@ export default function SorollFocComparacioPage() {
             <p className="mb-1 font-mono text-xs text-ink-soft">{v.detall}</p>
             <div className="overflow-hidden rounded-xl border-2 border-ink-soft/30 bg-white">
               <SorollFocSvg
-                soroll={generaSoroll({ resposta: "27", ...opcionsSoroll("imatge"), colorObjectiu: v.color, radiPunts: v.radi })}
+                soroll={generaSoroll({ resposta: "273", ...opcionsSoroll("imatge"), colorObjectiu: v.color, radiPunts: v.radi })}
                 className="w-full"
               />
             </div>

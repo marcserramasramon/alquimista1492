@@ -56,7 +56,7 @@ export function alcadaSoroll(estil: "imatge" | "fons"): number {
 
 /** Opcions de generaSoroll segons l'estil del cartell. */
 export function opcionsSoroll(estil: "imatge" | "fons") {
-  return { alcada: alcadaSoroll(estil), quantitat: estil === "imatge" ? 990 : 756 };
+  return { alcada: alcadaSoroll(estil), quantitat: estil === "imatge" ? 495 : 378 };
 }
 
 /** Proporció de l'alçada del cartell que ocupa el número de la resposta (60% de l'1,9 original). */
@@ -148,8 +148,10 @@ export function generaSoroll({
   const pasHalftone = 6.5;
   const radiHalftone = radiPunts;
   const margeHalftone = midaObjectiuFinal * 0.65;
-  const minXHalftone = Math.max(0, xObjectiu - margeHalftone);
-  const maxXHalftone = Math.min(amplada, xObjectiu + margeHalftone);
+  // L'amplada del número creix amb les xifres (cada una fa uns 0,56 de la mida): sense això, la darrera xifra queda tallada.
+  const margeXHalftone = midaObjectiuFinal * Math.max(0.65, 0.3 * resposta.length + 0.05);
+  const minXHalftone = Math.max(0, xObjectiu - margeXHalftone);
+  const maxXHalftone = Math.min(amplada, xObjectiu + margeXHalftone);
   const minYHalftone = Math.max(0, yObjectiu - margeHalftone);
   const maxYHalftone = Math.min(alcada, yObjectiu + margeHalftone);
   const puntsObjectiu: PuntHalftone[] = [];
