@@ -144,6 +144,26 @@ h3 {
   .btn-fosc:active:not(:disabled) {
     box-shadow: 0 0 0 var(--gold-deep);
   }
+  /* Entrada a la realitat augmentada: taronja de foc i un petit bot cada pocs segons. */
+  .btn-ar {
+    background: var(--foc);
+    color: var(--paper);
+    box-shadow: 0 5px 0 #9c3410;
+    animation: saltar-ar 2.4s ease-in-out infinite;
+  }
+  .btn-ar:active:not(:disabled) {
+    box-shadow: 0 0 0 #9c3410;
+  }
+  @keyframes saltar-ar {
+    0%, 60%, 100% { transform: translateY(0); }
+    70% { transform: translateY(-10px); }
+    80% { transform: translateY(0); }
+    88% { transform: translateY(-4px); }
+    94% { transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn-ar { animation: none; }
+  }
   .btn-secundari {
     background: var(--paper);
     color: var(--ink);

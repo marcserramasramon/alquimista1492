@@ -125,7 +125,7 @@ export function VistaEstacio({
 
         {/* Extra de realitat augmentada d'aquest pas (content/public/extres.ts): no compta per a la partida. */}
         {getExtraArDeFita(estacio.id) && (
-          <Link href={`/joc/ar/${getExtraArDeFita(estacio.id)?.id}`} className="btn btn-fosc">
+          <Link href={`/joc/ar/${getExtraArDeFita(estacio.id)?.id}`} className="btn btn-ar">
             {getExtraArDeFita(estacio.id)?.boto}
           </Link>
         )}
@@ -213,7 +213,7 @@ export function VistaEstacio({
         {/* Extra de realitat augmentada d'aquesta fita (content/public/extres.ts): només un cop resolta la
             prova (pantalla després de fita completa), i no compta per a la partida. */}
         {resolta && getExtraArDeFita(estacio.id) && (
-          <Link href={`/joc/ar/${getExtraArDeFita(estacio.id)?.id}`} className="btn btn-fosc mb-6">
+          <Link href={`/joc/ar/${getExtraArDeFita(estacio.id)?.id}`} className="btn btn-ar mb-6">
             {getExtraArDeFita(estacio.id)?.boto}
           </Link>
         )}

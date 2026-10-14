@@ -123,7 +123,7 @@ export function VistaMissatgeVideo({
             {text}
           </p>
           {accioAr && (
-            <Link href={accioAr.href} onClick={accioAr.onClick} className="btn btn-secundari">
+            <Link href={accioAr.href} onClick={accioAr.onClick} className="btn btn-ar">
               {accioAr.boto}
             </Link>
           )}
@@ -204,7 +204,7 @@ export function VistaMissatgeVideo({
           {text}
         </p>
         {accioAr && (
-          <Link href={accioAr.href} onClick={accioAr.onClick} className="btn btn-secundari">
+          <Link href={accioAr.href} onClick={accioAr.onClick} className="btn btn-ar">
             {accioAr.boto}
           </Link>
         )}
