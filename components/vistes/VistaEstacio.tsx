@@ -246,6 +246,11 @@ export function VistaEstacio({
           )
         ) : pas === "narracio" && estacio.element ? (
           <>
+            {extraArribada && (
+              <Link href={`/joc/ar/${extraArribada.id}`} className="btn btn-ar mb-6">
+                {extraArribada.boto}
+              </Link>
+            )}
             {/* Pas 1: la veu de Fra Francesc. El botó de sota dona pas a la prova. */}
             <Narracio
               text={onRepetirArribada ? { ...ARRIBADES[estacio.element], audio: undefined } : ARRIBADES[estacio.element]}
@@ -267,11 +272,6 @@ export function VistaEstacio({
                 )
               }
             />
-            {extraArribada && (
-              <Link href={`/joc/ar/${extraArribada.id}`} className="btn btn-ar">
-                {extraArribada.boto}
-              </Link>
-            )}
             <button onClick={anarAProva} className="btn btn-primari">
               A la prova →
             </button>
