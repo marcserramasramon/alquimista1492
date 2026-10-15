@@ -86,6 +86,8 @@ export function VistaEstacio({
 
   const element = estacio.element ? ELEMENTS[estacio.element] : null;
   const color = element?.color ?? "var(--gold)";
+  // Extra d'AR que surt a la pantalla d'arribada (narració), no a la de fita resolta.
+  const extraArribada = getExtraArDeFita(estacio.id)?.arribada ? getExtraArDeFita(estacio.id) : undefined;
 
   // Check-in previ: només text+veu, sense enigma ni resposta. En tornar al mapa ja s'hi ha
   // revelat la ubicació de la fita real (app/api/estat).
@@ -212,7 +214,7 @@ export function VistaEstacio({
 
         {/* Extra de realitat augmentada d'aquesta fita (content/public/extres.ts): només un cop resolta la
             prova (pantalla després de fita completa), i no compta per a la partida. */}
-        {resolta && getExtraArDeFita(estacio.id) && (
+        {resolta && getExtraArDeFita(estacio.id) && !extraArribada && (
           <Link href={`/joc/ar/${getExtraArDeFita(estacio.id)?.id}`} className="btn btn-ar mb-6">
             {getExtraArDeFita(estacio.id)?.boto}
           </Link>
@@ -265,6 +267,11 @@ export function VistaEstacio({
                 )
               }
             />
+            {extraArribada && (
+              <Link href={`/joc/ar/${extraArribada.id}`} className="btn btn-ar">
+                {extraArribada.boto}
+              </Link>
+            )}
             <button onClick={anarAProva} className="btn btn-primari">
               A la prova →
             </button>

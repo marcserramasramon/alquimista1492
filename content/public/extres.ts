@@ -6,7 +6,7 @@
  * Res d'aquí és una solució: es pot enviar al client sense risc.
  */
 
-export type EscenaAr = "ulls-siluetes" | "fantasmes" | "foc" | "guies" | "aigua";
+export type EscenaAr = "ulls-siluetes" | "fantasmes" | "foc" | "guies" | "aigua" | "terra";
 
 export interface PuntGps {
   latitud: number;
@@ -44,11 +44,16 @@ export interface ExtraAr {
    */
   figura?: "3d" | "plana";
   /**
-   * Només per a "ulls-siluetes", "guies" i "aigua". En "ulls-siluetes": direcció del camí que fa el jugador, de `des` cap a `cap`. La figura apareix en aquesta
+   * Només per a "ulls-siluetes", "guies", "aigua" i "terra". En "ulls-siluetes": direcció del camí que fa el jugador, de `des` cap a `cap`. La figura apareix en aquesta
    * direcció (al davant) o a la contrària (al darrere), la que quedi més a prop d'on mira el jugador.
-   * Sense camí, apareix on mira el mòbil.
+   * Sense camí, apareix on mira el mòbil. En "terra": de la fita (`des`) cap a les àmfores (`cap`).
    */
   cami?: { des: PuntGps; cap: PuntGps };
+  /**
+   * Només per a "terra" (o qualsevol extra amb `fitaId`): el botó surt a la pantalla d'arribada de la fita
+   * (la narració de Fra Francesc, abans de la prova), en lloc de sortir quan la prova és resolta.
+   */
+  arribada?: boolean;
   /**
    * Només per a "aigua": ample del riu en metres (3 per defecte). El riu corre en el sentit de `cami`
    * (si n'hi ha: el carrer on som) i passa pels peus del jugador.
@@ -252,6 +257,44 @@ export const EXTRES_AR: ExtraAr[] = [
       ],
       nota: "És només un extra: no canvia res de la partida.",
       boto: "Veure les ànimes",
+    },
+  },
+  {
+    // Esquerda de llum i runes de la Terra: des de la fita de Planes Bones fins a les àmfores, que cal comptar.
+    // Surt a la pantalla d'arribada de la fita (`arribada`), no quan la prova està resolta.
+    id: "terra-cami",
+    fitaId: "planes-bones",
+    arribada: true,
+    escena: "terra",
+    // La fita (des) i les àmfores (cap): ~90 m cap a l'est-sud-est (rumb ≈ 104°).
+    cami: {
+      des: { latitud: 41.91227654730743, longitud: 2.2334459962925832 },
+      cap: { latitud: 41.91206607307903, longitud: 2.2345129167936397 },
+    },
+    boto: "🧭 Seguiu la Terra",
+    introduccio: {
+      titol: "La Terra us guia",
+      entrada: "Des d'aquesta fita, una esquerda de llum us portarà fins a les àmfores. Això és el que veureu:",
+      passos: [
+        { icona: "🌱", text: "Una esquerda de llum s'obre pel terra i avança cap a les àmfores, amb molsa lluminosa i espores que pugen." },
+        { icona: "🔆", text: "Les runes de la Terra floten a prop del terra: s'il·luminen quan hi passeu per sobre." },
+        { icona: "🧭", text: "La brúixola de baix a la dreta marca cap a les àmfores. Quan sou sobre l'esquerda, el triangle de la Terra vibra amb guspires daurades." },
+      ],
+      permisos: {
+        titol: "El mòbil us demanarà permís per a:",
+        items: [
+          { icona: "📷", text: "Càmera: per veure el que teniu al davant. La imatge no es grava ni s'envia enlloc." },
+          { icona: "🧭", text: "Moviment i brúixola: per saber cap a on mireu." },
+          { icona: "📍", text: "Ubicació: per saber on sou i guiar-vos. No es desa ni s'envia enlloc." },
+        ],
+        nota: "Sense ubicació no hi ha camí que mostrar. Si no en voleu donar la càmera, es pot seguir igualment: arrossegueu el dit per mirar.",
+      },
+      consells: [
+        "Mireu on trepitgeu: no camineu mentre mireu la pantalla. Atureu-vos per mirar i després seguiu.",
+        "El GPS pot trigar uns segons a trobar-vos. Si el camí no apareix, espereu i sortiu a l'aire lliure.",
+      ],
+      nota: "És només un extra: no canvia res de la partida.",
+      boto: "Començar",
     },
   },
 ];

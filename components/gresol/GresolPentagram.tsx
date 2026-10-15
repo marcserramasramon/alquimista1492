@@ -47,7 +47,7 @@ const STATIONS: Station[] = [
   {
     name: "Planes Bones",
     element: "Terra",
-    coords: [41.91211636015775, 2.2339699558518227],
+    coords: [41.91227654730743, 2.2334459962925832],
     angle: 351,
     emoji: "🪨",
     color: "bg-amber-700",

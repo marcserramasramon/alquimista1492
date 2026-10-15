@@ -52,6 +52,7 @@ import { GuiaManual } from "@/components/player/GuiaManual";
 import { VistaExtraAr } from "@/components/vistes/VistaExtraAr";
 import { VistaFantasmes } from "@/components/vistes/VistaFantasmes";
 import { VistaGuiesAnimes } from "@/components/vistes/VistaGuiesAnimes";
+import { VistaTerra } from "@/components/vistes/VistaTerra";
 import { VistaFoc } from "@/components/vistes/VistaFoc";
 import { VistaAigua } from "@/components/vistes/VistaAigua";
 import { EXTRES_AR, getExtraAr } from "@/content/public/extres";
@@ -832,6 +833,21 @@ export const PANTALLES: Pantalla[] = [
     titol: "Ànimes guia · escena",
     descripcio: "Ànimes petites que volen en línia recta pel camí (rumb ≈ 166°). Sense càmera ni sensors: arrossegueu per girar.",
     render: () => <VistaGuiesAnimes extra={getExtraAr("anima-guies")!} onTornar={noop} directa />,
+  },
+  {
+    id: "terra-cami-introduccio",
+    grup: "hub",
+    titol: "Seguiu la Terra · explicació",
+    descripcio:
+      "Es veu en tocar el botó «Seguiu la Terra» a l'arribada de la fita de Planes Bones: explica l'esquerda de llum cap a les àmfores. El text és a content/public/extres.ts (extra «terra-cami»).",
+    render: () => <VistaTerra extra={getExtraAr("terra-cami")!} onTornar={noop} />,
+  },
+  {
+    id: "terra-cami-escena",
+    grup: "hub",
+    titol: "Seguiu la Terra · escena",
+    descripcio: "Esquerda de llum, runes i brúixola cap a les àmfores. Sense càmera ni sensors: arrossegueu per girar; la posició de prova és la fita.",
+    render: () => <VistaTerra extra={getExtraAr("terra-cami")!} onTornar={noop} directa />,
   },
   {
     id: "extra-foc-introduccio",

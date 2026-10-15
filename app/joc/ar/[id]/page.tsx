@@ -7,6 +7,7 @@ import { VistaFantasmes } from "@/components/vistes/VistaFantasmes";
 import { VistaAigua } from "@/components/vistes/VistaAigua";
 import { VistaFoc } from "@/components/vistes/VistaFoc";
 import { VistaGuiesAnimes } from "@/components/vistes/VistaGuiesAnimes";
+import { VistaTerra } from "@/components/vistes/VistaTerra";
 import { getExtraAr } from "@/content/public/extres";
 
 /** Extra de realitat augmentada (content/public/extres.ts): no toca el progrés de la partida. */
@@ -29,6 +30,8 @@ export default function ExtraArPage() {
           ? VistaGuiesAnimes
           : extra.escena === "aigua"
             ? VistaAigua
-            : VistaExtraAr;
+            : extra.escena === "terra"
+              ? VistaTerra
+              : VistaExtraAr;
   return <Vista extra={extra} onTornar={() => router.push("/joc")} />;
 }
