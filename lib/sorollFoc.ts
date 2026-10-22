@@ -108,8 +108,8 @@ const PROPORCIO_LILA_VORA = 0.4;
 /** Camuflatge: amplada (unitats del cartell) de la franja de vora on es barregen els punts lila. */
 export const AMPLADA_VORA_CAMUFLATGE = 18;
 
-/** Radi dels punts de la trama de la resposta. */
-export const RADI_PUNTS_OBJECTIU = 2.7;
+/** Radi dels punts de la trama de la resposta (unitats SVG; 1 unitat ≈ 0,168 mm al cartell A4). */
+export const RADI_PUNTS_OBJECTIU = 0.9; // unitats SVG: 0,9 × 0,168 mm/unitat ≈ 0,15 mm al PDF A4
 
 /**
  * Colors del soroll: vermells purs, sense cian ni negre (C0, M95-100, Y85-95, K0).
