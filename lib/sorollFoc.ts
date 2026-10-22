@@ -37,6 +37,8 @@ export interface PuntHalftone {
   color: string;
   /** Si hi és, el punt és un triangle equilàter de radi `r` (circumscrit) girat aquests graus; sense valor, un cercle. */
   angle?: number;
+  /** Només a la trama de fons: si és cert, a la vora del número aquest punt es pinta lila (dithering del contorn). */
+  barreja?: boolean;
 }
 
 export interface Soroll {
@@ -45,6 +47,8 @@ export interface Soroll {
   peces: PecaSoroll[];
   /** Trama de punts (halftone) del número de la resposta (components/cartells/SorollFocSvg.tsx la clipa a la seva forma). */
   puntsObjectiu: PuntHalftone[];
+  /** Camuflatge: trama vermella a tot el cartell, amb la mateixa graella, radi i densitat que la del número (que hi queda alineada). */
+  puntsFons?: PuntHalftone[];
 }
 
 /**
@@ -95,6 +99,15 @@ export const BLAU_OBJECTIU = "#2f63c0";
 /** Separació entre els punts de la trama de la resposta. */
 export const PAS_PUNTS_OBJECTIU = 6.5;
 
+/** Camuflatge: fracció dels punts de dins del número que són vermells. */
+const PROPORCIO_VERMELL_DINS = 0.12;
+
+/** Camuflatge: fracció dels punts de fons, a la vora del número, que són lila. */
+const PROPORCIO_LILA_VORA = 0.4;
+
+/** Camuflatge: amplada (unitats del cartell) de la franja de vora on es barregen els punts lila. */
+export const AMPLADA_VORA_CAMUFLATGE = 18;
+
 /** Radi dels punts de la trama de la resposta. */
 export const RADI_PUNTS_OBJECTIU = 2.7;
 
@@ -138,6 +151,7 @@ export function generaSoroll({
   colorsSoroll = COLORS_SOROLL,
   pasPunts = PAS_PUNTS_OBJECTIU,
   triangles = false,
+  camuflatge = true,
 }: {
   resposta: string;
   llavor?: number;
@@ -157,6 +171,12 @@ export function generaSoroll({
   pasPunts?: number;
   /** Els punts de la trama són triangles orientats a l'atzar (en lloc de cercles). No toca la composició del soroll. */
   triangles?: boolean;
+  /**
+   * Camuflatge òptic (impressió d'anul·lació espectral): trama vermella a tot el cartell amb la mateixa
+   * textura que el número, i uns punts vermells barrejats dins del lila i uns de lila a la vora
+   * (dithering). Sense això, el número es llegeix pels forats blancs entre el soroll. No toca la composició.
+   */
+  camuflatge?: boolean;
 }): Soroll {
   const r = prng(llavor);
   const entre = (min: number, max: number) => min + r() * (max - min);
@@ -195,9 +215,23 @@ export function generaSoroll({
   const puntsObjectiu: PuntHalftone[] = [];
   // PRNG propi: així els angles no alteren la composició del soroll, que ve després amb `r`.
   const rAngles = prng(llavor + 7919);
+  const rCamuflatge = prng(llavor + 104729);
+  const triaVermell = () => colorsSoroll[Math.floor(rCamuflatge() * colorsSoroll.length)];
   for (let y = minYHalftone; y <= maxYHalftone; y += pasHalftone) {
     for (let x = minXHalftone; x <= maxXHalftone; x += pasHalftone) {
-      puntsObjectiu.push({ x, y, r: radiHalftone, color: colorObjectiu, ...(triangles ? { angle: rAngles() * 360 } : {}) });
+      // Dithering: una part dels punts de dins del número són vermells (invisibles sota el filtre vermell).
+      const color = camuflatge && rCamuflatge() < PROPORCIO_VERMELL_DINS ? triaVermell() : colorObjectiu;
+      puntsObjectiu.push({ x, y, r: radiHalftone, color, ...(triangles ? { angle: rAngles() * 360 } : {}) });
+    }
+  }
+
+  // Trama vermella de fons a tot el cartell, alineada amb la graella del número.
+  const puntsFons: PuntHalftone[] = [];
+  if (camuflatge) {
+    for (let y = minYHalftone % pasHalftone; y <= alcada; y += pasHalftone) {
+      for (let x = minXHalftone % pasHalftone; x <= amplada; x += pasHalftone) {
+        puntsFons.push({ x, y, r: radiHalftone, color: triaVermell(), barreja: rCamuflatge() < PROPORCIO_LILA_VORA });
+      }
     }
   }
 
@@ -237,5 +271,5 @@ export function generaSoroll({
     }
   }
 
-  return { amplada, alcada, peces, puntsObjectiu };
+  return { amplada, alcada, peces, puntsObjectiu, ...(camuflatge ? { puntsFons } : {}) };
 }

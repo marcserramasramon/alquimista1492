@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { Roboto } from "next/font/google";
+import { AMPLADA_VORA_CAMUFLATGE } from "@/lib/sorollFoc";
 import type { FormaSimbol, PecaSoroll, Soroll } from "@/lib/sorollFoc";
 
 /** Tipografia del número amagat (la resposta). */
@@ -108,6 +109,7 @@ export function SorollFocSvg({
   const idBase = useId().replace(/:/g, "");
   const clipObjectiu = `${idBase}-clip-objectiu`;
   const maskSoroll = `${idBase}-mask-soroll`;
+  const maskVora = `${idBase}-mask-vora`;
   const objectiu = soroll.peces.find((p) => p.objectiu);
   const sotaObjectiu = soroll.peces.filter((p) => !p.objectiu && p.sotaObjectiu);
   const sobreObjectiu = soroll.peces.filter((p) => !p.objectiu && !p.sotaObjectiu);
@@ -123,6 +125,17 @@ export function SorollFocSvg({
           )
         ))}
       </g>
+    ) : null;
+
+  const puntFons = (p: (typeof soroll.puntsObjectiu)[number], i: number, color: string) => (
+    <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={p.r.toFixed(2)} fill={color} />
+  );
+  const tramaFons =
+    soroll.puntsFons && objectiu ? (
+      <>
+        {soroll.puntsFons.map((p, i) => puntFons(p, i, p.color))}
+        <g mask={`url(#${maskVora})`}>{soroll.puntsFons.map((p, i) => p.barreja && puntFons(p, i, objectiu.color))}</g>
+      </>
     ) : null;
 
   const tramaFinal = nomesInterseccio && trama ? <g mask={`url(#${maskSoroll})`}>{trama}</g> : trama;
@@ -145,6 +158,28 @@ export function SorollFocSvg({
           </mask>
         </defs>
       )}
+      {objectiu && soroll.puntsFons && (
+        <defs>
+          <mask id={maskVora} maskUnits="userSpaceOnUse" x={0} y={0} width={soroll.amplada} height={soroll.alcada}>
+            <text
+              x={objectiu.x}
+              y={objectiu.y}
+              fontSize={objectiu.mida}
+              fontWeight={negreta ? 700 : 400}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fill="#fff"
+              stroke="#fff"
+              strokeWidth={AMPLADA_VORA_CAMUFLATGE}
+              strokeLinejoin="round"
+              transform={`rotate(${objectiu.rotacio.toFixed(1)} ${objectiu.x.toFixed(1)} ${objectiu.y.toFixed(1)})`}
+              style={{ fontFamily: `${roboto.style.fontFamily}, sans-serif` }}
+            >
+              {objectiu.xifra}
+            </text>
+          </mask>
+        </defs>
+      )}
       {objectiu && (
         <defs>
           <clipPath id={clipObjectiu}>
@@ -163,6 +198,7 @@ export function SorollFocSvg({
           </clipPath>
         </defs>
       )}
+      {tramaFons}
       {sotaObjectiu.map((p, i) => (
         <PecaNoise key={`sota-${i}`} p={p} />
       ))}
