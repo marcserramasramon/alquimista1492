@@ -67,7 +67,29 @@ const PROPORCIO_MIDA_OBJECTIU = 0.76;
 /** Fracció de les xifres vermelles originals que es dibuixen. */
 const PROPORCIO_VERMELLS = 1;
 
-/** Color de la resposta: un blau fosc, l'únic blau del cartell. */
+/**
+ * CMYK (0-100) -> hex RGB, aproximació ingènua per a la pantalla. La impressió
+ * real surt dels valors CMYK de sota (veure scripts/genera-tira-calibratge.py).
+ */
+function cmyk(c: number, m: number, y: number, k = 0) {
+  const canal = (v: number) =>
+    Math.round(255 * (1 - v / 100) * (1 - k / 100))
+      .toString(16)
+      .padStart(2, "0");
+  return `#${canal(c)}${canal(m)}${canal(y)}`;
+}
+
+/**
+ * Cian (%) del lila de la resposta: el valor crític. Amb massa (>30) es veu a
+ * simple vista; amb massa poc (<12) el filtre vermell no el revela. Es calibra
+ * amb la tira de calibratge a la impremta (el valor òptim sol ser 18-22).
+ */
+export const CIAN_LILA_OBJECTIU = 20;
+
+/** Color de la resposta: un lila (magenta + una mica de cian). A simple vista es confon amb el vermell; a través d'un filtre vermell, el cian el fa fosc. */
+export const LILA_OBJECTIU = cmyk(CIAN_LILA_OBJECTIU, 92, 28);
+
+/** El blau que s'havia fet servir per a la resposta abans del lila (es conserva per a les pantalles de proves). */
 export const BLAU_OBJECTIU = "#2f63c0";
 
 /** Separació entre els punts de la trama de la resposta. */
@@ -76,16 +98,18 @@ export const PAS_PUNTS_OBJECTIU = 6.5;
 /** Radi dels punts de la trama de la resposta. */
 export const RADI_PUNTS_OBJECTIU = 2.7;
 
-/** Colors del soroll: vermells, taronges i grocs vius (es dissolen a través del "paper de foc"; sense tons foscos, que quedarien foscos sota el filtre), cap que es pugui confondre amb el blau de la resposta. */
+/**
+ * Colors del soroll: vermells purs, sense cian ni negre (C0, M95-100, Y85-95, K0).
+ * Reflecteixen tota la llum vermella, així que a través d'un filtre vermell es
+ * confonen amb el paper blanc i desapareixen; només queda el lila de la resposta.
+ */
 const COLORS_SOROLL = [
-  "#d0021b", // vermell viu
-  "#e13c2b", // vermell taronja
-  "#e8561f", // taronja vermellós
-  "#f07a1a", // taronja
-  "#f59b1c", // taronja clar
-  "#f7b500", // ambre
-  "#f5c800", // groc daurat
-  "#f2dc1e", // groc
+  cmyk(0, 100, 90),
+  cmyk(0, 98, 85),
+  cmyk(0, 95, 95),
+  cmyk(0, 100, 95),
+  cmyk(0, 96, 88),
+  cmyk(0, 95, 90),
 ];
 
 const SIMBOLS: FormaSimbol[] = ["foc", "aigua", "aire", "terra", "sol", "lluna", "sofre", "sal", "estrella"];
@@ -109,7 +133,7 @@ export function generaSoroll({
   alcada = 440,
   quantitat = 300,
   midaObjectiu,
-  colorObjectiu = BLAU_OBJECTIU,
+  colorObjectiu = LILA_OBJECTIU,
   radiPunts = RADI_PUNTS_OBJECTIU,
   colorsSoroll = COLORS_SOROLL,
   pasPunts = PAS_PUNTS_OBJECTIU,
@@ -123,7 +147,7 @@ export function generaSoroll({
   quantitat?: number;
   /** Mida de la resposta (per defecte proporcional a `alcada`, veure PROPORCIO_MIDA_OBJECTIU). */
   midaObjectiu?: number;
-  /** Color del número de la resposta i dels seus punts (per defecte BLAU_OBJECTIU). */
+  /** Color del número de la resposta i dels seus punts (per defecte LILA_OBJECTIU). */
   colorObjectiu?: string;
   /** Radi dels punts de la trama del número (per defecte RADI_PUNTS_OBJECTIU). */
   radiPunts?: number;
@@ -196,8 +220,8 @@ export function generaSoroll({
       const esXifra = r() < 0.62;
       // Només es queda el 75% de les xifres vermelles que hi havia (la resta de cel·les queden buides).
       if (esXifra && r() >= PROPORCIO_VERMELLS) continue;
-      // Xifres i símbols tenen la mateixa paleta càlida (COLORS_SOROLL): només
-      // la resposta és blava.
+      // Xifres i símbols tenen la mateixa paleta de vermells purs (COLORS_SOROLL): només
+      // la resposta és lila.
       const color = tria(colorsSoroll);
       peces.push({
         x: cx + entre(-ampladaCella * 0.7, ampladaCella * 0.7),
