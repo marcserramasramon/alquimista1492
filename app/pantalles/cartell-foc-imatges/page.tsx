@@ -3,6 +3,9 @@ import { generaSoroll, opcionsSoroll, PAS_PUNTS_OBJECTIU } from "@/lib/sorollFoc
 import { SorollFocSvg } from "@/components/cartells/SorollFocSvg";
 import { colorsBlaus, NUMEROS_INVERTITS, DENSITAT_SOROLL_INVERTIT } from "../cartell-foc-proves/dades";
 
+// Pàgina molt gran (més de 20 MB en HTML): no es prerenderitza, perquè Vercel no la pot servir com a ISR.
+export const dynamic = "force-dynamic";
+
 /**
  * Només les imatges del cartell de Foc (sense el format final), del número groc a sobre del soroll blau 3:2:1 al 333%,
  * una sota l'altra a mida real (168 mm d'ample, 2 per pàgina). Primer totes les combinacions de radi i densitat amb la
