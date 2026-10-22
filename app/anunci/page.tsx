@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Balthazar } from "next/font/google";
 import Image from "next/image";
+import Script from "next/script";
 import { AMPLE_CINTA, CintaRunes, CintaRunesEstils } from "@/components/anunci/CintaRunes";
 import { MapaPlaMasset } from "@/components/anunci/MapaPlaMasset";
 import { MiniJocElements } from "@/components/anunci/MiniJocElements";
@@ -209,6 +210,14 @@ const PANTALLES_DESPRES: { color: string; contingut: ReactNode }[] = [
   },
 ];
 
+/** Google Tag Manager: només a la pàgina d'anunci. */
+const GTM_ID = "GTM-N9KVBRQF";
+const GTM_SCRIPT = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${GTM_ID}');`;
+
 /** Estil comú de les dues graelles de cinta · pantalla · cinta, abans i després de les 5 fites. */
 const ESTIL_GRAELLA = { gridTemplateColumns: `${AMPLE_CINTA}px minmax(0, 1fr) ${AMPLE_CINTA}px` };
 
@@ -218,6 +227,17 @@ export default function AnunciPage() {
   const allColors = [DAURAT, ...colorsAbans, ...colorsDespres];
   return (
     <main className={`${balthazar.variable} bg-ink`}>
+      {/* Google Tag Manager (noscript): per a navegadors sense JavaScript. */}
+      <noscript>
+        <iframe
+          src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+          height="0"
+          width="0"
+          style={{ display: "none", visibility: "hidden" }}
+        />
+      </noscript>
+      {/* Google Tag Manager: carregat just després de la hidratació. */}
+      <Script id="google-tag-manager" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: GTM_SCRIPT }} />
       <style>{`html { scroll-snap-type: y mandatory; }`}</style>
       <CintaRunesEstils />
       <div className="grid" style={ESTIL_GRAELLA}>
