@@ -1,0 +1,676 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Actors · Els Guardians del Secret</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&display=swap">
+<style>
+  :root {
+    --bg: #f5f2ea; --card: #ffffff; --fg: #1d1b16; --muted: #6b655a;
+    --accent: #9a4a1f; --line: #d9d2c2; --soft: #efeadc;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161511; --card: #201e18; --fg: #f1ece0; --muted: #a8a093;
+      --accent: #e0935f; --line: #3a372e; --soft: #2a2720; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161511; --card: #201e18; --fg: #f1ece0; --muted: #a8a093;
+    --accent: #e0935f; --line: #3a372e; --soft: #2a2720; color-scheme: dark;
+  }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font-family: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+    font-size: 17px; line-height: 1.55;
+    padding-block: 32px 48px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  main { max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  h1 { font-size: 34px; line-height: 1.15; margin: 0; font-weight: 800; text-wrap: balance; }
+  h2 { font-size: 24px; margin: 0 0 10px; font-weight: 800; text-wrap: balance; }
+  h3 { font-size: 15px; margin: 20px 0 8px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; }
+  p { margin: 0 0 12px; }
+  ul, ol { margin: 0 0 4px; padding-left: 22px; }
+  li { margin: 0 0 6px; }
+  strong { font-weight: 700; }
+  .meta { color: var(--muted); font-size: 15px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 22px; min-width: 0; }
+  .tag { display: inline-block; font-size: 13px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+  .index { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
+  .index a { display: inline-block; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--fg); text-decoration: none; font-weight: 600; font-size: 15px; background: var(--soft); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .table-wrap { overflow-x: auto; min-width: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+  th { font-weight: 800; background: var(--soft); }
+  td:first-child { font-weight: 700; }
+  .quote { border-left: 4px solid var(--accent); padding: 4px 0 4px 14px; margin: 0 0 12px; }
+  .pending { background: var(--soft); border-radius: 8px; padding: 10px 12px; font-size: 15px; }
+  .lines { display: grid; gap: 6px; }
+  .lines div { background: var(--soft); border-radius: 6px; padding: 8px 10px; font-size: 15px; }
+  .legend { list-style: none; padding: 0; margin: 14px 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 18px; font-size: 15px; }
+  @media (max-width: 480px) { .legend { grid-template-columns: 1fr; } }
+  .legend .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 8px; vertical-align: middle; border: 1px solid #1d1b16; }
+  .legend .dot.sq { border-radius: 2px; }
+  .legend .dot.num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: #fff8e6; font-size: 12px; font-weight: 700; color: #1d1b16; }
+  .legend .dot.line { width: 22px; height: 0; border: 0; border-top: 2px dashed #7a5c2e; border-radius: 0; }
+  .tag-real { display: inline-block; font-size: 12px; font-weight: 700; background: var(--accent); color: #fff; border-radius: 4px; padding: 1px 6px; }
+  .tag-prop { display: inline-block; font-size: 12px; font-weight: 700; background: var(--soft); color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; }
+  .barra { position: sticky; top: 0; z-index: 20; display: flex; gap: 8px; overflow-x: auto; white-space: nowrap; background: var(--bg); padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .barra a { flex: none; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--fg); text-decoration: none; font-weight: 600; font-size: 15px; background: var(--card); }
+  .barra a[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .barra a.nivell-1 { font-weight: 800; font-size: 16px; border-left: 5px solid var(--accent); }
+  .barra a.nivell-2 { margin-left: 18px; font-size: 14px; font-weight: 600; padding: 6px 12px; }
+  .panel { display: none; }
+  .panel.on { display: block; }
+  .fitxes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .fitxa-card { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .fitxa-card h3 { margin: 0; color: var(--fg); font-size: 20px; text-transform: none; letter-spacing: 0; }
+  a.fitxa-card { text-decoration: none; color: var(--fg); }
+  .fitxa-card img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; object-position: 50% 20%; border-radius: 8px; display: block; }
+  details.sub { margin: 12px 0; border: 1px solid var(--line); border-radius: 10px; padding: 0 16px; background: var(--card); break-inside: avoid; }
+  details.sub > summary { cursor: pointer; list-style: none; padding: 14px 0; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; font-size: 15px; }
+  details.sub > summary::-webkit-details-marker { display: none; }
+  details.sub > summary::after { content: '+'; float: right; font-size: 20px; line-height: 1; }
+  details.sub[open] > summary::after { content: '−'; }
+  details.sub > :not(summary):last-child { margin-bottom: 16px; }
+  @media (min-width: 900px) {
+    main { max-width: 1180px; display: grid; grid-template-columns: 230px minmax(0, 1fr); column-gap: 28px; align-items: start; }
+    main > header { grid-column: 1 / -1; }
+    .barra { grid-column: 1; grid-row: 2; position: sticky; top: 16px; flex-direction: column; gap: 6px; white-space: normal; overflow-x: visible; overflow-y: auto; max-height: calc(100svh - 32px); border-bottom: 0; padding: 0; background: transparent; }
+    .barra a { display: block; border-radius: 8px; text-align: left; }
+    main > .panel { grid-column: 2; grid-row: 2; min-width: 0; }
+  }
+  @media (max-width: 480px) { h1 { font-size: 28px; } .card { padding: 18px; } }
+</style>
+
+<main>
+  <header class="card" style="border-top: 6px solid var(--accent);">
+    <span class="tag">Document per als actors</span>
+    <h1>Els Guardians del Secret de Sentfores</h1>
+    <p class="meta">Escape room exterior a Sentfores (Osona), any 1472. Document de treball, versió 21 d'octubre de 2026.</p>
+    <ul class="index" aria-label="Contingut">
+      <li><a href="#historia">Història</a></li>
+      <li><a href="#objectius">Objectius</a></li>
+      <li><a href="#dades">Dades</a></li>
+      <li><a href="#fites">Fites i mapa</a></li>
+      <li><a href="#proces">Procés del joc</a></li>
+      <li><a href="#ar">AR i vídeos</a></li>
+      <li><a href="#actors">Actors</a></li>
+      <li><a href="#fitxes">Fitxes individuals</a></li>
+      <li><a href="#ritual">Ritual final</a></li>
+    </ul>
+  </header>
+
+  <section class="card" id="historia">
+    <span class="tag">Història</span>
+    <h2>Un missatge per a vosaltres</h2>
+    <p>Sentfores, any 1472. La guerra ha capgirat el poble i el castell ha caigut. Fra Francesc de Sentfores, de l'Orde del Testament, guarda una recepta més antiga que les pedres del castell: el camí per obtenir la Pedra Filosofal.</p>
+    <p>Hi ha gent que la vol per fer-ne mal ús, i el Sant Ofici persegueix qui practica l'art de la transmutació. Fra Francesc ha partit la Gran Obra en cinc fragments —Aigua, Terra, Foc, Aire i Ànima— i els ha amagat al voltant del poble. Els jugadors reben el seu missatge, el segueixen i els recullen.</p>
+    <p>Quan tinguin els cinc fragments, han de tornar al Pla de Masset, al cor de l'estrella. Allà Fra Francesc els espera, els explica la fórmula i els guia en el ritual del Gresol. Si l'acaben, els jugadors reconstrueixen la Pedra Filosofal i Fra Francesc els consagra com a Guardians del Secret.</p>
+    <p class="quote"><strong>Desenllaç:</strong> els jugadors tornen al Pla de Masset, on Fra Francesc els consagra, i reconstrueixen la Pedra Filosofal.</p>
+  </section>
+
+  <section class="card" id="objectius">
+    <span class="tag">Objectius</span>
+    <h2>Què han de fer els jugadors</h2>
+    <ol>
+      <li>Seguir el missatge i trobar les cinc fites, en qualsevol ordre: Aigua, Terra, Foc, Aire i Ànima.</li>
+      <li>A cada fita, llegir el text de Fra Francesc, resoldre la prova i escriure la resposta a l'app.</li>
+      <li>Demanar pistes si s'encallen. Fra Francesc en va deixar tres per a cada fragment. L'última dona la solució.</li>
+      <li>Reunir els cinc fragments i anar al Pla de Masset, al centre de l'estrella.</li>
+      <li>Fer el ritual del Gresol dels Cinc Elements, guiats per Fra Francesc.</li>
+    </ol>
+  </section>
+
+  <section class="card" id="dades">
+    <span class="tag">Dades</span>
+    <h2>Dades generals</h2>
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><td>Durada</td><td>1 h 30 min – 2 h</td></tr>
+          <tr><td>Equips</td><td>8 equips com a màxim. Cada equip té nom i un mòbil com a mínim.</td></tr>
+          <tr><td>Data</td><td>Diumenge 8 de novembre de 2026, a les 18:00</td></tr>
+          <tr><td>Idioma</td><td>Català</td></tr>
+          <tr><td>Recorregut</td><td>A peu pel poble. Hi ha trams de carretera: cal anar en fila i pel costat.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card" id="fites">
+    <span class="tag">Fites i mapa</span>
+    <h2>Les cinc fites</h2>
+    <p>Les fites formen un pentagrama al voltant del Pla de Masset. Cada fita té una prova: l'equip la resol a la pantalla de l'app.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Element</th><th>Lloc</th><th>Coordenades</th><th>Què cal fer</th><th>Resposta</th></tr></thead>
+        <tbody>
+          <tr><td>Aigua</td><td>Font del Lleó (Carrer del Call)</td><td>41,914816, 2,227479</td><td>Cerqueu la boca del lleó que brolla vida.</td><td>127</td></tr>
+          <tr><td>Terra</td><td>Planes Bones</td><td>41,912256, 2,233469</td><td>Trobeu on guardava els elements l'alquimista.</td><td>666</td></tr>
+          <tr><td>Foc</td><td>Serrat del Caçador (Carretera de la Guixa)</td><td>41,915419, 2,231577</td><td>Mireu a través del foc per desvelar el fragment.</td><td>233</td></tr>
+          <tr><td>Aire</td><td>Pas previ: Creu del Pujolar. Fita: Serrat de la Creu</td><td>Pas previ: 41,911628, 2,226846 · Fita: 41,910894, 2,224438</td><td>Primer arribar a la creu vella (pas previ). Després resoldre l'enigma del vent.</td><td>431</td></tr>
+          <tr><td>Ànima</td><td>Dunes d'asfalt (pista skate, Camí Antic de Malla)</td><td>41,910355, 2,230083</td><td>La llum de la veritat desvelarà el secret ocult.</td><td>773</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>Mapa del joc</h3>
+    <figure style="margin:0">
+    <svg viewBox="0 0 2048 2048" role="img" aria-label="Mapa del joc amb les fites, el pas previ, el Pla de Masset i els punts de vídeo" style="width:100%;height:auto;display:block;border-radius:8px;">
+      <image href="/mapa-sentfores.webp" x="0" y="0" width="2048" height="2048"/>
+      <polygon points="1028,444 514,891 511,1883 1368,1528 1640,892" fill="none" stroke="#7a5c2e" stroke-width="10" stroke-dasharray="36 24"/>
+      <rect x="752" y="1528" width="40" height="40" fill="#6b655a" stroke="#fffdf7" stroke-width="6"/>
+      <circle cx="1024" cy="1024" r="22" fill="#9a4a1f" stroke="#fffdf7" stroke-width="7"/>
+      <circle cx="514" cy="891" r="30" fill="#4aa3df" stroke="#fffdf7" stroke-width="7"/>
+      <circle cx="1640" cy="892" r="30" fill="#a9794a" stroke="#fffdf7" stroke-width="7"/>
+      <circle cx="1028" cy="444" r="30" fill="#e2603a" stroke="#fffdf7" stroke-width="7"/>
+      <circle cx="511" cy="1883" r="30" fill="#9fc7d9" stroke="#fffdf7" stroke-width="7"/>
+      <circle cx="1368" cy="1528" r="30" fill="#b47be0" stroke="#fffdf7" stroke-width="7"/>
+      <g font-size="28" font-weight="700" text-anchor="middle" fill="#1b1511" stroke="#1b1511">
+        <circle cx="687" cy="1054" r="24" fill="#fffdf7" stroke-width="6"/><text x="687" y="1064" stroke="none">1</text>
+        <circle cx="1388" cy="697" r="24" fill="#fffdf7" stroke-width="6"/><text x="1388" y="707" stroke="none">2</text>
+        <circle cx="883" cy="718" r="24" fill="#fffdf7" stroke-width="6"/><text x="883" y="728" stroke="none">3</text>
+        <circle cx="1029" cy="1261" r="24" fill="#fffdf7" stroke-width="6"/><text x="1029" y="1271" stroke="none">4</text>
+        <circle cx="769" cy="1312" r="24" fill="#fffdf7" stroke-width="6"/><text x="769" y="1322" stroke="none">5</text>
+      </g>
+      <g font-size="34" font-weight="700" fill="#1b1511" stroke="#fffdf7" stroke-width="9" paint-order="stroke">
+        <text x="550" y="905">Aigua · Font del Lleó</text>
+        <text x="1064" y="452">Foc · Serrat del Caçador</text>
+        <text x="1676" y="906">Terra · Planes Bones</text>
+        <text x="548" y="1897">Aire · Serrat de la Creu</text>
+        <text x="1404" y="1542">Ànima · pista skate</text>
+        <text x="1060" y="1040">Pla de Masset</text>
+        <text x="812" y="1562">Pas previ · Creu del Pujolar</text>
+      </g>
+      <line x1="80" y1="1960" x2="474" y2="1960" stroke="#1b1511" stroke-width="10"/>
+      <text x="277" y="2004" text-anchor="middle" font-size="32" font-weight="700" fill="#1b1511" stroke="#fffdf7" stroke-width="8" paint-order="stroke">200 m</text>
+      <g transform="rotate(-29.846 170 170)">
+        <path d="M170 70 L120 230 L170 200 L220 230 Z" fill="#1b1511"/>
+        <text x="170" y="50" text-anchor="middle" font-size="60" font-weight="700" fill="#1b1511">N</text>
+      </g>
+    </svg>
+    </figure>
+    <ul class="legend">
+      <li><span class="dot" style="background:#4aa3df"></span>Aigua · Font del Lleó</li>
+      <li><span class="dot" style="background:#a9794a"></span>Terra · Planes Bones</li>
+      <li><span class="dot" style="background:#e2603a"></span>Foc · Serrat del Caçador</li>
+      <li><span class="dot" style="background:#9fc7d9"></span>Aire · Serrat de la Creu (fita)</li>
+      <li><span class="dot" style="background:#b47be0"></span>Ànima · Dunes d'asfalt (pista skate)</li>
+      <li><span class="dot sq" style="background:#6b655a"></span>Pas previ de l'Aire · Creu del Pujolar</li>
+      <li><span class="dot" style="background:#9a4a1f"></span>Pla de Masset · Gresol (centre)</li>
+      <li><span class="dot line"></span>Pentagrama, traçat aproximat</li>
+      <li><span class="dot num">1</span>Vídeo de camí · Aigua · Església del poble</li>
+      <li><span class="dot num">2</span>Vídeo de camí · Terra · Entrada del Mas Vinyals</li>
+      <li><span class="dot num">3</span>Vídeo de camí · Foc · Plaça de la Creu</li>
+      <li><span class="dot num">4</span>Vídeo de camí · Ànima · Camí de Malla</li>
+      <li><span class="dot num">5</span>Vídeo de camí · Inquisidor · Cementiri</li>
+      <li>Escala: 200 m. Nord a dalt.</li>
+    </ul>
+  </section>
+
+  <section class="card" id="proces">
+    <span class="tag">Procés del joc</span>
+    <h2>Del missatge al final</h2>
+    <p>Així avança una partida, de dalt a baix. Les caixes amb vídeo marquen on es reprodueix un vídeo.</p>
+    <svg viewBox="0 0 720 900" role="img" aria-label="Diagrama de caixes del procés del joc, de l'entrada fins al final" style="width:100%;height:auto;display:block;">
+      <defs>
+        <marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="#7a7266"/>
+        </marker>
+      </defs>
+      <g stroke="#7a7266" stroke-width="2" fill="none" marker-end="url(#fl)">
+        <line x1="320" y1="90" x2="320" y2="118"/>
+        <line x1="320" y1="174" x2="320" y2="206"/>
+        <line x1="320" y1="266" x2="320" y2="294"/>
+        <line x1="320" y1="354" x2="320" y2="382"/>
+        <line x1="320" y1="644" x2="320" y2="676"/>
+        <line x1="320" y1="732" x2="320" y2="762"/>
+        <line x1="320" y1="822" x2="320" y2="848"/>
+        <path d="M620 654 L620 792 L522 792" stroke-dasharray="6 4"/>
+      </g>
+      <g font-family="inherit" text-anchor="middle">
+        <rect x="120" y="30" width="400" height="60" rx="10" fill="#fffdf7" stroke="#9a4a1f" stroke-width="2"/>
+        <text x="320" y="56" font-size="17" font-weight="700" fill="#1d1b16">1. Entrada a l'app</text>
+        <text x="320" y="76" font-size="14" fill="#6b655a">Benvinguda, equip i sala d'espera</text>
+
+        <rect x="120" y="118" width="400" height="56" rx="10" fill="#fffdf7" stroke="#9a4a1f" stroke-width="2"/>
+        <text x="320" y="142" font-size="17" font-weight="700" fill="#1d1b16">2. Carta de Fra Francesc</text>
+        <text x="320" y="162" font-size="14" fill="#6b655a">🎬 Vídeo intro-carta, amb so, a pantalla completa</text>
+
+        <rect x="120" y="206" width="400" height="60" rx="10" fill="#fffdf7" stroke="#9a4a1f" stroke-width="2"/>
+        <text x="320" y="232" font-size="17" font-weight="700" fill="#1d1b16">3. Hub: mapa i pentagrama</text>
+        <text x="320" y="252" font-size="14" fill="#6b655a">El temps corre. Les cinc fites es veuen al mapa</text>
+
+        <rect x="120" y="294" width="400" height="60" rx="10" fill="#fffdf7" stroke="#9a4a1f" stroke-width="2"/>
+        <text x="320" y="320" font-size="17" font-weight="700" fill="#1d1b16">4. Camí (GPS)</text>
+        <text x="320" y="340" font-size="14" fill="#6b655a">🎬 Vídeos automàtics a 30–40 m de cada punt</text>
+
+        <rect x="100" y="382" width="440" height="262" rx="12" fill="none" stroke="#9a4a1f" stroke-width="2" stroke-dasharray="6 4"/>
+        <text x="120" y="406" font-size="17" font-weight="700" fill="#1d1b16" text-anchor="start">5. Fita × 5 (en qualsevol ordre)</text>
+        <rect x="130" y="418" width="380" height="36" rx="8" fill="#efeadc" stroke="#d9d2c2"/>
+        <text x="320" y="441" font-size="14" fill="#1d1b16">a. Tocar la fita al mapa o escanejar el QR</text>
+        <rect x="130" y="462" width="380" height="36" rx="8" fill="#efeadc" stroke="#d9d2c2"/>
+        <text x="320" y="485" font-size="14" fill="#1d1b16">b. 🎬 Arribada: vídeo i veu de Fra Francesc</text>
+        <rect x="130" y="506" width="380" height="36" rx="8" fill="#efeadc" stroke="#d9d2c2"/>
+        <text x="320" y="529" font-size="14" fill="#1d1b16">c. La prova: resposta i tres pistes</text>
+        <rect x="130" y="550" width="380" height="36" rx="8" fill="#efeadc" stroke="#d9d2c2"/>
+        <text x="320" y="573" font-size="14" fill="#1d1b16">d. 🎬 Encert: vídeo i fragment</text>
+        <rect x="130" y="594" width="380" height="36" rx="8" fill="#efeadc" stroke="#d9d2c2"/>
+        <text x="320" y="617" font-size="14" fill="#1d1b16">e. Fita resolta: el fragment queda guardat</text>
+
+        <rect x="120" y="676" width="400" height="56" rx="10" fill="#fffdf7" stroke="#9a4a1f" stroke-width="2"/>
+        <text x="320" y="702" font-size="17" font-weight="700" fill="#1d1b16">6. Estrella completa</text>
+        <text x="320" y="722" font-size="14" fill="#6b655a">🎬 Vídeo estrella-completa, amb les cinc fites</text>
+
+        <rect x="120" y="762" width="400" height="60" rx="10" fill="#fffdf7" stroke="#9a4a1f" stroke-width="2"/>
+        <text x="320" y="788" font-size="17" font-weight="700" fill="#1d1b16">7. Pla de Masset: la caixa de pocions</text>
+        <text x="320" y="808" font-size="14" fill="#6b655a">Fra Francesc i el ritual dels cinc elements</text>
+
+        <rect x="120" y="848" width="400" height="52" rx="10" fill="#fffdf7" stroke="#9a4a1f" stroke-width="2"/>
+        <text x="320" y="872" font-size="17" font-weight="700" fill="#1d1b16">8. Guardians del Secret</text>
+        <text x="320" y="890" font-size="14" fill="#6b655a">🎬 Vídeo final-guardians i música</text>
+
+        <rect x="540" y="590" width="160" height="64" rx="10" fill="none" stroke="#7a7266" stroke-width="2" stroke-dasharray="6 4"/>
+        <text x="620" y="616" font-size="14" font-weight="700" fill="#1d1b16">Temps a zero</text>
+        <text x="620" y="636" font-size="13" fill="#6b655a">Sense estrella: àudio</text>
+      </g>
+    </svg>
+    <p class="meta" style="margin-top:12px;">Si el temps s'acaba abans de les cinc fites, la partida va directament al Pla de Masset.</p>
+  </section>
+
+  <section class="card" id="ar">
+    <span class="tag">AR i vídeos</span>
+    <h2>Punts de pas, fites i vídeos</h2>
+    <p>Cada equip porta un mòbil. El mapa del hub mostra les cinc fites i el punt blau de l'equip. Una fita s'obre sola en arribar-hi, pel GPS, o escanejant el QR del cartell si el GPS falla.</p>
+
+    <h3>Punt de pas previ (Aire)</h3>
+    <p>Abans de l'Aire, els jugadors han d'arribar a la <strong>Creu del Pujolar</strong> (41,911628, 2,226846). Només arribar-hi desbloqueja la fita de l'Aire. No hi ha prova.</p>
+
+    <h3>Extres AR</h3>
+    <p>Són extres de diversió: no canvien la partida ni les pistes. Cada extra s'activa amb un botó.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Extra</th><th>On</th><th>Què es veu</th><th>Botó</th></tr></thead>
+        <tbody>
+          <tr><td>Ulls en la foscor (Aire)</td><td>Pas previ, Creu del Pujolar</td><td>Una figura en la foscor que vigila. Una vora de la pantalla es posa vermella cap al costat on és. Si s'acosta massa, es pot cridar perquè marxi.</td><td>«Mirar la foscor»</td></tr>
+          <tr><td>Ànimes a la foscor (Ànima)</td><td>Dunes d'asfalt, pista de skate</td><td>Fantasmes grans, ànimes petites i portals de llum. El botó 💥 fa un flaix que dissol els fantasmes grans.</td><td>«Mirar les ànimes»</td></tr>
+          <tr><td>Foc a la foscor (Foc)</td><td>Serrat del Caçador</td><td>Arcs de flames que surten de terra. Els companys enfocats queden amb un contorn vermell.</td><td>«Encendre el foc»</td></tr>
+          <tr><td>Ràpids als peus (Aigua)</td><td>Font del Lleó, carrer del Call. Després de resoldre la fita</td><td>Un riu de ràpids d'uns 3 m passa pels peus. Per una vora blava surt un lleó d'aigua que ve dues vegades, de costats oposats. Abans cal calibrar mirant cap avall del carrer.</td><td>«Deixar córrer l'aigua»</td></tr>
+          <tr><td>La Terra us guia (Terra)</td><td>Planes Bones, a la pantalla d'arribada</td><td>Una esquerda de llum porta fins a les àmfores, a uns 90 m cap a l'est-sud-est.</td><td>«Seguiu la Terra»</td></tr>
+          <tr><td>Les ànimes us guien (Ànima)</td><td>Camí de Malla, des del vídeo del camí</td><td>Ànimes petites que volen en línia recta pel camí cap a la fita d'Ànima.</td><td>«Veure les ànimes»</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="meta" style="margin-top:12px;">L'extra de l'Aigua encara no s'ha provat en un mòbil real.</p>
+
+    <h3>Vídeos automàtics pel camí (GPS)</h3>
+    <p>Es disparen quan un equip és a 30–40 m del punt. El vídeo va mut i el so és un fitxer a part, sincronitzat.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Vídeo</th><th>Punt que el dispara</th><th>Coordenades</th><th>Què diu</th></tr></thead>
+        <tbody>
+          <tr><td>aigua-esglesia</td><td>Església del poble, camí cap a l'Aigua</td><td>41,913778, 2,227906 (30 m)</td><td>«L'aigua ha passat»</td></tr>
+          <tr><td>terra-planes-bones</td><td>Entrada del Mas Vinyals, camí cap a la Terra</td><td>41,913600, 2,232721 (30 m)</td><td>«La Terra ha florit»</td></tr>
+          <tr><td>foc-placa-creu</td><td>Plaça de la Creu, camí cap al Foc</td><td>41,914663, 2,229972 (30 m)</td><td>«El Foc ha espurnejat»</td></tr>
+          <tr><td>anima-cami-malla</td><td>Camí de Malla, camí cap a l'Ànima</td><td>41,912181, 2,229094 (30 m)</td><td>«L'Ànima ronda el camí»</td></tr>
+          <tr><td>alerta-inquisidor</td><td>Cementiri, camí cap al pas previ de l'Aire</td><td>41,912569, 2,227555 (40 m)</td><td>L'Inquisidor: «Us ha sentit»</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Vídeos quan es resol la fita</h3>
+    <ul>
+      <li><strong>arribada-fita-[element]:</strong> en obrir la fita, amb la veu de Fra Francesc.</li>
+      <li><strong>fita-[element]:</strong> en encertar la prova, el fragment trobat.</li>
+      <li><strong>estrella-completa:</strong> en tenir les cinc fites resoltes.</li>
+      <li><strong>final-guardians:</strong> al final del ritual del Gresol.</li>
+    </ul>
+  </section>
+
+  <section class="card" id="actors">
+    <span class="tag">Actors</span>
+    <h2>Llista d'actors i personatges</h2>
+        <div class="table-wrap">
+      <table>
+        <thead><tr><th>Personatge</th><th>Qui l'interpreta</th><th>On</th><th>Què fa i què diu</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Fra Francesc de Sentfores</td>
+                        <td></td>
+            <td>Vídeo de la carta a l'inici; veu a cada arribada; fragments; ritual final al Pla de Masset</td>
+            <td>Alquimista de l'Orde del Testament. Vol que la recepta no caigui en mans de qui en vol fer mal ús. Signa «— Fra F.». «Que el foc de l'Atanor us guiï.»</td>
+          </tr>
+          <tr>
+            <td>L'Inquisidor</td>
+                        <td></td>
+            <td>Ronda el poble durant tota la partida; alerta al cementiri</td>
+            <td>Home alt, capa i caputxa negres, cara sempre oculta, fanal i espasa. Amenaça i advoca als jugadors. «On sou?» · «Alto!» · «A la força!» · «Heretgia! … El Sant Ofici no oblida ni perdona.»</td>
+          </tr>
+          <tr>
+            <td>Mossèn Joan, rector</td>
+                        <td></td>
+            <td>Porta de l'església, nucli del castell (41,9137561, 2,2277808)</td>
+            <td>Confessor i escriptor de cartes. Pacient, culte, prudent. Amaga que va protegir un remença fugit. «Que Déu us guardi.» · «Vés en pau, i no et fiïs de qui somriu massa.»</td>
+          </tr>
+          <tr>
+            <td>Mare Constança, superiora</td>
+            <td></td>
+            <td>Dins del convent, al nucli del poble</td>
+            <td>Ferma i discreta. Decideix qui entra i qui surt del claustre. «Que el Senyor us dugui la pau, filla.»</td>
+          </tr>
+          <tr>
+            <td>Ramon Sitjar i Bernadeta, soldats</td>
+                        <td></td>
+            <td>Entrada del poble, entre la fita de foc i la fita de terra (41,9145837, 2,2299493)</td>
+            <td>Ramon, sergent de ballesters, cansat i lleial. Bernadeta, ballestera novella, xerradora. Ramon sap qui baixa al cementiri de nit. «Identifica't. Aquí mana el senyor i el Sant Ofici.» · «Bon dia! Veniu de Vic?»</td>
+          </tr>
+          <tr>
+            <td>Vell alquimista boig</td>
+                        <td></td>
+            <td>Dunes d'asfalt, a les afores (41,910355, 2,230083)</td>
+            <td>Alquimista corromput pel poder, encorbat, amb dues veus: una de sàvia i una de boig. Vol la Pedra Filosofal. «El poder serà meu, sí, sí.» · «Qui s'acosta al meu gresol, mor.»</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card" id="fitxes">
+    <span class="tag">Fitxes individuals</span>
+    <h2>Fra Francesc de Sentfores</h2>
+    <img src="/actors/img/fra-francesc.jpg" alt="Fra Francesc llegint un pergamí en el seu laboratori" style="width:100%;height:auto;border-radius:8px;display:block;margin:10px 0;">
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><td>Rol</td><td>Alquimista i membre de l'Orde del Testament. És l'únic de l'Orde que els jugadors coneixen</td></tr>
+          <tr><td>Aparença</td><td>Home gran, rostre arrugat, mirada de savi i barba mitjana</td></tr>
+          <tr><td>On i quan</td><td>Vídeo de la carta a l'inici; veu a cada arribada; fragments; ritual final al Pla de Masset (41,913130, 2,229789)</td></tr>
+          <tr><td>Veu</td><td>Gravada. Qui l'interpreta en persona: per decidir</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="lines" style="margin-top:10px;">
+      <div><strong>Carta:</strong> «Em dic Fra Francesc de Sentfores.»</div>
+      <div><strong>Arribada a la Font del Lleó:</strong> «Escolteu. Sentiu l'aigua?»</div>
+      <div><strong>Final de la carta:</strong> «Que el foc de l'Atanor us guiï.» Signa: «— Fra F.»</div>
+    </div>
+    <h3>Llenya</h3>
+    <ul>
+      <li><strong>Què vol:</strong> Que la recepta no caigui en mans de qui en vol fer mal ús.</li>
+    </ul>
+
+    <h2 style="margin-top:28px;">L'Inquisidor</h2>
+    <img src="/actors/img/inquisidor.jpg" alt="L'Inquisidor amb capa i caputxa negres i un fanal" style="width:100%;height:auto;border-radius:8px;display:block;margin:10px 0;">
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><td>Rol</td><td>Home del Sant Ofici que ronda el poble. Personatge independent de Fra Francesc</td></tr>
+          <tr><td>Disfressa</td><td>Vestit de comissari del Sant Ofici: capa i caputxa negres que tapin tota la cara, fanal a la mà i espasa a la cintura. Cap detall que el faci reconèixer</td></tr>
+          <tr><td>On i quan</td><td>Pels carrers i al Pla de Masset durant tota la partida. Alerta al cementiri (41,912569, 2,227555)</td></tr>
+          <tr><td>Què fa</td><td>Vigila, adverteix i amenaça. Amenaça amb la transmutació del cos a qui s'hi posi</td></tr>
+          <tr><td>Veu</td><td>Més greu, amb eco</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="lines" style="margin-top:10px;">
+      <div><strong>Alt:</strong> «On sou?» · «Alto!» · «A la força!»</div>
+      <div><strong>Alerta al cementiri:</strong> «Heretgia! … El Sant Ofici no oblida ni perdona. Qui toca l'obra de l'alquimista, crema amb ella. Qui hi ha aquí?»</div>
+      <div><strong>Avís del màster:</strong> «Un home del Sant Ofici ronda per aquests carrers.»</div>
+    </div>
+
+    <h2 style="margin-top:28px;">Mossèn Joan, rector (proposat)</h2>
+    <img src="/actors/img/mare-mossen.jpg" alt="El rector al costat de la mare superiora davant de la porta del convent" style="width:100%;height:auto;border-radius:8px;display:block;margin:10px 0;">
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><td>Rol</td><td>Rector de la parròquia; confessor i escriptor de cartes dels veïns</td></tr>
+          <tr><td>Aparença i edat</td><td>Clergat, 55–60 anys</td></tr>
+          <tr><td>On i quan</td><td>Porta de l'església, nucli del castell (41,9137561, 2,2277808). Al matí (missa); a la tarda visita els malalts</td></tr>
+          <tr><td>Tres paraules</td><td>Pacient, culte, prudent</td></tr>
+          <tr><td>Relacions</td><td>Confessor de Pere; tensió amb el batlle Guillem; desconfiança cap a l'inquisidor</td></tr>
+          <tr><td>To i registre</td><td>Pausat, paternal, amb un punt d'ironia. Català culte, alguna expressió llatina</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="lines" style="margin-top:10px;">
+      <div><strong>Saludo:</strong> «Que Déu us guardi. Passeu amb el cap baix, que el Sant Ofici també escolta a les esglésies.»</div>
+      <div><strong>Pista:</strong> «L'alquimista no va amagar res lluny. El poble coneix cada pedra del seu camí.»</div>
+      <div><strong>Enuig:</strong> «Aquí no es parla de recepta ni d'or. Si us sent algú, pagarem tots.»</div>
+      <div><strong>Sense missió:</strong> «Vés en pau, i no et fiïs de qui somriu massa.»</div>
+    </div>
+    <h3>Llenya</h3>
+    <ul>
+      <li><strong>Què vol:</strong> Que el poble no es divideixi i que la guerra no torni.</li>
+      <li><strong>Què amaga:</strong> Va protegir un remença fugit i no ho ha dit a ningú.</li>
+    </ul>
+
+    <h2 style="margin-top:28px;">Mare Constança, superiora (proposada)</h2>
+    <img src="/actors/img/mare-mossen.jpg" alt="La mare superiora i el rector davant de la porta del convent" style="width:100%;height:auto;border-radius:8px;display:block;margin:10px 0;">
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><td>Rol</td><td>Superiora de la comunitat de monges del poble. Decideix qui entra i qui surt del claustre</td></tr>
+          <tr><td>Edat</td><td>60–65 anys</td></tr>
+          <tr><td>On i quan</td><td>Dins del convent, al nucli del poble. Coordenades per decidir</td></tr>
+          <tr><td>Tres paraules</td><td>Severa, discreta, orgullosa</td></tr>
+          <tr><td>To i registre</td><td>Ferma i pausada. Català culte</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="lines" style="margin-top:10px;">
+      <div><strong>Saludo:</strong> «Que el Senyor us dugui la pau, filla. Aquí les portes es tanquen a l'hora de completes.»</div>
+      <div><strong>Pista:</strong> «Si cerqueu un secret, mireu on es resen els morts. El claustre en sap més que el poble.»</div>
+      <div><strong>Enuig:</strong> «Al claustre no es parla de fora. Marxeu abans que cridi.»</div>
+      <div><strong>Sense missió:</strong> «Vés en pau, i resa per als qui no tenen nom.»</div>
+    </div>
+    <h3>Llenya</h3>
+    <ul>
+      <li><strong>Què vol:</strong> Que el convent no es vegi embrutat per la guerra ni per les històries del poble.</li>
+      <li><strong>Què amaga:</strong> Coneix el camí que la comunitat fa de nit fins al cementiri per enterrar els qui no tenen lloc al poble.</li>
+    </ul>
+
+    <h2 style="margin-top:28px;">Ramon Sitjar i Bernadeta, soldats (proposats)</h2>
+    <img src="/actors/img/soldats.jpg" alt="Ramon i Bernadeta amb ballestes davant de la barrera del poble" style="width:100%;height:auto;border-radius:8px;display:block;margin:10px 0;">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Camp</th><th>Ramon Sitjar</th><th>Bernadeta</th></tr></thead>
+        <tbody>
+          <tr><td>Rol</td><td>Sergent de ballesters del castell</td><td>Ballestera novella</td></tr>
+          <tr><td>Estatus i edat</td><td>Soldat a sou del senyor, 45–50 anys</td><td>Filla de pagès de Vic, reclutada, 18–20 anys</td></tr>
+          <tr><td>On i quan</td><td>Entrada del poble, entre la fita de foc i la fita de terra (41,9145837, 2,2299493). Torns de dia i de nit</td><td>Al seu costat, els mateixos torns</td></tr>
+          <tr><td>Tres paraules</td><td>Cansat, lleial, sec</td><td>Xerraire, nerviosa, valenta</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="lines" style="margin-top:10px;">
+      <div><strong>Saludo (Ramon):</strong> «Identifica't. Aquí mana el senyor i el Sant Ofici.»</div>
+      <div><strong>Saludo (Bernadeta):</strong> «Bon dia! Veniu de Vic? A la font diuen que l'aigua canta.»</div>
+      <div><strong>Pista (Ramon):</strong> «Ahir l'home de la capa negra va cap al cementiri. No li pregunteu on va.»</div>
+      <div><strong>Pista (Bernadeta):</strong> «Ahir vaig veure un fanal entre els pins del Serrat del Caçador.»</div>
+      <div><strong>Enuig (Ramon):</strong> «Una paraula més contra l'ordre i passes la nit al cep.»</div>
+      <div><strong>Enuig (Bernadeta):</strong> «No m'empenyis, que no sóc un sac de gra!»</div>
+    </div>
+    <h3>Llenya</h3>
+    <ul>
+      <li><strong>Ramon, què vol:</strong> Tornar a casa viu.</li>
+      <li><strong>Ramon, què amaga:</strong> Sap qui baixa al cementiri de nit i no ho ha dit a ningú.</li>
+      <li><strong>Bernadeta, què vol:</strong> Demostrar que val per a alguna cosa.</li>
+    </ul>
+
+    <h2 style="margin-top:28px;">Vell alquimista boig, corromput pel poder (proposat)</h2>
+    <img src="/actors/img/boig.jpg" alt="El vell alquimista encorbat, amb una ampolla a la mà" style="width:100%;height:auto;border-radius:8px;display:block;margin:10px 0;">
+    <div class="table-wrap">
+      <table>
+        <tbody>
+          <tr><td>Nom</td><td>Per decidir</td></tr>
+          <tr><td>Rol i edat</td><td>Vell alquimista de l'Orde, boig i corromput pel poder. Viu a les afores, a les dunes d'asfalt. 70 anys o més</td></tr>
+          <tr><td>On i quan</td><td>Dunes d'asfalt, a les afores (41,910355, 2,230083). Al vespre i de nit</td></tr>
+          <tr><td>Tres paraules</td><td>Obsessiu, cruel, malalt</td></tr>
+          <tr><td>To i registre</td><td>Altiu i ansiós. Alterna la veu de sàvia amb la de boig</td></tr>
+          <tr><td>Posat corporal</td><td>Encorbat, com si caminés a quatre grapes. Cap endavant, mans que es mouen a batzegades i ulls que van d'un costat a l'altre</td></tr>
+          <tr><td>Dobla personalitat</td><td>Dues veus: la del vell sàvia, pausada i amable, i la del boig, que xiuxiueja i es renya a si mateix. Canvia d'una a l'altra enmig de la frase</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="lines" style="margin-top:10px;">
+      <div><strong>Saludo:</strong> «Benvingut, fill meu... un nou aprenent! Ai, el poder serà meu, sí, sí.»</div>
+      <div><strong>Pista:</strong> «La pedra no és de Fra Francesc. Si la trobo, és meva.»</div>
+      <div><strong>Enuig:</strong> «Qui s'acosta al meu gresol, mor. El poder és meu!»</div>
+      <div><strong>Sense missió:</strong> «Vés, vés... que el poder no es comparteix.»</div>
+    </div>
+    <h3>Llenya</h3>
+    <ul>
+      <li><strong>Què vol:</strong> La Pedra Filosofal, per tenir un poder sense límits.</li>
+      <li><strong>Què amaga:</strong> Va ser de l'Orde del Testament i el va abandonar per ambició.</li>
+    </ul>
+  </section>
+
+  <section class="card" id="ritual">
+    <span class="tag">Ritual final</span>
+    <h2>La caixa de pocions màgiques</h2>
+    <p>Al Pla de Masset, Fra Francesc els explica la recepta. Els jugadors afegeixen els cinc elements al gresol, un a un, quan els ho digui. Quan hi entra la Quinta Essència, la matèria parla.</p>
+    <p><strong>Contrasenya:</strong> algú diu «El temps es consumeix.» El jugador respon: «Però el foc de l'Atanor es manté.»</p>
+    <p>Quan el LED s'encén, el màster prem «Consagrar Guardians del Secret» i els mòbils passen a «Guardians del Secret».</p>
+    <p class="quote">«Veritas et Materia in unum vertuntur.» La Veritat i la Matèria es fan una de sola.</p>
+  </section>
+
+</main>
+<script>
+(function () {
+  var main = document.querySelector('main');
+  var header = main.querySelector('header');
+
+  // Fitxes individuals: cada personatge és una secció pròpia.
+  var fit = document.getElementById('fitxes');
+  if (fit) {
+    var ref = fit;
+    Array.prototype.slice.call(fit.querySelectorAll('h2')).forEach(function (h, i) {
+      var sec = document.createElement('section');
+      sec.className = 'card fitxa';
+      sec.id = 'fitxa-' + (i + 1);
+      sec.setAttribute('data-label', h.textContent.split(',')[0].replace(/\s*\(.*\)\s*$/, '').trim());
+      var el = h.nextElementSibling;
+      sec.appendChild(h);
+      while (el && el.tagName !== 'H2') {
+        var nx = el.nextElementSibling;
+        sec.appendChild(el);
+        el = nx;
+      }
+      ref.parentNode.insertBefore(sec, ref.nextSibling);
+      ref = sec;
+    });
+    fit.remove();
+  }
+
+  // Actors: la taula es converteix en fitxes, cadascuna amb un enllaç a la seva fitxa individual.
+  var act = document.getElementById('actors');
+  var tbl = act && act.querySelector('table');
+  if (tbl) {
+    var fitxesSeccions = Array.prototype.slice.call(main.querySelectorAll('section.fitxa'));
+    var claus = ['Fra Francesc', 'Inquisidor', 'Mossèn', 'Mare', 'Ramon', 'alquimista'];
+    var imatges = {
+      'Fra Francesc': '/actors/img/fra-francesc.jpg',
+      'Inquisidor': '/actors/img/inquisidor.jpg',
+      'Mossèn': '/actors/img/mare-mossen.jpg',
+      'Mare': '/actors/img/mare-mossen.jpg',
+      'Ramon': '/actors/img/soldats.jpg',
+      'alquimista': '/actors/img/boig.jpg'
+    };
+    var grid = document.createElement('div');
+    grid.className = 'fitxes-grid';
+    Array.prototype.slice.call(tbl.querySelectorAll('tbody tr')).forEach(function (tr) {
+      var td = tr.querySelectorAll('td');
+      var nom = td[0].textContent.trim();
+      var clau = claus.filter(function (k) { return nom.indexOf(k) !== -1; })[0];
+      var dest = fitxesSeccions.filter(function (s) {
+        return clau && s.getAttribute('data-label').toLowerCase().indexOf(clau.toLowerCase()) !== -1;
+      })[0];
+      var c = document.createElement('a');
+      c.className = 'fitxa-card';
+      c.href = dest ? '#' + dest.id : '#actors';
+      c.innerHTML = '<img alt=""><h3></h3>';
+      c.querySelector('h3').textContent = nom;
+      if (imatges[clau]) c.querySelector('img').src = imatges[clau];
+      else c.querySelector('img').remove();
+      if (clau === 'Mossèn') c.querySelector('img').style.objectPosition = '100% 30%';
+      if (clau === 'Mare') c.querySelector('img').style.objectPosition = '16% 30%';
+      grid.appendChild(c);
+    });
+    // Ordre de la llista: la mare superiora abans que el mossèn.
+    var targetes = Array.prototype.slice.call(grid.children);
+    var mossen = targetes.filter(function (c) { return c.querySelector('h3').textContent.indexOf('Mossèn') === 0; })[0];
+    var mare = targetes.filter(function (c) { return c.querySelector('h3').textContent.indexOf('Mare') === 0; })[0];
+    if (mossen && mare) grid.insertBefore(mossen, mare.nextSibling);
+    tbl.closest('.table-wrap').replaceWith(grid);
+  }
+
+  // Barra de navegació fixa: una secció visible cada vegada.
+  var ix = header.querySelector('ul.index');
+  if (ix) ix.remove();
+  var panels = Array.prototype.slice.call(main.querySelectorAll(':scope > section.card'));
+  panels.forEach(function (p) {
+    p.classList.add('panel');
+    if (!p.getAttribute('data-label')) {
+      var t = p.querySelector(':scope > .tag');
+      p.setAttribute('data-label', t ? t.textContent.trim() : p.id);
+    }
+  });
+  // Subseccions desplegables: cada h3 obre un bloc que es planega i desplega.
+  panels.forEach(function (p) {
+    Array.prototype.slice.call(p.children).filter(function (c) { return c.tagName === 'H3'; }).forEach(function (h, i) {
+      var d = document.createElement('details');
+      d.className = 'sub';
+      d.open = i === 0;
+      var s = document.createElement('summary');
+      s.textContent = h.textContent;
+      d.appendChild(s);
+      var nodes = [];
+      var el = h.nextElementSibling;
+      while (el && el.tagName !== 'H3' && el.tagName !== 'H2') {
+        nodes.push(el);
+        el = el.nextElementSibling;
+      }
+      nodes.forEach(function (n) { d.appendChild(n); });
+      p.replaceChild(d, h);
+    });
+  });
+
+  var bar = document.createElement('nav');
+  bar.className = 'barra';
+  bar.setAttribute('aria-label', 'Seccions');
+  panels.forEach(function (p) {
+    var a = document.createElement('a');
+    a.href = '#' + p.id;
+    a.dataset.id = p.id;
+    a.textContent = p.getAttribute('data-label');
+    if (p.id === 'actors') a.className = 'nivell-1';
+    if (p.classList.contains('fitxa')) a.className = 'nivell-2';
+    bar.appendChild(a);
+  });
+  header.insertAdjacentElement('afterend', bar);
+
+  function mostra(id) {
+    var p = document.getElementById(id);
+    if (!p || panels.indexOf(p) === -1) p = panels[0];
+    panels.forEach(function (x) { x.classList.toggle('on', x === p); });
+    bar.querySelectorAll('a').forEach(function (a) {
+      if (a.dataset.id === p.id) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+    var cur = bar.querySelector('[aria-current]');
+    if (cur) cur.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    window.scrollTo(0, 0);
+  }
+  bar.addEventListener('click', function (e) {
+    var a = e.target.closest('a');
+    if (!a) return;
+    e.preventDefault();
+    history.replaceState(null, '', '#' + a.dataset.id);
+    mostra(a.dataset.id);
+  });
+  window.addEventListener('hashchange', function () { mostra(location.hash.slice(1)); });
+  mostra(location.hash.slice(1));
+})();
+</script>

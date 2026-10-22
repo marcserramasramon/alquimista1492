@@ -3,7 +3,7 @@ import { Roboto } from "next/font/google";
 import type { FormaSimbol, PecaSoroll, Soroll } from "@/lib/sorollFoc";
 
 /** Tipografia del número amagat (la resposta). */
-const roboto = Roboto({ weight: "400", subsets: ["latin"] });
+const roboto = Roboto({ weight: ["400", "700"], subsets: ["latin"] });
 
 /**
  * Símbols alquímics dibuixats amb traços (no amb fonts, que no sempre tenen
@@ -45,12 +45,12 @@ function Simbol({ forma }: { forma: FormaSimbol }) {
 }
 
 /** Una xifra o un símbol del soroll, sense cap vora ni efecte afegit. */
-function PecaNoise({ p }: { p: PecaSoroll }) {
+function PecaNoise({ p, color = p.color }: { p: PecaSoroll; color?: string }) {
   return p.xifra ? (
     <text
       x={p.x}
       y={p.y}
-      fill={p.color}
+      fill={color}
       fontSize={p.mida}
       fontWeight={800}
       textAnchor="middle"
@@ -67,11 +67,21 @@ function PecaNoise({ p }: { p: PecaSoroll }) {
       strokeLinecap="round"
       fill="none"
     >
-      <g color={p.color} stroke="currentColor" strokeWidth={0.1}>
+      <g color={color} stroke="currentColor" strokeWidth={0.1}>
         <Simbol forma={p.simbol!} />
       </g>
     </g>
   );
+}
+
+/** Vèrtexs d'un triangle equilàter de radi `r` (circumscrit) centrat a (x, y) i girat `angle` graus. */
+function puntsTriangle(x: number, y: number, r: number, angle: number) {
+  return [0, 120, 240]
+    .map((a) => {
+      const rad = ((a + angle - 90) * Math.PI) / 180;
+      return `${(x + r * Math.cos(rad)).toFixed(1)},${(y + r * Math.sin(rad)).toFixed(1)}`;
+    })
+    .join(" ");
 }
 
 /**
@@ -79,12 +89,43 @@ function PecaNoise({ p }: { p: PecaSoroll }) {
  * Un 30% del soroll (`sotaObjectiu`) es dibuixa abans que la resposta, per
  * quedar-hi per sota en lloc de per sobre.
  */
-export function SorollFocSvg({ soroll, className }: { soroll: Soroll; className?: string }) {
+export function SorollFocSvg({
+  soroll,
+  className,
+  objectiuDamunt = false,
+  negreta = false,
+  nomesInterseccio = false,
+}: {
+  soroll: Soroll;
+  className?: string;
+  /** Dibuixa el número per sobre de tot el soroll, en lloc de quedar-hi tapat. */
+  objectiuDamunt?: boolean;
+  /** El número de la resposta en negreta (la trama de punts el segueix). */
+  negreta?: boolean;
+  /** El número només es pinta on s'encreua amb les peces del soroll (la trama es retalla amb la forma del soroll). */
+  nomesInterseccio?: boolean;
+}) {
   const idBase = useId().replace(/:/g, "");
   const clipObjectiu = `${idBase}-clip-objectiu`;
+  const maskSoroll = `${idBase}-mask-soroll`;
   const objectiu = soroll.peces.find((p) => p.objectiu);
   const sotaObjectiu = soroll.peces.filter((p) => !p.objectiu && p.sotaObjectiu);
   const sobreObjectiu = soroll.peces.filter((p) => !p.objectiu && !p.sotaObjectiu);
+
+  const trama =
+    objectiu && soroll.puntsObjectiu.length > 0 ? (
+      <g clipPath={`url(#${clipObjectiu})`}>
+        {soroll.puntsObjectiu.map((p, i) => (
+          p.angle === undefined ? (
+            <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={p.r.toFixed(2)} fill={p.color} />
+          ) : (
+            <polygon key={i} points={puntsTriangle(p.x, p.y, p.r, p.angle)} fill={p.color} />
+          )
+        ))}
+      </g>
+    ) : null;
+
+  const tramaFinal = nomesInterseccio && trama ? <g mask={`url(#${maskSoroll})`}>{trama}</g> : trama;
 
   return (
     <svg
@@ -93,6 +134,17 @@ export function SorollFocSvg({ soroll, className }: { soroll: Soroll; className?
       role="img"
       aria-label="Composició de números i símbols de colors"
     >
+      {objectiu && nomesInterseccio && (
+        <defs>
+          <mask id={maskSoroll} maskUnits="userSpaceOnUse" x={0} y={0} width={soroll.amplada} height={soroll.alcada}>
+            {soroll.peces
+              .filter((p) => !p.objectiu)
+              .map((p, i) => (
+                <PecaNoise key={i} p={p} color="#fff" />
+              ))}
+          </mask>
+        </defs>
+      )}
       {objectiu && (
         <defs>
           <clipPath id={clipObjectiu}>
@@ -100,7 +152,7 @@ export function SorollFocSvg({ soroll, className }: { soroll: Soroll; className?
               x={objectiu.x}
               y={objectiu.y}
               fontSize={objectiu.mida}
-              fontWeight={400}
+              fontWeight={negreta ? 700 : 400}
               textAnchor="middle"
               dominantBaseline="central"
               transform={`rotate(${objectiu.rotacio.toFixed(1)} ${objectiu.x.toFixed(1)} ${objectiu.y.toFixed(1)})`}
@@ -114,16 +166,11 @@ export function SorollFocSvg({ soroll, className }: { soroll: Soroll; className?
       {sotaObjectiu.map((p, i) => (
         <PecaNoise key={`sota-${i}`} p={p} />
       ))}
-      {objectiu && soroll.puntsObjectiu.length > 0 && (
-        <g clipPath={`url(#${clipObjectiu})`}>
-          {soroll.puntsObjectiu.map((p, i) => (
-            <circle key={i} cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={p.r.toFixed(2)} fill={p.color} />
-          ))}
-        </g>
-      )}
+      {!objectiuDamunt && tramaFinal}
       {sobreObjectiu.map((p, i) => (
         <PecaNoise key={`sobre-${i}`} p={p} />
       ))}
+      {objectiuDamunt && tramaFinal}
     </svg>
   );
 }

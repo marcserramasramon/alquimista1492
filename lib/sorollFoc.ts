@@ -35,6 +35,8 @@ export interface PuntHalftone {
   y: number;
   r: number;
   color: string;
+  /** Si hi és, el punt és un triangle equilàter de radi `r` (circumscrit) girat aquests graus; sense valor, un cercle. */
+  angle?: number;
 }
 
 export interface Soroll {
@@ -67,6 +69,9 @@ const PROPORCIO_VERMELLS = 1;
 
 /** Color de la resposta: un blau fosc, l'únic blau del cartell. */
 export const BLAU_OBJECTIU = "#2f63c0";
+
+/** Separació entre els punts de la trama de la resposta. */
+export const PAS_PUNTS_OBJECTIU = 6.5;
 
 /** Radi dels punts de la trama de la resposta. */
 export const RADI_PUNTS_OBJECTIU = 2.7;
@@ -107,6 +112,8 @@ export function generaSoroll({
   colorObjectiu = BLAU_OBJECTIU,
   radiPunts = RADI_PUNTS_OBJECTIU,
   colorsSoroll = COLORS_SOROLL,
+  pasPunts = PAS_PUNTS_OBJECTIU,
+  triangles = false,
 }: {
   resposta: string;
   llavor?: number;
@@ -122,6 +129,10 @@ export function generaSoroll({
   radiPunts?: number;
   /** Colors de les xifres i els símbols del soroll; un color repetit pesa més (per defecte COLORS_SOROLL). No canvia la composició, només els colors. */
   colorsSoroll?: string[];
+  /** Separació entre els punts de la trama del número: com més gran, menys densitat (per defecte PAS_PUNTS_OBJECTIU). */
+  pasPunts?: number;
+  /** Els punts de la trama són triangles orientats a l'atzar (en lloc de cercles). No toca la composició del soroll. */
+  triangles?: boolean;
 }): Soroll {
   const r = prng(llavor);
   const entre = (min: number, max: number) => min + r() * (max - min);
@@ -148,7 +159,7 @@ export function generaSoroll({
   // Trama de punts (halftone) de la resposta: graella de cercles (clipats a
   // la seva forma pel component), tots de la mateixa mida i del blau de la
   // resposta.
-  const pasHalftone = 6.5;
+  const pasHalftone = pasPunts;
   const radiHalftone = radiPunts;
   const margeHalftone = midaObjectiuFinal * 0.65;
   // L'amplada del número creix amb les xifres (cada una fa uns 0,56 de la mida): sense això, la darrera xifra queda tallada.
@@ -158,9 +169,11 @@ export function generaSoroll({
   const minYHalftone = Math.max(0, yObjectiu - margeHalftone);
   const maxYHalftone = Math.min(alcada, yObjectiu + margeHalftone);
   const puntsObjectiu: PuntHalftone[] = [];
+  // PRNG propi: així els angles no alteren la composició del soroll, que ve després amb `r`.
+  const rAngles = prng(llavor + 7919);
   for (let y = minYHalftone; y <= maxYHalftone; y += pasHalftone) {
     for (let x = minXHalftone; x <= maxXHalftone; x += pasHalftone) {
-      puntsObjectiu.push({ x, y, r: radiHalftone, color: colorObjectiu });
+      puntsObjectiu.push({ x, y, r: radiHalftone, color: colorObjectiu, ...(triangles ? { angle: rAngles() * 360 } : {}) });
     }
   }
 

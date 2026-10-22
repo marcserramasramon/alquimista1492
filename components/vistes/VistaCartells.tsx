@@ -26,6 +26,8 @@ export interface DadesCartell {
   qrSvg?: string;
   /** Només el Foc: composició de números i símbols (lib/sorollFoc.ts). */
   soroll?: Soroll;
+  /** Només el Foc: el número va per sobre del soroll (experiments de color). */
+  objectiuDamunt?: boolean;
 }
 
 const ARTICLE: Record<Element, string> = {
@@ -95,7 +97,7 @@ function Cartell({ c, estil }: { c: DadesCartell; estil: EstilCartell }) {
             <div className="relative w-full shrink-0" style={{ aspectRatio: PROPORCIO_IMATGE }}>
               {/* eslint-disable-next-line @next/next/no-img-element -- s'imprimeix: sense optimització d'imatge */}
               <img src={c.poema.imatge} alt="" className="absolute inset-0 h-full w-full" />
-              {c.soroll && <SorollFocSvg soroll={c.soroll} className="absolute inset-0 h-full w-full" />}
+              {c.soroll && <SorollFocSvg soroll={c.soroll} objectiuDamunt={c.objectiuDamunt} className="absolute inset-0 h-full w-full" />}
             </div>
           )}
 
@@ -112,7 +114,7 @@ function Cartell({ c, estil }: { c: DadesCartell; estil: EstilCartell }) {
 
           {fons && c.soroll && (
             <div className="rounded-[3mm] border-[0.8mm] border-ink bg-white p-[2mm]">
-              <SorollFocSvg soroll={c.soroll} className="block h-auto w-full" />
+              <SorollFocSvg soroll={c.soroll} objectiuDamunt={c.objectiuDamunt} className="block h-auto w-full" />
             </div>
           )}
         </div>
