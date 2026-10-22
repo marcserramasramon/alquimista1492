@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="96" fill="#3b2f2a"/>
+  <circle cx="100" cy="100" r="84" fill="none" stroke="#f3e6c4" stroke-width="3" stroke-dasharray="6 6"/>
+  <g fill="none" stroke="#f3e6c4" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"><path d="M74 150 V82 H66 V62 H80 V72 H88 V62 H112 V72 H120 V62 H134 V82 H126 V150 Z"/><path d="M92 150 V120 H108 V150 M100 96 V104"/></g>
+</svg>

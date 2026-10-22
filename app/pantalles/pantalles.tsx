@@ -529,7 +529,7 @@ export const PANTALLES: Pantalla[] = [
     id: "equips",
     grup: "entrada",
     titol: "Tria de l'equip",
-    descripcio: "Les 8 icones, totes lliures.",
+    descripcio: "Les 25 icones, totes lliures.",
     render: () => <VistaSeleccioEquip ambJugadors={[]} triant={null} error={null} onTriar={noop} />,
   },
   {
@@ -1534,7 +1534,7 @@ export const PANTALLES: Pantalla[] = [
     id: "master-equips-buit",
     grup: "master",
     titol: "Màster · equips no trobats",
-    descripcio: "Només si falta la migració dels 8 equips.",
+    descripcio: "Només si falta la migració dels 25 equips.",
     render: () => (
       <VistaMasterEquips {...MASTER_BASE} equips={[]} posicioMaster={null} comparteixo={false} estatUbicacio="inactiu" />
     ),

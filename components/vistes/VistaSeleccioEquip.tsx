@@ -18,7 +18,7 @@ export interface VistaSeleccioEquipProps {
 }
 
 /**
- * Les 8 icones d'equip. Un equip pot tenir diversos mòbils: si ja n'hi ha, es demana
+ * Les 25 icones d'equip. Un equip pot tenir diversos mòbils: si ja n'hi ha, es demana
  * confirmació abans d'entrar-hi (per no entrar per error a l'equip d'uns altres).
  */
 export function VistaSeleccioEquip({
@@ -51,7 +51,7 @@ export function VistaSeleccioEquip({
         </div>
       )}
 
-      <ul className="grid animate-entrar grid-cols-2 gap-3 [animation-delay:160ms]">
+      <ul className="grid animate-entrar grid-cols-2 gap-3 sm:grid-cols-3 [animation-delay:160ms]">
         {EQUIPS.map((equip) => {
           const ambJugadorsJa = ambJugadors.includes(equip.id);
           const aquest = triant === equip.id;

@@ -1,5 +1,5 @@
 /**
- * Els 8 equips de la partida. Cada mòbil n'agafa un tocant-ne la icona.
+ * Els 25 equips de la partida. Cada mòbil n'agafa un tocant-ne la icona.
  *
  * `id` és el `slug` de la taula v2_teams (migració 20260924000015): si se'n
  * canvia un, cal una migració nova. El `nom` d'aquí és el que es mostra.
@@ -21,6 +21,23 @@ export const EQUIPS = [
   { id: "sang-sofre", nom: "Sang i Sofre", imatge: "/images/equips/sang-sofre.svg" },
   { id: "magnum-opus", nom: "Custodis del Magnum Opus", imatge: "/images/equips/magnum-opus.svg" },
   { id: "homuncles-cendra", nom: "Els Homuncles de Cendra", imatge: "/images/equips/homuncles-cendra.svg" },
+  { id: "sol-negre", nom: "Els Fills del Sol Negre", imatge: "/images/equips/sol-negre.svg" },
+  { id: "lluna-plata", nom: "La Confraria de la Lluna de Plata", imatge: "/images/equips/lluna-plata.svg" },
+  { id: "estrella-sal", nom: "Els Guardians de la Sal", imatge: "/images/equips/estrella-sal.svg" },
+  { id: "clau-secreta", nom: "La Clau del Secret", imatge: "/images/equips/clau-secreta.svg" },
+  { id: "pedra-filosofal", nom: "Els Cercadors de la Pedra", imatge: "/images/equips/pedra-filosofal.svg" },
+  { id: "ampolla-verda", nom: "L'Ampolla Verda", imatge: "/images/equips/ampolla-verda.svg" },
+  { id: "llibre-tancat", nom: "El Llibre Tancat", imatge: "/images/equips/llibre-tancat.svg" },
+  { id: "corona-cendra", nom: "La Corona de Cendra", imatge: "/images/equips/corona-cendra.svg" },
+  { id: "espasa-quieta", nom: "Els Guardians de l'Espasa Quieta", imatge: "/images/equips/espasa-quieta.svg" },
+  { id: "ancora-fosca", nom: "L'Àncora Fosca", imatge: "/images/equips/ancora-fosca.svg" },
+  { id: "fulla-tres", nom: "Les Tres Fulles", imatge: "/images/equips/fulla-tres.svg" },
+  { id: "torre-vigia", nom: "La Torre de Vigia", imatge: "/images/equips/torre-vigia.svg" },
+  { id: "corretja-ferro", nom: "Els Ferrers de la Corretja", imatge: "/images/equips/corretja-ferro.svg" },
+  { id: "flama-blava", nom: "La Flama Blava", imatge: "/images/equips/flama-blava.svg" },
+  { id: "arbre-ocult", nom: "L'Arbre Ocult", imatge: "/images/equips/arbre-ocult.svg" },
+  { id: "ull-clar", nom: "L'Ull Clar", imatge: "/images/equips/ull-clar.svg" },
+  { id: "llum-ferit", nom: "El Llum Ferit", imatge: "/images/equips/llum-ferit.svg" },
 ] as const satisfies readonly Equip[];
 
 export type EquipId = (typeof EQUIPS)[number]["id"];
