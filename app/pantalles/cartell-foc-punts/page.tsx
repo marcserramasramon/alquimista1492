@@ -73,3 +73,6 @@ export default function CartellFocPuntsPage() {
     </>
   );
 }
+
+// Pàgina molt gran en HTML: no es prerenderitza, perquè Vercel no la pot servir com a ISR.
+export const dynamic = "force-dynamic";
