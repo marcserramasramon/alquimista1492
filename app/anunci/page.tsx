@@ -248,6 +248,15 @@ export default function AnunciPage() {
                 {TIPUS_ESDEVENIMENT}
               </span>
             </div>
+            <a
+              href="https://forms.gle/Y6GtfmEgy2C74un39"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 rounded-full px-8 py-4 text-base font-extrabold text-ink shadow-lg sm:text-lg"
+              style={{ backgroundColor: DAURAT }}
+            >
+              Inscriu-te a la partida
+            </a>
             <p className="mt-6 animate-bounce text-sm font-bold uppercase tracking-[0.2em] text-paper/70">Descobriu de què va ↓</p>
           </div>
         </section>
