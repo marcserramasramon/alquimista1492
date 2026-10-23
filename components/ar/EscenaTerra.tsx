@@ -526,6 +526,11 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           cam.rotation.set(m.elevacio * RAD, -m.rumb * RAD, 0);
           uniforms.uCam.value.set(sobreCami.x, sobreCami.z);
 
+          // El gegant, a 5 m davant de l'equip i de cara a ell.
+          const th = m.rumb * RAD;
+          golem.position.set(sobreCami.x + Math.sin(th) * 5, 0, sobreCami.z - Math.cos(th) * 5);
+          golem.rotation.y = -th;
+
           renderer.render(escena, cam);
           frame = requestAnimationFrame(bucle);
         };
