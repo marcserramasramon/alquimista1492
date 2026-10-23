@@ -392,7 +392,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         sol.position.set(-30, 60, 20);
         escena.add(sol);
         const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
-        new GLTFLoader().load("/golem/stone-golem.glb", (gltf) => {
+        new GLTFLoader().load("/golem/semi-rig.glb", (gltf) => {
           const model = gltf.scene;
           const caixa = new THREE.Box3().setFromObject(model);
           const escala = ALCADA_GOLEM / (caixa.max.y - caixa.min.y || 1);
