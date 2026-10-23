@@ -3,7 +3,7 @@
 import type { Object3D } from "three";
 import { useEffect, useRef, type RefObject } from "react";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
-import { animaCaminada } from "@/components/ar/terra/caminada";
+import { animaCaminada, PREFIXOS_OSSOS } from "@/components/ar/terra/caminada";
 import type { PuntGps } from "@/content/public/extres";
 
 /** Posició de l'equip (GPS); nul·la mentre el mòbil no n'ha trobat cap. */
@@ -400,7 +400,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           // Els ossos del CC_Base, per animar-los a la caminada.
           const ossos = new Map<string, Object3D>();
           model.traverse((objecte) => {
-            if (objecte.name.startsWith("CC_Base_")) ossos.set(objecte.name, objecte);
+            if (PREFIXOS_OSSOS.some((p) => objecte.name.startsWith(p))) ossos.set(objecte.name, objecte);
           });
           ossosGolem = ossos;
           const caixa = new THREE.Box3().setFromObject(model);
