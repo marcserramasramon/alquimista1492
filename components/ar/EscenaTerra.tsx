@@ -28,12 +28,6 @@ const MALLA_X0 = -120;
 const MALLA_X1 = 260;
 const MALLA_Z0 = -120;
 const MALLA_Z1 = 120;
-/** Distància (m) de la fita a què es posa el con, en la direcció del lloc final. */
-const DISTANCIA_CON_M = 20;
-/** Vèrtexs extra dins del disc del con (per al terra i per al cel), perquè el con tingui prou punts. */
-const NVERTEXS_CON = 1800;
-/** Radi (m) del disc del con: dins d'aquest radi el terra i el cel s'uneixen en un con. */
-const RADI_CON = 7.5;
 /** Colors del marcador provisional i de la brúixola. */
 const OR = "255, 206, 92";
 
@@ -120,8 +114,7 @@ function projecta(l: Local, altura: number, mirada: Mirada, w: number, h: number
 
 /**
  * Vèrtexs de la malla, per al terra i per al cel (la mateixa geometria, amb `uCel` = 0 o 1). El terra
- * es mou com el mar, amb diversos trens d'ona. A prop del con, els vèrtexs es doblegen cap a la seva
- * superfície: el terra puja i el cel baixa fins a unir-se en un mateix con, que s'eixampla cap amunt.
+ * es mou com el mar, amb diversos trens d'ona.
  */
 const VERTEX = `
   attribute float aSeed;
@@ -130,7 +123,6 @@ const VERTEX = `
   uniform float uCel;
   uniform float uAlcada;
   uniform vec2 uCam;
-  uniform vec2 uCentre;
   uniform vec3 uBaixa;
   uniform vec3 uAlta;
   varying vec3 vCol;
@@ -144,20 +136,10 @@ const VERTEX = `
     h += 0.10 * sin(dot(p.xz, vec2(-0.18, -0.98)) * 1.55 + uTime * 2.4 + 0.4);
     h += 0.07 * sin(dot(p.xz, vec2(0.60, 0.80)) * 2.30 + uTime * 3.1 + 3.0);
     h += 0.03 * sin(p.x * 3.1 + p.z * 2.7 + uTime * 4.0 + aSeed * 6.2831);
-    float base = uCel > 0.5 ? uAlcada - h : h;
-    float d = distance(p.xz, uCentre);
-    // Punt sobre el perímetre del con: cada vèrtex té una alçada i un angle propis, així el terra i el cel
-    // omplen la mateixa paret a totes les alçades i les dues malles s'uneixen pel mig.
-    float yCon = fract(aSeed * 17.3) * uAlcada;
-    float rCon = 1.0 + 4.5 * (yCon / uAlcada);
-    float angCon = aSeed * 6.2831 * 9.0;
-    vec2 xzCon = uCentre + vec2(cos(angCon), sin(angCon)) * rCon;
-    float wCon = 1.0 - smoothstep(6.0, 9.0, d);
-    p.xz = mix(p.xz, xzCon, wCon);
-    p.y = mix(base, yCon, wCon);
+    p.y = uCel > 0.5 ? uAlcada - h : h;
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(uTime * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
-    vCol = mix(uBaixa, uAlta, max(cresta, wCon)) * (0.65 + 0.6 * cresta + 0.5 * wCon + brill);
+    vCol = mix(uBaixa, uAlta, cresta) * (0.65 + 0.6 * cresta + brill);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     float dist = length(p.xz - uCam);
     vA = 1.0 - smoothstep(120.0, 260.0, dist);
@@ -200,11 +182,10 @@ interface Props {
 }
 
 /**
- * Malla de punts que cobreix el terra fins a l'horitzó i es mou com el mar. Al terra i al cel hi ha la
- * mateixa malla; a la posició del con, les dues es doblegen i s'uneixen en un mateix con. Per sobre, la
- * brúixola (canvas 2D) apunta cap al lloc final i el triangle de la Terra vibra amb guspires quan l'equip
- * és sobre el camí. Al lloc final hi ha un marcador provisional. Dibuixat en dos canvas transparents a
- * sobre de la càmera. La lògica geogràfica és a `estatTerra`.
+ * Malla de punts que cobreix el terra fins a l'horitzó i es mou com el mar, amb una còpia invertida al cel.
+ * Per sobre, la brúixola (canvas 2D) apunta cap al lloc final i el triangle de la Terra vibra amb guspires
+ * quan l'equip és sobre el camí. Al lloc final hi ha un marcador provisional. Dibuixat en dos canvas
+ * transparents a sobre de la càmera. La lògica geogràfica és a `estatTerra`.
  */
 export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }: Props) {
   const glRef = useRef<HTMLCanvasElement>(null);
@@ -303,15 +284,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const cam = new THREE.PerspectiveCamera(FOV_V, 1, 0.5, 800);
         cam.rotation.order = "YXZ";
 
-        // Centre del con: a DISTANCIA_CON_M metres de la fita, en la direcció del lloc final.
-        const B = aMon(amfores.latitud, amfores.longitud, fita);
-        const llargCami = Math.hypot(B.x, B.z) || 1;
-        const centre = { x: (B.x / llargCami) * DISTANCIA_CON_M, z: (B.z / llargCami) * DISTANCIA_CON_M };
-
-        // Vèrtexs: la graella del terra més un disc dens al voltant del con, perquè el con tingui prou punts.
-        const total = NX * NZ + NVERTEXS_CON;
-        const pos = new Float32Array(total * 3);
-        const seed = new Float32Array(total);
+        const pos = new Float32Array(NX * NZ * 3);
+        const seed = new Float32Array(NX * NZ);
         let i = 0;
         // Graella desplaçada a l'atzar dins de cada cel·la: així no es veuen línies rectes.
         const pasX = (MALLA_X1 - MALLA_X0) / (NX - 1);
@@ -325,15 +299,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             i++;
           }
         }
-        for (let j = 0; j < NVERTEXS_CON; j++) {
-          const angle = Math.random() * Math.PI * 2;
-          const radi = RADI_CON * Math.sqrt(Math.random());
-          pos[i * 3] = centre.x + Math.cos(angle) * radi;
-          pos[i * 3 + 1] = 0;
-          pos[i * 3 + 2] = centre.z + Math.sin(angle) * radi;
-          seed[i] = Math.random();
-          i++;
-        }
         const geo = new THREE.BufferGeometry();
         geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
         geo.setAttribute("aSeed", new THREE.BufferAttribute(seed, 1));
@@ -344,7 +309,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           uCel: { value: 0 },
           uAlcada: { value: ALCADA_CEL },
           uCam: { value: new THREE.Vector2() },
-          uCentre: { value: new THREE.Vector2(centre.x, centre.z) },
           uBaixa: { value: new THREE.Vector3(0.12, 0.45, 0.22) },
           uAlta: { value: new THREE.Vector3(0.6, 1.0, 0.5) },
         };
