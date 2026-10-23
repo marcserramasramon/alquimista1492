@@ -1,7 +1,9 @@
 "use client";
 
+import type { Object3D } from "three";
 import { useEffect, useRef, type RefObject } from "react";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
+import { animaCaminada } from "@/components/ar/terra/caminada";
 import type { PuntGps } from "@/content/public/extres";
 
 /** Posició de l'equip (GPS); nul·la mentre el mòbil no n'ha trobat cap. */
@@ -392,8 +394,15 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         sol.position.set(-30, 60, 20);
         escena.add(sol);
         const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
+        let ossosGolem: Map<string, Object3D> | null = null;
         new GLTFLoader().load("/golem/semi-rig.glb", (gltf) => {
           const model = gltf.scene;
+          // Els ossos del CC_Base, per animar-los a la caminada.
+          const ossos = new Map<string, Object3D>();
+          model.traverse((objecte) => {
+            if (objecte.name.startsWith("CC_Base_")) ossos.set(objecte.name, objecte);
+          });
+          ossosGolem = ossos;
           const caixa = new THREE.Box3().setFromObject(model);
           const escala = ALCADA_GOLEM / (caixa.max.y - caixa.min.y || 1);
           const midaCentre = caixa.getCenter(new THREE.Vector3());
@@ -529,7 +538,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           // El gegant, a 5 m davant de l'equip i de cara a ell.
           const th = m.rumb * RAD;
           golem.position.set(sobreCami.x + Math.sin(th) * 5, 0, sobreCami.z - Math.cos(th) * 5);
-          golem.rotation.y = -th;
+          // Gira d'un costat a l'altre (uns ±50°) i camina sobre el lloc.
+          const tSegons = (ara - inici) / 1000;
+          golem.rotation.y = -th + 0.9 * Math.sin(tSegons * 0.25);
+          if (ossosGolem) animaCaminada(ossosGolem, tSegons);
 
           renderer.render(escena, cam);
           frame = requestAnimationFrame(bucle);
