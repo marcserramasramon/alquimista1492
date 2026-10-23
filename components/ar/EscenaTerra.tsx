@@ -251,33 +251,6 @@ const FRAGMENT = `
   }
 `;
 
-/**
- * Partícules blanques que surten de la posició del jugador (cada 3 s) i van molt a poc a poc cap al forat,
- * a mig camí entre el terra i el cel, onejant. La posició es calcula a la CPU per a cada una.
- */
-const PARTICULA_VERTEX = `
-  attribute float aAlpha;
-  uniform float uPR;
-  uniform vec2 uCam;
-  varying float vA;
-  void main() {
-    vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    vA = aAlpha * (1.0 - smoothstep(120.0, 260.0, length(position.xz - uCam)));
-    gl_PointSize = clamp(260.0 / (-mv.z), 3.0, 10.0) * uPR;
-    gl_Position = projectionMatrix * mv;
-  }
-`;
-
-const PARTICULA_FRAGMENT = `
-  varying float vA;
-  void main() {
-    float r = length(gl_PointCoord - 0.5);
-    if (r > 0.5) discard;
-    float a = smoothstep(0.5, 0.05, r) * vA;
-    gl_FragColor = vec4(1.0, 1.0, 1.0, a);
-  }
-`;
-
 interface Guspira {
   x: number;
   y: number;
@@ -502,36 +475,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         escena.add(new THREE.Points(geoCel, materialCel));
 
-        // Partícules que surten de la posició del jugador cada 3 s i es mouen lentament cap al forat.
-        const NPARTICULES_EMISSIO = 40;
-        const CICLE_EMISSIO_MS = 3000;
-        // Una partícula cada 3 s i 120 s de trajecte: sempre hi ha 40 en camí.
-        const DURADA_TRAJECTE_S = 120;
-        let emisSemillada = false;
-        const emisSx = new Float32Array(NPARTICULES_EMISSIO);
-        const emisSz = new Float32Array(NPARTICULES_EMISSIO);
-        const emisNaix = new Float64Array(NPARTICULES_EMISSIO).fill(-1e12);
-        let emisSeguent = 0;
-        let emisUltima = -1e12;
-        const posParticules = new Float32Array(NPARTICULES_EMISSIO * 3);
-        const alfaParticules = new Float32Array(NPARTICULES_EMISSIO);
-        const geoParticula = new THREE.BufferGeometry();
-        geoParticula.setAttribute("position", new THREE.BufferAttribute(posParticules, 3));
-        geoParticula.setAttribute("aAlpha", new THREE.BufferAttribute(alfaParticules, 1));
-        const materialParticula = new THREE.ShaderMaterial({
-          uniforms: {
-            uPR: uniforms.uPR,
-            uCam: uniforms.uCam,
-          },
-          vertexShader: PARTICULA_VERTEX,
-          fragmentShader: PARTICULA_FRAGMENT,
-          transparent: true,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-        });
-        const particula = new THREE.Points(geoParticula, materialParticula);
-        particula.frustumCulled = false;
-        escena.add(particula);
 
         const inici = performance.now();
         let w = 0;
@@ -555,40 +498,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           const sobreCami = u ? aMon(u.lat, u.lng, fita) : { x: 0, z: 0 };
           uniforms.uTime.value = (ara - inici) / 1000;
 
-          // Al primer GPS, les 40 partícules ja són en camí (cadascuna desfasada 3 s), perquè n'hi hagi sempre 40.
-          if (u && !emisSemillada) {
-            emisSemillada = true;
-            for (let j = 0; j < NPARTICULES_EMISSIO; j++) {
-              emisSx[j] = sobreCami.x;
-              emisSz[j] = sobreCami.z;
-              emisNaix[j] = ara - (j + 1) * CICLE_EMISSIO_MS;
-            }
-            emisUltima = ara;
-          }
-          // Cada 3 s surt una partícula de la posició del jugador (mentre hi hagi GPS).
-          if (u && ara - emisUltima >= CICLE_EMISSIO_MS) {
-            emisSx[emisSeguent] = sobreCami.x;
-            emisSz[emisSeguent] = sobreCami.z;
-            emisNaix[emisSeguent] = ara;
-            emisSeguent = (emisSeguent + 1) % NPARTICULES_EMISSIO;
-            emisUltima = ara;
-          }
-          const centreX = uniforms.uCentre.value.x;
-          const centreZ = uniforms.uCentre.value.y;
-          for (let j = 0; j < NPARTICULES_EMISSIO; j++) {
-            const edat = (ara - emisNaix[j]) / 1000;
-            const k = edat / DURADA_TRAJECTE_S;
-            if (k < 0 || k > 1) {
-              alfaParticules[j] = 0;
-              continue;
-            }
-            posParticules[j * 3] = emisSx[j] + (centreX - emisSx[j]) * k + Math.sin(edat * 0.7) * 1.5;
-            posParticules[j * 3 + 1] = 15 + Math.sin(edat * 0.6);
-            posParticules[j * 3 + 2] = emisSz[j] + (centreZ - emisSz[j]) * k + Math.cos(edat * 0.5) * 1.5;
-            alfaParticules[j] = Math.min(1, k / 0.1) * (1 - Math.max(0, (k - 0.9) / 0.1));
-          }
-          geoParticula.attributes.position.needsUpdate = true;
-          geoParticula.attributes.aAlpha.needsUpdate = true;
 
           cam.position.set(sobreCami.x, ALCADA_OLLS, sobreCami.z);
           cam.rotation.set(m.elevacio * RAD, -m.rumb * RAD, 0);
@@ -605,8 +514,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           material.dispose();
           geoCel.dispose();
           materialCel.dispose();
-          geoParticula.dispose();
-          materialParticula.dispose();
           renderer.dispose();
         };
       } catch {
