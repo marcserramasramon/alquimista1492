@@ -147,12 +147,14 @@ const VERTEX = `
   }
 `;
 
-/** Partícules del forat de cuc, que uneix el terra amb el cel a la posició final. */
+/** Partícules del con, que uneix el terra amb el cel. */
 const NPARTICULES_FORAT = 4000;
+/** Distància (m) de la fita a què es posa el con, en la direcció del lloc final. */
+const DISTANCIA_FORAT_M = 5;
 
 /**
- * Forat de cuc a la posició final: cada partícula puja en espiral des del terra fins al cel. El forat és
- * estret pel mig i ample als extrems, i el color va de verd (terra) a blau (cel).
+ * Con de partícules a la posició del forat: pugen del terra cap al cel i el con s'eixampla cap amunt, sense
+ * espiral. El color va de verd (terra) a blau (cel).
  */
 const FORAT_VERTEX = `
   attribute float aSeed;
@@ -168,8 +170,8 @@ const FORAT_VERTEX = `
   void main() {
     float t = fract(aSeed * 7.13 + uTime * 0.12);
     float y = t * uAlcada;
-    float r = 0.8 + 3.0 * pow(2.0 * t - 1.0, 2.0);
-    float ang = aSeed * 6.2831 * 17.0 + uTime * (1.5 + 2.0 * t);
+    float r = (0.6 + 5.0 * t) * (0.5 + 0.5 * fract(aSeed * 31.7));
+    float ang = aSeed * 6.2831 * 17.0;
     vec3 p = vec3(uCentre.x + cos(ang) * r, y, uCentre.y + sin(ang) * r);
     vCol = mix(uBaixa, uAlta, t) * (0.8 + 0.6 * sin(ang * 3.0 + uTime));
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
@@ -371,8 +373,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         cel.scale.y = -1;
         escena.add(cel);
 
-        // El forat de cuc, a la posició final: partícules en espiral des del terra fins al cel.
-        const centreFinal = aMon(amfores.latitud, amfores.longitud, fita);
+        // El con, a DISTANCIA_FORAT_M metres de la fita en la direcció del lloc final.
+        const B = aMon(amfores.latitud, amfores.longitud, fita);
+        const llargCami = Math.hypot(B.x, B.z) || 1;
+        const centreFinal = { x: (B.x / llargCami) * DISTANCIA_FORAT_M, z: (B.z / llargCami) * DISTANCIA_FORAT_M };
         const posForat = new Float32Array(NPARTICULES_FORAT * 3);
         const seedForat = new Float32Array(NPARTICULES_FORAT);
         for (let j = 0; j < NPARTICULES_FORAT; j++) seedForat[j] = Math.random();
