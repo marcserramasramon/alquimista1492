@@ -229,7 +229,9 @@ const SKY_VERTEX = `
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(uTime * 2.0 + aSeed * 31.0)), 14.0) * 0.7;
     float dimBase = 1.0 - 0.7 * wF * (1.0 - s);
-    vCol = (mix(uBaixa, uAlta, cresta) * (0.6 + 0.6 * cresta + brill) + vec3(jet * fase * 0.5)) * dimBase * (1.0 - oculta);
+    // La base del cel és la que brilla més (hi ha molts vèrtexs): s'apaga cap al seu bord.
+    float fadeBase = mix(1.0, smoothstep(0.0, 0.35, s), wF);
+    vCol = (mix(uBaixa, uAlta, cresta) * (0.6 + 0.6 * cresta + brill) + vec3(jet * fase * 0.5)) * dimBase * fadeBase * (1.0 - oculta);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     float dist = length(p.xz - uCam);
     vA = 1.0 - smoothstep(120.0, 260.0, dist);
