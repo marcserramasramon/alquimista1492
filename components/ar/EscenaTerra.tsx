@@ -146,8 +146,14 @@ const VERTEX = `
     h += 0.03 * sin(p.x * 3.1 + p.z * 2.7 + uTime * 4.0 + aSeed * 6.2831);
     float base = uCel > 0.5 ? uAlcada - h : h;
     float d = distance(p.xz, uCentre);
-    float yCon = clamp((d - 0.6) / 5.0, 0.0, 1.0) * uAlcada;
-    float wCon = 1.0 - smoothstep(5.0, 7.5, d);
+    // Punt sobre el perímetre del con: cada vèrtex té una alçada i un angle propis, així el terra i el cel
+    // omplen la mateixa paret a totes les alçades i les dues malles s'uneixen pel mig.
+    float yCon = fract(aSeed * 17.3) * uAlcada;
+    float rCon = 1.0 + 4.5 * (yCon / uAlcada);
+    float angCon = aSeed * 6.2831 * 9.0;
+    vec2 xzCon = uCentre + vec2(cos(angCon), sin(angCon)) * rCon;
+    float wCon = 1.0 - smoothstep(6.0, 9.0, d);
+    p.xz = mix(p.xz, xzCon, wCon);
     p.y = mix(base, yCon, wCon);
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(uTime * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
