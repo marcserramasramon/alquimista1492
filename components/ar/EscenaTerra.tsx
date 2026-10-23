@@ -3,7 +3,6 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
 import type { PuntGps } from "@/content/public/extres";
-import { construirGolem } from "@/components/ar/terra/golem";
 
 /** Posició de l'equip (GPS); nul·la mentre el mòbil no n'ha trobat cap. */
 export type PosicioEquip = { lat: number; lng: number } | null;
@@ -381,8 +380,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // El monticle, a la posició GPS exacta PUNT_FORAT.
         const centre = aMon(PUNT_FORAT.latitud, PUNT_FORAT.longitud, fita);
 
-        // El gegant de pedra, sobre la posició exacta del monticle, de cara a la fita.
-        const golem = construirGolem(THREE);
+        // El gegant de pedra (model GLB de public/golem), a 3 m d'alçada, sobre la posició exacta del monticle,
+        // de cara a la fita.
+        const ALCADA_GOLEM = 3;
+        const golem = new THREE.Group();
         golem.position.set(centre.x, 0, centre.z);
         golem.rotation.y = Math.atan2(-centre.x, -centre.z);
         escena.add(golem);
@@ -390,6 +391,17 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const sol = new THREE.DirectionalLight(0xffe3b0, 1.4);
         sol.position.set(-30, 60, 20);
         escena.add(sol);
+        const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
+        new GLTFLoader().load("/golem/stone-golem.glb", (gltf) => {
+          const model = gltf.scene;
+          const caixa = new THREE.Box3().setFromObject(model);
+          const escala = ALCADA_GOLEM / (caixa.max.y - caixa.min.y || 1);
+          const midaCentre = caixa.getCenter(new THREE.Vector3());
+          model.scale.setScalar(escala);
+          // Peus a terra i centrat en x i z.
+          model.position.set(-midaCentre.x * escala, -caixa.min.y * escala, -midaCentre.z * escala);
+          golem.add(model);
+        });
         const total = NX * NZ + NVERTEXS_FORAT;
         const pos = new Float32Array(total * 3);
         const seed = new Float32Array(total);
