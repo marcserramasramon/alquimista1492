@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { EscenaTerra, estatTerra, RADI_AMFORES, type PosicioEquip } from "@/components/ar/EscenaTerra";
+import {
+  DISTANCIA_PROVA_FORAT_M,
+  EscenaTerra,
+  estatTerra,
+  PUNT_FORAT,
+  RADI_AMFORES,
+  type PosicioEquip,
+} from "@/components/ar/EscenaTerra";
+import { distanciaMetres } from "@/lib/ubicacio";
 import { IntroduccioExtraAr } from "@/components/vistes/IntroduccioExtraAr";
 import { rumbCami, type ExtraAr } from "@/content/public/extres";
 import { diferenciaRumb, useOrientacio } from "@/lib/orientacio";
@@ -69,7 +77,14 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   // Ubicació contínua: només cal mentre l'extra és obert. A la galeria, l'equip és a la fita.
   useEffect(() => {
     if (directa && cami) {
-      posicio.current = { lat: cami.des.latitud, lng: cami.des.longitud };
+      // A la galeria, l'equip és a DISTANCIA_PROVA_FORAT_M metres del monticle, cap a la fita.
+      const f = PUNT_FORAT;
+      const dist = distanciaMetres({ lat: f.latitud, lng: f.longitud }, { lat: cami.des.latitud, lng: cami.des.longitud });
+      const k = Math.min(1, DISTANCIA_PROVA_FORAT_M / Math.max(1, dist));
+      posicio.current = {
+        lat: f.latitud + (cami.des.latitud - f.latitud) * k,
+        lng: f.longitud + (cami.des.longitud - f.longitud) * k,
+      };
       return;
     }
     if (!iniciat) return;

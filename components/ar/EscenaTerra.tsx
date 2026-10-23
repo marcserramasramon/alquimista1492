@@ -21,8 +21,10 @@ const RADI_CAMI_BUIT = 15;
 export const RADI_AMFORES = 6;
 /** Alçada (m) a què penja la còpia de la malla al cel. */
 const ALCADA_CEL = 30;
-/** Distància (m) de la fita a què es posa el monticle, en la direcció del lloc final. */
-const DISTANCIA_FORAT_M = 10;
+/** Posició GPS exacta del monticle. */
+export const PUNT_FORAT: PuntGps = { latitud: 41.91203206477954, longitud: 2.234635039095013 };
+/** Distància (m) a la qual s'ha de estar del monticle per veure'l (posició de prova de la galeria). */
+export const DISTANCIA_PROVA_FORAT_M = 15;
 /** Vèrtexs extra al disc del forat, perquè l'embut tingui prou punts. */
 const NVERTEXS_FORAT = 2500;
 /** Radi (m) del disc del forat, al voltant del punt GPS final. */
@@ -163,7 +165,8 @@ const VERTEX = `
     float wF = 1.0 - smoothstep(5.5, 7.5, d);
     p.xz = mix(p.xz, xzF, wF);
     // Doll de partícules: des de la punta de dalt, els vèrtexs pugen cap amunt en bucle.
-    float jet = smoothstep(0.8, 1.0, s) * wF;
+    // Només un 30 % dels vèrtexs de la punta pugen; la resta es queden quiets i formen el con.
+    float jet = smoothstep(0.8, 1.0, s) * wF * step(0.7, aSeed);
     float fase = fract(aSeed * 13.7 + uTime * 0.35);
     float yTerra = mix(h, 8.0 * s, wF) + jet * fase * 6.0;
     p.y = yTerra;
@@ -348,10 +351,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         cam.rotation.order = "YXZ";
 
         // Centre del forat: el punt GPS final, en metres respecte la fita.
-        // El monticle, a DISTANCIA_FORAT_M metres de la fita en la direcció del lloc final.
-        const B = aMon(amfores.latitud, amfores.longitud, fita);
-        const llargCami = Math.hypot(B.x, B.z) || 1;
-        const centre = { x: (B.x / llargCami) * DISTANCIA_FORAT_M, z: (B.z / llargCami) * DISTANCIA_FORAT_M };
+        // El monticle, a la posició GPS exacta PUNT_FORAT.
+        const centre = aMon(PUNT_FORAT.latitud, PUNT_FORAT.longitud, fita);
         const total = NX * NZ + NVERTEXS_FORAT;
         const pos = new Float32Array(total * 3);
         const seed = new Float32Array(total);
