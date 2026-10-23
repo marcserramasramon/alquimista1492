@@ -160,11 +160,14 @@ const VERTEX = `
     vec2 xzF = uCentre + vec2(cos(angF), sin(angF)) * rf;
     float wF = 1.0 - smoothstep(8.0, 10.0, d);
     p.xz = mix(p.xz, xzF, wF);
-    float yTerra = mix(h, 8.0 * s, wF);
+    // Doll de partícules: des de la punta de dalt, els vèrtexs pugen cap amunt en bucle.
+    float jet = smoothstep(0.8, 1.0, s) * wF;
+    float fase = fract(aSeed * 13.7 + uTime * 0.35);
+    float yTerra = mix(h, 8.0 * s, wF) + jet * fase * 6.0;
     p.y = yTerra;
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(tm * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
-    vCol = mix(uBaixa, uAlta, cresta) * (0.65 + 0.6 * cresta + brill);
+    vCol = mix(uBaixa, uAlta, cresta) * (0.65 + 0.6 * cresta + brill) + vec3(jet * fase * 0.5);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     float dist = length(p.xz - uCam);
     vA = 1.0 - smoothstep(120.0, 260.0, dist);
