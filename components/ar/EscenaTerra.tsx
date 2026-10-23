@@ -251,6 +251,58 @@ const FRAGMENT = `
   }
 `;
 
+/** Partícules blanques que entren al con des de tots els costats, pugen i desapareixen. */
+const NPARTICULES_BLANQUES = 1500;
+
+/**
+ * Partícules blanques: cada una surt d'un punt a l'atzar al voltant del con, s'acosta al centre a ran de
+ * terra, puja per l'eix fins a la punta (9 m) i s'esvaeix.
+ */
+const BLANQUES_VERTEX = `
+  attribute float aSeed;
+  uniform float uTime;
+  uniform float uPR;
+  uniform vec2 uCam;
+  uniform vec2 uCentre;
+  varying float vA;
+  void main() {
+    float t = fract(aSeed * 13.1 + uTime * 0.08);
+    float ang = aSeed * 6.2831 * 7.0;
+    float r0 = 18.0 + 8.0 * fract(aSeed * 5.7);
+    vec2 inici = uCentre + vec2(cos(ang), sin(ang)) * r0;
+    float hInici = 0.5 + 2.0 * fract(aSeed * 3.3);
+    vec2 xz;
+    float y;
+    float a;
+    if (t < 0.5) {
+      float k = t * 2.0;
+      xz = mix(inici, uCentre, k);
+      y = mix(hInici, 0.0, k);
+      a = smoothstep(0.0, 0.2, k);
+    } else {
+      float k = (t - 0.5) * 2.0;
+      xz = uCentre + vec2(sin(aSeed * 90.0 + k * 4.0), cos(aSeed * 70.0 + k * 3.0)) * 0.4 * (1.0 - 0.5 * k);
+      y = k * 9.0;
+      a = 1.0 - smoothstep(0.6, 1.0, k);
+    }
+    vec3 p = vec3(xz.x, y, xz.y);
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    vA = a * (1.0 - smoothstep(120.0, 260.0, length(p.xz - uCam)));
+    gl_PointSize = clamp(260.0 / (-mv.z), 1.5, 7.0) * uPR;
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
+const BLANQUES_FRAGMENT = `
+  varying float vA;
+  void main() {
+    float r = length(gl_PointCoord - 0.5);
+    if (r > 0.5) discard;
+    float a = smoothstep(0.5, 0.05, r) * vA;
+    gl_FragColor = vec4(1.0, 1.0, 1.0, a);
+  }
+`;
+
 interface Guspira {
   x: number;
   y: number;
@@ -475,6 +527,30 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         escena.add(new THREE.Points(geoCel, materialCel));
 
+        // Partícules blanques que entren al con des de tots els costats.
+        const seedBlanques = new Float32Array(NPARTICULES_BLANQUES);
+        for (let j = 0; j < NPARTICULES_BLANQUES; j++) seedBlanques[j] = Math.random();
+        const geoBlanques = new THREE.BufferGeometry();
+        geoBlanques.setAttribute("position", new THREE.BufferAttribute(new Float32Array(NPARTICULES_BLANQUES * 3), 3));
+        geoBlanques.setAttribute("aSeed", new THREE.BufferAttribute(seedBlanques, 1));
+        const materialBlanques = new THREE.ShaderMaterial({
+          uniforms: {
+            uTime: uniforms.uTime,
+            uPR: uniforms.uPR,
+            uCam: uniforms.uCam,
+            uCentre: uniforms.uCentre,
+          },
+          vertexShader: BLANQUES_VERTEX,
+          fragmentShader: BLANQUES_FRAGMENT,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        // Les posicions reals es calculen al shader: la geometria no té un rang útil per a la retallada de vista.
+        const blanques = new THREE.Points(geoBlanques, materialBlanques);
+        blanques.frustumCulled = false;
+        escena.add(blanques);
+
         const inici = performance.now();
         let w = 0;
         let h = 0;
@@ -512,6 +588,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           material.dispose();
           geoCel.dispose();
           materialCel.dispose();
+          geoBlanques.dispose();
+          materialBlanques.dispose();
           renderer.dispose();
         };
       } catch {
