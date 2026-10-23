@@ -28,7 +28,7 @@ export const DISTANCIA_PROVA_FORAT_M = 15;
 /** Vèrtexs extra al disc del forat, perquè l'embut tingui prou punts. */
 const NVERTEXS_FORAT = 2500;
 /** Radi (m) del disc del forat, al voltant del punt GPS final. */
-const RADI_FORAT = 4.5;
+const RADI_FORAT = 3.5;
 /** Malla de punts: 160 × 100 = 16.000 vèrtexs, en metres respecte la fita (x = est, z = sud). */
 const NX = 160;
 const NZ = 100;
