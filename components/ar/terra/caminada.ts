@@ -4,22 +4,22 @@ import type { Object3D } from "three";
 const RITME = 2.4;
 
 /**
- * Noms dels ossos segons el sistema de la rigging: CC_Base (Character Creator) o mixamorig (Mixamo,
- * també el que fa servir Mesh2Motion). Es busca el primer que existeixi al model.
+ * Noms dels ossos segons la rigging: CC_Base (Character Creator), mixamorig (Mixamo) o Mesh2Motion,
+ * Es busca el primer nom que existeixi al model.
  */
 const NOMS: Record<string, string[]> = {
-  cuixaE: ["CC_Base_L_Thigh", "mixamorig:LeftUpLeg"],
-  cuixaD: ["CC_Base_R_Thigh", "mixamorig:RightUpLeg"],
-  canellaE: ["CC_Base_L_Calf", "mixamorig:LeftLeg"],
-  canellaD: ["CC_Base_R_Calf", "mixamorig:RightLeg"],
-  braE: ["CC_Base_L_Upperarm", "mixamorig:LeftArm"],
-  braD: ["CC_Base_R_Upperarm", "mixamorig:RightArm"],
-  esquena1: ["CC_Base_Spine01", "mixamorig:Spine"],
-  esquena2: ["CC_Base_Spine02", "mixamorig:Spine1"],
+  cuixaE: ["CC_Base_L_Thigh", "mixamorig:LeftUpLeg", "thigh_l"],
+  cuixaD: ["CC_Base_R_Thigh", "mixamorig:RightUpLeg", "thigh_r"],
+  canellaE: ["CC_Base_L_Calf", "mixamorig:LeftLeg", "calf_l"],
+  canellaD: ["CC_Base_R_Calf", "mixamorig:RightLeg", "calf_r"],
+  braE: ["CC_Base_L_Upperarm", "mixamorig:LeftArm", "upperarm_l"],
+  braD: ["CC_Base_R_Upperarm", "mixamorig:RightArm", "upperarm_r"],
+  esquena1: ["CC_Base_Spine01", "mixamorig:Spine", "spine_01"],
+  esquena2: ["CC_Base_Spine02", "mixamorig:Spine1", "spine_02"],
 };
 
-/** Prefixos dels noms d'ossos que reconeix l'animació. */
-export const PREFIXOS_OSSOS = ["CC_Base_", "mixamorig:"];
+
+
 
 /**
  * Caminada del gegant: les cames i els braços es balancegen en contrafase, els genolls es doblegen quan la
