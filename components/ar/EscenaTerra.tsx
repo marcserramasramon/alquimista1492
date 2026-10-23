@@ -294,6 +294,45 @@ const BLANQUES_VERTEX = `
   }
 `;
 
+/** Punts del flux que surten de la posició del jugador cap al con. */
+const NPARTICULES_FLUX = 200;
+
+/**
+ * Flux: punts que surten de la posició de l'equip, s'acosten en corrent al con a ran de terra i després
+ * pugen per l'eix fins a la punta, on s'esvaeixen. Surten de forma contínua, amb fases diferents.
+ */
+const FLUX_VERTEX = `
+  attribute float aSeed;
+  uniform float uTime;
+  uniform float uPR;
+  uniform vec2 uCam;
+  uniform vec2 uCentre;
+  varying float vA;
+  void main() {
+    float t = fract(aSeed * 17.7 + uTime * 0.25);
+    vec2 inici = uCam + vec2(sin(aSeed * 40.0), cos(aSeed * 53.0)) * 0.3;
+    vec2 xz;
+    float y;
+    float a;
+    if (t < 0.6) {
+      float k = t / 0.6;
+      xz = mix(inici, uCentre, k);
+      y = mix(1.2, 0.0, k);
+      a = smoothstep(0.0, 0.15, k);
+    } else {
+      float k = (t - 0.6) / 0.4;
+      xz = uCentre;
+      y = k * 9.0;
+      a = 1.0 - smoothstep(0.6, 1.0, k);
+    }
+    vec3 p = vec3(xz.x, y, xz.y);
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    vA = a * (1.0 - smoothstep(120.0, 260.0, length(p.xz - uCam)));
+    gl_PointSize = clamp(260.0 / (-mv.z), 1.5, 7.0) * uPR;
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
 const BLANQUES_FRAGMENT = `
   varying float vA;
   void main() {
@@ -552,6 +591,29 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         blanques.frustumCulled = false;
         escena.add(blanques);
 
+        // Flux de punts que surten de la posició del jugador cap al con.
+        const seedFlux = new Float32Array(NPARTICULES_FLUX);
+        for (let j = 0; j < NPARTICULES_FLUX; j++) seedFlux[j] = Math.random();
+        const geoFlux = new THREE.BufferGeometry();
+        geoFlux.setAttribute("position", new THREE.BufferAttribute(new Float32Array(NPARTICULES_FLUX * 3), 3));
+        geoFlux.setAttribute("aSeed", new THREE.BufferAttribute(seedFlux, 1));
+        const materialFlux = new THREE.ShaderMaterial({
+          uniforms: {
+            uTime: uniforms.uTime,
+            uPR: uniforms.uPR,
+            uCam: uniforms.uCam,
+            uCentre: uniforms.uCentre,
+          },
+          vertexShader: FLUX_VERTEX,
+          fragmentShader: BLANQUES_FRAGMENT,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        const flux = new THREE.Points(geoFlux, materialFlux);
+        flux.frustumCulled = false;
+        escena.add(flux);
+
         const inici = performance.now();
         let w = 0;
         let h = 0;
@@ -591,6 +653,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           materialCel.dispose();
           geoBlanques.dispose();
           materialBlanques.dispose();
+          geoFlux.dispose();
+          materialFlux.dispose();
           renderer.dispose();
         };
       } catch {
