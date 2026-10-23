@@ -19,7 +19,7 @@ const RADI_CAMI_PLE = 3;
 const RADI_CAMI_BUIT = 15;
 /** Des d'aquesta distància (m) del lloc final, es dona per arribat. */
 export const RADI_AMFORES = 6;
-/** Alçada (m) a què penja la còpia invertida de la malla, com un cel de mar. */
+/** Alçada (m) a què penja la còpia de la malla al cel. */
 const ALCADA_CEL = 30;
 /** Malla de punts: 160 × 100 = 16.000 vèrtexs, en metres respecte la fita (x = est, z = sud). */
 const NX = 160;
@@ -28,6 +28,12 @@ const MALLA_X0 = -120;
 const MALLA_X1 = 260;
 const MALLA_Z0 = -120;
 const MALLA_Z1 = 120;
+/** Distància (m) de la fita a què es posa el con, en la direcció del lloc final. */
+const DISTANCIA_CON_M = 5;
+/** Vèrtexs extra dins del disc del con (per al terra i per al cel), perquè el con tingui prou punts. */
+const NVERTEXS_CON = 1800;
+/** Radi (m) del disc del con: dins d'aquest radi el terra i el cel s'uneixen en un con. */
+const RADI_CON = 7.5;
 /** Colors del marcador provisional i de la brúixola. */
 const OR = "255, 206, 92";
 
@@ -113,15 +119,18 @@ function projecta(l: Local, altura: number, mirada: Mirada, w: number, h: number
 }
 
 /**
- * Vèrtexs de la malla: el terra es mou com el mar, amb diversos trens d'ona que van en direccions
- * diferents i a velocitats diferents. Les crestes més altes es veuen més clares, i alguns punts brillen
- * una mica a l'atzar, com la llum sobre l'aigua.
+ * Vèrtexs de la malla, per al terra i per al cel (la mateixa geometria, amb `uCel` = 0 o 1). El terra
+ * es mou com el mar, amb diversos trens d'ona. A prop del con, els vèrtexs es doblegen cap a la seva
+ * superfície: el terra puja i el cel baixa fins a unir-se en un mateix con, que s'eixampla cap amunt.
  */
 const VERTEX = `
   attribute float aSeed;
   uniform float uTime;
   uniform float uPR;
+  uniform float uCel;
+  uniform float uAlcada;
   uniform vec2 uCam;
+  uniform vec2 uCentre;
   uniform vec3 uBaixa;
   uniform vec3 uAlta;
   varying vec3 vCol;
@@ -135,45 +144,14 @@ const VERTEX = `
     h += 0.10 * sin(dot(p.xz, vec2(-0.18, -0.98)) * 1.55 + uTime * 2.4 + 0.4);
     h += 0.07 * sin(dot(p.xz, vec2(0.60, 0.80)) * 2.30 + uTime * 3.1 + 3.0);
     h += 0.03 * sin(p.x * 3.1 + p.z * 2.7 + uTime * 4.0 + aSeed * 6.2831);
-    p.y += h;
+    float base = uCel > 0.5 ? uAlcada - h : h;
+    float d = distance(p.xz, uCentre);
+    float yCon = clamp((d - 0.6) / 5.0, 0.0, 1.0) * uAlcada;
+    float wCon = 1.0 - smoothstep(5.0, 7.5, d);
+    p.y = mix(base, yCon, wCon);
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(uTime * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
-    vCol = mix(uBaixa, uAlta, cresta) * (0.65 + 0.6 * cresta + brill);
-    vec4 mv = modelViewMatrix * vec4(p, 1.0);
-    float dist = length(p.xz - uCam);
-    vA = 1.0 - smoothstep(120.0, 260.0, dist);
-    gl_PointSize = clamp(260.0 / (-mv.z), 1.5, 9.0) * uPR;
-    gl_Position = projectionMatrix * mv;
-  }
-`;
-
-/** Partícules del con, que uneix el terra amb el cel. */
-const NPARTICULES_FORAT = 4000;
-/** Distància (m) de la fita a què es posa el con, en la direcció del lloc final. */
-const DISTANCIA_FORAT_M = 5;
-
-/**
- * Con de partícules a la posició del forat: pugen del terra cap al cel i el con s'eixampla cap amunt, sense
- * espiral. El color va de verd (terra) a blau (cel).
- */
-const FORAT_VERTEX = `
-  attribute float aSeed;
-  uniform float uTime;
-  uniform float uPR;
-  uniform float uAlcada;
-  uniform vec2 uCam;
-  uniform vec2 uCentre;
-  uniform vec3 uBaixa;
-  uniform vec3 uAlta;
-  varying vec3 vCol;
-  varying float vA;
-  void main() {
-    float t = fract(aSeed * 7.13 + uTime * 0.12);
-    float y = t * uAlcada;
-    float r = (0.6 + 5.0 * t) * (0.5 + 0.5 * fract(aSeed * 31.7));
-    float ang = aSeed * 6.2831 * 17.0;
-    vec3 p = vec3(uCentre.x + cos(ang) * r, y, uCentre.y + sin(ang) * r);
-    vCol = mix(uBaixa, uAlta, t) * (0.8 + 0.6 * sin(ang * 3.0 + uTime));
+    vCol = mix(uBaixa, uAlta, max(cresta, wCon)) * (0.65 + 0.6 * cresta + 0.5 * wCon + brill);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     float dist = length(p.xz - uCam);
     vA = 1.0 - smoothstep(120.0, 260.0, dist);
@@ -216,10 +194,11 @@ interface Props {
 }
 
 /**
- * Malla de 16.000 punts que cobreix el terra fins a l'horitzó i es mou com el mar, amb diversos trens
- * d'ona en direccions diferents. Per sobre, la brúixola (canvas 2D) apunta cap al lloc final i el triangle
- * de la Terra vibra amb guspires quan l'equip és sobre el camí. Al lloc final hi ha un marcador provisional.
- * Dibuixat en dos canvas transparents a sobre de la càmera. La lògica geogràfica és a `estatTerra`.
+ * Malla de punts que cobreix el terra fins a l'horitzó i es mou com el mar. Al terra i al cel hi ha la
+ * mateixa malla; a la posició del con, les dues es doblegen i s'uneixen en un mateix con. Per sobre, la
+ * brúixola (canvas 2D) apunta cap al lloc final i el triangle de la Terra vibra amb guspires quan l'equip
+ * és sobre el camí. Al lloc final hi ha un marcador provisional. Dibuixat en dos canvas transparents a
+ * sobre de la càmera. La lògica geogràfica és a `estatTerra`.
  */
 export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }: Props) {
   const glRef = useRef<HTMLCanvasElement>(null);
@@ -299,8 +278,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
     return () => cancelAnimationFrame(frame);
   }, [mirada, posicio, fita, amfores]);
 
-  // La malla i el front d'ona, en WebGL. Three.js només es carrega en obrir aquesta pantalla. Sense
-  // WebGL, la pantalla queda només amb la brúixola.
+  // La malla, en WebGL. Three.js només es carrega en obrir aquesta pantalla. Sense WebGL, la pantalla
+  // queda només amb la brúixola.
   useEffect(() => {
     let cancel = false;
     let frame = 0;
@@ -318,8 +297,15 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const cam = new THREE.PerspectiveCamera(FOV_V, 1, 0.5, 800);
         cam.rotation.order = "YXZ";
 
-        const pos = new Float32Array(NX * NZ * 3);
-        const seed = new Float32Array(NX * NZ);
+        // Centre del con: a DISTANCIA_CON_M metres de la fita, en la direcció del lloc final.
+        const B = aMon(amfores.latitud, amfores.longitud, fita);
+        const llargCami = Math.hypot(B.x, B.z) || 1;
+        const centre = { x: (B.x / llargCami) * DISTANCIA_CON_M, z: (B.z / llargCami) * DISTANCIA_CON_M };
+
+        // Vèrtexs: la graella del terra més un disc dens al voltant del con, perquè el con tingui prou punts.
+        const total = NX * NZ + NVERTEXS_CON;
+        const pos = new Float32Array(total * 3);
+        const seed = new Float32Array(total);
         let i = 0;
         // Graella desplaçada a l'atzar dins de cada cel·la: així no es veuen línies rectes.
         const pasX = (MALLA_X1 - MALLA_X0) / (NX - 1);
@@ -333,6 +319,15 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             i++;
           }
         }
+        for (let j = 0; j < NVERTEXS_CON; j++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radi = RADI_CON * Math.sqrt(Math.random());
+          pos[i * 3] = centre.x + Math.cos(angle) * radi;
+          pos[i * 3 + 1] = 0;
+          pos[i * 3 + 2] = centre.z + Math.sin(angle) * radi;
+          seed[i] = Math.random();
+          i++;
+        }
         const geo = new THREE.BufferGeometry();
         geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
         geo.setAttribute("aSeed", new THREE.BufferAttribute(seed, 1));
@@ -340,7 +335,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const uniforms = {
           uTime: { value: 0 },
           uPR: { value: 1 },
+          uCel: { value: 0 },
+          uAlcada: { value: ALCADA_CEL },
           uCam: { value: new THREE.Vector2() },
+          uCentre: { value: new THREE.Vector2(centre.x, centre.z) },
           uBaixa: { value: new THREE.Vector3(0.12, 0.45, 0.22) },
           uAlta: { value: new THREE.Vector3(0.6, 1.0, 0.5) },
         };
@@ -354,53 +352,21 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         escena.add(new THREE.Points(geo, material));
 
-        // La mateixa malla penjada al cel, invertida i en blau: comparteix la geometria i el temps.
-        const uniformsCel = {
-          ...uniforms,
-          uBaixa: { value: new THREE.Vector3(0.1, 0.3, 0.7) },
-          uAlta: { value: new THREE.Vector3(0.55, 0.8, 1.0) },
-        };
+        // La mateixa geometria, al cel: invertida i en blau, amb el mateix con.
         const materialCel = new THREE.ShaderMaterial({
-          uniforms: uniformsCel,
+          uniforms: {
+            ...uniforms,
+            uCel: { value: 1 },
+            uBaixa: { value: new THREE.Vector3(0.1, 0.3, 0.7) },
+            uAlta: { value: new THREE.Vector3(0.55, 0.8, 1.0) },
+          },
           vertexShader: VERTEX,
           fragmentShader: FRAGMENT,
           transparent: true,
           depthWrite: false,
           blending: THREE.AdditiveBlending,
         });
-        const cel = new THREE.Points(geo, materialCel);
-        cel.position.y = ALCADA_CEL;
-        cel.scale.y = -1;
-        escena.add(cel);
-
-        // El con, a DISTANCIA_FORAT_M metres de la fita en la direcció del lloc final.
-        const B = aMon(amfores.latitud, amfores.longitud, fita);
-        const llargCami = Math.hypot(B.x, B.z) || 1;
-        const centreFinal = { x: (B.x / llargCami) * DISTANCIA_FORAT_M, z: (B.z / llargCami) * DISTANCIA_FORAT_M };
-        const posForat = new Float32Array(NPARTICULES_FORAT * 3);
-        const seedForat = new Float32Array(NPARTICULES_FORAT);
-        for (let j = 0; j < NPARTICULES_FORAT; j++) seedForat[j] = Math.random();
-        const geoForat = new THREE.BufferGeometry();
-        geoForat.setAttribute("position", new THREE.BufferAttribute(posForat, 3));
-        geoForat.setAttribute("aSeed", new THREE.BufferAttribute(seedForat, 1));
-        const materialForat = new THREE.ShaderMaterial({
-          uniforms: {
-            ...uniforms,
-            uCentre: { value: new THREE.Vector2(centreFinal.x, centreFinal.z) },
-            uAlcada: { value: ALCADA_CEL },
-            uBaixa: { value: new THREE.Vector3(0.4, 1.0, 0.6) },
-            uAlta: { value: new THREE.Vector3(0.5, 0.8, 1.0) },
-          },
-          vertexShader: FORAT_VERTEX,
-          fragmentShader: FRAGMENT,
-          transparent: true,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-        });
-        // Les posicions reals es calculen al shader: el rang de la geometria no és útil per a la retallada de vista.
-        const forat = new THREE.Points(geoForat, materialForat);
-        forat.frustumCulled = false;
-        escena.add(forat);
+        escena.add(new THREE.Points(geo, materialCel));
 
         const inici = performance.now();
         let w = 0;
@@ -438,8 +404,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           geo.dispose();
           material.dispose();
           materialCel.dispose();
-          geoForat.dispose();
-          materialForat.dispose();
           renderer.dispose();
         };
       } catch {
