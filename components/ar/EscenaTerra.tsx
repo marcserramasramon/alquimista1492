@@ -168,7 +168,7 @@ const VERTEX = `
     // Només un 30 % dels vèrtexs de la punta pugen; la resta es queden quiets i formen el con.
     float jet = smoothstep(0.8, 1.0, s) * wF * step(0.7, aSeed);
     float fase = fract(aSeed * 13.7 + uTime * 0.35);
-    float yTerra = mix(h, 8.0 * s, wF) + jet * fase * 6.0;
+    float yTerra = mix(h, 9.0 * s, wF) + jet * fase * 6.0;
     p.y = yTerra;
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(tm * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
@@ -224,7 +224,7 @@ const SKY_VERTEX = `
     float jet = smoothstep(0.8, 1.0, s) * wF * step(0.7, aSeed);
     float fase = fract(aSeed * 13.7 + uTime * 0.35);
     // Mirall del terra: el con del cel és la imatge del del terra respecte del pla del cel (30 m).
-    p.y = mix(uAlcada - h, uAlcada - 8.0 * s, wF) - jet * fase * 6.0;
+    p.y = mix(uAlcada - h, uAlcada - 9.0 * s, wF) - jet * fase * 6.0;
     float oculta = wF * (1.0 - step(0.0005, jet));
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(uTime * 2.0 + aSeed * 31.0)), 14.0) * 0.7;
