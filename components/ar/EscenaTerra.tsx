@@ -147,6 +147,39 @@ const VERTEX = `
   }
 `;
 
+/** Partícules del forat de cuc, que uneix el terra amb el cel a la posició final. */
+const NPARTICULES_FORAT = 4000;
+
+/**
+ * Forat de cuc a la posició final: cada partícula puja en espiral des del terra fins al cel. El forat és
+ * estret pel mig i ample als extrems, i el color va de verd (terra) a blau (cel).
+ */
+const FORAT_VERTEX = `
+  attribute float aSeed;
+  uniform float uTime;
+  uniform float uPR;
+  uniform float uAlcada;
+  uniform vec2 uCam;
+  uniform vec2 uCentre;
+  uniform vec3 uBaixa;
+  uniform vec3 uAlta;
+  varying vec3 vCol;
+  varying float vA;
+  void main() {
+    float t = fract(aSeed * 7.13 + uTime * 0.12);
+    float y = t * uAlcada;
+    float r = 0.8 + 3.0 * pow(2.0 * t - 1.0, 2.0);
+    float ang = aSeed * 6.2831 * 17.0 + uTime * (1.5 + 2.0 * t);
+    vec3 p = vec3(uCentre.x + cos(ang) * r, y, uCentre.y + sin(ang) * r);
+    vCol = mix(uBaixa, uAlta, t) * (0.8 + 0.6 * sin(ang * 3.0 + uTime));
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    float dist = length(p.xz - uCam);
+    vA = 1.0 - smoothstep(120.0, 260.0, dist);
+    gl_PointSize = clamp(260.0 / (-mv.z), 1.5, 9.0) * uPR;
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
 const FRAGMENT = `
   varying vec3 vCol;
   varying float vA;
@@ -338,6 +371,33 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         cel.scale.y = -1;
         escena.add(cel);
 
+        // El forat de cuc, a la posició final: partícules en espiral des del terra fins al cel.
+        const centreFinal = aMon(amfores.latitud, amfores.longitud, fita);
+        const posForat = new Float32Array(NPARTICULES_FORAT * 3);
+        const seedForat = new Float32Array(NPARTICULES_FORAT);
+        for (let j = 0; j < NPARTICULES_FORAT; j++) seedForat[j] = Math.random();
+        const geoForat = new THREE.BufferGeometry();
+        geoForat.setAttribute("position", new THREE.BufferAttribute(posForat, 3));
+        geoForat.setAttribute("aSeed", new THREE.BufferAttribute(seedForat, 1));
+        const materialForat = new THREE.ShaderMaterial({
+          uniforms: {
+            ...uniforms,
+            uCentre: { value: new THREE.Vector2(centreFinal.x, centreFinal.z) },
+            uAlcada: { value: ALCADA_CEL },
+            uBaixa: { value: new THREE.Vector3(0.4, 1.0, 0.6) },
+            uAlta: { value: new THREE.Vector3(0.5, 0.8, 1.0) },
+          },
+          vertexShader: FORAT_VERTEX,
+          fragmentShader: FRAGMENT,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        // Les posicions reals es calculen al shader: el rang de la geometria no és útil per a la retallada de vista.
+        const forat = new THREE.Points(geoForat, materialForat);
+        forat.frustumCulled = false;
+        escena.add(forat);
+
         const inici = performance.now();
         let w = 0;
         let h = 0;
@@ -374,6 +434,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           geo.dispose();
           material.dispose();
           materialCel.dispose();
+          geoForat.dispose();
+          materialForat.dispose();
           renderer.dispose();
         };
       } catch {
