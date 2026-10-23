@@ -251,6 +251,39 @@ const FRAGMENT = `
   }
 `;
 
+/**
+ * Una sola partícula blanca, a mig camí entre el terra i el cel, que oneja i va molt a poc a poc de la
+ * posició de l'equip cap al forat.
+ */
+const PARTICULA_VERTEX = `
+  uniform float uTime;
+  uniform float uPR;
+  uniform vec2 uCam;
+  uniform vec2 uCentre;
+  varying float vA;
+  void main() {
+    float k = fract(uTime * 0.01);
+    vec2 base = mix(uCam, uCentre, k);
+    vec2 onada = vec2(sin(uTime * 0.7), cos(uTime * 0.5)) * 1.5;
+    vec3 p = vec3(base.x + onada.x, 15.0 + sin(uTime * 0.6) * 1.0, base.y + onada.y);
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    float a = smoothstep(0.0, 0.1, k) * (1.0 - smoothstep(0.9, 1.0, k));
+    vA = a;
+    gl_PointSize = clamp(260.0 / (-mv.z), 3.0, 10.0) * uPR;
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
+const PARTICULA_FRAGMENT = `
+  varying float vA;
+  void main() {
+    float r = length(gl_PointCoord - 0.5);
+    if (r > 0.5) discard;
+    float a = smoothstep(0.5, 0.05, r) * vA;
+    gl_FragColor = vec4(1.0, 1.0, 1.0, a);
+  }
+`;
+
 interface Guspira {
   x: number;
   y: number;
@@ -475,6 +508,26 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         escena.add(new THREE.Points(geoCel, materialCel));
 
+        // Una sola partícula blanca que oneja i es mou lentament cap al forat.
+        const geoParticula = new THREE.BufferGeometry();
+        geoParticula.setAttribute("position", new THREE.BufferAttribute(new Float32Array(3), 3));
+        const materialParticula = new THREE.ShaderMaterial({
+          uniforms: {
+            uTime: uniforms.uTime,
+            uPR: uniforms.uPR,
+            uCam: uniforms.uCam,
+            uCentre: uniforms.uCentre,
+          },
+          vertexShader: PARTICULA_VERTEX,
+          fragmentShader: PARTICULA_FRAGMENT,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        const particula = new THREE.Points(geoParticula, materialParticula);
+        particula.frustumCulled = false;
+        escena.add(particula);
+
         const inici = performance.now();
         let w = 0;
         let h = 0;
@@ -512,6 +565,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           material.dispose();
           geoCel.dispose();
           materialCel.dispose();
+          geoParticula.dispose();
+          materialParticula.dispose();
           renderer.dispose();
         };
       } catch {
