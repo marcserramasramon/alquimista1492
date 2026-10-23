@@ -21,6 +21,10 @@ const RADI_CAMI_BUIT = 15;
 export const RADI_AMFORES = 6;
 /** Alçada (m) a què penja la còpia de la malla al cel. */
 const ALCADA_CEL = 30;
+/** Vèrtexs extra al disc del forat, perquè l'embut tingui prou punts. */
+const NVERTEXS_FORAT = 2500;
+/** Radi (m) del disc del forat, al voltant del punt GPS final. */
+const RADI_FORAT = 10;
 /** Malla de punts: 160 × 100 = 16.000 vèrtexs, en metres respecte la fita (x = est, z = sud). */
 const NX = 160;
 const NZ = 100;
@@ -123,6 +127,7 @@ const VERTEX = `
   uniform float uCel;
   uniform float uVel;
   uniform float uAlcada;
+  uniform vec2 uCentre;
   uniform vec2 uCam;
   uniform vec3 uBaixa;
   uniform vec3 uAlta;
@@ -138,7 +143,25 @@ const VERTEX = `
     h += 0.10 * sin(dot(p.xz, vec2(-0.18, -0.98)) * 1.55 + tm * 2.4 + 0.4);
     h += 0.07 * sin(dot(p.xz, vec2(0.60, 0.80)) * 2.30 + tm * 3.1 + 3.0);
     h += 0.03 * sin(p.x * 3.1 + p.z * 2.7 + tm * 4.0 + aSeed * 6.2831);
-    p.y = uCel > 0.5 ? uAlcada - h : h;
+    // Forat de cuc a la posició final: la malla es doblega cap avall en un embut (vora a terra, coll a 4 m
+    // sota terra i base a 8 m). Cada vèrtex del disc es posa sobre la superfície de l'embut, a una alçada
+    // pròpia; el cel és el mirall del terra.
+    float d = distance(p.xz, uCentre);
+    float s = fract(aSeed * 17.3);
+    float rf;
+    if (s < 0.5) {
+      float u = 1.0 - 2.0 * s;
+      rf = 2.5 + 6.5 * u * u;
+    } else {
+      float u = (s - 0.5) * 2.0;
+      rf = 2.5 + 2.5 * u * u;
+    }
+    float angF = aSeed * 6.2831 * 9.0;
+    vec2 xzF = uCentre + vec2(cos(angF), sin(angF)) * rf;
+    float wF = 1.0 - smoothstep(8.0, 10.0, d);
+    p.xz = mix(p.xz, xzF, wF);
+    float yTerra = mix(h, -8.0 * s, wF);
+    p.y = uCel > 0.5 ? uAlcada - yTerra : yTerra;
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(tm * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
     vCol = mix(uBaixa, uAlta, cresta) * (0.65 + 0.6 * cresta + brill);
@@ -286,8 +309,11 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const cam = new THREE.PerspectiveCamera(FOV_V, 1, 0.5, 800);
         cam.rotation.order = "YXZ";
 
-        const pos = new Float32Array(NX * NZ * 3);
-        const seed = new Float32Array(NX * NZ);
+        // Centre del forat: el punt GPS final, en metres respecte la fita.
+        const centre = aMon(amfores.latitud, amfores.longitud, fita);
+        const total = NX * NZ + NVERTEXS_FORAT;
+        const pos = new Float32Array(total * 3);
+        const seed = new Float32Array(total);
         let i = 0;
         // Graella desplaçada a l'atzar dins de cada cel·la: així no es veuen línies rectes.
         const pasX = (MALLA_X1 - MALLA_X0) / (NX - 1);
@@ -301,6 +327,16 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             i++;
           }
         }
+        // Vèrtexs extra al disc del forat, perquè l'embut tingui prou punts.
+        for (let j = 0; j < NVERTEXS_FORAT; j++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radi = RADI_FORAT * Math.sqrt(Math.random());
+          pos[i * 3] = centre.x + Math.cos(angle) * radi;
+          pos[i * 3 + 1] = 0;
+          pos[i * 3 + 2] = centre.z + Math.sin(angle) * radi;
+          seed[i] = Math.random();
+          i++;
+        }
         const geo = new THREE.BufferGeometry();
         geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
         geo.setAttribute("aSeed", new THREE.BufferAttribute(seed, 1));
@@ -312,6 +348,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           uVel: { value: 1 },
           uAlcada: { value: ALCADA_CEL },
           uCam: { value: new THREE.Vector2() },
+          uCentre: { value: new THREE.Vector2(centre.x, centre.z) },
           uBaixa: { value: new THREE.Vector3(0.12, 0.45, 0.22) },
           uAlta: { value: new THREE.Vector3(0.6, 1.0, 0.5) },
         };
