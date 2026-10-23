@@ -274,11 +274,11 @@ export const EXTRES_AR: ExtraAr[] = [
     boto: "🧭 Seguiu la Terra",
     introduccio: {
       titol: "La Terra us guia",
-      entrada: "Des d'aquesta fita, una esquerda de llum us portarà fins a les àmfores. Això és el que veureu:",
+      entrada: "Des d'aquesta fita, unes ones translúcides us portaran fins al lloc. Això és el que veureu:",
       passos: [
-        { icona: "🌱", text: "Una esquerda de llum s'obre pel terra i avança cap a les àmfores, amb molsa lluminosa i espores que pugen." },
-        { icona: "🔆", text: "Les runes de la Terra floten a prop del terra: s'il·luminen quan hi passeu per sobre." },
-        { icona: "🧭", text: "La brúixola de baix a la dreta marca cap a les àmfores. Quan sou sobre l'esquerda, el triangle de la Terra vibra amb guspires daurades." },
+        { icona: "🌊", text: "Ones translúcides de 2 metres volen i sinuegen des de la fita cap al lloc final, una darrere l'altra." },
+        { icona: "🧭", text: "La brúixola de baix a la dreta marca cap al lloc. Quan sou sobre el camí, el triangle de la Terra vibra amb guspires daurades." },
+        { icona: "📍", text: "Quan hi arribeu, mireu a terra." },
       ],
       permisos: {
         titol: "El mòbil us demanarà permís per a:",

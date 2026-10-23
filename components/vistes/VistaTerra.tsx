@@ -109,12 +109,12 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
       const girar = !lectura || Math.abs(dif) < MARGE_GRAUS ? null : dif > 0 ? "dreta" : "esquerra";
       const missatge =
         e.distanciaAmfores < RADI_AMFORES
-          ? "🏺 Les àmfores són aquí: mireu a terra i compteu-les."
+          ? "📍 Ja sou al lloc: mireu a terra."
           : e.ressonancia >= 0.6
-            ? "🔆 Bé: seguiu l'esquerda de llum cap a les àmfores."
+            ? "🌊 Bé: seguiu les ones cap al lloc."
             : e.ressonancia >= 0.25
-              ? "✨ Acosteu-vos a l'esquerda de llum: les runes s'il·luminen."
-              : "🌀 Torneu al camí: les runes s'apaguen quan us en separeu.";
+              ? "✨ Acosteu-vos al camí de les ones: el triangle vibra quan hi sou."
+              : "🌀 Torneu al camí: la brúixola s'apaga quan us en separeu.";
       setGuia({ missatge, girar });
     }, 400);
     return () => clearInterval(id);
