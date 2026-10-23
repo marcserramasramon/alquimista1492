@@ -31,6 +31,8 @@ function pedra(T: Tres, geometria: THREE.BufferGeometry, material: THREE.Materia
 export function construirGolem(T: Tres): THREE.Group {
   const rnd = llavor(1472);
   const grup = new T.Group();
+  // Pedres del cos: se n'afegeix la meitat (una de cada dues), per aligerar la figura.
+  const pedres: THREE.Mesh[] = [];
 
   const geometriaPedra = new T.SphereGeometry(1, 10, 7);
   const materialPedra = new T.MeshStandardMaterial({ color: 0x6f675c, roughness: 0.95, metalness: 0 });
@@ -40,28 +42,32 @@ export function construirGolem(T: Tres): THREE.Group {
   // Cames: dues columnes de pedres apilades.
   for (const sx of [-0.9, 0.9]) {
     for (const y of [0.5, 1.3, 2.1, 2.9]) {
-      grup.add(pedra(T, geometriaPedra, materialPedra, sx + (rnd() - 0.5) * 0.3, y, (rnd() - 0.5) * 0.3, 0.75, 0.42, rnd));
+      pedres.push(pedra(T, geometriaPedra, materialPedra, sx + (rnd() - 0.5) * 0.3, y, (rnd() - 0.5) * 0.3, 0.75, 0.42, rnd));
     }
   }
 
   // Malucs i pelvis.
   for (let i = 0; i < 5; i++) {
-    grup.add(pedra(T, geometriaPedra, materialPedra, -1.2 + i * 0.6, 3.5, (rnd() - 0.5) * 0.3, 0.55, 0.38, rnd));
+    pedres.push(pedra(T, geometriaPedra, materialPedra, -1.2 + i * 0.6, 3.5, (rnd() - 0.5) * 0.3, 0.55, 0.38, rnd));
   }
 
   // Tronc: dues files de pedres grans, com el pit de la imatge.
   for (const y of [4.2, 5.0]) {
     for (let i = 0; i < 5; i++) {
-      grup.add(pedra(T, geometriaPedra, materialPedra, -1.2 + i * 0.6, y, 0.45 + (rnd() - 0.5) * 0.2, 0.62, 0.5, rnd));
+      pedres.push(pedra(T, geometriaPedra, materialPedra, -1.2 + i * 0.6, y, 0.45 + (rnd() - 0.5) * 0.2, 0.62, 0.5, rnd));
     }
   }
 
   // Braços: pedres que baixen i s'obren cap a fora.
   for (const sx of [-1, 1]) {
     for (let i = 0; i < 4; i++) {
-      grup.add(pedra(T, geometriaPedra, materialPedra, sx * (1.9 + i * 0.12), 4.3 - i * 0.7, 0.1 + (rnd() - 0.5) * 0.2, 0.55, 0.4, rnd));
+      pedres.push(pedra(T, geometriaPedra, materialPedra, sx * (1.9 + i * 0.12), 4.3 - i * 0.7, 0.1 + (rnd() - 0.5) * 0.2, 0.55, 0.4, rnd));
     }
   }
+
+  pedres.forEach((pedraCos, i) => {
+    if (i % 2 === 0) grup.add(pedraCos);
+  });
 
   // Cap: una pedra gran amb dues obertures on van els ulls.
   grup.add(pedra(T, geometriaPedra, materialPedra, 0, 5.9, 0, 0.9, 0.85, rnd));
