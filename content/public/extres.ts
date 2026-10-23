@@ -266,10 +266,10 @@ export const EXTRES_AR: ExtraAr[] = [
     fitaId: "planes-bones",
     arribada: true,
     escena: "terra",
-    // La fita (des) i les àmfores (cap): ~90 m cap a l'est-sud-est (rumb ≈ 104°).
+    // La fita (des) i les àmfores (cap): ~180 m cap a l'est-sud-est (rumb ≈ 107°).
     cami: {
       des: { latitud: 41.91227654730743, longitud: 2.2334459962925832 },
-      cap: { latitud: 41.91206607307903, longitud: 2.2345129167936397 },
+      cap: { latitud: 41.91180905920371, longitud: 2.235562619810543 },
     },
     boto: "🧭 Seguiu la Terra",
     introduccio: {
