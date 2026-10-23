@@ -168,7 +168,7 @@ const VERTEX = `
     // Només un 30 % dels vèrtexs de la punta pugen; la resta es queden quiets i formen el con.
     float jet = smoothstep(0.8, 1.0, s) * wF * step(0.7, aSeed);
     float fase = fract(aSeed * 13.7 + uTime * 0.35);
-    float yTerra = mix(h, 8.0 * s, wF) - jet * fase * 6.0;
+    float yTerra = mix(h, 8.0 * s, wF) + jet * fase * 6.0;
     p.y = yTerra;
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(tm * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
