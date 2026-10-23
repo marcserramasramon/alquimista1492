@@ -223,7 +223,8 @@ const SKY_VERTEX = `
     p.xz = mix(p.xz, xzF, wF);
     float jet = smoothstep(0.8, 1.0, s) * wF * step(0.7, aSeed);
     float fase = fract(aSeed * 13.7 + uTime * 0.35);
-    p.y = mix(uAlcada + h, uAlcada + 8.0 * s, wF) + jet * fase * 6.0;
+    // Al cel el con va del revés: la base és a dalt i la punta apunta avall.
+    p.y = mix(uAlcada + h, uAlcada + 8.0 * (1.0 - s), wF) + jet * fase * 6.0;
     float oculta = wF * (1.0 - step(0.0005, jet));
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(uTime * 2.0 + aSeed * 31.0)), 14.0) * 0.7;
