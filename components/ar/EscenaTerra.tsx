@@ -252,23 +252,17 @@ const FRAGMENT = `
 `;
 
 /**
- * Una sola partícula blanca, a mig camí entre el terra i el cel, que oneja i va molt a poc a poc de la
- * posició de l'equip cap al forat.
+ * Partícules blanques que surten de la posició del jugador (cada 3 s) i van molt a poc a poc cap al forat,
+ * a mig camí entre el terra i el cel, onejant. La posició es calcula a la CPU per a cada una.
  */
 const PARTICULA_VERTEX = `
-  uniform float uTime;
+  attribute float aAlpha;
   uniform float uPR;
   uniform vec2 uCam;
-  uniform vec2 uCentre;
   varying float vA;
   void main() {
-    float k = fract(uTime * 0.01);
-    vec2 base = mix(uCam, uCentre, k);
-    vec2 onada = vec2(sin(uTime * 0.7), cos(uTime * 0.5)) * 1.5;
-    vec3 p = vec3(base.x + onada.x, 15.0 + sin(uTime * 0.6) * 1.0, base.y + onada.y);
-    vec4 mv = modelViewMatrix * vec4(p, 1.0);
-    float a = smoothstep(0.0, 0.1, k) * (1.0 - smoothstep(0.9, 1.0, k));
-    vA = a;
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vA = aAlpha * (1.0 - smoothstep(120.0, 260.0, length(position.xz - uCam)));
     gl_PointSize = clamp(260.0 / (-mv.z), 3.0, 10.0) * uPR;
     gl_Position = projectionMatrix * mv;
   }
@@ -508,15 +502,24 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         escena.add(new THREE.Points(geoCel, materialCel));
 
-        // Una sola partícula blanca que oneja i es mou lentament cap al forat.
+        // Partícules que surten de la posició del jugador cada 3 s i es mouen lentament cap al forat.
+        const NPARTICULES_EMISSIO = 40;
+        const CICLE_EMISSIO_MS = 3000;
+        const DURADA_TRAJECTE_S = 100;
+        const emisSx = new Float32Array(NPARTICULES_EMISSIO);
+        const emisSz = new Float32Array(NPARTICULES_EMISSIO);
+        const emisNaix = new Float64Array(NPARTICULES_EMISSIO).fill(-1e12);
+        let emisSeguent = 0;
+        let emisUltima = -1e12;
+        const posParticules = new Float32Array(NPARTICULES_EMISSIO * 3);
+        const alfaParticules = new Float32Array(NPARTICULES_EMISSIO);
         const geoParticula = new THREE.BufferGeometry();
-        geoParticula.setAttribute("position", new THREE.BufferAttribute(new Float32Array(3), 3));
+        geoParticula.setAttribute("position", new THREE.BufferAttribute(posParticules, 3));
+        geoParticula.setAttribute("aAlpha", new THREE.BufferAttribute(alfaParticules, 1));
         const materialParticula = new THREE.ShaderMaterial({
           uniforms: {
-            uTime: uniforms.uTime,
             uPR: uniforms.uPR,
             uCam: uniforms.uCam,
-            uCentre: uniforms.uCentre,
           },
           vertexShader: PARTICULA_VERTEX,
           fragmentShader: PARTICULA_FRAGMENT,
@@ -549,6 +552,31 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           const u = posicio.current;
           const sobreCami = u ? aMon(u.lat, u.lng, fita) : { x: 0, z: 0 };
           uniforms.uTime.value = (ara - inici) / 1000;
+
+          // Cada 3 s surt una partícula de la posició del jugador (mentre hi hagi GPS).
+          if (u && ara - emisUltima >= CICLE_EMISSIO_MS) {
+            emisSx[emisSeguent] = sobreCami.x;
+            emisSz[emisSeguent] = sobreCami.z;
+            emisNaix[emisSeguent] = ara;
+            emisSeguent = (emisSeguent + 1) % NPARTICULES_EMISSIO;
+            emisUltima = ara;
+          }
+          const centreX = uniforms.uCentre.value.x;
+          const centreZ = uniforms.uCentre.value.y;
+          for (let j = 0; j < NPARTICULES_EMISSIO; j++) {
+            const edat = (ara - emisNaix[j]) / 1000;
+            const k = edat / DURADA_TRAJECTE_S;
+            if (k < 0 || k > 1) {
+              alfaParticules[j] = 0;
+              continue;
+            }
+            posParticules[j * 3] = emisSx[j] + (centreX - emisSx[j]) * k + Math.sin(edat * 0.7) * 1.5;
+            posParticules[j * 3 + 1] = 15 + Math.sin(edat * 0.6);
+            posParticules[j * 3 + 2] = emisSz[j] + (centreZ - emisSz[j]) * k + Math.cos(edat * 0.5) * 1.5;
+            alfaParticules[j] = Math.min(1, k / 0.1) * (1 - Math.max(0, (k - 0.9) / 0.1));
+          }
+          geoParticula.attributes.position.needsUpdate = true;
+          geoParticula.attributes.aAlpha.needsUpdate = true;
 
           cam.position.set(sobreCami.x, ALCADA_OLLS, sobreCami.z);
           cam.rotation.set(m.elevacio * RAD, -m.rumb * RAD, 0);
