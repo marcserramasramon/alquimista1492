@@ -28,6 +28,9 @@ const RADI_FORAT = 10;
 /** Malla de punts: 160 × 100 = 16.000 vèrtexs, en metres respecte la fita (x = est, z = sud). */
 const NX = 160;
 const NZ = 100;
+/** Malla del cel: una graella pròpia, més esbiaixada que la del terra. */
+const NX_CEL = 120;
+const NZ_CEL = 75;
 const MALLA_X0 = -120;
 const MALLA_X1 = 260;
 const MALLA_Z0 = -120;
@@ -124,8 +127,6 @@ const VERTEX = `
   attribute float aSeed;
   uniform float uTime;
   uniform float uPR;
-  uniform float uCel;
-  uniform float uVel;
   uniform float uAlcada;
   uniform vec2 uCentre;
   uniform vec2 uCam;
@@ -135,7 +136,7 @@ const VERTEX = `
   varying float vA;
   void main() {
     vec3 p = position;
-    float tm = uTime * uVel;
+    float tm = uTime;
     float h = 0.0;
     h += 0.28 * sin(dot(p.xz, vec2(0.71, 0.70)) * 0.42 + tm * 1.1);
     h += 0.20 * sin(dot(p.xz, vec2(-0.45, 0.89)) * 0.61 + tm * 1.5 + 1.3);
@@ -161,10 +162,43 @@ const VERTEX = `
     float wF = 1.0 - smoothstep(8.0, 10.0, d);
     p.xz = mix(p.xz, xzF, wF);
     float yTerra = mix(h, -8.0 * s, wF);
-    p.y = uCel > 0.5 ? uAlcada - yTerra : yTerra;
+    p.y = yTerra;
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(tm * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
     vCol = mix(uBaixa, uAlta, cresta) * (0.65 + 0.6 * cresta + brill);
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    float dist = length(p.xz - uCam);
+    vA = 1.0 - smoothstep(120.0, 260.0, dist);
+    gl_PointSize = clamp(260.0 / (-mv.z), 1.5, 9.0) * uPR;
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
+/**
+ * Vèrtexs del cel: una malla pròpia, amb una altra graella i uns altres trens d'ona (no és una còpia del
+ * terra). Es mou més a poc a poc i sense forat.
+ */
+const SKY_VERTEX = `
+  attribute float aSeed;
+  uniform float uTime;
+  uniform float uPR;
+  uniform float uAlcada;
+  uniform vec2 uCam;
+  uniform vec3 uBaixa;
+  uniform vec3 uAlta;
+  varying vec3 vCol;
+  varying float vA;
+  void main() {
+    vec3 p = position;
+    float h = 0.0;
+    h += 0.22 * sin(dot(p.xz, vec2(0.30, -0.95)) * 0.35 + uTime * 0.6);
+    h += 0.18 * sin(dot(p.xz, vec2(0.88, 0.47)) * 0.52 + uTime * 0.8 + 0.7);
+    h += 0.12 * sin(dot(p.xz, vec2(-0.66, 0.75)) * 0.90 + uTime * 1.0 + 2.6);
+    h += 0.06 * sin(dot(p.xz, vec2(0.10, 0.99)) * 1.80 + uTime * 1.6 + 1.1);
+    p.y = uAlcada + h;
+    float cresta = smoothstep(-0.2, 0.4, h);
+    float brill = pow(max(0.0, sin(uTime * 2.0 + aSeed * 31.0)), 14.0) * 0.7;
+    vCol = mix(uBaixa, uAlta, cresta) * (0.6 + 0.6 * cresta + brill);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     float dist = length(p.xz - uCam);
     vA = 1.0 - smoothstep(120.0, 260.0, dist);
@@ -344,8 +378,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const uniforms = {
           uTime: { value: 0 },
           uPR: { value: 1 },
-          uCel: { value: 0 },
-          uVel: { value: 1 },
           uAlcada: { value: ALCADA_CEL },
           uCam: { value: new THREE.Vector2() },
           uCentre: { value: new THREE.Vector2(centre.x, centre.z) },
@@ -362,23 +394,40 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         escena.add(new THREE.Points(geo, material));
 
-        // La mateixa geometria, al cel: invertida i en blau, amb el mateix con.
+        // Malla del cel: geometria pròpia (altra graella i altres vèrtexs), en blau i sense forat.
+        const posCel = new Float32Array(NX_CEL * NZ_CEL * 3);
+        const seedCel = new Float32Array(NX_CEL * NZ_CEL);
+        let k = 0;
+        const pasXCel = (MALLA_X1 - MALLA_X0) / (NX_CEL - 1);
+        const pasZCel = (MALLA_Z1 - MALLA_Z0) / (NZ_CEL - 1);
+        for (let ix = 0; ix < NX_CEL; ix++) {
+          for (let iz = 0; iz < NZ_CEL; iz++) {
+            posCel[k * 3] = MALLA_X0 + ix * pasXCel + (Math.random() - 0.5) * pasXCel * 0.9;
+            posCel[k * 3 + 1] = ALCADA_CEL;
+            posCel[k * 3 + 2] = MALLA_Z0 + iz * pasZCel + (Math.random() - 0.5) * pasZCel * 0.9;
+            seedCel[k] = Math.random();
+            k++;
+          }
+        }
+        const geoCel = new THREE.BufferGeometry();
+        geoCel.setAttribute("position", new THREE.BufferAttribute(posCel, 3));
+        geoCel.setAttribute("aSeed", new THREE.BufferAttribute(seedCel, 1));
         const materialCel = new THREE.ShaderMaterial({
           uniforms: {
-            ...uniforms,
-            uCel: { value: 1 },
-            // Les partícules del cel es mouen més lentament que les del terra.
-            uVel: { value: 0.4 },
+            uTime: uniforms.uTime,
+            uPR: uniforms.uPR,
+            uCam: uniforms.uCam,
+            uAlcada: uniforms.uAlcada,
             uBaixa: { value: new THREE.Vector3(0.1, 0.3, 0.7) },
             uAlta: { value: new THREE.Vector3(0.55, 0.8, 1.0) },
           },
-          vertexShader: VERTEX,
+          vertexShader: SKY_VERTEX,
           fragmentShader: FRAGMENT,
           transparent: true,
           depthWrite: false,
           blending: THREE.AdditiveBlending,
         });
-        escena.add(new THREE.Points(geo, materialCel));
+        escena.add(new THREE.Points(geoCel, materialCel));
 
         const inici = performance.now();
         let w = 0;
@@ -415,6 +464,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           cancelAnimationFrame(frame);
           geo.dispose();
           material.dispose();
+          geoCel.dispose();
           materialCel.dispose();
           renderer.dispose();
         };
