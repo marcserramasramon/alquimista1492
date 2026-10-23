@@ -40,6 +40,8 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   const video = useRef<HTMLVideoElement>(null);
   const flux = useRef<MediaStream | null>(null);
   const posicio = useRef<PosicioEquip>(null);
+  // Motiu pel qual no hi ha ubicació (permís, GPS...), perquè es vegi a la pantalla.
+  const ubicacioError = useRef<string | null>(null);
   const { mirada, estat: estatSensors, demanar } = useOrientacio();
 
   // Els sensors, la càmera i la ubicació es demanen en tocar el botó (iOS i Android ho exigeixen).
@@ -70,12 +72,25 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
       posicio.current = { lat: cami.des.latitud, lng: cami.des.longitud };
       return;
     }
-    if (!iniciat || !navigator.geolocation) return;
+    if (!iniciat) return;
+    if (!navigator.geolocation) {
+      ubicacioError.current = "📍 Aquest navegador no té ubicació.";
+      return;
+    }
     const id = navigator.geolocation.watchPosition(
       (p) => {
         posicio.current = { lat: p.coords.latitude, lng: p.coords.longitude };
+        ubicacioError.current = null;
       },
-      () => {},
+      (error) => {
+        // Codi 1: permís denegat; 2: posició no disponible; 3: temps esgotat (es torna a provar sola).
+        ubicacioError.current =
+          error.code === 1
+            ? "📍 No hi ha permís de ubicació: permeteu-la al navegador i recarregueu."
+            : error.code === 2
+              ? "📍 El navegador no pot trobar la ubicació (GPS no disponible)."
+              : null;
+      },
       { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 },
     );
     return () => navigator.geolocation.clearWatch(id);
@@ -86,7 +101,9 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
     if (!iniciat || !cami) return;
     const id = setInterval(() => {
       const e = estatTerra(posicio.current, cami.des, cami.cap);
-      if (!e) return setGuia({ missatge: "📍 Esperant la ubicació: cal que el mòbil us localitzi.", girar: null });
+      if (!e) {
+        return setGuia({ missatge: ubicacioError.current ?? "📍 Esperant la ubicació: cal que el mòbil us localitzi.", girar: null });
+      }
       const lectura = mirada.current;
       const dif = lectura ? diferenciaRumb(e.rumbAmfores, lectura.rumb) : 0;
       const girar = !lectura || Math.abs(dif) < MARGE_GRAUS ? null : dif > 0 ? "dreta" : "esquerra";
