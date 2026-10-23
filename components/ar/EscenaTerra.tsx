@@ -148,9 +148,14 @@ const VERTEX = `
     // base a 8 m per sobre). Cada vèrtex del disc es posa sobre la superfície, a una alçada pròpia.
     float d = distance(p.xz, uCentre);
     float s = fract(aSeed * 17.3);
-    // Perfil simètric: ample als dos extrems (9 m) i estret al coll (2,5 m).
-    float u = abs(2.0 * s - 1.0);
-    float rf = 2.5 + 6.5 * u * u;
+    // Perfil: ample al terra (9 m), estret al mig (2,5 m) i tancat a dalt (0,8 m).
+    float rf;
+    if (s < 0.5) {
+      float u = 1.0 - 2.0 * s;
+      rf = 2.5 + 6.5 * u * u;
+    } else {
+      rf = 2.5 - 1.7 * (2.0 * s - 1.0);
+    }
     float angF = aSeed * 6.2831 * 9.0;
     vec2 xzF = uCentre + vec2(cos(angF), sin(angF)) * rf;
     float wF = 1.0 - smoothstep(8.0, 10.0, d);
