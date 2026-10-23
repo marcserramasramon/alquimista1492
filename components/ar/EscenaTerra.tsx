@@ -172,7 +172,9 @@ const VERTEX = `
     p.y = yTerra;
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(tm * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
-    vCol = mix(uBaixa, uAlta, cresta) * (0.65 + 0.6 * cresta + brill) + vec3(jet * fase * 0.5);
+    // Només es veuen els vèrtexs que pugen: el con estàtic es fa invisible (en additiu, el negre no suma res).
+    float oculta = wF * (1.0 - step(0.0005, jet));
+    vCol = (mix(uBaixa, uAlta, cresta) * (0.65 + 0.6 * cresta + brill) + vec3(jet * fase * 0.5)) * (1.0 - oculta);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     float dist = length(p.xz - uCam);
     vA = 1.0 - smoothstep(120.0, 260.0, dist);
