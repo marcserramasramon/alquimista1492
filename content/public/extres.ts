@@ -274,9 +274,9 @@ export const EXTRES_AR: ExtraAr[] = [
     boto: "🧭 Seguiu la Terra",
     introduccio: {
       titol: "La Terra us guia",
-      entrada: "Des d'aquesta fita, unes ones translúcides us portaran fins al lloc. Això és el que veureu:",
+      entrada: "El terra mateix us guiarà fins al lloc. Això és el que veureu:",
       passos: [
-        { icona: "🌊", text: "Ones translúcides de 2 metres volen i sinuegen des de la fita cap al lloc final, una darrere l'altra." },
+        { icona: "🌊", text: "El terra és una malla de punts de llum que oneja suaument. Des de la vostra posició surt una ona que avança cap al lloc final." },
         { icona: "🧭", text: "La brúixola de baix a la dreta marca cap al lloc. Quan sou sobre el camí, el triangle de la Terra vibra amb guspires daurades." },
         { icona: "📍", text: "Quan hi arribeu, mireu a terra." },
       ],

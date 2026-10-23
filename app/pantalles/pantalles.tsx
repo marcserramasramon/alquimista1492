@@ -839,14 +839,14 @@ export const PANTALLES: Pantalla[] = [
     grup: "hub",
     titol: "Seguiu la Terra · explicació",
     descripcio:
-      "Es veu en tocar el botó «Seguiu la Terra» a l'arribada de la fita de Planes Bones: explica les ones translúcides cap al lloc final. El text és a content/public/extres.ts (extra «terra-cami»).",
+      "Es veu en tocar el botó «Seguiu la Terra» a l'arribada de la fita de Planes Bones: explica la malla de punts i l'ona cap al lloc final. El text és a content/public/extres.ts (extra «terra-cami»).",
     render: () => <VistaTerra extra={getExtraAr("terra-cami")!} onTornar={noop} />,
   },
   {
     id: "terra-cami-escena",
     grup: "hub",
     titol: "Seguiu la Terra · escena",
-    descripcio: "Ones translúcides de 2 m que volen cap al lloc final i brúixola. Sense càmera ni sensors: arrossegueu per girar; la posició de prova és la fita.",
+    descripcio: "Malla de 4.000 punts que oneja, amb el front d'ona que va cap al lloc final i brúixola. Sense càmera ni sensors: arrossegueu per girar; la posició de prova és la fita.",
     render: () => <VistaTerra extra={getExtraAr("terra-cami")!} onTornar={noop} directa />,
   },
   {

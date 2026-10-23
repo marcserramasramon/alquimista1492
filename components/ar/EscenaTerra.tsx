@@ -19,16 +19,17 @@ const RADI_CAMI_PLE = 3;
 const RADI_CAMI_BUIT = 15;
 /** Des d'aquesta distància (m) del lloc final, es dona per arribat. */
 export const RADI_AMFORES = 6;
-/** Ones translúcides que volen alhora, i quant triga una a anar de la fita fins al lloc final. */
-const NOMBRE_ONES = 5;
-const DURADA_ONA_MS = 9000;
-/** Mida de cada ona: 2 m d'alçada i 2 m d'ample. */
-const ALCADA_ONA = 2;
-const AMPLADA_ONA = 2;
-const PUNTS_PER_ONA = 14;
-/** Marcador provisional del lloc final: l'objecte es decidirà més endavant. */
+/** Quant triga el front d'onada a anar de l'equip fins al lloc final, en mil·lisegons. */
+const DURADA_FRONT_MS = 7000;
+/** Malla de punts: 80 × 50 = 4.000 vèrtexs, en metres respecte la fita (x = est, z = sud). */
+const NX = 80;
+const NZ = 50;
+const MALLA_X0 = -120;
+const MALLA_X1 = 260;
+const MALLA_Z0 = -120;
+const MALLA_Z1 = 120;
+/** Colors del marcador provisional i de la brúixola. */
 const OR = "255, 206, 92";
-const AIGUA = "150, 220, 255";
 
 /** Estat del camí respecte la posició de l'equip. */
 export interface EstatTerra {
@@ -60,6 +61,14 @@ function enMetres(p: PuntGps, u: { lat: number; lng: number }): Local {
   return {
     est: (p.longitud - u.lng) * METRES_GRAU_LAT * Math.cos(u.lat * RAD),
     nord: (p.latitud - u.lat) * METRES_GRAU_LAT,
+  };
+}
+
+/** Posició d'un punt GPS en el món de l'escena: origen a la fita, x = est i z = sud (el nord és -z). */
+function aMon(lat: number, lng: number, fita: PuntGps): { x: number; z: number } {
+  return {
+    x: (lng - fita.longitud) * METRES_GRAU_LAT * Math.cos(fita.latitud * RAD),
+    z: -(lat - fita.latitud) * METRES_GRAU_LAT,
   };
 }
 
@@ -103,6 +112,52 @@ function projecta(l: Local, altura: number, mirada: Mirada, w: number, h: number
   };
 }
 
+/**
+ * Vèrtexs de la malla: l'onatge lent del terra es calcula aquí, i el front que va des de l'equip cap al
+ * lloc final (uFase, uInici, uDir, uLlarg) aixeca els punts al seu pas i els deixa una estela.
+ */
+const VERTEX = `
+  attribute float aSeed;
+  uniform float uTime;
+  uniform float uFase;
+  uniform float uLlarg;
+  uniform float uPR;
+  uniform vec2 uInici;
+  uniform vec2 uDir;
+  uniform vec2 uCam;
+  varying vec3 vCol;
+  varying float vA;
+  void main() {
+    vec3 p = position;
+    float idle = sin(p.x * 0.09 + uTime * 0.9 + aSeed * 6.2831) * 0.5 + cos(p.z * 0.07 - uTime * 0.7) * 0.5;
+    vec2 rel = p.xz - uInici;
+    float s = dot(rel, uDir);
+    float d = s - uFase * uLlarg;
+    float cresta = exp(-d * d / 32.0);
+    float estela = d < 0.0 ? exp(d / 10.0) * 0.5 : 0.0;
+    float pols = cresta + estela;
+    p.y += idle * 0.035 + pols * 0.3;
+    float progres = clamp(s / uLlarg, 0.0, 1.0);
+    vCol = mix(vec3(0.35, 0.85, 0.9), vec3(1.0, 0.8, 0.36), progres) * (0.55 + 1.2 * pols);
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    float dist = length(p.xz - uCam);
+    vA = 1.0 - smoothstep(120.0, 260.0, dist);
+    gl_PointSize = clamp(260.0 / (-mv.z), 1.5, 9.0) * uPR;
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
+const FRAGMENT = `
+  varying vec3 vCol;
+  varying float vA;
+  void main() {
+    float r = length(gl_PointCoord - 0.5);
+    if (r > 0.5) discard;
+    float a = smoothstep(0.5, 0.05, r) * vA;
+    gl_FragColor = vec4(vCol, a);
+  }
+`;
+
 interface Guspira {
   x: number;
   y: number;
@@ -120,18 +175,20 @@ interface Props {
   arrossegar: boolean;
   /** Rumb inicial de la mirada quan s'arrossega: cap al camí. */
   rumb: number;
-  /** La fita (on comença el camí) i el lloc final (on acaba). */
+  /** La fita (on comença el camí, i origen de la malla) i el lloc final. */
   fita: PuntGps;
   amfores: PuntGps;
 }
 
 /**
- * Ones translúcides de 2 m que volen i sinuegen des de la fita fins al lloc final, i una brúixola que
- * apunta cap al lloc final (el triangle de la Terra vibra amb guspires quan l'equip és sobre el camí).
- * Al lloc final hi ha un marcador provisional: l'objecte es decidirà més endavant.
- * Dibuixat en un canvas 2D transparent a sobre de la càmera. La lògica geogràfica és a `estatTerra`.
+ * Malla de 4.000 punts que cobreix el terra fins a l'horitzó i oneja suaument. Des de la posició de
+ * l'equip surt un front d'ona que avança cap al lloc final; quan hi passa, els punts s'aixequen i
+ * s'il·luminen. Per sobre, la brúixola (canvas 2D) apunta cap al lloc final i el triangle de la Terra vibra
+ * amb guspires quan l'equip és sobre el camí. Al lloc final hi ha un marcador provisional. Dibuixat en
+ * dos canvas transparents a sobre de la càmera. La lògica geogràfica és a `estatTerra`.
  */
 export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }: Props) {
+  const glRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Sense sensors, la vista comença mirant cap al camí.
   const manual = useRef<Mirada>({ rumb, elevacio: 0 });
@@ -142,6 +199,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
     arrossegarRef.current = arrossegar;
   }, [arrossegar]);
 
+  // Brúixola i marcador provisional, en 2D.
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
@@ -168,69 +226,22 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
       const m = arrossegarRef.current ? manual.current : (mirada.current ?? manual.current);
       const u = posicio.current;
       const e = estatTerra(u, fita, amfores);
-      const t = ara;
+      const r = e?.ressonancia ?? 0;
 
       if (u && e) {
-        const a = enMetres(fita, u);
         const b = enMetres(amfores, u);
-        const dx = b.est - a.est;
-        const dy = b.nord - a.nord;
-        const llarg = Math.hypot(dx, dy) || 1;
-        // Perpendicular al camí, en metres (per al gruix i el serpeig de les ones).
-        const perp = { est: -dy / llarg, nord: dx / llarg };
-        const r = e.ressonancia;
-
-        // 1. Ones translúcides: cadascuna surt de la fita, vola cap al lloc final i sinuega pel camí.
-        for (let k = 0; k < NOMBRE_ONES; k++) {
-          const f = (t / DURADA_ONA_MS + k / NOMBRE_ONES) % 1;
-          // Vol sinuós: la trajectòria es mou d'un costat a l'altre del camí.
-          const serpeig = Math.sin(t * 0.0009 + k * 1.7) * 3;
-          const centre: Local = {
-            est: a.est + dx * f + perp.est * serpeig,
-            nord: a.nord + dy * f + perp.nord * serpeig,
-          };
-          // Apareix i desapareix suaument a cada extrem del camí.
-          const fade = Math.min(1, f * 6) * Math.min(1, (1 - f) * 6);
-          const dalt: (Punt | null)[] = [];
-          const baix: (Punt | null)[] = [];
-          for (let j = 0; j <= PUNTS_PER_ONA; j++) {
-            const lateral = (j / PUNTS_PER_ONA - 0.5) * AMPLADA_ONA + Math.sin(j * 0.8 + t * 0.005 + k) * 0.25;
-            const x = centre.est + perp.est * lateral;
-            const y = centre.nord + perp.nord * lateral;
-            // La cresta de l'ona ondula en alçada.
-            const alcada = ALCADA_ONA * (0.75 + 0.25 * Math.cos(j * 0.5 + t * 0.004 + k));
-            dalt.push(projecta({ est: x, nord: y }, alcada, m, w, h));
-            baix.push(projecta({ est: x, nord: y }, 0.1, m, w, h));
-          }
-          if (fade <= 0 || dalt.some((p) => p === null) || baix.some((p) => p === null)) continue;
-          ctx.beginPath();
-          dalt.forEach((p, j) => (j === 0 ? ctx.moveTo(p!.x, p!.y) : ctx.lineTo(p!.x, p!.y)));
-          for (let j = baix.length - 1; j >= 0; j--) ctx.lineTo(baix[j]!.x, baix[j]!.y);
-          ctx.closePath();
-          ctx.fillStyle = `rgba(${AIGUA}, ${0.16 * fade})`;
-          ctx.fill();
-          ctx.strokeStyle = `rgba(232, 250, 255, ${0.45 * fade})`;
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
-        }
-
-        // 2. Marcador provisional del lloc final: un cercle que batega a terra.
         const pFinal = projecta(b, 0, m, w, h);
         if (pFinal) {
-          const batec = 0.6 + 0.4 * Math.sin(t / 500);
+          const batec = 0.6 + 0.4 * Math.sin(ara / 500);
           ctx.strokeStyle = `rgba(${OR}, ${0.4 * batec})`;
           ctx.lineWidth = Math.max(1, 0.12 * pFinal.escala);
           ctx.beginPath();
           ctx.ellipse(pFinal.x, pFinal.y, 1.8 * pFinal.escala, 0.6 * pFinal.escala, 0, 0, Math.PI * 2);
           ctx.stroke();
         }
-
-        // 3. Brúixola (HUD): al voltant de les puntes, a la cantonada inferior dreta. Quan l'equip és
-        // lluny del camí s'apaga; el triangle vibra amb guspires quan hi és a sobre.
-        drawBrujula(ctx, m, e, r, t, w, h, guspires);
-      } else {
-        drawBrujula(ctx, m, null, 0, t, w, h, guspires);
       }
+
+      drawBrujula(ctx, m, e, r, ara / 1000, w, h, guspires);
 
       for (let i = guspires.length - 1; i >= 0; i--) {
         const g = guspires[i];
@@ -254,33 +265,152 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
     return () => cancelAnimationFrame(frame);
   }, [mirada, posicio, fita, amfores]);
 
+  // La malla i el front d'ona, en WebGL. Three.js només es carrega en obrir aquesta pantalla. Sense
+  // WebGL, la pantalla queda només amb la brúixola.
+  useEffect(() => {
+    let cancel = false;
+    let frame = 0;
+    let neteja: () => void = () => {};
+
+    (async () => {
+      try {
+        const THREE = await import("three");
+        const canvas = glRef.current;
+        if (cancel || !canvas) return;
+
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
+        renderer.setClearColor(0x000000, 0);
+        const escena = new THREE.Scene();
+        const cam = new THREE.PerspectiveCamera(FOV_V, 1, 0.5, 800);
+        cam.rotation.order = "YXZ";
+
+        const pos = new Float32Array(NX * NZ * 3);
+        const seed = new Float32Array(NX * NZ);
+        let i = 0;
+        for (let ix = 0; ix < NX; ix++) {
+          for (let iz = 0; iz < NZ; iz++) {
+            pos[i * 3] = MALLA_X0 + (ix * (MALLA_X1 - MALLA_X0)) / (NX - 1);
+            pos[i * 3 + 1] = 0;
+            pos[i * 3 + 2] = MALLA_Z0 + (iz * (MALLA_Z1 - MALLA_Z0)) / (NZ - 1);
+            seed[i] = Math.random();
+            i++;
+          }
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+        geo.setAttribute("aSeed", new THREE.BufferAttribute(seed, 1));
+
+        const uniforms = {
+          uTime: { value: 0 },
+          uFase: { value: 0 },
+          uLlarg: { value: 1 },
+          uPR: { value: 1 },
+          uInici: { value: new THREE.Vector2() },
+          uDir: { value: new THREE.Vector2(1, 0) },
+          uCam: { value: new THREE.Vector2() },
+        };
+        const material = new THREE.ShaderMaterial({
+          uniforms,
+          vertexShader: VERTEX,
+          fragmentShader: FRAGMENT,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        escena.add(new THREE.Points(geo, material));
+
+        // La direcció del camí i el punt on comença el front (la projecció de l'equip sobre el camí).
+        const B = aMon(amfores.latitud, amfores.longitud, fita);
+        const llarg = Math.hypot(B.x, B.z) || 1;
+        const dirX = B.x / llarg;
+        const dirZ = B.z / llarg;
+        uniforms.uDir.value.set(dirX, dirZ);
+
+        const inici = performance.now();
+        let w = 0;
+        let h = 0;
+        const bucle = (ara: number) => {
+          const cw = canvas.clientWidth;
+          const ch = canvas.clientHeight;
+          if (cw !== w || ch !== h) {
+            w = cw;
+            h = ch;
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            renderer.setPixelRatio(dpr);
+            renderer.setSize(w, h, false);
+            cam.aspect = w / Math.max(1, h);
+            cam.updateProjectionMatrix();
+            uniforms.uPR.value = dpr;
+          }
+
+          const m = arrossegarRef.current ? manual.current : (mirada.current ?? manual.current);
+          const u = posicio.current;
+          const sobreCami = u ? aMon(u.lat, u.lng, fita) : { x: 0, z: 0 };
+          // Projecció de l'equip sobre el camí (entre la fita i el lloc final).
+          const s = Math.max(0, Math.min(llarg, sobreCami.x * dirX + sobreCami.z * dirZ));
+          uniforms.uInici.value.set(dirX * s, dirZ * s);
+          uniforms.uLlarg.value = Math.max(1, llarg - s);
+          const t = (ara - inici) / 1000;
+          uniforms.uTime.value = t;
+          uniforms.uFase.value = ((ara - inici) % DURADA_FRONT_MS) / DURADA_FRONT_MS;
+
+          cam.position.set(sobreCami.x, ALCADA_OLLS, sobreCami.z);
+          cam.rotation.set(m.elevacio * RAD, -m.rumb * RAD, 0);
+          uniforms.uCam.value.set(sobreCami.x, sobreCami.z);
+
+          renderer.render(escena, cam);
+          frame = requestAnimationFrame(bucle);
+        };
+        frame = requestAnimationFrame(bucle);
+
+        neteja = () => {
+          cancelAnimationFrame(frame);
+          geo.dispose();
+          material.dispose();
+          renderer.dispose();
+        };
+      } catch {
+        // Sense WebGL: només es veu la brúixola.
+      }
+    })();
+
+    return () => {
+      cancel = true;
+      cancelAnimationFrame(frame);
+      neteja();
+    };
+  }, [mirada, posicio, fita, amfores]);
+
   // Sense sensors: arrossegar gira la mirada (rumb amb l'horitzontal, inclinació amb la vertical).
   return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 h-full w-full touch-none"
-      onPointerDown={(ev) => {
-        punter.current = { x: ev.clientX, y: ev.clientY };
-        ev.currentTarget.setPointerCapture(ev.pointerId);
-      }}
-      onPointerMove={(ev) => {
-        if (!arrossegarRef.current || !punter.current) return;
-        const dx = ev.clientX - punter.current.x;
-        const dy = ev.clientY - punter.current.y;
-        punter.current = { x: ev.clientX, y: ev.clientY };
-        const graus = FOV_H / Math.max(1, ev.currentTarget.clientWidth);
-        manual.current = {
-          rumb: (manual.current.rumb - dx * graus + 360) % 360,
-          elevacio: Math.max(-60, Math.min(60, manual.current.elevacio + dy * graus)),
-        };
-      }}
-      onPointerUp={() => {
-        punter.current = null;
-      }}
-      onPointerCancel={() => {
-        punter.current = null;
-      }}
-    />
+    <>
+      <canvas ref={glRef} className="absolute inset-0 h-full w-full" />
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 h-full w-full touch-none"
+        onPointerDown={(ev) => {
+          punter.current = { x: ev.clientX, y: ev.clientY };
+          ev.currentTarget.setPointerCapture(ev.pointerId);
+        }}
+        onPointerMove={(ev) => {
+          if (!arrossegarRef.current || !punter.current) return;
+          const dx = ev.clientX - punter.current.x;
+          const dy = ev.clientY - punter.current.y;
+          punter.current = { x: ev.clientX, y: ev.clientY };
+          const graus = FOV_H / Math.max(1, ev.currentTarget.clientWidth);
+          manual.current = {
+            rumb: (manual.current.rumb - dx * graus + 360) % 360,
+            elevacio: Math.max(-60, Math.min(60, manual.current.elevacio + dy * graus)),
+          };
+        }}
+        onPointerUp={() => {
+          punter.current = null;
+        }}
+        onPointerCancel={() => {
+          punter.current = null;
+        }}
+      />
+    </>
   );
 }
 

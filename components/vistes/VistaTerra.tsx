@@ -111,9 +111,9 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
         e.distanciaAmfores < RADI_AMFORES
           ? "📍 Ja sou al lloc: mireu a terra."
           : e.ressonancia >= 0.6
-            ? "🌊 Bé: seguiu les ones cap al lloc."
+            ? "🌊 Bé: seguiu l'ona cap al lloc."
             : e.ressonancia >= 0.25
-              ? "✨ Acosteu-vos al camí de les ones: el triangle vibra quan hi sou."
+              ? "✨ Acosteu-vos al camí de l'ona: el triangle vibra quan hi sou."
               : "🌀 Torneu al camí: la brúixola s'apaga quan us en separeu.";
       setGuia({ missatge, girar });
     }, 400);
