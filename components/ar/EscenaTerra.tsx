@@ -252,7 +252,7 @@ const FRAGMENT = `
 `;
 
 /** Partícules blanques que entren al con des de tots els costats, pugen i desapareixen. */
-const NPARTICULES_BLANQUES = 1500;
+const NPARTICULES_BLANQUES = 120;
 
 /**
  * Partícules blanques: cada una surt d'un punt a l'atzar al voltant del con, s'acosta al centre a ran de
@@ -281,7 +281,8 @@ const BLANQUES_VERTEX = `
       a = smoothstep(0.0, 0.2, k);
     } else {
       float k = (t - 0.5) * 2.0;
-      xz = uCentre + vec2(sin(aSeed * 90.0 + k * 4.0), cos(aSeed * 70.0 + k * 3.0)) * 0.4 * (1.0 - 0.5 * k);
+      // Pujada recta per l'eix del con: cap espiral.
+      xz = uCentre;
       y = k * 9.0;
       a = 1.0 - smoothstep(0.6, 1.0, k);
     }
