@@ -505,7 +505,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // Partícules que surten de la posició del jugador cada 3 s i es mouen lentament cap al forat.
         const NPARTICULES_EMISSIO = 40;
         const CICLE_EMISSIO_MS = 3000;
-        const DURADA_TRAJECTE_S = 100;
+        // Una partícula cada 3 s i 120 s de trajecte: sempre hi ha 40 en camí.
+        const DURADA_TRAJECTE_S = 120;
+        let emisSemillada = false;
         const emisSx = new Float32Array(NPARTICULES_EMISSIO);
         const emisSz = new Float32Array(NPARTICULES_EMISSIO);
         const emisNaix = new Float64Array(NPARTICULES_EMISSIO).fill(-1e12);
@@ -553,6 +555,16 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           const sobreCami = u ? aMon(u.lat, u.lng, fita) : { x: 0, z: 0 };
           uniforms.uTime.value = (ara - inici) / 1000;
 
+          // Al primer GPS, les 40 partícules ja són en camí (cadascuna desfasada 3 s), perquè n'hi hagi sempre 40.
+          if (u && !emisSemillada) {
+            emisSemillada = true;
+            for (let j = 0; j < NPARTICULES_EMISSIO; j++) {
+              emisSx[j] = sobreCami.x;
+              emisSz[j] = sobreCami.z;
+              emisNaix[j] = ara - (j + 1) * CICLE_EMISSIO_MS;
+            }
+            emisUltima = ara;
+          }
           // Cada 3 s surt una partícula de la posició del jugador (mentre hi hagi GPS).
           if (u && ara - emisUltima >= CICLE_EMISSIO_MS) {
             emisSx[emisSeguent] = sobreCami.x;
