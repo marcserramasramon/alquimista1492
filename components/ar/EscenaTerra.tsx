@@ -144,9 +144,8 @@ const VERTEX = `
     h += 0.10 * sin(dot(p.xz, vec2(-0.18, -0.98)) * 1.55 + tm * 2.4 + 0.4);
     h += 0.07 * sin(dot(p.xz, vec2(0.60, 0.80)) * 2.30 + tm * 3.1 + 3.0);
     h += 0.03 * sin(p.x * 3.1 + p.z * 2.7 + tm * 4.0 + aSeed * 6.2831);
-    // Forat de cuc a la posició final: la malla es doblega cap avall en un embut (vora a terra, coll a 4 m
-    // sota terra i base a 8 m). Cada vèrtex del disc es posa sobre la superfície de l'embut, a una alçada
-    // pròpia; el cel és el mirall del terra.
+    // Monticle a la posició final: la malla del terra puja en forma de trompeta (vora a terra, coll a 4 m i
+    // base a 8 m per sobre). Cada vèrtex del disc es posa sobre la superfície, a una alçada pròpia.
     float d = distance(p.xz, uCentre);
     float s = fract(aSeed * 17.3);
     float rf;
@@ -161,7 +160,7 @@ const VERTEX = `
     vec2 xzF = uCentre + vec2(cos(angF), sin(angF)) * rf;
     float wF = 1.0 - smoothstep(8.0, 10.0, d);
     p.xz = mix(p.xz, xzF, wF);
-    float yTerra = mix(h, -8.0 * s, wF);
+    float yTerra = mix(h, 8.0 * s, wF);
     p.y = yTerra;
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(tm * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
