@@ -28,7 +28,7 @@ export const DISTANCIA_PROVA_FORAT_M = 15;
 /** Vèrtexs extra al disc del forat, perquè l'embut tingui prou punts. */
 const NVERTEXS_FORAT = 2500;
 /** Radi (m) del disc del forat, al voltant del punt GPS final. */
-const RADI_FORAT = 7.5;
+const RADI_FORAT = 4.5;
 /** Malla de punts: 160 × 100 = 16.000 vèrtexs, en metres respecte la fita (x = est, z = sud). */
 const NX = 160;
 const NZ = 100;
@@ -152,17 +152,17 @@ const VERTEX = `
     // base a 8 m per sobre). Cada vèrtex del disc es posa sobre la superfície, a una alçada pròpia.
     float d = distance(p.xz, uCentre);
     float s = fract(aSeed * 17.3);
-    // Perfil: ample al terra (5 m), estret al mig (2 m) i tancat a dalt (1 m).
+    // Perfil: base al terra (1,67 m, un terç dels 5 m anteriors), coll al mig (2 m) i tancat a dalt (1 m).
     float rf;
     if (s < 0.5) {
       float u = 1.0 - 2.0 * s;
-      rf = 2.0 + 3.0 * u * u;
+      rf = 2.0 - 0.333 * u * u;
     } else {
       rf = 2.0 - (2.0 * s - 1.0);
     }
     float angF = aSeed * 6.2831 * 9.0;
     vec2 xzF = uCentre + vec2(cos(angF), sin(angF)) * rf;
-    float wF = 1.0 - smoothstep(5.5, 7.5, d);
+    float wF = 1.0 - smoothstep(2.5, 4.0, d);
     p.xz = mix(p.xz, xzF, wF);
     // Doll de partícules: des de la punta de dalt, els vèrtexs pugen cap amunt en bucle.
     // Només un 30 % dels vèrtexs de la punta pugen; la resta es queden quiets i formen el con.
