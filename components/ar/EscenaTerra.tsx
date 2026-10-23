@@ -282,11 +282,14 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const pos = new Float32Array(NX * NZ * 3);
         const seed = new Float32Array(NX * NZ);
         let i = 0;
+        // Graella desplaçada a l'atzar dins de cada cel·la: així no es veuen línies rectes.
+        const pasX = (MALLA_X1 - MALLA_X0) / (NX - 1);
+        const pasZ = (MALLA_Z1 - MALLA_Z0) / (NZ - 1);
         for (let ix = 0; ix < NX; ix++) {
           for (let iz = 0; iz < NZ; iz++) {
-            pos[i * 3] = MALLA_X0 + (ix * (MALLA_X1 - MALLA_X0)) / (NX - 1);
+            pos[i * 3] = MALLA_X0 + ix * pasX + (Math.random() - 0.5) * pasX * 0.9;
             pos[i * 3 + 1] = 0;
-            pos[i * 3 + 2] = MALLA_Z0 + (iz * (MALLA_Z1 - MALLA_Z0)) / (NZ - 1);
+            pos[i * 3 + 2] = MALLA_Z0 + iz * pasZ + (Math.random() - 0.5) * pasZ * 0.9;
             seed[i] = Math.random();
             i++;
           }
