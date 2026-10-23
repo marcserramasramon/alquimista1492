@@ -19,6 +19,8 @@ const RADI_CAMI_PLE = 3;
 const RADI_CAMI_BUIT = 15;
 /** Des d'aquesta distància (m) del lloc final, es dona per arribat. */
 export const RADI_AMFORES = 6;
+/** Alçada (m) a què penja la còpia invertida de la malla, com un cel de mar. */
+const ALCADA_CEL = 30;
 /** Malla de punts: 160 × 100 = 16.000 vèrtexs, en metres respecte la fita (x = est, z = sud). */
 const NX = 160;
 const NZ = 100;
@@ -120,6 +122,8 @@ const VERTEX = `
   uniform float uTime;
   uniform float uPR;
   uniform vec2 uCam;
+  uniform vec3 uBaixa;
+  uniform vec3 uAlta;
   varying vec3 vCol;
   varying float vA;
   void main() {
@@ -134,7 +138,7 @@ const VERTEX = `
     p.y += h;
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(uTime * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
-    vCol = mix(vec3(0.12, 0.45, 0.22), vec3(0.6, 1.0, 0.5), cresta) * (0.65 + 0.6 * cresta + brill);
+    vCol = mix(uBaixa, uAlta, cresta) * (0.65 + 0.6 * cresta + brill);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     float dist = length(p.xz - uCam);
     vA = 1.0 - smoothstep(120.0, 260.0, dist);
@@ -302,6 +306,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           uTime: { value: 0 },
           uPR: { value: 1 },
           uCam: { value: new THREE.Vector2() },
+          uBaixa: { value: new THREE.Vector3(0.12, 0.45, 0.22) },
+          uAlta: { value: new THREE.Vector3(0.6, 1.0, 0.5) },
         };
         const material = new THREE.ShaderMaterial({
           uniforms,
@@ -312,6 +318,25 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           blending: THREE.AdditiveBlending,
         });
         escena.add(new THREE.Points(geo, material));
+
+        // La mateixa malla penjada al cel, invertida i en blau: comparteix la geometria i el temps.
+        const uniformsCel = {
+          ...uniforms,
+          uBaixa: { value: new THREE.Vector3(0.1, 0.3, 0.7) },
+          uAlta: { value: new THREE.Vector3(0.55, 0.8, 1.0) },
+        };
+        const materialCel = new THREE.ShaderMaterial({
+          uniforms: uniformsCel,
+          vertexShader: VERTEX,
+          fragmentShader: FRAGMENT,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        const cel = new THREE.Points(geo, materialCel);
+        cel.position.y = ALCADA_CEL;
+        cel.scale.y = -1;
+        escena.add(cel);
 
         const inici = performance.now();
         let w = 0;
@@ -348,6 +373,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           cancelAnimationFrame(frame);
           geo.dispose();
           material.dispose();
+          materialCel.dispose();
           renderer.dispose();
         };
       } catch {
