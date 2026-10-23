@@ -276,7 +276,7 @@ export const EXTRES_AR: ExtraAr[] = [
       titol: "La Terra us guia",
       entrada: "El terra mateix us guiarà fins al lloc. Això és el que veureu:",
       passos: [
-        { icona: "🌊", text: "El terra és una malla de punts de llum que oneja suaument. Des de la vostra posició surt una ona que avança cap al lloc final." },
+        { icona: "🌊", text: "El terra és una malla de punts de llum que es mou com el mar, amb onades que es creuen en totes les direccions." },
         { icona: "🧭", text: "La brúixola de baix a la dreta marca cap al lloc. Quan sou sobre el camí, el triangle de la Terra vibra amb guspires daurades." },
         { icona: "📍", text: "Quan hi arribeu, mireu a terra." },
       ],

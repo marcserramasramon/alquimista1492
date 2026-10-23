@@ -846,7 +846,7 @@ export const PANTALLES: Pantalla[] = [
     id: "terra-cami-escena",
     grup: "hub",
     titol: "Seguiu la Terra · escena",
-    descripcio: "Malla de 4.000 punts que oneja, amb el front d'ona que va cap al lloc final i brúixola. Sense càmera ni sensors: arrossegueu per girar; la posició de prova és la fita.",
+    descripcio: "Malla de 16.000 punts que es mou com el mar, amb brúixola cap al lloc final. Sense càmera ni sensors: arrossegueu per girar; la posició de prova és la fita.",
     render: () => <VistaTerra extra={getExtraAr("terra-cami")!} onTornar={noop} directa />,
   },
   {

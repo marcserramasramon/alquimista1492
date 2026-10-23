@@ -19,11 +19,9 @@ const RADI_CAMI_PLE = 3;
 const RADI_CAMI_BUIT = 15;
 /** Des d'aquesta distància (m) del lloc final, es dona per arribat. */
 export const RADI_AMFORES = 6;
-/** Quant triga el front d'onada a anar de l'equip fins al lloc final, en mil·lisegons. */
-const DURADA_FRONT_MS = 7000;
-/** Malla de punts: 80 × 50 = 4.000 vèrtexs, en metres respecte la fita (x = est, z = sud). */
-const NX = 80;
-const NZ = 50;
+/** Malla de punts: 160 × 100 = 16.000 vèrtexs, en metres respecte la fita (x = est, z = sud). */
+const NX = 160;
+const NZ = 100;
 const MALLA_X0 = -120;
 const MALLA_X1 = 260;
 const MALLA_Z0 = -120;
@@ -113,32 +111,30 @@ function projecta(l: Local, altura: number, mirada: Mirada, w: number, h: number
 }
 
 /**
- * Vèrtexs de la malla: l'onatge lent del terra es calcula aquí, i el front que va des de l'equip cap al
- * lloc final (uFase, uInici, uDir, uLlarg) aixeca els punts al seu pas i els deixa una estela.
+ * Vèrtexs de la malla: el terra es mou com el mar, amb diversos trens d'ona que van en direccions
+ * diferents i a velocitats diferents. Les crestes més altes es veuen més clares, i alguns punts brillen
+ * una mica a l'atzar, com la llum sobre l'aigua.
  */
 const VERTEX = `
   attribute float aSeed;
   uniform float uTime;
-  uniform float uFase;
-  uniform float uLlarg;
   uniform float uPR;
-  uniform vec2 uInici;
-  uniform vec2 uDir;
   uniform vec2 uCam;
   varying vec3 vCol;
   varying float vA;
   void main() {
     vec3 p = position;
-    float idle = sin(p.x * 0.09 + uTime * 0.9 + aSeed * 6.2831) * 0.5 + cos(p.z * 0.07 - uTime * 0.7) * 0.5;
-    vec2 rel = p.xz - uInici;
-    float s = dot(rel, uDir);
-    float d = s - uFase * uLlarg;
-    float cresta = exp(-d * d / 32.0);
-    float estela = d < 0.0 ? exp(d / 10.0) * 0.5 : 0.0;
-    float pols = cresta + estela;
-    p.y += idle * 0.035 + pols * 0.3;
-    float progres = clamp(s / uLlarg, 0.0, 1.0);
-    vCol = mix(vec3(0.35, 0.85, 0.9), vec3(1.0, 0.8, 0.36), progres) * (0.55 + 1.2 * pols);
+    float h = 0.0;
+    h += 0.28 * sin(dot(p.xz, vec2(0.71, 0.70)) * 0.42 + uTime * 1.1);
+    h += 0.20 * sin(dot(p.xz, vec2(-0.45, 0.89)) * 0.61 + uTime * 1.5 + 1.3);
+    h += 0.16 * sin(dot(p.xz, vec2(0.92, -0.38)) * 0.97 + uTime * 1.9 + 2.1);
+    h += 0.10 * sin(dot(p.xz, vec2(-0.18, -0.98)) * 1.55 + uTime * 2.4 + 0.4);
+    h += 0.07 * sin(dot(p.xz, vec2(0.60, 0.80)) * 2.30 + uTime * 3.1 + 3.0);
+    h += 0.03 * sin(p.x * 3.1 + p.z * 2.7 + uTime * 4.0 + aSeed * 6.2831);
+    p.y += h;
+    float cresta = smoothstep(-0.2, 0.4, h);
+    float brill = pow(max(0.0, sin(uTime * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
+    vCol = mix(vec3(0.12, 0.38, 0.62), vec3(0.55, 0.95, 1.0), cresta) * (0.65 + 0.6 * cresta + brill);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     float dist = length(p.xz - uCam);
     vA = 1.0 - smoothstep(120.0, 260.0, dist);
@@ -181,11 +177,10 @@ interface Props {
 }
 
 /**
- * Malla de 4.000 punts que cobreix el terra fins a l'horitzó i oneja suaument. Des de la posició de
- * l'equip surt un front d'ona que avança cap al lloc final; quan hi passa, els punts s'aixequen i
- * s'il·luminen. Per sobre, la brúixola (canvas 2D) apunta cap al lloc final i el triangle de la Terra vibra
- * amb guspires quan l'equip és sobre el camí. Al lloc final hi ha un marcador provisional. Dibuixat en
- * dos canvas transparents a sobre de la càmera. La lògica geogràfica és a `estatTerra`.
+ * Malla de 16.000 punts que cobreix el terra fins a l'horitzó i es mou com el mar, amb diversos trens
+ * d'ona en direccions diferents. Per sobre, la brúixola (canvas 2D) apunta cap al lloc final i el triangle
+ * de la Terra vibra amb guspires quan l'equip és sobre el camí. Al lloc final hi ha un marcador provisional.
+ * Dibuixat en dos canvas transparents a sobre de la càmera. La lògica geogràfica és a `estatTerra`.
  */
 export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }: Props) {
   const glRef = useRef<HTMLCanvasElement>(null);
@@ -302,11 +297,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
 
         const uniforms = {
           uTime: { value: 0 },
-          uFase: { value: 0 },
-          uLlarg: { value: 1 },
           uPR: { value: 1 },
-          uInici: { value: new THREE.Vector2() },
-          uDir: { value: new THREE.Vector2(1, 0) },
           uCam: { value: new THREE.Vector2() },
         };
         const material = new THREE.ShaderMaterial({
@@ -318,13 +309,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           blending: THREE.AdditiveBlending,
         });
         escena.add(new THREE.Points(geo, material));
-
-        // La direcció del camí i el punt on comença el front (la projecció de l'equip sobre el camí).
-        const B = aMon(amfores.latitud, amfores.longitud, fita);
-        const llarg = Math.hypot(B.x, B.z) || 1;
-        const dirX = B.x / llarg;
-        const dirZ = B.z / llarg;
-        uniforms.uDir.value.set(dirX, dirZ);
 
         const inici = performance.now();
         let w = 0;
@@ -346,13 +330,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           const m = arrossegarRef.current ? manual.current : (mirada.current ?? manual.current);
           const u = posicio.current;
           const sobreCami = u ? aMon(u.lat, u.lng, fita) : { x: 0, z: 0 };
-          // Projecció de l'equip sobre el camí (entre la fita i el lloc final).
-          const s = Math.max(0, Math.min(llarg, sobreCami.x * dirX + sobreCami.z * dirZ));
-          uniforms.uInici.value.set(dirX * s, dirZ * s);
-          uniforms.uLlarg.value = Math.max(1, llarg - s);
-          const t = (ara - inici) / 1000;
-          uniforms.uTime.value = t;
-          uniforms.uFase.value = ((ara - inici) % DURADA_FRONT_MS) / DURADA_FRONT_MS;
+          uniforms.uTime.value = (ara - inici) / 1000;
 
           cam.position.set(sobreCami.x, ALCADA_OLLS, sobreCami.z);
           cam.rotation.set(m.elevacio * RAD, -m.rumb * RAD, 0);
