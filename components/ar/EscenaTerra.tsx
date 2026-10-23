@@ -21,6 +21,8 @@ const RADI_CAMI_BUIT = 15;
 export const RADI_AMFORES = 6;
 /** Alçada (m) a què penja la còpia de la malla al cel. */
 const ALCADA_CEL = 30;
+/** Distància (m) de la fita a què es posa el monticle, en la direcció del lloc final. */
+const DISTANCIA_FORAT_M = 10;
 /** Vèrtexs extra al disc del forat, perquè l'embut tingui prou punts. */
 const NVERTEXS_FORAT = 2500;
 /** Radi (m) del disc del forat, al voltant del punt GPS final. */
@@ -346,7 +348,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         cam.rotation.order = "YXZ";
 
         // Centre del forat: el punt GPS final, en metres respecte la fita.
-        const centre = aMon(amfores.latitud, amfores.longitud, fita);
+        // El monticle, a DISTANCIA_FORAT_M metres de la fita en la direcció del lloc final.
+        const B = aMon(amfores.latitud, amfores.longitud, fita);
+        const llargCami = Math.hypot(B.x, B.z) || 1;
+        const centre = { x: (B.x / llargCami) * DISTANCIA_FORAT_M, z: (B.z / llargCami) * DISTANCIA_FORAT_M };
         const total = NX * NZ + NVERTEXS_FORAT;
         const pos = new Float32Array(total * 3);
         const seed = new Float32Array(total);
