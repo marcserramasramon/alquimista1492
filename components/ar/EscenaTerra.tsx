@@ -29,7 +29,7 @@ const MALLA_X1 = 260;
 const MALLA_Z0 = -120;
 const MALLA_Z1 = 120;
 /** Distància (m) de la fita a què es posa el con, en la direcció del lloc final. */
-const DISTANCIA_CON_M = 5;
+const DISTANCIA_CON_M = 20;
 /** Vèrtexs extra dins del disc del con (per al terra i per al cel), perquè el con tingui prou punts. */
 const NVERTEXS_CON = 1800;
 /** Radi (m) del disc del con: dins d'aquest radi el terra i el cel s'uneixen en un con. */
