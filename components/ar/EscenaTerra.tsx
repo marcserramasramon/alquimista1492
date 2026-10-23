@@ -121,6 +121,7 @@ const VERTEX = `
   uniform float uTime;
   uniform float uPR;
   uniform float uCel;
+  uniform float uVel;
   uniform float uAlcada;
   uniform vec2 uCam;
   uniform vec3 uBaixa;
@@ -129,16 +130,17 @@ const VERTEX = `
   varying float vA;
   void main() {
     vec3 p = position;
+    float tm = uTime * uVel;
     float h = 0.0;
-    h += 0.28 * sin(dot(p.xz, vec2(0.71, 0.70)) * 0.42 + uTime * 1.1);
-    h += 0.20 * sin(dot(p.xz, vec2(-0.45, 0.89)) * 0.61 + uTime * 1.5 + 1.3);
-    h += 0.16 * sin(dot(p.xz, vec2(0.92, -0.38)) * 0.97 + uTime * 1.9 + 2.1);
-    h += 0.10 * sin(dot(p.xz, vec2(-0.18, -0.98)) * 1.55 + uTime * 2.4 + 0.4);
-    h += 0.07 * sin(dot(p.xz, vec2(0.60, 0.80)) * 2.30 + uTime * 3.1 + 3.0);
-    h += 0.03 * sin(p.x * 3.1 + p.z * 2.7 + uTime * 4.0 + aSeed * 6.2831);
+    h += 0.28 * sin(dot(p.xz, vec2(0.71, 0.70)) * 0.42 + tm * 1.1);
+    h += 0.20 * sin(dot(p.xz, vec2(-0.45, 0.89)) * 0.61 + tm * 1.5 + 1.3);
+    h += 0.16 * sin(dot(p.xz, vec2(0.92, -0.38)) * 0.97 + tm * 1.9 + 2.1);
+    h += 0.10 * sin(dot(p.xz, vec2(-0.18, -0.98)) * 1.55 + tm * 2.4 + 0.4);
+    h += 0.07 * sin(dot(p.xz, vec2(0.60, 0.80)) * 2.30 + tm * 3.1 + 3.0);
+    h += 0.03 * sin(p.x * 3.1 + p.z * 2.7 + tm * 4.0 + aSeed * 6.2831);
     p.y = uCel > 0.5 ? uAlcada - h : h;
     float cresta = smoothstep(-0.2, 0.4, h);
-    float brill = pow(max(0.0, sin(uTime * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
+    float brill = pow(max(0.0, sin(tm * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
     vCol = mix(uBaixa, uAlta, cresta) * (0.65 + 0.6 * cresta + brill);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     float dist = length(p.xz - uCam);
@@ -307,6 +309,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           uTime: { value: 0 },
           uPR: { value: 1 },
           uCel: { value: 0 },
+          uVel: { value: 1 },
           uAlcada: { value: ALCADA_CEL },
           uCam: { value: new THREE.Vector2() },
           uBaixa: { value: new THREE.Vector3(0.12, 0.45, 0.22) },
@@ -327,6 +330,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           uniforms: {
             ...uniforms,
             uCel: { value: 1 },
+            // Les partícules del cel es mouen més lentament que les del terra.
+            uVel: { value: 0.4 },
             uBaixa: { value: new THREE.Vector3(0.1, 0.3, 0.7) },
             uAlta: { value: new THREE.Vector3(0.55, 0.8, 1.0) },
           },
