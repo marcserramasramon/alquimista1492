@@ -435,10 +435,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const alcadaRaw = caixa.max.y - caixa.min.y || 1;
         const xCentre = (caixa.max.x + caixa.min.x) / 2;
         const zFront = (caixa.min.z + caixa.max.z) / 2 + 0.1 * alcadaRaw;
-        const yOlls = caixa.max.y - 0.12 * alcadaRaw;
+        const yOlls = caixa.max.y - 0.07 * alcadaRaw;
         const materialOll = new THREE.MeshBasicMaterial({ color: 0xff1a1a });
         const centreOlls = new THREE.Vector3(xCentre, yOlls, zFront);
-        for (const sx of [-0.09, 0.09]) {
+        for (const sx of [-0.05, 0.05]) {
           const oll = new THREE.Mesh(new THREE.SphereGeometry(0.016 * alcadaRaw, 12, 10), materialOll);
           oll.position.set(xCentre + sx * alcadaRaw, yOlls, zFront);
           model.add(oll);
