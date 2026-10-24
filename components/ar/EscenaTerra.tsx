@@ -1,10 +1,19 @@
 "use client";
 
-import type { Object3D } from "three";
+import type { AnimationAction, AnimationClip, AnimationMixer } from "three";
 import { useEffect, useRef, type RefObject } from "react";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
-import { animaCaminada } from "@/components/ar/terra/caminada";
+import { EstatGolem, SeguimentGolem } from "@/components/ar/terra/seguiment";
 import type { PuntGps } from "@/content/public/extres";
+
+/**
+ * El clip de la caminada i el del senyal porten un moviment de l'arrel (pelvis) que el codi ja controla: se'l
+ * treu perquè el golem no es desplaci sol.
+ */
+function senseMovimentArrel(clip: AnimationClip): AnimationClip {
+  clip.tracks = clip.tracks.filter((pista) => !(pista.name.startsWith("pelvis") && pista.name.endsWith(".position")));
+  return clip;
+}
 
 /** Posició de l'equip (GPS); nul·la mentre el mòbil no n'ha trobat cap. */
 export type PosicioEquip = { lat: number; lng: number } | null;
@@ -394,23 +403,39 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         sol.position.set(-30, 60, 20);
         escena.add(sol);
         const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
-        let ossosGolem: Map<string, Object3D> | null = null;
-        new GLTFLoader().load("/golem/semi-rig.glb", (gltf) => {
-          const model = gltf.scene;
-          // Els ossos del CC_Base, per animar-los a la caminada.
-          const ossos = new Map<string, Object3D>();
-          model.traverse((objecte) => {
-            if (objecte.name) ossos.set(objecte.name, objecte);
-          });
-          ossosGolem = ossos;
-          const caixa = new THREE.Box3().setFromObject(model);
-          const escala = ALCADA_GOLEM / (caixa.max.y - caixa.min.y || 1);
-          const midaCentre = caixa.getCenter(new THREE.Vector3());
-          model.scale.setScalar(escala);
-          // Peus a terra i centrat en x i z.
-          model.position.set(-midaCentre.x * escala, -caixa.min.y * escala, -midaCentre.z * escala);
-          golem.add(model);
-        });
+        const seguiment = new SeguimentGolem(centre.x, centre.z);
+        let mixerGolem: AnimationMixer | null = null;
+        let accioCaminar: AnimationAction | null = null;
+        let accioSaludar: AnimationAction | null = null;
+        let estatAnim: EstatGolem | null = null;
+        let ultimFrameGolem = performance.now();
+        const canviaAnimacio = (estat: EstatGolem) => {
+          const origen = estatAnim === "seguint" ? accioCaminar : estatAnim === "bequeig" ? accioSaludar : null;
+          const desti = estat === "seguint" ? accioCaminar : estat === "bequeig" ? accioSaludar : null;
+          if (origen && origen !== desti) origen.fadeOut(0.3);
+          if (desti) desti.reset().fadeIn(0.3).play();
+          estatAnim = estat;
+        };
+        const carregador = new GLTFLoader();
+        const [gltfGolem, gltfCaminar, gltfSaludar] = await Promise.all([
+          carregador.loadAsync("/golem/semi-rig.glb"),
+          carregador.loadAsync("/golem/walk.glb"),
+          carregador.loadAsync("/golem/beckon.glb"),
+        ]);
+        const model = gltfGolem.scene;
+        const caixa = new THREE.Box3().setFromObject(model);
+        const escala = ALCADA_GOLEM / (caixa.max.y - caixa.min.y || 1);
+        const midaCentre = caixa.getCenter(new THREE.Vector3());
+        model.scale.setScalar(escala);
+        // Peus a terra i centrat en x i z.
+        model.position.set(-midaCentre.x * escala, -caixa.min.y * escala, -midaCentre.z * escala);
+        golem.add(model);
+        // Caminar i senyalar (beckon) amb els clips de les animacions; els ossos tenen els noms de Mesh2Motion.
+        mixerGolem = new THREE.AnimationMixer(model);
+        accioCaminar = mixerGolem.clipAction(senseMovimentArrel(gltfCaminar.animations[0]));
+        accioCaminar.setLoop(THREE.LoopRepeat, Infinity);
+        accioSaludar = mixerGolem.clipAction(senseMovimentArrel(gltfSaludar.animations[0]));
+        accioSaludar.setLoop(THREE.LoopRepeat, Infinity);
         const total = NX * NZ + NVERTEXS_FORAT;
         const pos = new Float32Array(total * 3);
         const seed = new Float32Array(total);
@@ -535,13 +560,15 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           cam.rotation.set(m.elevacio * RAD, -m.rumb * RAD, 0);
           uniforms.uCam.value.set(sobreCami.x, sobreCami.z);
 
-          // El gegant, a 5 m davant de l'equip i de cara a ell.
-          const th = m.rumb * RAD;
-          golem.position.set(sobreCami.x + Math.sin(th) * 5, 0, sobreCami.z - Math.cos(th) * 5);
-          // Gira d'un costat a l'altre (uns ±50°) i camina sobre el lloc.
-          const tSegons = (ara - inici) / 1000;
-          golem.rotation.y = -th + 0.9 * Math.sin(tSegons * 0.25);
-          if (ossosGolem) animaCaminada(ossosGolem, tSegons);
+          // El gegant segueix el jugador (mostreig cada 0,5 s) i camina cap a la fita.
+          const pas = seguiment.update(ara, sobreCami.x, sobreCami.z);
+          golem.position.set(pas.x, 0, pas.z);
+          golem.rotation.y = pas.yaw;
+          if (mixerGolem) {
+            mixerGolem.update(Math.min(0.1, (ara - ultimFrameGolem) / 1000));
+            if (pas.estat !== estatAnim) canviaAnimacio(pas.estat);
+          }
+          ultimFrameGolem = ara;
 
           renderer.render(escena, cam);
           frame = requestAnimationFrame(bucle);
