@@ -439,11 +439,11 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const materialOll = new THREE.MeshBasicMaterial({ color: 0xff1a1a });
         const centreOlls = new THREE.Vector3(xCentre, yOlls, zFront);
         for (const sx of [-0.09, 0.09]) {
-          const oll = new THREE.Mesh(new THREE.SphereGeometry(0.035 * alcadaRaw, 12, 10), materialOll);
+          const oll = new THREE.Mesh(new THREE.SphereGeometry(0.016 * alcadaRaw, 12, 10), materialOll);
           oll.position.set(xCentre + sx * alcadaRaw, yOlls, zFront);
           model.add(oll);
         }
-        const llumOlls = new THREE.PointLight(0xff1a1a, 0.6, 3);
+        const llumOlls = new THREE.PointLight(0xff1a1a, 0.25, 1.5);
         llumOlls.position.copy(centreOlls);
         model.add(llumOlls);
         // Caminar i senyalar (beckon) amb els clips de les animacions; els ossos tenen els noms de Mesh2Motion.
