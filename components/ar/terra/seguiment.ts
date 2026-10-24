@@ -1,10 +1,16 @@
-/** Estat del golem: camina cap a la fita, fa el senyal de venir (beckon) o es queda quiet a la fita. */
-export type EstatGolem = "seguint" | "bequeig" | "quiet";
+/**
+ * Estat del golem:
+ * - "seguint": camina cap a la fita.
+ * - "gest": fa el senyal de venir (una vegada, 3 s).
+ * - "quiet": s'està quiet (mirant el jugador o a la fita).
+ * - "seu": s'ha assegut, esperant que el jugador es mogui.
+ */
+export type EstatGolem = "seguint" | "gest" | "quiet" | "seu";
 
 export interface PasGolem {
   x: number;
   z: number;
-  /** Rumb del golem (radiants): cap a on camina, o cap al jugador quan fa el senyal. */
+  /** Rumb del golem (radiants): cap a on camina, o cap al jugador quan està parat. */
   yaw: number;
   estat: EstatGolem;
 }
@@ -18,15 +24,24 @@ const VELOCITAT = 1.4;
 /** Un jugador es considera parat si en 3 mostres seguides (1,5 s) no s'ha mogut més de 0,3 m. */
 const MOVIMENT_MIN_M = 0.3;
 const MOSTRES_PARAT = 3;
-/** Si el jugador és més lluny que això (m), el golem s'espera i fa el senyal. */
+/** Si el jugador és més lluny que això (m), el golem s'espera quiet. */
 const DISTANCIA_MAX = 12;
 /** A partir d'aquesta distància de la fita (m), el golem s'hi queda quiet. */
 const RADI_FITA = 1.5;
 
 /**
+ * Seqüència quan el jugador està parat, en mil·lisegons des que s'ha parat:
+ * senyal (0–3 s), quiet (3–8 s), senyal (8–11 s), quiet (11–21 s) i després s'asseu.
+ */
+const SENYAL_1_FI = 3000;
+const QUIET_1_FI = 8000;
+const SENYAL_2_FI = 11000;
+const QUIET_2_FI = 21000;
+
+/**
  * Seguiment del golem: cada 0,5 s es mira on és el jugador. El golem camina cap a la fita mentre el jugador
- * avança. Si el jugador s'atura, o s'allunya més de DISTANCIA_MAX, el golem es gira cap a ell i fa el senyal
- * de venir. Quan arriba a la fita, es queda quiet.
+ * avança. Quan el jugador s'atura, es gira cap a ell i fa la seqüència de senyal i espera, i al final s'asseu
+ * fins que es mogui. Quan arriba a la fita, es queda quiet.
  */
 export class SeguimentGolem {
   private gx = 0;
@@ -37,6 +52,7 @@ export class SeguimentGolem {
   private arribat = false;
   private ultimaMostra = -Infinity;
   private ultimTemps = -1;
+  private tParat = -1;
   private historial: { x: number; z: number }[] = [];
 
   constructor(private readonly fx: number, private readonly fz: number) {}
@@ -62,18 +78,33 @@ export class SeguimentGolem {
     }
 
     const dFita = Math.hypot(this.fx - this.gx, this.fz - this.gz);
+    const mirarJugador = Math.atan2(mostra.x - this.gx, mostra.z - this.gz);
     if (this.arribat || dFita < RADI_FITA) {
       this.arribat = true;
       this.estat = "quiet";
-      this.yaw = Math.atan2(mostra.x - this.gx, mostra.z - this.gz);
+      this.yaw = mirarJugador;
       return this.pas();
     }
 
     const dJugador = Math.hypot(mostra.x - this.gx, mostra.z - this.gz);
-    if (this.jugadorParat() || dJugador > DISTANCIA_MAX) {
-      // El jugador no avança (o és massa lluny): el golem es gira cap a ell i fa el senyal.
-      this.estat = "bequeig";
-      this.yaw = Math.atan2(mostra.x - this.gx, mostra.z - this.gz);
+    if (this.jugadorParat()) {
+      if (this.tParat < 0) this.tParat = ara;
+      const e = ara - this.tParat;
+      if (e < SENYAL_1_FI) this.estat = "gest";
+      else if (e < QUIET_1_FI) this.estat = "quiet";
+      else if (e < SENYAL_2_FI) this.estat = "gest";
+      else if (e < QUIET_2_FI) this.estat = "quiet";
+      else this.estat = "seu";
+      this.yaw = mirarJugador;
+      return this.pas();
+    }
+
+    // El jugador es mou: es reinicia la seqüència.
+    this.tParat = -1;
+    if (dJugador > DISTANCIA_MAX) {
+      // Massa lluny: el golem espera quiet que el jugador s'acosti.
+      this.estat = "quiet";
+      this.yaw = mirarJugador;
       return this.pas();
     }
 

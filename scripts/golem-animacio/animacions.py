@@ -36,6 +36,11 @@ if MODE == 'senyal':
     NOM = 'Senyal'
     def w_walk(t): return 0.0*t
     def arm_up(t): return ramp(t, 0.2, 0.8) - ramp(t, 2.4, 3.0)
+elif MODE == 'seure':
+    TOTAL = 1.0
+    NOM = 'Seure'
+    def w_walk(t): return 0.0*t
+    def arm_up(t): return 0.0*t
 else:
     TOTAL = 1.0
     NOM = 'Walk'
@@ -46,6 +51,15 @@ def phase_of(t, n=2000):
     ts = np.linspace(0, t, n); return 2*np.pi*np.trapezoid([w_walk(x) for x in ts], ts) if t > 0 else 0.0
 
 def pose(t, speed):
+    if MODE == 'seure':
+        # postura asseguda: cuixes endavant, genolls doblegats, pelvis baixa (unitats del model, ~10 d'alt)
+        rot = {}
+        for s in ('l', 'r'):
+            rot[f'thigh_{s}'] = fwd(deg(80))
+            rot[f'calf_{s}'] = fwd(deg(-85))
+            rot[f'foot_{s}'] = fwd(deg(-10))
+        rot['spine_01'] = fwd(deg(-8))
+        return rot, np.array([0.0, -2.4, 0.0])
     ww = w_walk(t); ph = phase_of(t)
     wa, yaw, roll, bob = walk_angles(ph, ww)
     rot = {n: fwd(a) for n, a in wa.items()}
