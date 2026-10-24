@@ -38,6 +38,8 @@ const SENYAL_2_FI = 11000;
 const QUIET_2_FI = 21000;
 /** Després de l'espera final, el golem avança fins a aquesta distància del jugador (m), es gira i fa el senyal. */
 const DISTANCIA_AVANC = 3;
+/** El golem s'aturarà aquests metres a l'esquerra de la línia entre el jugador i la fita (no a la perpendicular). */
+const DESPLA_ESQUERRA = 2;
 /** Durada del senyal final, en mil·lisegons; després s'està quiet. */
 const SENYAL_FINAL_MS = 3000;
 
@@ -101,7 +103,12 @@ export class SeguimentGolem {
         this.estat = "quiet";
       } else {
         // Avança un tros més cap a la fita, es para a uns metres del jugador, es gira i fa el senyal.
-        const tgt = this.puntAvant(mostra, DISTANCIA_AVANC);
+        const base = this.puntAvant(mostra, DISTANCIA_AVANC);
+        // Vector unitari de la línia jugador -> fita, i el seu costat esquerre (a l'esquerra de qui camina).
+        const lx = this.fx - mostra.x;
+        const lz = this.fz - mostra.z;
+        const ll = Math.hypot(lx, lz) || 1;
+        const tgt = { x: base.x + (lz / ll) * DESPLA_ESQUERRA, z: base.z - (lx / ll) * DESPLA_ESQUERRA };
         const dx = tgt.x - this.gx;
         const dz = tgt.z - this.gz;
         const dT = Math.hypot(dx, dz);
