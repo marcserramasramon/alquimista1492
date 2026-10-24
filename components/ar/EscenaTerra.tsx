@@ -1,19 +1,11 @@
 "use client";
 
-import type { AnimationAction, AnimationClip, AnimationMixer } from "three";
+import type { AnimationAction, AnimationMixer } from "three";
 import { useEffect, useRef, type RefObject } from "react";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
 import { EstatGolem, SeguimentGolem } from "@/components/ar/terra/seguiment";
 import type { PuntGps } from "@/content/public/extres";
 
-/**
- * Només es fan servir les rotacions dels clips. Les translacions dels ossos són d'un altre rig i escala, i
- * desmuntarien el golem; les posicions les deixa el model, i el moviment el controla el codi.
- */
-function senseMovimentArrel(clip: AnimationClip): AnimationClip {
-  clip.tracks = clip.tracks.filter((pista) => !pista.name.endsWith(".position"));
-  return clip;
-}
 
 /** Posició de l'equip (GPS); nul·la mentre el mòbil no n'ha trobat cap. */
 export type PosicioEquip = { lat: number; lng: number } | null;
@@ -409,6 +401,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         let accioSaludar: AnimationAction | null = null;
         let estatAnim: EstatGolem | null = null;
         let ultimFrameGolem = performance.now();
+        let yawGolem: number | null = null;
         const canviaAnimacio = (estat: EstatGolem) => {
           const origen = estatAnim === "seguint" ? accioCaminar : estatAnim === "bequeig" ? accioSaludar : null;
           const desti = estat === "seguint" ? accioCaminar : estat === "bequeig" ? accioSaludar : null;
@@ -419,11 +412,13 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const carregador = new GLTFLoader();
         // El model és el del fitxer de la caminada: té la malla, la textura i el rig amb la mateixa postura de
         // repòs que els clips (si no, les rotacions es desfiguren).
-        const [gltfCaminar, gltfSaludar] = await Promise.all([
-          carregador.loadAsync("/golem/walk.glb"),
-          carregador.loadAsync("/golem/beckon.glb"),
+        // Model amb el rig corregit (scripts/golem-animacio) i els dos clips: caminar i senyal (vine).
+        const [gltfModel, gltfCaminar, gltfSaludar] = await Promise.all([
+          carregador.loadAsync("/golem/golem.glb"),
+          carregador.loadAsync("/golem/caminar.glb"),
+          carregador.loadAsync("/golem/senyal.glb"),
         ]);
-        const model = gltfCaminar.scene;
+        const model = gltfModel.scene;
         const caixa = new THREE.Box3().setFromObject(model);
         const escala = ALCADA_GOLEM / (caixa.max.y - caixa.min.y || 1);
         const midaCentre = caixa.getCenter(new THREE.Vector3());
@@ -433,9 +428,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         golem.add(model);
         // Caminar i senyalar (beckon) amb els clips de les animacions; els ossos tenen els noms de Mesh2Motion.
         mixerGolem = new THREE.AnimationMixer(model);
-        accioCaminar = mixerGolem.clipAction(senseMovimentArrel(gltfCaminar.animations[0]));
+        accioCaminar = mixerGolem.clipAction(gltfCaminar.animations[0]);
         accioCaminar.setLoop(THREE.LoopRepeat, Infinity);
-        accioSaludar = mixerGolem.clipAction(senseMovimentArrel(gltfSaludar.animations[0]));
+        accioSaludar = mixerGolem.clipAction(gltfSaludar.animations[0]);
         accioSaludar.setLoop(THREE.LoopRepeat, Infinity);
         const total = NX * NZ + NVERTEXS_FORAT;
         const pos = new Float32Array(total * 3);
@@ -564,9 +559,15 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           // El gegant segueix el jugador (mostreig cada 0,5 s) i camina cap a la fita.
           const pas = seguiment.update(ara, sobreCami.x, sobreCami.z);
           golem.position.set(pas.x, 0, pas.z);
-          golem.rotation.y = pas.yaw;
+          // El gir és continu: el golem gira cap a la direcció que toca a 2,5 rad/s, sense saltar.
+          const dtGolem = Math.min(0.1, (ara - ultimFrameGolem) / 1000);
+          if (yawGolem === null) yawGolem = pas.yaw;
+          const diferencia = Math.atan2(Math.sin(pas.yaw - yawGolem), Math.cos(pas.yaw - yawGolem));
+          const maxGir = 2.5 * dtGolem;
+          yawGolem += Math.max(-maxGir, Math.min(maxGir, diferencia));
+          golem.rotation.y = yawGolem;
           if (mixerGolem) {
-            mixerGolem.update(Math.min(0.1, (ara - ultimFrameGolem) / 1000));
+            mixerGolem.update(dtGolem);
             if (pas.estat !== estatAnim) canviaAnimacio(pas.estat);
           }
           ultimFrameGolem = ara;
