@@ -434,7 +434,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const alcadaRaw = caixa.max.y - caixa.min.y || 1;
         const xCentre = (caixa.max.x + caixa.min.x) / 2;
         const zOlls = (caixa.min.z + caixa.max.z) / 2 + 0.10 * alcadaRaw;
-        const yOlls = caixa.max.y - 0.07 * alcadaRaw;
+        const yOlls = caixa.max.y - 0.091 * alcadaRaw;
         const ulls = [
           new THREE.Vector3(xCentre - 0.03 * alcadaRaw, yOlls, zOlls),
           new THREE.Vector3(xCentre + 0.05 * alcadaRaw, yOlls, zOlls),
