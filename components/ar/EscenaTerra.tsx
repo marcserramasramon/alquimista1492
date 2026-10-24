@@ -435,13 +435,14 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const capGolem = model.getObjectByName("head");
         if (capGolem) {
           const materialOll = new THREE.MeshBasicMaterial({ color: 0xff1a1a });
-          for (const x of [-0.32, 0.32]) {
-            const oll = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 10), materialOll);
-            oll.position.set(x, 0.3, 0.82);
+          // L'arrel del rig té escala 10: les mides dels ossos fills són una desena part de les unitats del model.
+          for (const x of [-0.032, 0.032]) {
+            const oll = new THREE.Mesh(new THREE.SphereGeometry(0.025, 12, 10), materialOll);
+            oll.position.set(x, 0.03, 0.082);
             capGolem.add(oll);
           }
           const llumOlls = new THREE.PointLight(0xff1a1a, 1.5, 4);
-          llumOlls.position.set(0, 0.3, 0.9);
+          llumOlls.position.set(0, 0.03, 0.09);
           capGolem.add(llumOlls);
         }
         // Caminar i senyalar (beckon) amb els clips de les animacions; els ossos tenen els noms de Mesh2Motion.
