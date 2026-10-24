@@ -446,9 +446,14 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           golem.updateMatrixWorld(true);
           const materialOll = new THREE.MeshBasicMaterial({ color: 0xff1a1a });
           const llumOlls = new THREE.PointLight(0xff1a1a, 0.25, 1.5);
+          // L'os del cap hereta l'escala de l'arrel del rig: el radi de l'ull es corregeix perquè surti a la mida
+          // que volem en el món.
+          const escalaCap = new THREE.Vector3();
+          capOs.getWorldScale(escalaCap);
+          const radiUll = (0.016 * alcadaRaw * escala) / escalaCap.x;
           for (const posModel of ulls) {
             const posCap = capOs.worldToLocal(model.localToWorld(posModel.clone()));
-            const oll = new THREE.Mesh(new THREE.SphereGeometry(0.016 * alcadaRaw, 12, 10), materialOll);
+            const oll = new THREE.Mesh(new THREE.SphereGeometry(radiUll, 12, 10), materialOll);
             oll.position.copy(posCap);
             capOs.add(oll);
           }
