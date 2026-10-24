@@ -430,22 +430,31 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // Peus a terra i centrat en x i z.
         model.position.set(-midaCentre.x * escala, -caixa.min.y * escala, -midaCentre.z * escala);
         golem.add(model);
-        // Ulls vermells: dues esferes i una llum vermella, col·locades segons el volum del model (el cap és a
-        // dalt i mira cap a +Z). Són fills del model, així que segueixen l'escala i la posició del golem.
+        // Ulls vermells: dues esferes i una llum vermella, enganxades a l'os del cap perquè es mouen amb el cap.
+        // La posició es calcula en el volum del model (cap a dalt, mirant cap a +Z) i després es passa a
+        // coordenades del cap, un cop el model és a l'escena.
         const alcadaRaw = caixa.max.y - caixa.min.y || 1;
         const xCentre = (caixa.max.x + caixa.min.x) / 2;
-        const zFront = (caixa.min.z + caixa.max.z) / 2 + 0.1 * alcadaRaw;
+        const zOlls = (caixa.min.z + caixa.max.z) / 2 + 0.07 * alcadaRaw;
         const yOlls = caixa.max.y - 0.07 * alcadaRaw;
-        const materialOll = new THREE.MeshBasicMaterial({ color: 0xff1a1a });
-        const centreOlls = new THREE.Vector3(xCentre, yOlls, zFront);
-        for (const sx of [-0.05, 0.05]) {
-          const oll = new THREE.Mesh(new THREE.SphereGeometry(0.016 * alcadaRaw, 12, 10), materialOll);
-          oll.position.set(xCentre + sx * alcadaRaw, yOlls, zFront);
-          model.add(oll);
+        const ulls = [
+          new THREE.Vector3(xCentre - 0.03 * alcadaRaw, yOlls, zOlls),
+          new THREE.Vector3(xCentre + 0.05 * alcadaRaw, yOlls, zOlls),
+        ];
+        const capOs = model.getObjectByName("head");
+        if (capOs) {
+          golem.updateMatrixWorld(true);
+          const materialOll = new THREE.MeshBasicMaterial({ color: 0xff1a1a });
+          const llumOlls = new THREE.PointLight(0xff1a1a, 0.25, 1.5);
+          for (const posModel of ulls) {
+            const posCap = capOs.worldToLocal(model.localToWorld(posModel.clone()));
+            const oll = new THREE.Mesh(new THREE.SphereGeometry(0.016 * alcadaRaw, 12, 10), materialOll);
+            oll.position.copy(posCap);
+            capOs.add(oll);
+          }
+          llumOlls.position.copy(capOs.worldToLocal(model.localToWorld(new THREE.Vector3(xCentre, yOlls, zOlls))));
+          capOs.add(llumOlls);
         }
-        const llumOlls = new THREE.PointLight(0xff1a1a, 0.25, 1.5);
-        llumOlls.position.copy(centreOlls);
-        model.add(llumOlls);
         // Caminar i senyalar (beckon) amb els clips de les animacions; els ossos tenen els noms de Mesh2Motion.
         mixerGolem = new THREE.AnimationMixer(model);
         accioCaminar = mixerGolem.clipAction(gltfCaminar.animations[0]);
