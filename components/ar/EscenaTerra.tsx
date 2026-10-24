@@ -430,21 +430,22 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // Peus a terra i centrat en x i z.
         model.position.set(-midaCentre.x * escala, -caixa.min.y * escala, -midaCentre.z * escala);
         golem.add(model);
-        // Ulls vermells: dues esferes lluminoses i una llum vermella, enganxades a l'os del cap perquè
-        // segueixin el cap quan es mou el golem. Les posicions són en unitats del model (~10 d'alçada).
-        const capGolem = model.getObjectByName("head");
-        if (capGolem) {
-          const materialOll = new THREE.MeshBasicMaterial({ color: 0xff1a1a });
-          // L'arrel del rig té escala 10: les mides dels ossos fills són una desena part de les unitats del model.
-          for (const x of [-0.032, 0.032]) {
-            const oll = new THREE.Mesh(new THREE.SphereGeometry(0.025, 12, 10), materialOll);
-            oll.position.set(x, 0.03, 0.082);
-            capGolem.add(oll);
-          }
-          const llumOlls = new THREE.PointLight(0xff1a1a, 1.5, 4);
-          llumOlls.position.set(0, 0.03, 0.09);
-          capGolem.add(llumOlls);
+        // Ulls vermells: dues esferes i una llum vermella, col·locades segons el volum del model (el cap és a
+        // dalt i mira cap a +Z). Són fills del model, així que segueixen l'escala i la posició del golem.
+        const alcadaRaw = caixa.max.y - caixa.min.y || 1;
+        const xCentre = (caixa.max.x + caixa.min.x) / 2;
+        const zFront = (caixa.min.z + caixa.max.z) / 2 + 0.1 * alcadaRaw;
+        const yOlls = caixa.max.y - 0.12 * alcadaRaw;
+        const materialOll = new THREE.MeshBasicMaterial({ color: 0xff1a1a });
+        const centreOlls = new THREE.Vector3(xCentre, yOlls, zFront);
+        for (const sx of [-0.09, 0.09]) {
+          const oll = new THREE.Mesh(new THREE.SphereGeometry(0.035 * alcadaRaw, 12, 10), materialOll);
+          oll.position.set(xCentre + sx * alcadaRaw, yOlls, zFront);
+          model.add(oll);
         }
+        const llumOlls = new THREE.PointLight(0xff1a1a, 0.6, 3);
+        llumOlls.position.copy(centreOlls);
+        model.add(llumOlls);
         // Caminar i senyalar (beckon) amb els clips de les animacions; els ossos tenen els noms de Mesh2Motion.
         mixerGolem = new THREE.AnimationMixer(model);
         accioCaminar = mixerGolem.clipAction(gltfCaminar.animations[0]);
