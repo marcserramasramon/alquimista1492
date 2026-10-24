@@ -7,11 +7,11 @@ import { EstatGolem, SeguimentGolem } from "@/components/ar/terra/seguiment";
 import type { PuntGps } from "@/content/public/extres";
 
 /**
- * El clip de la caminada i el del senyal porten un moviment de l'arrel (pelvis) que el codi ja controla: se'l
- * treu perquè el golem no es desplaci sol.
+ * Només es fan servir les rotacions dels clips. Les translacions dels ossos són d'un altre rig i escala, i
+ * desmuntarien el golem; les posicions les deixa el model, i el moviment el controla el codi.
  */
 function senseMovimentArrel(clip: AnimationClip): AnimationClip {
-  clip.tracks = clip.tracks.filter((pista) => !(pista.name.startsWith("pelvis") && pista.name.endsWith(".position")));
+  clip.tracks = clip.tracks.filter((pista) => !pista.name.endsWith(".position"));
   return clip;
 }
 
