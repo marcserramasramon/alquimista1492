@@ -448,7 +448,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           // que volem en el món.
           const escalaCap = new THREE.Vector3();
           capOs.getWorldScale(escalaCap);
-          const radiUll = (0.016 * alcadaRaw * escala) / escalaCap.x;
+          const radiUll = (0.008 * alcadaRaw * escala) / escalaCap.x;
           for (const posModel of ulls) {
             const posCap = capOs.worldToLocal(model.localToWorld(posModel.clone()));
             const oll = new THREE.Mesh(new THREE.SphereGeometry(radiUll, 12, 10), materialOll);
