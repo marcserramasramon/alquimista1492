@@ -417,12 +417,13 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           estatAnim = estat;
         };
         const carregador = new GLTFLoader();
-        const [gltfGolem, gltfCaminar, gltfSaludar] = await Promise.all([
-          carregador.loadAsync("/golem/semi-rig.glb"),
+        // El model és el del fitxer de la caminada: té la malla, la textura i el rig amb la mateixa postura de
+        // repòs que els clips (si no, les rotacions es desfiguren).
+        const [gltfCaminar, gltfSaludar] = await Promise.all([
           carregador.loadAsync("/golem/walk.glb"),
           carregador.loadAsync("/golem/beckon.glb"),
         ]);
-        const model = gltfGolem.scene;
+        const model = gltfCaminar.scene;
         const caixa = new THREE.Box3().setFromObject(model);
         const escala = ALCADA_GOLEM / (caixa.max.y - caixa.min.y || 1);
         const midaCentre = caixa.getCenter(new THREE.Vector3());
