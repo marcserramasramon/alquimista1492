@@ -430,6 +430,20 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // Peus a terra i centrat en x i z.
         model.position.set(-midaCentre.x * escala, -caixa.min.y * escala, -midaCentre.z * escala);
         golem.add(model);
+        // Ulls vermells: dues esferes lluminoses i una llum vermella, enganxades a l'os del cap perquè
+        // segueixin el cap quan es mou el golem. Les posicions són en unitats del model (~10 d'alçada).
+        const capGolem = model.getObjectByName("head");
+        if (capGolem) {
+          const materialOll = new THREE.MeshBasicMaterial({ color: 0xff1a1a });
+          for (const x of [-0.32, 0.32]) {
+            const oll = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 10), materialOll);
+            oll.position.set(x, 0.3, 0.82);
+            capGolem.add(oll);
+          }
+          const llumOlls = new THREE.PointLight(0xff1a1a, 1.5, 4);
+          llumOlls.position.set(0, 0.3, 0.9);
+          capGolem.add(llumOlls);
+        }
         // Caminar i senyalar (beckon) amb els clips de les animacions; els ossos tenen els noms de Mesh2Motion.
         mixerGolem = new THREE.AnimationMixer(model);
         accioCaminar = mixerGolem.clipAction(gltfCaminar.animations[0]);
