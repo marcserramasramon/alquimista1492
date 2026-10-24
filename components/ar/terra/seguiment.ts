@@ -36,6 +36,10 @@ const SENYAL_1_FI = 3000;
 const QUIET_1_FI = 8000;
 const SENYAL_2_FI = 11000;
 const QUIET_2_FI = 21000;
+/** Després de l'espera final, el golem avança fins a aquesta distància del jugador (m), es gira i fa el senyal. */
+const DISTANCIA_AVANC = 3;
+/** Durada del senyal final, en mil·lisegons; després s'està quiet. */
+const SENYAL_FINAL_MS = 3000;
 
 /**
  * Seguiment del golem: cada 0,5 s es mira on és el jugador. El golem camina cap a la fita mentre el jugador
@@ -52,6 +56,7 @@ export class SeguimentGolem {
   private ultimaMostra = -Infinity;
   private ultimTemps = -1;
   private tParat = -1;
+  private tArribatAvanc = -1;
   private historial: { x: number; z: number }[] = [];
 
   constructor(private readonly fx: number, private readonly fz: number) {}
@@ -92,14 +97,32 @@ export class SeguimentGolem {
       if (e < SENYAL_1_FI) this.estat = "gest";
       else if (e < QUIET_1_FI) this.estat = "quiet";
       else if (e < SENYAL_2_FI) this.estat = "gest";
-      else if (e < QUIET_2_FI) this.estat = "quiet";
-      else this.estat = "quiet";
+      else if (e < QUIET_2_FI) {
+        this.estat = "quiet";
+      } else {
+        // Avança un tros més cap a la fita, es para a uns metres del jugador, es gira i fa el senyal.
+        const tgt = this.puntAvant(mostra, DISTANCIA_AVANC);
+        const dx = tgt.x - this.gx;
+        const dz = tgt.z - this.gz;
+        const dT = Math.hypot(dx, dz);
+        if (this.tArribatAvanc < 0 && dT > 0.3) {
+          this.estat = "seguint";
+          const pas = Math.min(dT, VELOCITAT * dt);
+          this.gx += (dx / dT) * pas;
+          this.gz += (dz / dT) * pas;
+          this.yaw = Math.atan2(dx, dz);
+          return this.pas();
+        }
+        if (this.tArribatAvanc < 0) this.tArribatAvanc = ara;
+        this.estat = ara - this.tArribatAvanc < SENYAL_FINAL_MS ? "gest" : "quiet";
+      }
       this.yaw = mirarJugador;
       return this.pas();
     }
 
     // El jugador es mou: es reinicia la seqüència.
     this.tParat = -1;
+    this.tArribatAvanc = -1;
     if (dJugador > DISTANCIA_MAX) {
       // Massa lluny: el golem espera quiet que el jugador s'acosti.
       this.estat = "quiet";
@@ -124,11 +147,16 @@ export class SeguimentGolem {
 
   /** Punt davant del jugador, en la direcció de la fita, a DISTANCIA_INICI metres. */
   private puntDavant(j: { x: number; z: number }): { x: number; z: number } {
+    return this.puntAvant(j, DISTANCIA_INICI);
+  }
+
+  /** Punt a `distancia` metres del jugador, en la direcció de la fita (sense passar-la). */
+  private puntAvant(j: { x: number; z: number }, distancia: number): { x: number; z: number } {
     const dx = this.fx - j.x;
     const dz = this.fz - j.z;
     const dd = Math.hypot(dx, dz);
-    if (dd <= DISTANCIA_INICI || dd === 0) return { x: this.fx, z: this.fz };
-    return { x: j.x + (dx / dd) * DISTANCIA_INICI, z: j.z + (dz / dd) * DISTANCIA_INICI };
+    if (dd <= distancia || dd === 0) return { x: this.fx, z: this.fz };
+    return { x: j.x + (dx / dd) * distancia, z: j.z + (dz / dd) * distancia };
   }
 
   private jugadorParat(): boolean {
