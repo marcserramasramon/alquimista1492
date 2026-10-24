@@ -55,11 +55,11 @@ def pose(t, speed):
         # postura asseguda: cuixes endavant, genolls doblegats, pelvis baixa (unitats del model, ~10 d'alt)
         rot = {}
         for s in ('l', 'r'):
-            rot[f'thigh_{s}'] = fwd(deg(80))
-            rot[f'calf_{s}'] = fwd(deg(-85))
-            rot[f'foot_{s}'] = fwd(deg(-10))
+            rot[f'thigh_{s}'] = fwd(deg(90))
+            rot[f'calf_{s}'] = fwd(deg(-90))
+            rot[f'foot_{s}'] = fwd(deg(0))
         rot['spine_01'] = fwd(deg(-8))
-        return rot, np.array([0.0, -2.4, 0.0])
+        return rot, np.array([0.0, -1.2, 0.0])
     ww = w_walk(t); ph = phase_of(t)
     wa, yaw, roll, bob = walk_angles(ph, ww)
     rot = {n: fwd(a) for n, a in wa.items()}
