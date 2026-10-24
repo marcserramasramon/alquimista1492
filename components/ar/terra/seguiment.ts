@@ -3,9 +3,8 @@
  * - "seguint": camina cap a la fita.
  * - "gest": fa el senyal de venir (una vegada, 3 s).
  * - "quiet": s'està quiet (mirant el jugador o a la fita).
- * - "seu": s'ha assegut, esperant que el jugador es mogui.
  */
-export type EstatGolem = "seguint" | "gest" | "quiet" | "seu";
+export type EstatGolem = "seguint" | "gest" | "quiet";
 
 export interface PasGolem {
   x: number;
@@ -31,7 +30,7 @@ const RADI_FITA = 1.5;
 
 /**
  * Seqüència quan el jugador està parat, en mil·lisegons des que s'ha parat:
- * senyal (0–3 s), quiet (3–8 s), senyal (8–11 s), quiet (11–21 s) i després s'asseu.
+ * senyal (0–3 s), quiet (3–8 s), senyal (8–11 s) i quiet (11–21 s); després continua quiet fins que es mogui.
  */
 const SENYAL_1_FI = 3000;
 const QUIET_1_FI = 8000;
@@ -40,8 +39,8 @@ const QUIET_2_FI = 21000;
 
 /**
  * Seguiment del golem: cada 0,5 s es mira on és el jugador. El golem camina cap a la fita mentre el jugador
- * avança. Quan el jugador s'atura, es gira cap a ell i fa la seqüència de senyal i espera, i al final s'asseu
- * fins que es mogui. Quan arriba a la fita, es queda quiet.
+ * avança. Quan el jugador s'atura, es gira cap a ell i fa la seqüència de senyal i espera, i al final es queda quiet
+ * Quan arriba a la fita, es queda quiet.
  */
 export class SeguimentGolem {
   private gx = 0;
@@ -94,7 +93,7 @@ export class SeguimentGolem {
       else if (e < QUIET_1_FI) this.estat = "quiet";
       else if (e < SENYAL_2_FI) this.estat = "gest";
       else if (e < QUIET_2_FI) this.estat = "quiet";
-      else this.estat = "seu";
+      else this.estat = "quiet";
       this.yaw = mirarJugador;
       return this.pas();
     }

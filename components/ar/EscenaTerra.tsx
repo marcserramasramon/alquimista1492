@@ -399,12 +399,11 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         let mixerGolem: AnimationMixer | null = null;
         let accioCaminar: AnimationAction | null = null;
         let accioSaludar: AnimationAction | null = null;
-        let accioSeure: AnimationAction | null = null;
         let estatAnim: EstatGolem | null = null;
         let ultimFrameGolem = performance.now();
         let yawGolem: number | null = null;
         const accioDe = (estat: EstatGolem | null): AnimationAction | null =>
-          estat === "seguint" ? accioCaminar : estat === "gest" ? accioSaludar : estat === "seu" ? accioSeure : null;
+          estat === "seguint" ? accioCaminar : estat === "gest" ? accioSaludar : null;
         const canviaAnimacio = (estat: EstatGolem) => {
           const origen = accioDe(estatAnim);
           const desti = accioDe(estat);
@@ -416,11 +415,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // El model és el del fitxer de la caminada: té la malla, la textura i el rig amb la mateixa postura de
         // repòs que els clips (si no, les rotacions es desfiguren).
         // Model amb el rig corregit (scripts/golem-animacio) i els dos clips: caminar i senyal (vine).
-        const [gltfModel, gltfCaminar, gltfSaludar, gltfSeure] = await Promise.all([
+        const [gltfModel, gltfCaminar, gltfSaludar] = await Promise.all([
           carregador.loadAsync("/golem/golem.glb"),
           carregador.loadAsync("/golem/caminar.glb"),
           carregador.loadAsync("/golem/senyal.glb"),
-          carregador.loadAsync("/golem/seure.glb"),
         ]);
         const model = gltfModel.scene;
         const caixa = new THREE.Box3().setFromObject(model);
@@ -468,8 +466,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         accioSaludar = mixerGolem.clipAction(gltfSaludar.animations[0]);
         accioSaludar.setLoop(THREE.LoopOnce, 1);
         accioSaludar.clampWhenFinished = true;
-        accioSeure = mixerGolem.clipAction(gltfSeure.animations[0]);
-        accioSeure.setLoop(THREE.LoopRepeat, Infinity);
         const total = NX * NZ + NVERTEXS_FORAT;
         const pos = new Float32Array(total * 3);
         const seed = new Float32Array(total);
