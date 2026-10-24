@@ -97,6 +97,31 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
     return () => navigator.geolocation.clearWatch(id);
   }, [iniciat, directa]);
 
+  // Galeria: les fletxes mouen l'observador 0,5 m per pulsació (amunt = nord, avall = sud, dreta = est,
+  // esquerra = oest).
+  useEffect(() => {
+    if (!directa) return;
+    const PAS_M = 0.5;
+    function alPremer(ev: KeyboardEvent) {
+      const p = posicio.current;
+      if (!p) return;
+      let dNord = 0;
+      let dEst = 0;
+      if (ev.key === "ArrowUp") dNord = PAS_M;
+      else if (ev.key === "ArrowDown") dNord = -PAS_M;
+      else if (ev.key === "ArrowRight") dEst = PAS_M;
+      else if (ev.key === "ArrowLeft") dEst = -PAS_M;
+      else return;
+      ev.preventDefault();
+      posicio.current = {
+        lat: p.lat + dNord / 111_320,
+        lng: p.lng + dEst / (111_320 * Math.cos((p.lat * Math.PI) / 180)),
+      };
+    }
+    window.addEventListener("keydown", alPremer);
+    return () => window.removeEventListener("keydown", alPremer);
+  }, [directa]);
+
   // Missatge de guia: es recalcula cada 400 ms (no cada fotograma).
   useEffect(() => {
     if (!iniciat || !cami) return;

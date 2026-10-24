@@ -1,29 +1,31 @@
-/** Estat del golem: camina cap al jugador, fa el senyal de venir (beckon) o es queda quiet a la fita. */
+/** Estat del golem: camina cap a la fita, fa el senyal de venir (beckon) o es queda quiet a la fita. */
 export type EstatGolem = "seguint" | "bequeig" | "quiet";
 
 export interface PasGolem {
   x: number;
   z: number;
-  /** Rumb del golem (radiants), amb la cara cap a on va o cap al jugador. */
+  /** Rumb del golem (radiants): cap a on camina, o cap al jugador quan fa el senyal. */
   yaw: number;
   estat: EstatGolem;
 }
 
 /** Cada quant es mostreja la posició del jugador, en mil·lisegons. */
 const MOSTREIG_MS = 500;
-/** Metres per davant del jugador, en la direcció de la fita, on es posa el golem. */
-const DISTANCIA_DAVANT = 5;
+/** Metres per davant del jugador on es posa el golem en començar. */
+const DISTANCIA_INICI = 5;
 /** Velocitat del golem quan camina, en metres per segon. */
 const VELOCITAT = 1.4;
 /** Un jugador es considera parat si en 3 mostres seguides (1,5 s) no s'ha mogut més de 0,3 m. */
 const MOVIMENT_MIN_M = 0.3;
 const MOSTRES_PARAT = 3;
+/** Si el jugador és més lluny que això (m), el golem s'espera i fa el senyal. */
+const DISTANCIA_MAX = 12;
 /** A partir d'aquesta distància de la fita (m), el golem s'hi queda quiet. */
 const RADI_FITA = 1.5;
 
 /**
- * Seguiment del golem: cada 0,5 s es mira on és el jugador. El golem es posa uns metres davant seu, en la
- * direcció de la fita, i el segueix caminant. Si el jugador s'atura, el golem es gira cap a ell i fa el senyal
+ * Seguiment del golem: cada 0,5 s es mira on és el jugador. El golem camina cap a la fita mentre el jugador
+ * avança. Si el jugador s'atura, o s'allunya més de DISTANCIA_MAX, el golem es gira cap a ell i fa el senyal
  * de venir. Quan arriba a la fita, es queda quiet.
  */
 export class SeguimentGolem {
@@ -41,9 +43,10 @@ export class SeguimentGolem {
 
   /** `ara` en mil·lisegons; (`jx`, `jz`) és la posició actual del jugador. */
   update(ara: number, jx: number, jz: number): PasGolem {
-    // Segons des de l'última crida (limitats: un salt de pestanya no fa caminar el golem de cop).
+    // Segons des de l'última crida, limitats: un salt de pestanya no fa caminar el golem de cop.
     const dt = this.ultimTemps < 0 ? 0 : Math.min(0.1, (ara - this.ultimTemps) / 1000);
     this.ultimTemps = ara;
+
     if (ara - this.ultimaMostra >= MOSTREIG_MS) {
       this.ultimaMostra = ara;
       this.historial.push({ x: jx, z: jz });
@@ -63,40 +66,39 @@ export class SeguimentGolem {
       this.arribat = true;
       this.estat = "quiet";
       this.yaw = Math.atan2(mostra.x - this.gx, mostra.z - this.gz);
-      return { x: this.gx, z: this.gz, yaw: this.yaw, estat: this.estat };
+      return this.pas();
     }
 
-    if (this.jugadorParat()) {
-      // El jugador s'ha parat: el golem es queda i el crida amb la mà.
+    const dJugador = Math.hypot(mostra.x - this.gx, mostra.z - this.gz);
+    if (this.jugadorParat() || dJugador > DISTANCIA_MAX) {
+      // El jugador no avança (o és massa lluny): el golem es gira cap a ell i fa el senyal.
       this.estat = "bequeig";
       this.yaw = Math.atan2(mostra.x - this.gx, mostra.z - this.gz);
-      return { x: this.gx, z: this.gz, yaw: this.yaw, estat: this.estat };
+      return this.pas();
     }
 
-    const destí = this.puntDavant(mostra);
-    const dx = destí.x - this.gx;
-    const dz = destí.z - this.gz;
-    const dd = Math.hypot(dx, dz);
-    if (dd > 0.3) {
-      this.estat = "seguint";
-      const pas = Math.min(dd, VELOCITAT * dt);
-      this.gx += (dx / dd) * pas;
-      this.gz += (dz / dd) * pas;
-      this.yaw = Math.atan2(dx, dz);
-    } else {
-      this.estat = "quiet";
-      this.yaw = Math.atan2(mostra.x - this.gx, mostra.z - this.gz);
-    }
+    // El jugador avança: el golem camina cap a la fita.
+    const dx = this.fx - this.gx;
+    const dz = this.fz - this.gz;
+    const pas = Math.min(dFita, VELOCITAT * dt);
+    this.gx += (dx / dFita) * pas;
+    this.gz += (dz / dFita) * pas;
+    this.estat = "seguint";
+    this.yaw = Math.atan2(dx, dz);
+    return this.pas();
+  }
+
+  private pas(): PasGolem {
     return { x: this.gx, z: this.gz, yaw: this.yaw, estat: this.estat };
   }
 
-  /** Punt davant del jugador, en la direcció de la fita, a DISTANCIA_DAVANT metres. */
+  /** Punt davant del jugador, en la direcció de la fita, a DISTANCIA_INICI metres. */
   private puntDavant(j: { x: number; z: number }): { x: number; z: number } {
     const dx = this.fx - j.x;
     const dz = this.fz - j.z;
     const dd = Math.hypot(dx, dz);
-    if (dd <= DISTANCIA_DAVANT || dd === 0) return { x: this.fx, z: this.fz };
-    return { x: j.x + (dx / dd) * DISTANCIA_DAVANT, z: j.z + (dz / dd) * DISTANCIA_DAVANT };
+    if (dd <= DISTANCIA_INICI || dd === 0) return { x: this.fx, z: this.fz };
+    return { x: j.x + (dx / dd) * DISTANCIA_INICI, z: j.z + (dz / dd) * DISTANCIA_INICI };
   }
 
   private jugadorParat(): boolean {
