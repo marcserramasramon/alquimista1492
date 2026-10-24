@@ -433,7 +433,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // coordenades del cap, un cop el model és a l'escena.
         const alcadaRaw = caixa.max.y - caixa.min.y || 1;
         const xCentre = (caixa.max.x + caixa.min.x) / 2;
-        const zOlls = (caixa.min.z + caixa.max.z) / 2 + 0.07 * alcadaRaw;
+        const zOlls = (caixa.min.z + caixa.max.z) / 2 + 0.15 * alcadaRaw;
         const yOlls = caixa.max.y - 0.07 * alcadaRaw;
         const ulls = [
           new THREE.Vector3(xCentre - 0.03 * alcadaRaw, yOlls, zOlls),
