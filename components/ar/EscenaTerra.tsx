@@ -424,6 +424,17 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // Peus a terra i centrat en x i z.
         model.position.set(-midaCentre.x * escala, -caixa.min.y * escala, -midaCentre.z * escala);
         golem.add(model);
+        // Llum que puja del terra: un halo verd-daurat a ran de terra sota el golem, que l'il·lumina des de baix.
+        const llumTerra = new THREE.PointLight(0xc8e07a, 1.4, 6);
+        llumTerra.position.set(0, 0.05, 0.4);
+        golem.add(llumTerra);
+        const halo = new THREE.Mesh(
+          new THREE.CircleGeometry(1.6, 32),
+          new THREE.MeshBasicMaterial({ color: 0xc8e07a, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending }),
+        );
+        halo.rotation.x = -Math.PI / 2;
+        halo.position.set(0, 0.02, 0);
+        golem.add(halo);
         // Ulls vermells: dues esferes i una llum vermella, enganxades a l'os del cap perquè es mouen amb el cap.
         // La posició es calcula en el volum del model (cap a dalt, mirant cap a +Z) i després es passa a
         // coordenades del cap, un cop el model és a l'escena.
