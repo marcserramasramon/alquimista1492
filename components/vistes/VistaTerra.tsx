@@ -40,6 +40,8 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   const video = useRef<HTMLVideoElement>(null);
   const flux = useRef<MediaStream | null>(null);
   const posicio = useRef<PosicioEquip>(null);
+  // Galeria: posició base (sense soroll) a la qual s'apliquen les fletxes.
+  const baseGaleria = useRef<PosicioEquip>(null);
   // Motiu pel qual no hi ha ubicació (permís, GPS...), perquè es vegi a la pantalla.
   const ubicacioError = useRef<string | null>(null);
   const { mirada, estat: estatSensors, demanar } = useOrientacio();
@@ -69,8 +71,9 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   // Ubicació contínua: només cal mentre l'extra és obert. A la galeria, l'equip és a la fita.
   useEffect(() => {
     if (directa && cami) {
-      // A la galeria, l'observador es posa en una posició fixa de prova.
-      posicio.current = { lat: 41.912264228224565, lng: 2.233467711759767 };
+      // A la galeria, l'observador es posa en una posició fixa de prova (la base de les fletxes).
+      baseGaleria.current = { lat: 41.912264228224565, lng: 2.233467711759767 };
+      posicio.current = baseGaleria.current;
       return;
     }
     if (!iniciat) return;
@@ -97,6 +100,24 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
     return () => navigator.geolocation.clearWatch(id);
   }, [iniciat, directa]);
 
+  // Prova de soroll del GPS (?soroll=1 a l'adreça): cada 2 s l'observador salta uns ±8 m, com un GPS dolent.
+  // La posició base és la que mouen les fletxes.
+  useEffect(() => {
+    if (!directa || typeof window === "undefined") return;
+    if (new URLSearchParams(window.location.search).get("soroll") !== "1") return;
+    const id = setInterval(() => {
+      const base = baseGaleria.current;
+      if (!base) return;
+      const nord = (Math.random() * 2 - 1) * 8;
+      const est = (Math.random() * 2 - 1) * 8;
+      posicio.current = {
+        lat: base.lat + nord / 111_320,
+        lng: base.lng + est / (111_320 * Math.cos((base.lat * Math.PI) / 180)),
+      };
+    }, 2000);
+    return () => clearInterval(id);
+  }, [directa]);
+
   // Galeria: les fletxes mouen l'observador 0,5 m per pulsació (amunt = nord, avall = sud, dreta = est,
   // esquerra = oest).
   useEffect(() => {
@@ -113,10 +134,12 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
       else if (ev.key === "ArrowLeft") dEst = -PAS_M;
       else return;
       ev.preventDefault();
-      posicio.current = {
+      const nova = {
         lat: p.lat + dNord / 111_320,
         lng: p.lng + dEst / (111_320 * Math.cos((p.lat * Math.PI) / 180)),
       };
+      baseGaleria.current = nova;
+      posicio.current = nova;
     }
     window.addEventListener("keydown", alPremer);
     return () => window.removeEventListener("keydown", alPremer);

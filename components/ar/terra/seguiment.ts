@@ -23,16 +23,31 @@ const DISTANCIA_DAVANT = 7;
 const DESPLA_ESQUERRA = 2;
 /** Velocitat del golem quan camina, en metres per segon. */
 const VELOCITAT = 1.4;
-/** Un jugador es considera parat si en 3 mostres seguides (1,5 s) no s'ha mogut més de 0,3 m. */
-const MOVIMENT_MIN_M = 0.3;
-const MOSTRES_PARAT = 3;
 /** Si el jugador és a menys d'això de la fita (m), el golem s'hi queda quiet. */
 const RADI_ARRIBADA = 3;
 
 /**
+ * Filtre del GPS: el GPS és lent i sorollós, així que la posició del jugador es suavitza. Un salt que implica
+ * més de VEL_MAX_M_S es descarta (soroll), però si se n'acumulen REBUTJOS_MAX seguits es dona per bona
+ * (el jugador s'ha desplaçat de veritat).
+ */
+const FILTRE_ALFA = 0.4;
+const VEL_MAX_M_S = 8;
+const REBUTJOS_MAX = 4;
+/**
+ * Histèresi de parat: el jugador es considera parat quan la velocitat suavitzada és < VEL_PARAT durant
+ * TEMPS_PARAT_MS, i es considera en moviment quan és > VEL_MOURE durant TEMPS_MOURE_MS. Entre els dos
+ * llindars es manté l'estat anterior, així el golem no oscil·la.
+ */
+const VEL_PARAT = 0.4;
+const VEL_MOURE = 0.8;
+const TEMPS_PARAT_MS = 2000;
+const TEMPS_MOURE_MS = 1000;
+
+/**
  * Seqüència quan el jugador està parat, en mil·lisegons des que s'ha parat:
- * senyal (0–3 s), quiet (3–8 s), senyal (8–11 s) i quiet (11–21 s).
- * Després avança un tros cap a la fita, es gira, fa el senyal una vegada i es queda quiet.
+ * senyal (0–3 s), assenyala (3–8 s), senyal (8–11 s) i assenyala (11–21 s).
+ * Després avança un tros cap a la fita, es gira, fa el senyal una vegada i assenyala.
  */
 const SENYAL_1_FI = 3000;
 const QUIET_1_FI = 8000;
@@ -46,9 +61,9 @@ const SENYAL_FINAL_MS = 3000;
 const GIR_ASSENYALAR = Math.PI / 3;
 
 /**
- * Seguiment del golem: cada 0,5 s es mira on és el jugador. El golem es manté uns metres davant seu, en la
- * direcció de la fita, i un poc a la seva esquerra. Quan el jugador s'atura, fa la seqüència de senyal i
- * espera. Quan el jugador arriba a la fita, el golem es queda quiet.
+ * Seguiment del golem: cada 0,5 s es mira on és el jugador (filtrat). El golem es manté uns metres davant seu, en
+ * la direcció de la fita, i un poc a la seva esquerra. Quan el jugador s'atura, fa la seqüència de senyal i
+ * assenyalar. Quan el jugador arriba a la fita, el golem es queda quiet.
  */
 export class SeguimentGolem {
   private gx = 0;
@@ -61,22 +76,31 @@ export class SeguimentGolem {
   private ultimTemps = -1;
   private tParat = -1;
   private tSenyalFinal = -1;
-  private historial: { x: number; z: number }[] = [];
+
+  // Posició del jugador suavitzada i velocitat estimada.
+  private jugadorIniciat = false;
+  private jx = 0;
+  private jz = 0;
+  private tAcceptada = -1;
+  private velocitat = 0;
+  private rebutjos = 0;
+  private aturat = false;
+  private tBaixa = -1;
+  private tAlt = -1;
 
   constructor(private readonly fx: number, private readonly fz: number) {}
 
-  /** `ara` en mil·lisegons; (`jx`, `jz`) és la posició actual del jugador. */
-  update(ara: number, jx: number, jz: number): PasGolem {
+  /** `ara` en mil·lisegons; (`jx`, `jz`) és la darrera posició crua del jugador (GPS). */
+  update(ara: number, rawX: number, rawZ: number): PasGolem {
     // Segons des de l'última crida, limitats: un salt de pestanya no fa caminar el golem de cop.
     const dt = this.ultimTemps < 0 ? 0 : Math.min(0.1, (ara - this.ultimTemps) / 1000);
     this.ultimTemps = ara;
 
     if (ara - this.ultimaMostra >= MOSTREIG_MS) {
       this.ultimaMostra = ara;
-      this.historial.push({ x: jx, z: jz });
-      if (this.historial.length > MOSTRES_PARAT) this.historial.shift();
+      this.actualitzaJugador(ara, rawX, rawZ);
     }
-    const mostra = this.historial[this.historial.length - 1] ?? { x: jx, z: jz };
+    const mostra = { x: this.jx, z: this.jz };
 
     if (!this.iniciat) {
       const a = this.ancora(mostra);
@@ -87,7 +111,8 @@ export class SeguimentGolem {
 
     const mirarJugador = Math.atan2(mostra.x - this.gx, mostra.z - this.gz);
     // Assenyalant: gira només fins a GIR_ASSENYALAR cap a la fita, des de la direcció del jugador.
-    const diferenciaFita = Math.atan2(Math.sin(Math.atan2(this.fx - this.gx, this.fz - this.gz) - mirarJugador), Math.cos(Math.atan2(this.fx - this.gx, this.fz - this.gz) - mirarJugador));
+    const angleFita = Math.atan2(this.fx - this.gx, this.fz - this.gz);
+    const diferenciaFita = Math.atan2(Math.sin(angleFita - mirarJugador), Math.cos(angleFita - mirarJugador));
     const mirarFita = mirarJugador + Math.max(-GIR_ASSENYALAR, Math.min(GIR_ASSENYALAR, diferenciaFita));
     const dFitaJugador = Math.hypot(this.fx - mostra.x, this.fz - mostra.z);
     if (this.arribat || dFitaJugador < RADI_ARRIBADA) {
@@ -97,7 +122,7 @@ export class SeguimentGolem {
       return this.pas();
     }
 
-    if (this.jugadorParat()) {
+    if (this.aturat) {
       if (this.tParat < 0) this.tParat = ara;
       const e = ara - this.tParat;
       if (e < SENYAL_1_FI) {
@@ -144,8 +169,8 @@ export class SeguimentGolem {
     if (dA > 0.3) {
       this.estat = "seguint";
       // Si el jugador va ràpid i el golem es queda enrere, accelera per posar-se a la posició (fins a 6 m/s).
-      const velocitat = Math.min(6, VELOCITAT + dA * 0.5);
-      const pas = Math.min(dA, velocitat * dt);
+      const velocitatGolem = Math.min(6, VELOCITAT + dA * 0.5);
+      const pas = Math.min(dA, velocitatGolem * dt);
       this.gx += (dx / dA) * pas;
       this.gz += (dz / dA) * pas;
       this.yaw = Math.atan2(dx, dz);
@@ -154,6 +179,58 @@ export class SeguimentGolem {
       this.yaw = mirarJugador;
     }
     return this.pas();
+  }
+
+  /** Filtra la posició crua del GPS, estima la velocitat i actualitza l'estat de parat amb histèresi. */
+  private actualitzaJugador(ara: number, rawX: number, rawZ: number): void {
+    if (!this.jugadorIniciat) {
+      this.jugadorIniciat = true;
+      this.jx = rawX;
+      this.jz = rawZ;
+      this.tAcceptada = ara;
+      return;
+    }
+    const dt = (ara - this.tAcceptada) / 1000;
+    if (dt <= 0) return;
+
+    // Salt impossible: es descarta (soroll del GPS), però si es repeteix es dona per bo.
+    const salt = Math.hypot(rawX - this.jx, rawZ - this.jz);
+    if (salt / dt > VEL_MAX_M_S && this.rebutjos < REBUTJOS_MAX) {
+      this.rebutjos++;
+      return;
+    }
+    this.rebutjos = 0;
+
+    const nx = this.jx + FILTRE_ALFA * (rawX - this.jx);
+    const nz = this.jz + FILTRE_ALFA * (rawZ - this.jz);
+    const velocitatInstant = Math.hypot(nx - this.jx, nz - this.jz) / dt;
+    this.velocitat = 0.7 * this.velocitat + 0.3 * velocitatInstant;
+    this.jx = nx;
+    this.jz = nz;
+    this.tAcceptada = ara;
+
+    // Histèresi: per passar a parat o a moviment cal mantenir la velocitat un temps.
+    if (this.aturat) {
+      if (this.velocitat > VEL_MOURE) {
+        if (this.tAlt < 0) this.tAlt = ara;
+        if (ara - this.tAlt >= TEMPS_MOURE_MS) {
+          this.aturat = false;
+          this.tAlt = -1;
+        }
+      } else {
+        this.tAlt = -1;
+      }
+    } else {
+      if (this.velocitat < VEL_PARAT) {
+        if (this.tBaixa < 0) this.tBaixa = ara;
+        if (ara - this.tBaixa >= TEMPS_PARAT_MS) {
+          this.aturat = true;
+          this.tBaixa = -1;
+        }
+      } else {
+        this.tBaixa = -1;
+      }
+    }
   }
 
   private pas(): PasGolem {
@@ -176,12 +253,5 @@ export class SeguimentGolem {
     const d = Math.min(distancia, ll);
     // Costat esquerre de qui camina cap a la fita.
     return { x: j.x + ux * d + uz * DESPLA_ESQUERRA, z: j.z + uz * d - ux * DESPLA_ESQUERRA };
-  }
-
-  private jugadorParat(): boolean {
-    if (this.historial.length < MOSTRES_PARAT) return false;
-    const primera = this.historial[0];
-    const darrera = this.historial[this.historial.length - 1];
-    return Math.hypot(darrera.x - primera.x, darrera.z - primera.z) < MOVIMENT_MIN_M;
   }
 }
