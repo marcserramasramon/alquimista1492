@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { EscenaTerra, estatTerra, RADI_AMFORES, type PosicioEquip } from "@/components/ar/EscenaTerra";
+import { EscenaTerra, estatTerra, PUNT_FORAT, RADI_AMFORES, type PosicioEquip } from "@/components/ar/EscenaTerra";
 import { IntroduccioExtraAr } from "@/components/vistes/IntroduccioExtraAr";
 import { rumbCami, type ExtraAr } from "@/content/public/extres";
 import { diferenciaRumb, useOrientacio } from "@/lib/orientacio";
+import { distanciaMetres } from "@/lib/ubicacio";
 
 export interface VistaTerraProps {
   /** L'extra (content/public/extres.ts): `cami` és de la fita a les àmfores. */
@@ -37,6 +38,9 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   const [iniciat, setIniciat] = useState(directa);
   const [camera, setCamera] = useState<EstatCamera>("esperant");
   const [guia, setGuia] = useState<Guia>({ missatge: "📍 Esperant la ubicació…", girar: null });
+  // Botó «Traduir»: apareix a prop del punt final, i un cop premut, les runes es tradueixen.
+  const [aProp, setAProp] = useState(false);
+  const [traduit, setTraduit] = useState(false);
   const video = useRef<HTMLVideoElement>(null);
   const flux = useRef<MediaStream | null>(null);
   // Ambient de la Terra (cant gregorià sobre soroll de roques), en bucle al 65 %.
@@ -156,6 +160,18 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   }, [directa]);
 
   // Missatge de guia: es recalcula cada 400 ms (no cada fotograma).
+  // A prop del punt final (menys de 20 m), apareix el botó «Traduir».
+  useEffect(() => {
+    if (!iniciat) return;
+    const id = setInterval(() => {
+      const p = posicio.current;
+      if (!p) return setAProp(false);
+      const d = distanciaMetres({ lat: p.lat, lng: p.lng }, { lat: PUNT_FORAT.latitud, lng: PUNT_FORAT.longitud });
+      setAProp(d <= 20);
+    }, 500);
+    return () => clearInterval(id);
+  }, [iniciat]);
+
   useEffect(() => {
     if (!iniciat || !cami) return;
     const id = setInterval(() => {
@@ -203,6 +219,7 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
           rumb={rumb}
           fita={cami.des}
           amfores={cami.cap}
+          traduit={traduit}
         />
       )}
 
@@ -223,6 +240,14 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
           <p role="status" className="rounded-xl bg-black/70 px-4 py-2 text-center text-base font-bold">
             {guia.missatge}
           </p>
+        </div>
+      )}
+
+      {iniciat && aProp && !traduit && (
+        <div className="absolute inset-x-0 bottom-[calc(max(1.25rem,env(safe-area-inset-bottom))+4.5rem)] mx-auto w-full max-w-md px-4">
+          <button type="button" onClick={() => setTraduit(true)} className="btn btn-ar w-full">
+            Traduir
+          </button>
         </div>
       )}
 

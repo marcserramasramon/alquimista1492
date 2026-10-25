@@ -258,6 +258,33 @@ const SKY_VERTEX = `
   }
 `;
 
+/** Elements d'una frase en runes: espais i lletres que existeixen al joc (les que no, s'ometen). */
+function itemsRunes(text: string): { d: string | null; amplada: number }[] {
+  const out: { d: string | null; amplada: number }[] = [];
+  const net = text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  for (const ch of net) {
+    if (ch === " " || ch === "-") out.push({ d: null, amplada: 40 });
+    else if (GLIFS_RUNES[ch]) out.push({ d: GLIFS_RUNES[ch].d, amplada: GLIFS_RUNES[ch].amplada });
+  }
+  return out;
+}
+
+/** Amplada (px) d'una fila de runes a l'escala donada. */
+function amplariRunes(items: { amplada: number }[], escala: number): number {
+  return items.reduce((suma, it) => suma + it.amplada * escala + 25, 0) - 25;
+}
+
+/** SVG d'una fila de runes centrada a `centreX`, amb la línia base a `base`. */
+function filaRunesSvg(items: { d: string | null; amplada: number }[], escala: number, centreX: number, base: number): string {
+  let x = centreX - amplariRunes(items, escala) / 2;
+  let svg = "";
+  for (const it of items) {
+    if (it.d) svg += `<path d="${it.d}" transform="translate(${x.toFixed(1)} ${base}) scale(${escala})"/>`;
+    x += it.amplada * escala + 25;
+  }
+  return svg;
+}
+
 /** Font del text de la marquesina (Google Fonts). */
 const FONT_MARQUESINA = Metamorphous({ weight: "400", subsets: ["latin"] });
 
@@ -305,6 +332,8 @@ interface Props {
   /** La fita (on comença el camí, i origen de la malla) i el lloc final. */
   fita: PuntGps;
   amfores: PuntGps;
+  /** Quan és true, les marquesines de runes es transformen en les frases. */
+  traduit?: boolean;
 }
 
 /**
@@ -313,7 +342,11 @@ interface Props {
  * quan l'equip és sobre el camí. Al lloc final hi ha un marcador provisional. Dibuixat en dos canvas
  * transparents a sobre de la càmera. La lògica geogràfica és a `estatTerra`.
  */
-export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }: Props) {
+export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, traduit = false }: Props) {
+  const traduitRef = useRef(traduit);
+  useEffect(() => {
+    traduitRef.current = traduit;
+  }, [traduit]);
   const glRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Sense sensors, la vista comença mirant cap al camí.
@@ -625,41 +658,37 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         grupAnfores.position.set(centre.x, 0, centre.z);
         grupAnfores.add(banda);
 
-        // Franja de runes a sobre de la marquesina, com una altra marquesina: les runes del joc, dretes i en fila,
-        // enrotllades al voltant del cilindre.
+        // Marquesines de runes: les mateixes dues files que el text, però escrites amb les runes del joc. Quan
+        // el jugador prem «Traduir», es fonen amb les frases (la banda del text, que és la de dalt).
+        const itemsF1 = itemsRunes("Aquí guarda l'alquimista la matèria");
+        const itemsF2 = itemsRunes("compte-les tres cops");
+        let escalaRunes = 1.7;
+        while (amplariRunes(itemsF1, escalaRunes) > 4096 * 0.92 && escalaRunes > 0.5) escalaRunes -= 0.05;
         const lienzoRunes = document.createElement("canvas");
         lienzoRunes.width = 4096;
-        lienzoRunes.height = 260;
+        lienzoRunes.height = 520;
         const ctxRunes = lienzoRunes.getContext("2d");
         if (ctxRunes) {
-          const escalaRuna = 1.5;
-          let x = 0;
-          const lletres = [...INSCRIPCIO_RUNES];
-          const paths: string[] = [];
-          while (x < lienzoRunes.width) {
-            for (const ch of lletres) {
-              const g = GLIFS_RUNES[ch];
-              if (!g) continue;
-              if (x >= lienzoRunes.width) break;
-              paths.push(`<path d="${g.d}" transform="translate(${x.toFixed(1)} 200) scale(${escalaRuna})"/>`);
-              x += g.amplada * escalaRuna + 30;
-            }
-          }
           const svgRunes =
-            `<svg xmlns="http://www.w3.org/2000/svg" width="${lienzoRunes.width}" height="${lienzoRunes.height}" viewBox="0 0 ${lienzoRunes.width} ${lienzoRunes.height}">` +
-            `<g fill="rgb(150,255,110)">${paths.join("")}</g></svg>`;
+            `<svg xmlns="http://www.w3.org/2000/svg" width="4096" height="520" viewBox="0 0 4096 520">` +
+            `<g fill="rgb(150,255,110)">` +
+            filaRunesSvg(itemsF1, escalaRunes, 2048, 130 + 85) +
+            filaRunesSvg(itemsF2, escalaRunes, 1024, 390 + 85) +
+            filaRunesSvg(itemsF2, escalaRunes, 3072, 390 + 85) +
+            `</g></svg>`;
           const imatgeRunes = new Image();
           imatgeRunes.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgRunes);
           await imatgeRunes.decode().catch(() => {});
           ctxRunes.drawImage(imatgeRunes, 0, 0, lienzoRunes.width, lienzoRunes.height);
         }
         const texturaRunes = new THREE.CanvasTexture(lienzoRunes);
-        texturaRunes.wrapS = THREE.RepeatWrapping;
         const matRunes = new THREE.MeshBasicMaterial({ map: texturaRunes, transparent: true, depthWrite: false, side: THREE.DoubleSide });
-        const geomRunes = new THREE.CylinderGeometry(RADI_BANDA, RADI_BANDA, 0.9, 96, 1, true);
-        const cercleRunes = new THREE.Mesh(geomRunes, matRunes);
-        cercleRunes.position.set(0, 6.2, 0);
-        grupAnfores.add(cercleRunes);
+        const bandaRunes = new THREE.Mesh(geomBanda, matRunes);
+        bandaRunes.position.set(0, ALCADA_BANDA, 0);
+        grupAnfores.add(bandaRunes);
+        // La banda de text (matA) comença transparent: només es veu després de «Traduir».
+        matA.opacity = 0;
+        let fadeTraduir = 0;
         escena.add(grupAnfores);
 
         // Estelles fugaces: 30, cada una amb el seu temps, que cauen a l'atzar cap a un punt a 50 m davant de
@@ -896,6 +925,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           }
           ultimFrameGolem = ara;
 
+          // Fos de les runes a les frases quan el jugador prem «Traduir».
+          fadeTraduir += ((traduitRef.current ? 1 : 0) - fadeTraduir) * 0.04;
+          matRunes.opacity = 1 - fadeTraduir;
+          matA.opacity = fadeTraduir;
           renderer.render(escena, cam);
           frame = requestAnimationFrame(bucle);
         };
@@ -912,7 +945,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           texturaA.dispose();
           texturaRunes.dispose();
           matRunes.dispose();
-          geomRunes.dispose();
           matA.dispose();
           geomBanda.dispose();
           geoEstella.dispose();
