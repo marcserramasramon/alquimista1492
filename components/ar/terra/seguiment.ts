@@ -26,8 +26,6 @@ const VELOCITAT = 1.4;
 /** Un jugador es considera parat si en 3 mostres seguides (1,5 s) no s'ha mogut més de 0,3 m. */
 const MOVIMENT_MIN_M = 0.3;
 const MOSTRES_PARAT = 3;
-/** Si el jugador és més lluny que això (m), el golem s'espera quiet. */
-const DISTANCIA_MAX = 12;
 /** Si el jugador és a menys d'això de la fita (m), el golem s'hi queda quiet. */
 const RADI_ARRIBADA = 3;
 
@@ -138,14 +136,6 @@ export class SeguimentGolem {
     // El jugador es mou: es reinicia la seqüència.
     this.tParat = -1;
     this.tSenyalFinal = -1;
-    const dJugador = Math.hypot(mostra.x - this.gx, mostra.z - this.gz);
-    if (dJugador > DISTANCIA_MAX) {
-      // Massa lluny: el golem espera quiet que el jugador s'acosti.
-      this.estat = "quiet";
-      this.yaw = mirarJugador;
-      return this.pas();
-    }
-
     // El golem es manté davant i a l'esquerra del jugador.
     const a = this.ancora(mostra);
     const dx = a.x - this.gx;
@@ -153,7 +143,9 @@ export class SeguimentGolem {
     const dA = Math.hypot(dx, dz);
     if (dA > 0.3) {
       this.estat = "seguint";
-      const pas = Math.min(dA, VELOCITAT * dt);
+      // Si el jugador va ràpid i el golem es queda enrere, accelera per posar-se a la posició (fins a 6 m/s).
+      const velocitat = Math.min(6, VELOCITAT + dA * 0.5);
+      const pas = Math.min(dA, velocitat * dt);
       this.gx += (dx / dA) * pas;
       this.gz += (dz / dA) * pas;
       this.yaw = Math.atan2(dx, dz);
