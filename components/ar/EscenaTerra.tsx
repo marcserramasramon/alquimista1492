@@ -565,36 +565,34 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         escena.add(new THREE.Points(geo, material));
 
-        // Sis textos en cercle de 4 m al voltant del punt final, a 4 m d'alçada, que giren una volta cada 8 s.
-        // Cada text mira cap a fora del cercle.
-        const RADI_TEXTOS = 4;
-        const ALCADA_TEXTOS = 4;
-        const NUM_TEXTOS = 6;
+        // Marquesina de text que gira al voltant: una banda cilíndrica de 4 m de radi, a 4 m d'alçada, amb la frase
+        // repetida al voltant. Gira una volta cada 8 s.
+        const RADI_BANDA = 4;
+        const ALCADA_BANDA = 4;
+        const AMPLE_BANDA_M = 0.7;
         const lienzo = document.createElement("canvas");
-        lienzo.width = 1024;
+        lienzo.width = 2048;
         lienzo.height = 160;
         const ctxText = lienzo.getContext("2d");
         if (ctxText) {
           ctxText.clearRect(0, 0, lienzo.width, lienzo.height);
-          ctxText.font = "bold 76px serif";
+          ctxText.font = "bold 84px serif";
           ctxText.textAlign = "center";
           ctxText.textBaseline = "middle";
           ctxText.fillStyle = "rgb(150, 255, 110)";
           ctxText.shadowColor = "rgb(120, 255, 90)";
           ctxText.shadowBlur = 18;
-          ctxText.fillText("Aquí guarda l'alquimista la matèria", lienzo.width / 2, lienzo.height / 2);
+          ctxText.fillText("Aquí guarda l'alquimista la matèria", lienzo.width * 0.25, lienzo.height / 2);
+          ctxText.fillText("Aquí guarda l'alquimista la matèria", lienzo.width * 0.75, lienzo.height / 2);
         }
         const texturaText = new THREE.CanvasTexture(lienzo);
         const matText = new THREE.MeshBasicMaterial({ map: texturaText, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+        const geomBanda = new THREE.CylinderGeometry(RADI_BANDA, RADI_BANDA, AMPLE_BANDA_M, 96, 1, true);
+        const banda = new THREE.Mesh(geomBanda, matText);
+        banda.position.set(0, ALCADA_BANDA, 0);
         const grupAnfores = new THREE.Group();
         grupAnfores.position.set(centre.x, 0, centre.z);
-        for (let k = 0; k < NUM_TEXTOS; k++) {
-          const angle = (k / NUM_TEXTOS) * Math.PI * 2;
-          const pla = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.56), matText);
-          pla.position.set(Math.cos(angle) * RADI_TEXTOS, ALCADA_TEXTOS, Math.sin(angle) * RADI_TEXTOS);
-          pla.rotation.y = Math.PI / 2 - angle;
-          grupAnfores.add(pla);
-        }
+        grupAnfores.add(banda);
         escena.add(grupAnfores);
 
         // Estelles fugaces: 30, cada una amb el seu temps, que cauen a l'atzar cap a un punt a 50 m davant de
@@ -846,6 +844,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           geoCel.dispose();
           texturaText.dispose();
           matText.dispose();
+          geomBanda.dispose();
           geoEstella.dispose();
           matEstella.dispose();
           geoImpacte.dispose();
