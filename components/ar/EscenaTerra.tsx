@@ -2,7 +2,7 @@
 
 import type { AnimationAction, AnimationMixer } from "three";
 import { useEffect, useRef, type RefObject } from "react";
-import { Metamorphous } from "next/font/google";
+import { Eagle_Lake } from "next/font/google";
 import { GLIFS_RUNES, INSCRIPCIO_RUNES } from "@/components/ui/runes";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
 import { EstatGolem, SeguimentGolem } from "@/components/ar/terra/seguiment";
@@ -286,7 +286,7 @@ function filaRunesSvg(items: { d: string | null; amplada: number }[], escala: nu
 }
 
 /** Font del text de la marquesina (Google Fonts). */
-const FONT_MARQUESINA = Metamorphous({ weight: "400", subsets: ["latin"] });
+const FONT_MARQUESINA = Eagle_Lake({ weight: "400", subsets: ["latin"] });
 
 /** Estella fugaç i impacte: punts amb color i alfa per vèrtex. */
 const CAIGUDA_VERTEX = `
