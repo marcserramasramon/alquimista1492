@@ -2,6 +2,7 @@
 
 import type { AnimationAction, AnimationMixer } from "three";
 import { useEffect, useRef, type RefObject } from "react";
+import { Metamorphous } from "next/font/google";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
 import { EstatGolem, SeguimentGolem } from "@/components/ar/terra/seguiment";
 import { dibuixaVora } from "@/components/ar/voraGuia";
@@ -255,6 +256,9 @@ const SKY_VERTEX = `
     gl_Position = projectionMatrix * mv;
   }
 `;
+
+/** Font del text de la marquesina (Google Fonts). */
+const FONT_MARQUESINA = Metamorphous({ weight: "400", subsets: ["latin"] });
 
 /** Estella fugaç i impacte: punts amb color i alfa per vèrtex. */
 const CAIGUDA_VERTEX = `
@@ -570,6 +574,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const RADI_BANDA = 5;
         const ALCADA_BANDA = 4;
         const AMPLE_BANDA_M = 0.7;
+        // La font s'ha de carregar abans de dibuixar-la al canvas.
+        await document.fonts.load(`84px ${FONT_MARQUESINA.style.fontFamily}`).catch(() => {});
         const lienzo = document.createElement("canvas");
         lienzo.width = 2048;
         lienzo.height = 160;
@@ -579,10 +585,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           // Font compacta, i més petita si cal: la frase ha de cabre en la meitat de la banda, sense encavalcar-se.
           const frase = "Aquí guarda l'alquimista la matèria";
           let mida = 84;
-          ctxText.font = `bold ${mida}px "Arial Narrow", sans-serif`;
+          ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
           while (ctxText.measureText(frase).width > lienzo.width * 0.42 && mida > 30) {
             mida -= 2;
-            ctxText.font = `bold ${mida}px "Arial Narrow", sans-serif`;
+            ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
           }
           ctxText.textAlign = "center";
           ctxText.textBaseline = "middle";
