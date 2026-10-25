@@ -641,7 +641,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const T_IMPACTE = 3.5;
         const DURADA_IMPACTE = 1.5;
         const GRAVETAT = 6;
-        const ANG_CAIGUDA = (25 * Math.PI) / 180;
         const estelles = Array.from({ length: NUM_ESTELLES }, () => ({
           fase: Math.random() * CICLE_ESTELLA,
           cicleAnterior: 99,
@@ -783,11 +782,14 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             const ox = sobreCami.x + Math.sin(th) * fwd + Math.cos(th) * lat;
             const oz = sobreCami.z - Math.cos(th) * fwd + Math.sin(th) * lat;
             e.impacte.set(ox, 0.02, oz);
+            // Cada estella té la seva direcció i el seu angle de caiguda, a l'atzar (entre 12° i 40° de la vertical).
             const az = Math.random() * Math.PI * 2;
+            const angle = ((12 + Math.random() * 28) * Math.PI) / 180;
+            const distancia = 60;
             e.inici.set(
-              ox - Math.cos(az) * Math.sin(ANG_CAIGUDA) * 60,
-              Math.cos(ANG_CAIGUDA) * 60,
-              oz - Math.sin(az) * Math.sin(ANG_CAIGUDA) * 60,
+              ox - Math.cos(az) * Math.sin(angle) * distancia,
+              Math.cos(angle) * distancia,
+              oz - Math.sin(az) * Math.sin(angle) * distancia,
             );
             e.dir.copy(e.impacte).sub(e.inici).normalize();
             e.impacteRegistrat = false;
