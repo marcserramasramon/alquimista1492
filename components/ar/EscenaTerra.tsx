@@ -292,6 +292,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
   const punter = useRef<{ x: number; y: number } | null>(null);
   // Posició del golem en metres (món de l'escena), per il·luminar la vora cap a on és.
   const golemRef = useRef<{ x: number; z: number } | null>(null);
+  // Des de quan el golem és a la vista (per aturar la vora quan ja s'ha trobat).
+  const vistaDesDeRef = useRef<number | null>(null);
 
   useEffect(() => {
     arrossegarRef.current = arrossegar;
@@ -345,7 +347,16 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
       if (gol && uu) {
         const o = aMon(uu.lat, uu.lng, fita);
         const rumbGolem = (Math.atan2(gol.x - o.x, -(gol.z - o.z)) / RAD + 360) % 360;
-        dibuixaVora(ctx, w, h, diferenciaRumb(rumbGolem, m.rumb), 0.8, 900, ara, OR);
+        const dxGolem = diferenciaRumb(rumbGolem, m.rumb);
+        // Quan el golem ja és a la vista durant 2 s, la vora deixa d'il·luminar-se (ja s'ha trobat).
+        const enVista = Math.abs(dxGolem) < 25;
+        if (enVista) {
+          if (vistaDesDeRef.current === null) vistaDesDeRef.current = ara;
+        } else {
+          vistaDesDeRef.current = null;
+        }
+        const trobat = vistaDesDeRef.current !== null && ara - vistaDesDeRef.current >= 2000;
+        if (!trobat) dibuixaVora(ctx, w, h, dxGolem, 0.8, 900, ara, OR);
       }
       drawBrujula(ctx, m, e, r, ara / 1000, w, h, guspires);
 
