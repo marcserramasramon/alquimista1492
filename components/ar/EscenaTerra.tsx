@@ -619,10 +619,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         escena.add(grupAnfores);
 
         // Estelles fugaces: 30, cada una amb el seu temps, que cauen a l'atzar cap a un punt a 50 m davant de
-        // l'observador (dispersat). Cua de fins a 4 m, densa, que s'estreny fins a 1/10 a la punta.
+        // l'observador (dispersat). Cua de fins a 12 m, densa, en gradient fins a invisible, i que s'estreny fins a 1/10.
         const NUM_ESTELLES = 30;
-        const TRAIL_ESTELLA = 40;
-        const LLARG_CUA = 4;
+        const TRAIL_ESTELLA = 80;
+        const LLARG_CUA = 12;
         const PARTICULES_IMPACTE = 40;
         const CICLE_ESTELLA = 15;
         const T_IMPACTE = 3.5;
@@ -651,7 +651,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         geoEstella.setAttribute("aAlpha", new THREE.BufferAttribute(alfaEstella, 1));
         geoEstella.setAttribute("aMida", new THREE.BufferAttribute(midaEstella, 1));
         const matEstella = new THREE.ShaderMaterial({
-          uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(1.0, 0.97, 0.85) }, uMida: { value: 6 }, uMax: { value: 36 } },
+          uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(1.0, 0.97, 0.85) }, uMida: { value: 1.5 }, uMax: { value: 36 } },
           vertexShader: CAIGUDA_VERTEX,
           fragmentShader: FRAGMENT,
           transparent: true,
@@ -787,7 +787,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
               posEstella[j * 3] = pt.x;
               posEstella[j * 3 + 1] = pt.y;
               posEstella[j * 3 + 2] = pt.z;
-              alfaEstella[j] = 1 - fraccio * 0.8;
+              alfaEstella[j] = Math.pow(1 - fraccio, 1.5);
               midaEstella[j] = 1 - 0.9 * fraccio;
             }
           } else {
