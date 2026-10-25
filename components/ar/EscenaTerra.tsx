@@ -625,6 +625,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const GRAVETAT = 6;
         const impacteEstella = new THREE.Vector3(centre.x, 0.02, centre.z);
         const angleEstella = (25 * Math.PI) / 180;
+        let cicleEstellaAnterior = 99;
         const inicEstella = new THREE.Vector3(centre.x - Math.sin(angleEstella) * 60, Math.cos(angleEstella) * 60, centre.z);
         const dirEstella = impacteEstella.clone().sub(inicEstella).normalize();
         const posEstella = new Float32Array((TRAIL_ESTELLA + 1) * 3);
@@ -742,6 +743,16 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
 
         // Estella: cau (T_IMPACTE s) i després les partícules de l'impacte salten i cauen.
         const tCicle = ((ara - inici) / 1000) % CICLE_ESTELLA;
+        // A cada cicle nou, l'impacte es posa a 4 m davant de l'observador (en la direcció on mira).
+        if (tCicle < cicleEstellaAnterior) {
+          const th = m.rumb * RAD;
+          const ox = sobreCami.x + Math.sin(th) * 4;
+          const oz = sobreCami.z - Math.cos(th) * 4;
+          impacteEstella.set(ox, 0.02, oz);
+          inicEstella.set(ox - Math.sin(angleEstella) * 60, Math.cos(angleEstella) * 60, oz);
+          dirEstella.copy(impacteEstella).sub(inicEstella).normalize();
+        }
+        cicleEstellaAnterior = tCicle;
         if (tCicle < T_IMPACTE) {
           const f = tCicle / T_IMPACTE;
           const cap = inicEstella.clone().lerp(impacteEstella, f);
