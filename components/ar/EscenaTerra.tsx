@@ -277,22 +277,6 @@ const CAIGUDA_VERTEX = `
   }
 `;
 
-/** Àmfores: punts de llum sobre el perfil de cada àmfora, sense contorn. */
-const AMFORA_VERTEX = `
-  uniform float uPR;
-  uniform vec2 uCam;
-  varying vec3 vCol;
-  varying float vA;
-  void main() {
-    vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    vec4 wp = modelMatrix * vec4(position, 1.0);
-    vA = 1.0 - smoothstep(120.0, 260.0, length(wp.xz - uCam));
-    vCol = vec3(0.3, 0.5, 0.25);
-    gl_PointSize = clamp(260.0 / (-mv.z), 1.5, 9.0) * uPR;
-    gl_Position = projectionMatrix * mv;
-  }
-`;
-
 const FRAGMENT = `
   varying vec3 vCol;
   varying float vA;
@@ -581,54 +565,36 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         escena.add(new THREE.Points(geo, material));
 
-        // Sis àmfores en cercle de 4 m al voltant del punt final, a 0,5 m del terra, d'1 m d'alçada i 0,5 m de
-        // diàmetre a dalt. Són punts de llum sobre el perfil (sense sòlid ni contorn). Giren una volta cada 8 s.
-        const NUM_ANFORES = 6;
-        const RADI_ANFORES = 4;
-        const ALCADA_ANFORES = 4;
-        const PUNTS_ANFORA = 260;
-        const perfilAnfora: [number, number][] = [
-          [0, 0.12], [0.15, 0.2], [0.4, 0.3], [0.65, 0.22], [0.85, 0.12], [0.95, 0.18], [1, 0.25],
-        ];
-        const radiAnfora = (h: number): number => {
-          for (let i = 1; i < perfilAnfora.length; i++) {
-            const [h1, r1] = perfilAnfora[i - 1];
-            const [h2, r2] = perfilAnfora[i];
-            if (h <= h2) return r1 + ((r2 - r1) * (h - h1)) / (h2 - h1);
-          }
-          return perfilAnfora[perfilAnfora.length - 1][1];
-        };
-        const posAnfores = new Float32Array(NUM_ANFORES * PUNTS_ANFORA * 3);
-        let pa = 0;
-        for (let a = 0; a < NUM_ANFORES; a++) {
-          const angle = (a / NUM_ANFORES) * Math.PI * 2;
-          const cx = Math.cos(angle) * RADI_ANFORES;
-          const cz = Math.sin(angle) * RADI_ANFORES;
-          for (let q = 0; q < PUNTS_ANFORA; q++) {
-            const h = Math.random();
-            const theta = Math.random() * Math.PI * 2;
-            const r = radiAnfora(h);
-            posAnfores[pa * 3] = cx + Math.cos(theta) * r;
-            posAnfores[pa * 3 + 1] = ALCADA_ANFORES + h;
-            posAnfores[pa * 3 + 2] = cz + Math.sin(theta) * r;
-            pa++;
-          }
+        // Sis textos en cercle de 4 m al voltant del punt final, a 4 m d'alçada, que giren una volta cada 8 s.
+        // Cada text mira cap a fora del cercle.
+        const RADI_TEXTOS = 4;
+        const ALCADA_TEXTOS = 4;
+        const NUM_TEXTOS = 6;
+        const lienzo = document.createElement("canvas");
+        lienzo.width = 1024;
+        lienzo.height = 160;
+        const ctxText = lienzo.getContext("2d");
+        if (ctxText) {
+          ctxText.clearRect(0, 0, lienzo.width, lienzo.height);
+          ctxText.font = "bold 76px serif";
+          ctxText.textAlign = "center";
+          ctxText.textBaseline = "middle";
+          ctxText.fillStyle = "rgb(150, 255, 110)";
+          ctxText.shadowColor = "rgb(120, 255, 90)";
+          ctxText.shadowBlur = 18;
+          ctxText.fillText("Aquí guarda l'alquimista la matèria", lienzo.width / 2, lienzo.height / 2);
         }
-        const geoAnfores = new THREE.BufferGeometry();
-        geoAnfores.setAttribute("position", new THREE.BufferAttribute(posAnfores, 3));
-        const matAnfores = new THREE.ShaderMaterial({
-          uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam },
-          vertexShader: AMFORA_VERTEX,
-          fragmentShader: FRAGMENT,
-          transparent: true,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-        });
+        const texturaText = new THREE.CanvasTexture(lienzo);
+        const matText = new THREE.MeshBasicMaterial({ map: texturaText, transparent: true, depthWrite: false, side: THREE.DoubleSide });
         const grupAnfores = new THREE.Group();
         grupAnfores.position.set(centre.x, 0, centre.z);
-        const puntsAnfores = new THREE.Points(geoAnfores, matAnfores);
-        puntsAnfores.frustumCulled = false;
-        grupAnfores.add(puntsAnfores);
+        for (let k = 0; k < NUM_TEXTOS; k++) {
+          const angle = (k / NUM_TEXTOS) * Math.PI * 2;
+          const pla = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.56), matText);
+          pla.position.set(Math.cos(angle) * RADI_TEXTOS, ALCADA_TEXTOS, Math.sin(angle) * RADI_TEXTOS);
+          pla.rotation.y = Math.PI / 2 - angle;
+          grupAnfores.add(pla);
+        }
         escena.add(grupAnfores);
 
         // Estelles fugaces: 30, cada una amb el seu temps, que cauen a l'atzar cap a un punt a 50 m davant de
@@ -878,8 +844,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             if (objecte instanceof THREE.Mesh) objecte.geometry.dispose();
           });
           geoCel.dispose();
-          geoAnfores.dispose();
-          matAnfores.dispose();
+          texturaText.dispose();
+          matText.dispose();
           geoEstella.dispose();
           matEstella.dispose();
           geoImpacte.dispose();
