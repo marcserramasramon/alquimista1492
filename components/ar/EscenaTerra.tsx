@@ -684,7 +684,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
         const texturaRunes = new THREE.CanvasTexture(lienzoRunes);
         const matRunes = new THREE.MeshBasicMaterial({ map: texturaRunes, transparent: true, depthWrite: false, side: THREE.DoubleSide });
         const bandaRunes = new THREE.Mesh(geomBanda, matRunes);
-        bandaRunes.position.set(0, ALCADA_BANDA, 0);
+        bandaRunes.position.set(0, ALCADA_BANDA + 1.5, 0);
         grupAnfores.add(bandaRunes);
         // La banda de text (matA) comença transparent: només es veu després de «Traduir».
         matA.opacity = 0;
