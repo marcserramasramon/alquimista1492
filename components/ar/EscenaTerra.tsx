@@ -137,6 +137,7 @@ const VERTEX = `
   uniform float uPR;
   uniform float uAlcada;
   uniform vec2 uCentre;
+  uniform vec3 uOnades[30];
   uniform vec2 uCam;
   uniform vec3 uBaixa;
   uniform vec3 uAlta;
@@ -173,7 +174,18 @@ const VERTEX = `
     float jet = smoothstep(0.8, 1.0, s) * wF * step(0.7, aSeed);
     float fase = fract(aSeed * 13.7 + uTime * 0.35);
     float yTerra = mix(h, 9.0 * s, wF) + jet * fase * 6.0;
-    p.y = yTerra;
+    // Ones d'impacte: anells que s'expandeixen des de cada punt d'impacte i s'esvaeixen, com les ones de l'aigua.
+    float ona = 0.0;
+    for (int q = 0; q < 30; q++) {
+      vec3 o = uOnades[q];
+      float edat = uTime - o.z;
+      if (edat > 0.0 && edat < 4.0) {
+        float d = distance(p.xz, o.xy);
+        float R = edat * 5.0;
+        ona += 0.5 * exp(-edat * 0.9) * exp(-pow((d - R) / 1.0, 2.0));
+      }
+    }
+    p.y = yTerra + ona;
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(tm * 3.0 + aSeed * 40.0)), 12.0) * 0.8;
     // Només es veuen els vèrtexs que pugen: el con estàtic es fa invisible (en additiu, el negre no suma res).
@@ -555,6 +567,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           uAlcada: { value: ALCADA_CEL },
           uCam: { value: new THREE.Vector2() },
           uCentre: { value: new THREE.Vector2(centre.x, centre.z) },
+          uOnades: { value: Array.from({ length: 30 }, () => new THREE.Vector3(0, 0, -100)) },
           uBaixa: { value: new THREE.Vector3(0.12, 0.45, 0.22) },
           uAlta: { value: new THREE.Vector3(0.6, 1.0, 0.5) },
         };
@@ -632,6 +645,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const estelles = Array.from({ length: NUM_ESTELLES }, () => ({
           fase: Math.random() * CICLE_ESTELLA,
           cicleAnterior: 99,
+          impacteRegistrat: false,
           inici: new THREE.Vector3(),
           impacte: new THREE.Vector3(),
           dir: new THREE.Vector3(1, 0, 0),
@@ -773,6 +787,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
               oz - Math.sin(az) * Math.sin(ANG_CAIGUDA) * 60,
             );
             e.dir.copy(e.impacte).sub(e.inici).normalize();
+            e.impacteRegistrat = false;
           }
           e.cicleAnterior = tC;
 
@@ -796,6 +811,11 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
 
           // Impacte: les partícules salten des del punt d'impacte i cauen.
           const edat = tC - T_IMPACTE;
+          // En impactar, es registra la ona (posició i instant) perquè el terra l'expandeixi.
+          if (tC >= T_IMPACTE && !e.impacteRegistrat) {
+            e.impacteRegistrat = true;
+            uniforms.uOnades.value[i].set(e.impacte.x, e.impacte.z, (ara - inici) / 1000);
+          }
           for (let q = 0; q < PARTICULES_IMPACTE; q++) {
             const j = i * PARTICULES_IMPACTE + q;
             if (edat > 0 && edat < DURADA_IMPACTE) {
