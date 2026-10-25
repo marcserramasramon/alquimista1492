@@ -567,7 +567,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
 
         // Marquesina de text que gira al voltant: una banda cilíndrica de 4 m de radi, a 4 m d'alçada, amb la frase
         // repetida al voltant. Gira una volta cada 8 s.
-        const RADI_BANDA = 4;
+        const RADI_BANDA = 5;
         const ALCADA_BANDA = 4;
         const AMPLE_BANDA_M = 0.7;
         const lienzo = document.createElement("canvas");
