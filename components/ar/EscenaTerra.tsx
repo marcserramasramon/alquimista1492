@@ -770,17 +770,14 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // Les àmfores giren una volta cada 8 segons.
         grupAnfores.rotation.y = -(((ara - inici) / 1000) * Math.PI * 2) / 8;
 
-        // Estelles: cada una té el seu temps. Quan comença un cicle nou, tria un punt d'impacte a 50 m davant
-        // (dispersat) i una direcció de caiguda a 25° de la vertical. La cua es dibuixa fins a 4 m darrere la punta.
+        // Estelles: cada una té el seu temps. Quan comença un cicle nou, tria un punt d'impacte a l'atzar sobre el terra i una direcció de caiguda a 25° de la vertical. La cua es dibuixa fins a 4 m darrere la punta.
         for (let i = 0; i < NUM_ESTELLES; i++) {
           const e = estelles[i];
           const tC = ((ara - inici) / 1000 + e.fase) % CICLE_ESTELLA;
           if (tC < e.cicleAnterior) {
-            const th = m.rumb * RAD;
-            const fwd = 50 + (Math.random() * 2 - 1) * 6;
-            const lat = (Math.random() * 2 - 1) * 12;
-            const ox = sobreCami.x + Math.sin(th) * fwd + Math.cos(th) * lat;
-            const oz = sobreCami.z - Math.cos(th) * fwd + Math.sin(th) * lat;
+            // Punt d'impacte a l'atzar sobre tota la malla del terra (no només davant de l'observador).
+            const ox = MALLA_X0 + Math.random() * (MALLA_X1 - MALLA_X0);
+            const oz = MALLA_Z0 + Math.random() * (MALLA_Z1 - MALLA_Z0);
             e.impacte.set(ox, 0.02, oz);
             // Cada estella té la seva direcció i el seu angle de caiguda, a l'atzar (entre 8° i 12° de la vertical, al voltant de 10°).
             const az = Math.random() * Math.PI * 2;
