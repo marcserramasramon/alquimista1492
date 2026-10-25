@@ -425,16 +425,17 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         model.position.set(-midaCentre.x * escala, -caixa.min.y * escala, -midaCentre.z * escala);
         golem.add(model);
         // Llum que puja del terra: verd-daurat a ran de terra sota el golem, que l'il·lumina des de baix.
-        // Cinc punts de llum: el central a terra, i quatre als costats (a terra i sota els braços).
+        // Punts de llum: el central a terra, dos als costats a terra, dos sota els braços i un a dalt (cap al cap).
         const posicionsLlumTerra: [number, number, number][] = [
           [0, 0.05, 0.4],
           [-1.0, 0.1, 0.4],
           [1.0, 0.1, 0.4],
           [-1.8, 1.2, 0.3],
           [1.8, 1.2, 0.3],
+          [0, 2.8, 0.4],
         ];
         for (const [x, y, z] of posicionsLlumTerra) {
-          const llum = new THREE.PointLight(0xc8e07a, 0.7, 4);
+          const llum = new THREE.PointLight(0xc8e07a, 0.7, 8);
           llum.position.set(x, y, z);
           golem.add(llum);
         }
