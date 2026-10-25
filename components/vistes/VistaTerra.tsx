@@ -160,7 +160,7 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
         e.distanciaAmfores < RADI_AMFORES
           ? "📍 Ja sou al lloc: mireu a terra."
           : e.ressonancia >= 0.6
-            ? "🌊 Bé: seguiu la brúixola cap al lloc."
+            ? "Bé: seguiu la brúixola cap al lloc."
             : e.ressonancia >= 0.25
               ? "✨ Acosteu-vos al camí: el triangle vibra quan hi sou."
               : "🌀 Torneu al camí: la brúixola s'apaga quan us en separeu.";
@@ -210,11 +210,6 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
           <p role="status" className="rounded-xl bg-black/70 px-4 py-2 text-center text-base font-bold">
             {guia.missatge}
           </p>
-          {guia.girar && (
-            <p className="rounded-xl bg-black/60 px-3 py-1.5 text-center text-sm font-bold">
-              {guia.girar === "dreta" ? "➡️ Gireu-vos cap a la dreta per veure les àmfores" : "⬅️ Gireu-vos cap a l'esquerra per veure les àmfores"}
-            </p>
-          )}
         </div>
       )}
 
