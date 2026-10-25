@@ -3,6 +3,7 @@
 import type { AnimationAction, AnimationMixer } from "three";
 import { useEffect, useRef, type RefObject } from "react";
 import { Metamorphous } from "next/font/google";
+import { disposarRunesCercle } from "@/components/ui/runes";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
 import { EstatGolem, SeguimentGolem } from "@/components/ar/terra/seguiment";
 import { dibuixaVora } from "@/components/ar/voraGuia";
@@ -623,6 +624,29 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const grupAnfores = new THREE.Group();
         grupAnfores.position.set(centre.x, 0, centre.z);
         grupAnfores.add(banda);
+
+        // Cercle de runes a sobre de la marquesina, fet amb les mateixes runes del joc (el dibuix SVG es passa a
+        // una textura).
+        const glifsCercle = disposarRunesCercle(500, 500, 430, 60);
+        const svgRunes =
+          `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000">` +
+          `<g fill="rgb(150,255,110)">` +
+          glifsCercle.map((g) => `<path d="${g.d}" transform="${g.transform}"/>`).join("") +
+          `</g></svg>`;
+        const imatgeRunes = new Image();
+        imatgeRunes.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgRunes);
+        await imatgeRunes.decode().catch(() => {});
+        const lienzoRunes = document.createElement("canvas");
+        lienzoRunes.width = 1024;
+        lienzoRunes.height = 1024;
+        lienzoRunes.getContext("2d")?.drawImage(imatgeRunes, 0, 0, 1024, 1024);
+        const texturaRunes = new THREE.CanvasTexture(lienzoRunes);
+        const matRunes = new THREE.MeshBasicMaterial({ map: texturaRunes, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+        const geomRunes = new THREE.PlaneGeometry(10, 10);
+        const cercleRunes = new THREE.Mesh(geomRunes, matRunes);
+        cercleRunes.rotation.x = -Math.PI / 2;
+        cercleRunes.position.set(0, 6.5, 0);
+        grupAnfores.add(cercleRunes);
         escena.add(grupAnfores);
 
         // Estelles fugaces: 30, cada una amb el seu temps, que cauen a l'atzar cap a un punt a 50 m davant de
@@ -873,6 +897,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           });
           geoCel.dispose();
           texturaA.dispose();
+          texturaRunes.dispose();
+          matRunes.dispose();
+          geomRunes.dispose();
           matA.dispose();
           geomBanda.dispose();
           geoEstella.dispose();
