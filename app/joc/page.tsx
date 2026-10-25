@@ -96,6 +96,14 @@ export default function HubPage() {
   }, []);
   const intentsGps = useRef(new Map<string, number>());
 
+  /** Esborra la cookie d'equip d'aquest mòbil i torna a la tria d'equip. Retorna l'error, si n'hi ha. */
+  async function sortirGrup(): Promise<string | null> {
+    const res = await fetch("/api/equips/sortir", { method: "POST" }).catch(() => null);
+    if (!res?.ok) return "No s'ha pogut sortir del grup. Torna-ho a provar.";
+    router.replace("/equips");
+    return null;
+  }
+
   const carregar = useCallback(
     () =>
       fetch("/api/estat")
@@ -227,6 +235,7 @@ export default function HubPage() {
             setAvisant(true);
           }}
           onTancar={() => setAjudaOberta(false)}
+          onSortirGrup={sortirGrup}
         />
       )}
       {avisant && <EnviarAvis onTancar={() => setAvisant(false)} />}

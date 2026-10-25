@@ -36,14 +36,30 @@ export interface VistaAjudaProps {
   onManual: () => void;
   onEscriureMissatge: () => void;
   onTancar: () => void;
+  /** Fa sortir aquest mòbil del grup. Retorna el missatge d'error, o null si ha anat bé. */
+  onSortirGrup?: () => Promise<string | null>;
 }
 
 /**
  * Pop-up del botó "?" del mapa: primer les preguntes freqüents (es responen soles, sense
  * amoïnar el màster); si cap no encaixa, el botó de sota porta al formulari real (VistaEnviarAvis).
  */
-export function VistaAjuda({ nomEquip, onManual, onEscriureMissatge, onTancar }: VistaAjudaProps) {
+export function VistaAjuda({ nomEquip, onManual, onEscriureMissatge, onTancar, onSortirGrup }: VistaAjudaProps) {
   const [obertaId, setObertaId] = useState<string | null>(null);
+  const [confirmantSortir, setConfirmantSortir] = useState(false);
+  const [enviantSortir, setEnviantSortir] = useState(false);
+  const [errorSortir, setErrorSortir] = useState<string | null>(null);
+
+  async function sortir() {
+    if (!onSortirGrup) return;
+    setEnviantSortir(true);
+    setErrorSortir(null);
+    const error = await onSortirGrup();
+    if (error) {
+      setErrorSortir(error);
+      setEnviantSortir(false);
+    }
+  }
 
   return (
     <div
@@ -99,6 +115,33 @@ export function VistaAjuda({ nomEquip, onManual, onEscriureMissatge, onTancar }:
         <button type="button" onClick={onEscriureMissatge} className="btn btn-primari">
           ✉️ Escriure un missatge al màster
         </button>
+
+        {onSortirGrup && (
+          <div className="flex flex-col items-center gap-2 border-t-2 border-ink/20 pt-3">
+            {confirmantSortir ? (
+              <>
+                <p className="text-center text-base font-extrabold">Estàs segur que vols sortir del grup?</p>
+                {errorSortir && <p className="text-center text-sm text-blood">{errorSortir}</p>}
+                <div className="flex w-full gap-2">
+                  <button type="button" onClick={() => setConfirmantSortir(false)} className="btn btn-secundari flex-1">
+                    No
+                  </button>
+                  <button type="button" onClick={sortir} disabled={enviantSortir} className="btn btn-perill flex-1">
+                    {enviantSortir ? "Sortint..." : "Sí, surt"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmantSortir(true)}
+                className="min-h-11 px-3 text-sm text-ink-soft underline"
+              >
+                sortir del grup
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

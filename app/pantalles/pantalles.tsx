@@ -791,7 +791,13 @@ export const PANTALLES: Pantalla[] = [
     render: (dades) => (
       <>
         {getPantalla("hub-mitja-partida")?.render(dades)}
-        <VistaAjuda nomEquip="Els Corbs" onManual={noop} onEscriureMissatge={noop} onTancar={noop} />
+        <VistaAjuda
+          nomEquip="Els Corbs"
+          onManual={noop}
+          onEscriureMissatge={noop}
+          onTancar={noop}
+          onSortirGrup={() => Promise.resolve(null)}
+        />
       </>
     ),
   },
