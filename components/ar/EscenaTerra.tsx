@@ -255,14 +255,6 @@ const FRAGMENT = `
   }
 `;
 
-interface Guspira {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  vida: number;
-}
-
 interface Props {
   /** Lectura de la brúixola i la inclinació; pot ser nul·la fins que arribi la primera. */
   mirada: RefObject<Mirada | null>;
@@ -305,7 +297,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
 
-    const guspires: Guspira[] = [];
     let frame = 0;
     let w = 0;
     let h = 0;
@@ -325,10 +316,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
 
       const m = arrossegarRef.current ? manual.current : (mirada.current ?? manual.current);
       const u = posicio.current;
-      const e = estatTerra(u, fita, amfores);
-      const r = e?.ressonancia ?? 0;
-
-      if (u && e) {
+      if (u) {
         const b = enMetres(amfores, u);
         const pFinal = projecta(b, 0, m, w, h);
         if (pFinal) {
@@ -357,22 +345,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         }
         const trobat = vistaDesDeRef.current !== null && ara - vistaDesDeRef.current >= 2000;
         if (!trobat) dibuixaVora(ctx, w, h, dxGolem, 0.8, 900, ara, OR);
-      }
-      drawBrujula(ctx, m, e, r, ara / 1000, w, h, guspires);
-
-      for (let i = guspires.length - 1; i >= 0; i--) {
-        const g = guspires[i];
-        g.x += g.vx;
-        g.y += g.vy;
-        g.vida -= 0.025;
-        if (g.vida <= 0) {
-          guspires.splice(i, 1);
-          continue;
-        }
-        ctx.beginPath();
-        ctx.arc(g.x, g.y, 1.6, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${OR}, ${g.vida})`;
-        ctx.fill();
       }
 
       frame = requestAnimationFrame(bucle);
@@ -693,56 +665,4 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
       />
     </>
   );
-}
-
-/** Dibuixa la brúixola del HUD (en píxels de pantalla) i les guspires del triangle quan és sobre el camí. */
-function drawBrujula(
-  ctx: CanvasRenderingContext2D,
-  m: Mirada,
-  e: EstatTerra | null,
-  r: number,
-  t: number,
-  w: number,
-  h: number,
-  guspires: Guspira[],
-) {
-  const cx = w - 62;
-  const cy = h - 150;
-  const R = 42;
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(cx, cy, R, 0, Math.PI * 2);
-  ctx.fillStyle = "rgba(20, 14, 6, 0.6)";
-  ctx.fill();
-  ctx.strokeStyle = `rgba(${OR}, ${0.3 + 0.7 * r})`;
-  ctx.lineWidth = 2.5;
-  ctx.shadowColor = `rgb(${OR})`;
-  ctx.shadowBlur = 12 * r;
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-  ctx.font = "bold 12px sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ["N", "E", "S", "O"].forEach((lletra, k) => {
-    const angle = (k * 90 - m.rumb) * RAD;
-    ctx.fillStyle = `rgba(${OR}, ${0.25 + 0.75 * r})`;
-    ctx.fillText(lletra, cx + Math.sin(angle) * R * 0.78, cy - Math.cos(angle) * R * 0.78);
-  });
-  if (e) {
-    const vibra = r > 0.5 ? 1.4 * r : 0;
-    const phi = (e.rumbAmfores - m.rumb) * RAD;
-    const tx = cx + Math.sin(phi) * R * 0.55 + Math.sin(t * 0.09) * vibra;
-    const ty = cy - Math.cos(phi) * R * 0.55 + Math.cos(t * 0.13) * vibra;
-    ctx.beginPath();
-    ctx.moveTo(tx - 8, ty - 6);
-    ctx.lineTo(tx + 8, ty - 6);
-    ctx.lineTo(tx, ty + 8);
-    ctx.closePath();
-    ctx.fillStyle = r > 0.5 ? `rgba(${OR}, 1)` : "rgba(200, 200, 200, 0.4)";
-    ctx.fill();
-    if (r > 0.5 && Math.random() < 0.35) {
-      guspires.push({ x: tx + (Math.random() - 0.5) * 10, y: ty, vx: (Math.random() - 0.5) * 0.8, vy: -0.4 - Math.random() * 0.8, vida: 1 });
-    }
-  }
-  ctx.restore();
 }
