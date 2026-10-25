@@ -137,7 +137,7 @@ const VERTEX = `
   uniform float uPR;
   uniform float uAlcada;
   uniform vec2 uCentre;
-  uniform vec3 uOnades[30];
+  uniform vec3 uOnades[90];
   uniform vec2 uCam;
   uniform vec3 uBaixa;
   uniform vec3 uAlta;
@@ -176,7 +176,7 @@ const VERTEX = `
     float yTerra = mix(h, 9.0 * s, wF) + jet * fase * 6.0;
     // Ones d'impacte: anells que s'expandeixen des de cada punt d'impacte i s'esvaeixen, com les ones de l'aigua.
     float ona = 0.0;
-    for (int q = 0; q < 30; q++) {
+    for (int q = 0; q < 90; q++) {
       vec3 o = uOnades[q];
       float edat = uTime - o.z;
       if (edat > 0.0 && edat < 4.0) {
@@ -567,7 +567,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           uAlcada: { value: ALCADA_CEL },
           uCam: { value: new THREE.Vector2() },
           uCentre: { value: new THREE.Vector2(centre.x, centre.z) },
-          uOnades: { value: Array.from({ length: 30 }, () => new THREE.Vector3(0, 0, -100)) },
+          uOnades: { value: Array.from({ length: 90 }, () => new THREE.Vector3(0, 0, -100)) },
           uBaixa: { value: new THREE.Vector3(0.12, 0.45, 0.22) },
           uAlta: { value: new THREE.Vector3(0.6, 1.0, 0.5) },
         };
@@ -633,12 +633,12 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
 
         // Estelles fugaces: 30, cada una amb el seu temps, que cauen a l'atzar cap a un punt a 50 m davant de
         // l'observador (dispersat). Cua de fins a 12 m, densa, en gradient fins a invisible, i que s'estreny fins a 1/10.
-        const NUM_ESTELLES = 30;
+        const NUM_ESTELLES = 90;
         const TRAIL_ESTELLA = 80;
         const LLARG_CUA = 12;
         const PARTICULES_IMPACTE = 40;
         const CICLE_ESTELLA = 15;
-        const T_IMPACTE = 3.5;
+        const T_IMPACTE = 5.3;
         const DURADA_IMPACTE = 1.5;
         const GRAVETAT = 6;
         const estelles = Array.from({ length: NUM_ESTELLES }, () => ({
