@@ -569,8 +569,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         escena.add(new THREE.Points(geo, material));
 
-        // Marquesina de text que gira al voltant: una banda cilíndrica de 4 m de radi, a 4 m d'alçada, amb la frase
-        // repetida al voltant. Gira una volta cada 8 s.
+        // Marquesina de text que gira al voltant: una banda cilíndrica, amb una sola còpia de la frase. Gira una volta cada 8 s.
         const RADI_BANDA = 5;
         const ALCADA_BANDA = 4;
         const AMPLE_BANDA_M = 0.7;
@@ -578,15 +577,15 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         await document.fonts.load(`84px ${FONT_MARQUESINA.style.fontFamily}`).catch(() => {});
         const lienzo = document.createElement("canvas");
         lienzo.width = 2048;
-        lienzo.height = 160;
+        lienzo.height = 260;
         const ctxText = lienzo.getContext("2d");
         if (ctxText) {
           ctxText.clearRect(0, 0, lienzo.width, lienzo.height);
-          // Font compacta, i més petita si cal: la frase ha de cabre en la meitat de la banda, sense encavalcar-se.
+          // Una sola còpia de la frase, la més gran possible perquè càpiga en tota la banda.
           const frase = "Aquí guarda l'alquimista la matèria";
-          let mida = 84;
+          let mida = 168;
           ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
-          while (ctxText.measureText(frase).width > lienzo.width * 0.42 && mida > 30) {
+          while (ctxText.measureText(frase).width > lienzo.width * 0.92 && mida > 30) {
             mida -= 2;
             ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
           }
@@ -595,8 +594,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           ctxText.fillStyle = "rgb(150, 255, 110)";
           ctxText.shadowColor = "rgb(120, 255, 90)";
           ctxText.shadowBlur = 18;
-          ctxText.fillText(frase, lienzo.width * 0.25, lienzo.height / 2);
-          ctxText.fillText(frase, lienzo.width * 0.75, lienzo.height / 2);
+          ctxText.fillText(frase, lienzo.width / 2, lienzo.height / 2);
         }
         const texturaText = new THREE.CanvasTexture(lienzo);
         const matText = new THREE.MeshBasicMaterial({ map: texturaText, transparent: true, depthWrite: false, side: THREE.DoubleSide });
