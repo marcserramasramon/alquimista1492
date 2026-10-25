@@ -254,7 +254,7 @@ const AMFORA_VERTEX = `
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     vec4 wp = modelMatrix * vec4(position, 1.0);
     vA = 1.0 - smoothstep(120.0, 260.0, length(wp.xz - uCam));
-    vCol = vec3(0.6, 1.0, 0.5);
+    vCol = vec3(0.3, 0.5, 0.25);
     gl_PointSize = clamp(260.0 / (-mv.z), 1.5, 9.0) * uPR;
     gl_Position = projectionMatrix * mv;
   }
