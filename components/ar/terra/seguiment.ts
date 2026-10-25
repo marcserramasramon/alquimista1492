@@ -44,6 +44,8 @@ const QUIET_2_FI = 21000;
 const DISTANCIA_AVANC = 3;
 /** Durada del senyal final, en mil·lisegons. */
 const SENYAL_FINAL_MS = 3000;
+/** Quan assenyala, el golem es gira com a màxim aquests radiants des de la direcció del jugador (60°), perquè el braç es vegi. */
+const GIR_ASSENYALAR = Math.PI / 3;
 
 /**
  * Seguiment del golem: cada 0,5 s es mira on és el jugador. El golem es manté uns metres davant seu, en la
@@ -86,7 +88,9 @@ export class SeguimentGolem {
     }
 
     const mirarJugador = Math.atan2(mostra.x - this.gx, mostra.z - this.gz);
-    const mirarFita = Math.atan2(this.fx - this.gx, this.fz - this.gz);
+    // Assenyalant: gira només fins a GIR_ASSENYALAR cap a la fita, des de la direcció del jugador.
+    const diferenciaFita = Math.atan2(Math.sin(Math.atan2(this.fx - this.gx, this.fz - this.gz) - mirarJugador), Math.cos(Math.atan2(this.fx - this.gx, this.fz - this.gz) - mirarJugador));
+    const mirarFita = mirarJugador + Math.max(-GIR_ASSENYALAR, Math.min(GIR_ASSENYALAR, diferenciaFita));
     const dFitaJugador = Math.hypot(this.fx - mostra.x, this.fz - mostra.z);
     if (this.arribat || dFitaJugador < RADI_ARRIBADA) {
       this.arribat = true;
