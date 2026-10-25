@@ -425,18 +425,18 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         model.position.set(-midaCentre.x * escala, -caixa.min.y * escala, -midaCentre.z * escala);
         golem.add(model);
         // Llum que puja del terra: verd-daurat a ran de terra sota el golem, que l'il·lumina des de baix.
-        // Punts de llum: el central a terra, dos als costats a terra i dos sota els braços.
-        const posicionsLlumTerra: [number, number, number][] = [
-          [0, 0.05, 0.4],
-          [-1.0, 0.1, 0.4],
-          [1.0, 0.1, 0.4],
-          [-1.8, 1.2, 0.3],
-          [1.8, 1.2, 0.3],
-        ];
-        for (const [x, y, z] of posicionsLlumTerra) {
-          const llum = new THREE.PointLight(0xc8e07a, 0.7, 4);
-          llum.position.set(x, y, z);
-          golem.add(llum);
+        // Deu focus de llum en circumferència de 1,5 m al voltant del golem, a la mateixa alçada que la llum del
+        // terra i enfocats cap al pit (uns 2 m d'alçada).
+        const RADI_LLUM = 1.5;
+        const ALCADA_LLUM = 0.1;
+        const ALCADA_PIT = 2.0;
+        for (let k = 0; k < 10; k++) {
+          const angle = (k / 10) * Math.PI * 2;
+          const focus = new THREE.SpotLight(0xc8e07a, 2.0, 6, 0.7, 0.6, 1.5);
+          focus.position.set(Math.cos(angle) * RADI_LLUM, ALCADA_LLUM, Math.sin(angle) * RADI_LLUM);
+          focus.target.position.set(0, ALCADA_PIT, 0);
+          golem.add(focus);
+          golem.add(focus.target);
         }
         // Ulls vermells: dues esferes i una llum vermella, enganxades a l'os del cap perquè es mouen amb el cap.
         // La posició es calcula en el volum del model (cap a dalt, mirant cap a +Z) i després es passa a
