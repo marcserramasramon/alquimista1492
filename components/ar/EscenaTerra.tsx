@@ -618,11 +618,11 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         escena.add(grupAnfores);
 
         // Estella fugaç: cau del cel a 25° de la vertical i impacta al punt final. A l'impacte, les partícules
-        // del terra salten cap a fora i cauen. Cicle de 12 s.
+        // del terra salten cap a fora i cauen. Cicle de 15 s.
         const TRAIL_ESTELLA = 60;
         const PARTICULES_IMPACTE = 120;
-        const CICLE_ESTELLA = 12;
-        const T_IMPACTE = 1.2;
+        const CICLE_ESTELLA = 15;
+        const T_IMPACTE = 3.5;
         const DURADA_IMPACTE = 1.5;
         const GRAVETAT = 6;
         const impacteEstella = new THREE.Vector3(centre.x, 0.02, centre.z);
@@ -636,7 +636,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         geoEstella.setAttribute("position", new THREE.BufferAttribute(posEstella, 3));
         geoEstella.setAttribute("aAlpha", new THREE.BufferAttribute(alfaEstella, 1));
         const matEstella = new THREE.ShaderMaterial({
-          uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(1.0, 0.97, 0.85) }, uMida: { value: 4 }, uMax: { value: 28 } },
+          uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(1.0, 0.97, 0.85) }, uMida: { value: 6 }, uMax: { value: 36 } },
           vertexShader: CAIGUDA_VERTEX,
           fragmentShader: FRAGMENT,
           transparent: true,
@@ -763,7 +763,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             posEstella[k * 3] = pt.x;
             posEstella[k * 3 + 1] = pt.y;
             posEstella[k * 3 + 2] = pt.z;
-            alfaEstella[k] = (1 - k / (TRAIL_ESTELLA + 1)) * (k === 0 ? 1 : 0.8);
+            alfaEstella[k] = k === 0 ? 1 : 1 - (k / TRAIL_ESTELLA) * 0.7;
           }
         } else {
           alfaEstella.fill(0);
