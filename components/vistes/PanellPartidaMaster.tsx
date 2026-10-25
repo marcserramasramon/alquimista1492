@@ -57,6 +57,9 @@ export function PanellPartidaMaster({
       <Link href="/master/codis" className="btn btn-secundari text-lg">
         🔳 Codis dels cartells
       </Link>
+      <Link href="/master/equips" className="btn btn-secundari text-lg">
+        🔳 Codis dels equips
+      </Link>
 
       {/* Lluny de la resta: només per tornar a començar de zero */}
       {partidaIniciadaAt && (
