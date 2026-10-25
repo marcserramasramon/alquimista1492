@@ -3,7 +3,7 @@
 import type { AnimationAction, AnimationMixer } from "three";
 import { useEffect, useRef, type RefObject } from "react";
 import { Metamorphous } from "next/font/google";
-import { disposarRunesCercle } from "@/components/ui/runes";
+import { GLIFS_RUNES, INSCRIPCIO_RUNES } from "@/components/ui/runes";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
 import { EstatGolem, SeguimentGolem } from "@/components/ar/terra/seguiment";
 import { dibuixaVora } from "@/components/ar/voraGuia";
@@ -587,7 +587,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         if (ctxText) {
           ctxText.clearRect(0, 0, lienzo.width, lienzo.height);
           const frase1 = "Aquí guarda l'alquimista la matèria";
-          const frase2 = "COMPTE-LES TRES COPS";
+          const frase2 = "compte-les tres cops";
           // Mida de la primera frase: la més gran que hi cap sencera a l'amplada de la banda.
           let mida = 168;
           ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
@@ -625,27 +625,40 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         grupAnfores.position.set(centre.x, 0, centre.z);
         grupAnfores.add(banda);
 
-        // Cercle de runes a sobre de la marquesina, fet amb les mateixes runes del joc (el dibuix SVG es passa a
-        // una textura).
-        const glifsCercle = disposarRunesCercle(500, 500, 430, 60);
-        const svgRunes =
-          `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000">` +
-          `<g fill="rgb(150,255,110)">` +
-          glifsCercle.map((g) => `<path d="${g.d}" transform="${g.transform}"/>`).join("") +
-          `</g></svg>`;
-        const imatgeRunes = new Image();
-        imatgeRunes.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgRunes);
-        await imatgeRunes.decode().catch(() => {});
+        // Franja de runes a sobre de la marquesina, com una altra marquesina: les runes del joc, dretes i en fila,
+        // enrotllades al voltant del cilindre.
         const lienzoRunes = document.createElement("canvas");
-        lienzoRunes.width = 1024;
-        lienzoRunes.height = 1024;
-        lienzoRunes.getContext("2d")?.drawImage(imatgeRunes, 0, 0, 1024, 1024);
+        lienzoRunes.width = 4096;
+        lienzoRunes.height = 260;
+        const ctxRunes = lienzoRunes.getContext("2d");
+        if (ctxRunes) {
+          const escalaRuna = 1.5;
+          let x = 0;
+          const lletres = [...INSCRIPCIO_RUNES];
+          const paths: string[] = [];
+          while (x < lienzoRunes.width) {
+            for (const ch of lletres) {
+              const g = GLIFS_RUNES[ch];
+              if (!g) continue;
+              if (x >= lienzoRunes.width) break;
+              paths.push(`<path d="${g.d}" transform="translate(${x.toFixed(1)} 200) scale(${escalaRuna})"/>`);
+              x += g.amplada * escalaRuna + 30;
+            }
+          }
+          const svgRunes =
+            `<svg xmlns="http://www.w3.org/2000/svg" width="${lienzoRunes.width}" height="${lienzoRunes.height}" viewBox="0 0 ${lienzoRunes.width} ${lienzoRunes.height}">` +
+            `<g fill="rgb(150,255,110)">${paths.join("")}</g></svg>`;
+          const imatgeRunes = new Image();
+          imatgeRunes.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgRunes);
+          await imatgeRunes.decode().catch(() => {});
+          ctxRunes.drawImage(imatgeRunes, 0, 0, lienzoRunes.width, lienzoRunes.height);
+        }
         const texturaRunes = new THREE.CanvasTexture(lienzoRunes);
+        texturaRunes.wrapS = THREE.RepeatWrapping;
         const matRunes = new THREE.MeshBasicMaterial({ map: texturaRunes, transparent: true, depthWrite: false, side: THREE.DoubleSide });
-        const geomRunes = new THREE.PlaneGeometry(10, 10);
+        const geomRunes = new THREE.CylinderGeometry(RADI_BANDA, RADI_BANDA, 0.9, 96, 1, true);
         const cercleRunes = new THREE.Mesh(geomRunes, matRunes);
-        cercleRunes.rotation.x = -Math.PI / 2;
-        cercleRunes.position.set(0, 6.5, 0);
+        cercleRunes.position.set(0, 6.2, 0);
         grupAnfores.add(cercleRunes);
         escena.add(grupAnfores);
 
