@@ -274,11 +274,10 @@ export const EXTRES_AR: ExtraAr[] = [
     boto: "🧭 Seguiu la Terra",
     introduccio: {
       titol: "La Terra us guia",
-      entrada: "El terra mateix us guiarà fins al lloc. Això és el que veureu:",
+      entrada: "El Gollem protector de l'element terra us ha vingut a rebre.",
       passos: [
-        { icona: "🌊", text: "El terra és una malla de punts de llum que es mou com el mar, amb onades que es creuen en totes les direccions." },
-        { icona: "🧭", text: "La brúixola de baix a la dreta marca cap al lloc. Quan sou sobre el camí, el triangle de la Terra vibra amb guspires daurades." },
-        { icona: "📍", text: "Quan hi arribeu, mireu a terra." },
+        { icona: "🗿", text: "Seguiu-lo fins allà on l'alquimista ha guardat l'element de la terra." },
+        { icona: "🔮", text: "Quan tingueu la resposta, sortiu de la realitat augmentada i resoleu la fita." },
       ],
       permisos: {
         titol: "El mòbil us demanarà permís per a:",
