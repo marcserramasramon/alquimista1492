@@ -3,8 +3,9 @@
  * - "seguint": camina per mantenir-se davant i a l'esquerra del jugador.
  * - "gest": fa el senyal de venir (una vegada, 3 s).
  * - "quiet": s'està quiet (mirant el jugador o a la fita).
+ * - "assenyala": s'està quiet i assenyala amb el braç esquerre cap a la fita (mirant cap a ella).
  */
-export type EstatGolem = "seguint" | "gest" | "quiet";
+export type EstatGolem = "seguint" | "gest" | "quiet" | "assenyala";
 
 export interface PasGolem {
   x: number;
@@ -85,6 +86,7 @@ export class SeguimentGolem {
     }
 
     const mirarJugador = Math.atan2(mostra.x - this.gx, mostra.z - this.gz);
+    const mirarFita = Math.atan2(this.fx - this.gx, this.fz - this.gz);
     const dFitaJugador = Math.hypot(this.fx - mostra.x, this.fz - mostra.z);
     if (this.arribat || dFitaJugador < RADI_ARRIBADA) {
       this.arribat = true;
@@ -100,14 +102,14 @@ export class SeguimentGolem {
         this.estat = "gest";
         this.yaw = mirarJugador;
       } else if (e < QUIET_1_FI) {
-        this.estat = "quiet";
-        this.yaw = mirarJugador;
+        this.estat = "assenyala";
+        this.yaw = mirarFita;
       } else if (e < SENYAL_2_FI) {
         this.estat = "gest";
         this.yaw = mirarJugador;
       } else if (e < QUIET_2_FI) {
-        this.estat = "quiet";
-        this.yaw = mirarJugador;
+        this.estat = "assenyala";
+        this.yaw = mirarFita;
       } else {
         // Avança un tros cap a la fita, es para a uns metres del jugador, es gira i fa el senyal una vegada.
         const tgt = this.puntLateral(mostra, DISTANCIA_AVANC);
@@ -122,8 +124,8 @@ export class SeguimentGolem {
           this.yaw = Math.atan2(dx, dz);
         } else {
           if (this.tSenyalFinal < 0) this.tSenyalFinal = ara;
-          this.estat = ara - this.tSenyalFinal < SENYAL_FINAL_MS ? "gest" : "quiet";
-          this.yaw = mirarJugador;
+          this.estat = ara - this.tSenyalFinal < SENYAL_FINAL_MS ? "gest" : "assenyala";
+          this.yaw = ara - this.tSenyalFinal < SENYAL_FINAL_MS ? mirarJugador : mirarFita;
         }
       }
       return this.pas();
