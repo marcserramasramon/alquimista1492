@@ -551,7 +551,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // diàmetre a dalt. Són punts de llum sobre el perfil (sense sòlid ni contorn). Giren una volta cada 8 s.
         const NUM_ANFORES = 6;
         const RADI_ANFORES = 4;
-        const ALCADA_ANFORES = 1.2;
+        const ALCADA_ANFORES = 4;
         const PUNTS_ANFORA = 260;
         const perfilAnfora: [number, number][] = [
           [0, 0.12], [0.15, 0.2], [0.4, 0.3], [0.65, 0.22], [0.85, 0.12], [0.95, 0.18], [1, 0.25],
