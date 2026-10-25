@@ -250,6 +250,8 @@ const CAIGUDA_VERTEX = `
   uniform float uPR;
   uniform vec2 uCam;
   uniform vec3 uCol;
+  uniform float uMida;
+  uniform float uMax;
   varying vec3 vCol;
   varying float vA;
   void main() {
@@ -257,7 +259,7 @@ const CAIGUDA_VERTEX = `
     vec4 wp = modelMatrix * vec4(position, 1.0);
     vA = aAlpha * (1.0 - smoothstep(120.0, 260.0, length(wp.xz - uCam)));
     vCol = uCol;
-    gl_PointSize = clamp(260.0 / (-mv.z), 2.0, 10.0) * uPR;
+    gl_PointSize = clamp(uMida * 260.0 / (-mv.z), 2.0, uMax) * uPR;
     gl_Position = projectionMatrix * mv;
   }
 `;
@@ -634,7 +636,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         geoEstella.setAttribute("position", new THREE.BufferAttribute(posEstella, 3));
         geoEstella.setAttribute("aAlpha", new THREE.BufferAttribute(alfaEstella, 1));
         const matEstella = new THREE.ShaderMaterial({
-          uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(1.0, 0.97, 0.85) } },
+          uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(1.0, 0.97, 0.85) }, uMida: { value: 4 }, uMax: { value: 28 } },
           vertexShader: CAIGUDA_VERTEX,
           fragmentShader: FRAGMENT,
           transparent: true,
@@ -657,7 +659,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         geoImpacte.setAttribute("position", new THREE.BufferAttribute(posImpacte, 3));
         geoImpacte.setAttribute("aAlpha", new THREE.BufferAttribute(alfaImpacte, 1));
         const matImpacte = new THREE.ShaderMaterial({
-          uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(0.6, 1.0, 0.5) } },
+          uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(0.6, 1.0, 0.5) }, uMida: { value: 1 }, uMax: { value: 10 } },
           vertexShader: CAIGUDA_VERTEX,
           fragmentShader: FRAGMENT,
           transparent: true,
@@ -743,11 +745,11 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
 
         // Estella: cau (T_IMPACTE s) i després les partícules de l'impacte salten i cauen.
         const tCicle = ((ara - inici) / 1000) % CICLE_ESTELLA;
-        // A cada cicle nou, l'impacte es posa a 4 m davant de l'observador (en la direcció on mira).
+        // A cada cicle nou, l'impacte es posa a 15 m davant de l'observador (en la direcció on mira).
         if (tCicle < cicleEstellaAnterior) {
           const th = m.rumb * RAD;
-          const ox = sobreCami.x + Math.sin(th) * 4;
-          const oz = sobreCami.z - Math.cos(th) * 4;
+          const ox = sobreCami.x + Math.sin(th) * 15;
+          const oz = sobreCami.z - Math.cos(th) * 15;
           impacteEstella.set(ox, 0.02, oz);
           inicEstella.set(ox - Math.sin(angleEstella) * 60, Math.cos(angleEstella) * 60, oz);
           dirEstella.copy(impacteEstella).sub(inicEstella).normalize();
@@ -757,7 +759,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           const f = tCicle / T_IMPACTE;
           const cap = inicEstella.clone().lerp(impacteEstella, f);
           for (let k = 0; k <= TRAIL_ESTELLA; k++) {
-            const pt = cap.clone().addScaledVector(dirEstella, -k * 0.9);
+            const pt = cap.clone().addScaledVector(dirEstella, -k * 1.2);
             posEstella[k * 3] = pt.x;
             posEstella[k * 3 + 1] = pt.y;
             posEstella[k * 3 + 2] = pt.z;
