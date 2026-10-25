@@ -19,7 +19,7 @@ import type { EstacioMapa, MarcadorMapa } from "@/components/player/MapaEquip";
 import { HubVideoVist } from "./HubVideoVist";
 import { VistaUbicacio } from "@/components/vistes/VistaUbicacio";
 import { VistaBenvinguda } from "@/components/vistes/VistaBenvinguda";
-import { VistaSeleccioEquip } from "@/components/vistes/VistaSeleccioEquip";
+import { VistaEntradaEquip } from "@/components/vistes/VistaEntradaEquip";
 import { VistaEspera } from "@/components/vistes/VistaEspera";
 import { EQUIPS } from "@/content/public/equips";
 import { VistaHub } from "@/components/vistes/VistaHub";
@@ -36,6 +36,7 @@ import { VideoFita } from "@/components/vistes/VideoFita";
 import { VistaMasterLogin } from "@/components/vistes/VistaMasterLogin";
 import { VistaMasterEquips, type EquipMaster } from "@/components/vistes/VistaMasterEquips";
 import { VistaMasterCodis } from "@/components/vistes/VistaMasterCodis";
+import { VistaMasterCodisEquips } from "@/components/vistes/VistaMasterCodisEquips";
 import { VistaCartells, type DadesCartell } from "@/components/vistes/VistaCartells";
 import { VistaTextosEditats } from "@/components/vistes/VistaTextosEditats";
 import { POEMES_CARTELLS } from "@/content/public/cartells";
@@ -528,50 +529,51 @@ export const PANTALLES: Pantalla[] = [
   {
     id: "equips",
     grup: "entrada",
-    titol: "Tria de l'equip",
-    descripcio: "Les 25 icones, totes lliures.",
-    render: () => <VistaSeleccioEquip ambJugadors={[]} triant={null} error={null} onTriar={noop} />,
-  },
-  {
-    id: "equips-agafats",
-    grup: "entrada",
-    titol: "Tria · equips amb jugadors",
-    descripcio: "Tres equips que ja tenen algun mòbil (s'hi pot entrar igualment).",
+    titol: "Entrada · escanejar el QR",
+    descripcio: "Lector de QR de l'equip, amb l'entrada del codi a sota.",
     render: () => (
-      <VistaSeleccioEquip ambJugadors={[EQUIPS[1].id, EQUIPS[4].id, EQUIPS[6].id]} triant={null} error={null} onTriar={noop} />
-    ),
-  },
-  {
-    id: "equips-confirmar",
-    grup: "entrada",
-    titol: "Tria · confirmar entrar a un equip amb jugadors",
-    render: () => (
-      <VistaSeleccioEquip
-        ambJugadors={[EQUIPS[1].id]}
-        triant={null}
-        confirmant={EQUIPS[1].id}
+      <VistaEntradaEquip
+        mode="camera"
+        camera={<div className="flex h-full items-center justify-center text-lg text-paper">Càmera (exemple)</div>}
+        codi=""
+        enviant={false}
         error={null}
-        onTriar={noop}
-        onCancelar={noop}
+        onCodiChange={noop}
+        onEnviarCodi={noop}
+        onMode={noop}
       />
     ),
   },
   {
-    id: "equips-triant",
+    id: "equips-manual",
     grup: "entrada",
-    titol: "Tria · agafant l'equip",
-    render: () => <VistaSeleccioEquip ambJugadors={[EQUIPS[1].id]} triant={EQUIPS[2].id} error={null} onTriar={noop} />,
+    titol: "Entrada · codi manual",
+    descripcio: "Quan el QR no es llegeix: el codi de 8 caràcters a mà.",
+    render: () => (
+      <VistaEntradaEquip mode="manual" codi="ABC23" enviant={false} error={null} onCodiChange={noop} onEnviarCodi={noop} onMode={noop} />
+    ),
+  },
+  {
+    id: "equips-enviant",
+    grup: "entrada",
+    titol: "Entrada · entrant a l'equip",
+    render: () => (
+      <VistaEntradaEquip mode="manual" codi="H7K2M9QX" enviant error={null} onCodiChange={noop} onEnviarCodi={noop} onMode={noop} />
+    ),
   },
   {
     id: "equips-error",
     grup: "entrada",
-    titol: "Tria · error en entrar",
+    titol: "Entrada · codi incorrecte",
     render: () => (
-      <VistaSeleccioEquip
-        ambJugadors={[EQUIPS[1].id, EQUIPS[2].id]}
-        triant={null}
-        error="No s'ha pogut triar l'equip. Torna-ho a provar."
-        onTriar={noop}
+      <VistaEntradaEquip
+        mode="manual"
+        codi="ZZZZ9999"
+        enviant={false}
+        error="Codi incorrecte"
+        onCodiChange={noop}
+        onEnviarCodi={noop}
+        onMode={noop}
       />
     ),
   },
@@ -1426,6 +1428,21 @@ export const PANTALLES: Pantalla[] = [
             const codi = ["AAAAA", "BBBBB", "CCCCC", "DDDDD", "EEEEE"][i] ?? "XXXXX";
             return { id: e.id, nom: e.nom, element: e.element, codi, url: `https://exemple.cat/s/${e.id}?c=${codi}` };
           })}
+      />
+    ),
+  },
+  {
+    id: "master-codis-equips",
+    grup: "master",
+    titol: "Màster · codis dels equips",
+    descripcio: "QR i codi de cada equip (els reals són a /master/equips; el QR d'exemple no és el de veritat).",
+    render: () => (
+      <VistaMasterCodisEquips
+        cartells={EQUIPS.map((e, i) => ({
+          nom: e.nom,
+          codi: ["H7K2M9QX", "PN4R8ZTA", "3WD6LC9E", "QY2MHS5J", "8XFBK4VU"][i % 5],
+          svg: `<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10" fill="#fff"/><rect x="1" y="1" width="3" height="3" fill="#1b1511"/><rect x="6" y="1" width="3" height="3" fill="#1b1511"/><rect x="1" y="6" width="3" height="3" fill="#1b1511"/><rect x="5" y="5" width="2" height="2" fill="#1b1511"/></svg>`,
+        }))}
       />
     ),
   },
