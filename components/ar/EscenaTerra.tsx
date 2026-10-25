@@ -430,6 +430,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const RADI_LLUM = 1.5;
         const ALCADA_LLUM = 0.1;
         const ALCADA_PIT = 2.0;
+        // La llum que il·lumina els peus, com abans: un punt a terra, davant del golem.
+        const llumPeus = new THREE.PointLight(0xc8e07a, 0.7, 4);
+        llumPeus.position.set(0, 0.05, 0.4);
+        golem.add(llumPeus);
         for (let k = 0; k < 10; k++) {
           const angle = (k / 10) * Math.PI * 2;
           const focus = new THREE.SpotLight(0xc8e07a, 2.0, 6, 0.7, 0.6, 1.5);
