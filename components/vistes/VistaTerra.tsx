@@ -160,7 +160,7 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
         e.distanciaAmfores < RADI_AMFORES
           ? "📍 Ja sou al lloc: mireu a terra."
           : e.ressonancia >= 0.6
-            ? "Bé: seguiu la brúixola cap al lloc."
+            ? "Bé: seguiu el golem de pedra."
             : e.ressonancia >= 0.25
               ? "✨ Acosteu-vos al camí: el triangle vibra quan hi sou."
               : "🌀 Torneu al camí: la brúixola s'apaga quan us en separeu.";
