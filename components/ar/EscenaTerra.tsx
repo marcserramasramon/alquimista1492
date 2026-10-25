@@ -260,9 +260,9 @@ const SKY_VERTEX = `
 const CAIGUDA_VERTEX = `
   attribute float aAlpha;
   attribute float aMida;
+  attribute vec3 aCol;
   uniform float uPR;
   uniform vec2 uCam;
-  uniform vec3 uCol;
   uniform float uMida;
   uniform float uMax;
   varying vec3 vCol;
@@ -271,7 +271,7 @@ const CAIGUDA_VERTEX = `
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     vec4 wp = modelMatrix * vec4(position, 1.0);
     vA = aAlpha * (1.0 - smoothstep(120.0, 260.0, length(wp.xz - uCam)));
-    vCol = uCol;
+    vCol = aCol;
     gl_PointSize = clamp(uMida * aMida * 260.0 / (-mv.z), 2.0, uMax) * uPR;
     gl_Position = projectionMatrix * mv;
   }
@@ -664,6 +664,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         geoEstella.setAttribute("position", new THREE.BufferAttribute(posEstella, 3));
         geoEstella.setAttribute("aAlpha", new THREE.BufferAttribute(alfaEstella, 1));
         geoEstella.setAttribute("aMida", new THREE.BufferAttribute(midaEstella, 1));
+        geoEstella.setAttribute("aCol", new THREE.BufferAttribute(new Float32Array(TOTAL_CUA * 3).fill(1), 3));
         const matEstella = new THREE.ShaderMaterial({
           uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(1.0, 0.97, 0.85) }, uMida: { value: 1.5 }, uMax: { value: 36 } },
           vertexShader: CAIGUDA_VERTEX,
@@ -683,6 +684,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         geoImpacte.setAttribute("position", new THREE.BufferAttribute(posImpacte, 3));
         geoImpacte.setAttribute("aAlpha", new THREE.BufferAttribute(alfaImpacte, 1));
         geoImpacte.setAttribute("aMida", new THREE.BufferAttribute(midaImpacte, 1));
+        const colImpacte = new Float32Array(TOTAL_IMPACTE * 3);
+        geoImpacte.setAttribute("aCol", new THREE.BufferAttribute(colImpacte, 3));
         const matImpacte = new THREE.ShaderMaterial({
           uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(0.6, 1.0, 0.5) }, uMida: { value: 1 }, uMax: { value: 10 } },
           vertexShader: CAIGUDA_VERTEX,
@@ -824,6 +827,11 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
               posImpacte[j * 3 + 1] = Math.max(0.02, e.impacte.y + d.y * edat - 0.5 * GRAVETAT * edat * edat);
               posImpacte[j * 3 + 2] = e.impacte.z + d.z * edat;
               alfaImpacte[j] = 1 - edat / DURADA_IMPACTE;
+              // Espurnes blaves que es tornen verdes en apagar-se.
+              const fraccioColor = Math.min(1, edat / DURADA_IMPACTE);
+              colImpacte[j * 3] = 0.3 + (0.6 - 0.3) * fraccioColor;
+              colImpacte[j * 3 + 1] = 0.6 + (1.0 - 0.6) * fraccioColor;
+              colImpacte[j * 3 + 2] = 1.0 + (0.5 - 1.0) * fraccioColor;
             } else {
               alfaImpacte[j] = 0;
             }
@@ -834,6 +842,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         geoEstella.attributes.aMida.needsUpdate = true;
         geoImpacte.attributes.position.needsUpdate = true;
         geoImpacte.attributes.aAlpha.needsUpdate = true;
+        geoImpacte.attributes.aCol.needsUpdate = true;
 
 
           cam.position.set(sobreCami.x, ALCADA_OLLS, sobreCami.z);
