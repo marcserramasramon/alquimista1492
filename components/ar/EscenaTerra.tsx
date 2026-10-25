@@ -572,51 +572,51 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // Marquesina de text que gira al voltant: una banda cilíndrica, amb una sola còpia de la frase. Gira una volta cada 8 s.
         const RADI_BANDA = 5;
         const ALCADA_BANDA = 4;
-        const AMPLE_BANDA_M = 0.7;
+        const AMPLE_BANDA_M = 1.2;
         // La font s'ha de carregar abans de dibuixar-la al canvas.
         await document.fonts.load(`84px ${FONT_MARQUESINA.style.fontFamily}`).catch(() => {});
         // Dues frases que s'alternen: «Aquí guarda l'alquimista la matèria» (una còpia) i «COMPTE-LES TRES COPS»
         // (tres còpies al voltant). Cada una dona 2 voltes, i es desvanesc per canviar-la per l'altra.
-        // Les dues frases tenen la mateixa mida de lletra: la de la primera (que cap sencera a la banda).
-        const dibuixaFrase = (frase: string, copies: number, midaFixa?: number) => {
-          const lienzo = document.createElement("canvas");
-          lienzo.width = 4096;
-          lienzo.height = 260;
-          const ctxText = lienzo.getContext("2d");
-          let mida = midaFixa ?? 168;
-          if (ctxText) {
-            ctxText.clearRect(0, 0, lienzo.width, lienzo.height);
+        // Les dues frases juntes, una sobre l'altra: a dalt «Aquí guarda l'alquimista la matèria» (1 còpia) i a
+        // baix «COMPTE-LES TRES COPS» (3 còpies), amb la mateixa mida de lletra. Giren totes dues a la vegada.
+        const lienzo = document.createElement("canvas");
+        lienzo.width = 4096;
+        lienzo.height = 520;
+        const ctxText = lienzo.getContext("2d");
+        if (ctxText) {
+          ctxText.clearRect(0, 0, lienzo.width, lienzo.height);
+          const frase1 = "Aquí guarda l'alquimista la matèria";
+          const frase2 = "COMPTE-LES TRES COPS";
+          // Mida de la primera frase: la més gran que hi cap sencera a l'amplada de la banda.
+          let mida = 168;
+          ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
+          while (ctxText.measureText(frase1).width > lienzo.width * 0.92 && mida > 30) {
+            mida -= 2;
             ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
-            const amplada = lienzo.width / copies;
-            if (midaFixa === undefined) {
-              while (ctxText.measureText(frase).width > amplada * 0.92 && mida > 30) {
-                mida -= 2;
-                ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
-              }
-            }
-            ctxText.textAlign = "center";
-            ctxText.textBaseline = "middle";
-            ctxText.fillStyle = "rgb(150, 255, 110)";
-            ctxText.shadowColor = "rgb(120, 255, 90)";
-            ctxText.shadowBlur = 18;
-            // Estirat només en vertical, un 33 % més alt.
-            for (let c = 0; c < copies; c++) {
-              ctxText.save();
-              ctxText.translate(amplada * (c + 0.5), lienzo.height / 2);
-              ctxText.scale(1, 1.33);
-              ctxText.fillText(frase, 0, 0);
-              ctxText.restore();
-            }
           }
-          return { textura: new THREE.CanvasTexture(lienzo), mida };
-        };
-        const frase1 = dibuixaFrase("Aquí guarda l'alquimista la matèria", 1);
-        const frase2 = dibuixaFrase("COMPTE-LES TRES COPS", 3, frase1.mida);
-        const texturaA = frase1.textura;
-        const texturaB = frase2.textura;
+          ctxText.textAlign = "center";
+          ctxText.textBaseline = "middle";
+          ctxText.fillStyle = "rgb(150, 255, 110)";
+          ctxText.shadowColor = "rgb(120, 255, 90)";
+          ctxText.shadowBlur = 18;
+          // Fila de dalt: 1 còpia. Fila de baix: 3 còpies. Estirades només en vertical, un 33 % més altes.
+          const filaDalt = lienzo.height * 0.25;
+          const filaBaix = lienzo.height * 0.75;
+          ctxText.save();
+          ctxText.translate(lienzo.width / 2, filaDalt);
+          ctxText.scale(1, 1.33);
+          ctxText.fillText(frase1, 0, 0);
+          ctxText.restore();
+          for (let c = 0; c < 3; c++) {
+            ctxText.save();
+            ctxText.translate((lienzo.width / 3) * (c + 0.5), filaBaix);
+            ctxText.scale(1, 1.33);
+            ctxText.fillText(frase2, 0, 0);
+            ctxText.restore();
+          }
+        }
+        const texturaA = new THREE.CanvasTexture(lienzo);
         const matA = new THREE.MeshBasicMaterial({ map: texturaA, transparent: true, depthWrite: false, side: THREE.DoubleSide });
-        const matB = new THREE.MeshBasicMaterial({ map: texturaB, transparent: true, depthWrite: false, side: THREE.DoubleSide });
-        const matText = matA;
         const geomBanda = new THREE.CylinderGeometry(RADI_BANDA, RADI_BANDA, AMPLE_BANDA_M, 96, 1, true);
         const banda = new THREE.Mesh(geomBanda, matA);
         banda.position.set(0, ALCADA_BANDA, 0);
@@ -763,15 +763,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           uniforms.uTime.value = (ara - inici) / 1000;
         // Les àmfores giren una volta cada 8 segons.
         grupAnfores.rotation.y = -(((ara - inici) / 1000) * Math.PI * 2) / 8;
-        // Cicle de 32 s: 16 s la frase 1 (2 voltes) i 16 s la frase 2 (2 voltes), amb un desvanit d'1 s al canvi.
-        const cicleText = ((ara - inici) / 1000) % 32;
-        const esFrase1 = cicleText < 16;
-        const tDinsFrase = esFrase1 ? cicleText : cicleText - 16;
-        const opacitat = Math.min(1, tDinsFrase / 1, (16 - tDinsFrase) / 1);
-        const actual = esFrase1 ? matA : matB;
-        banda.material = actual;
-        matA.opacity = esFrase1 ? opacitat : 0;
-        matB.opacity = esFrase1 ? 0 : opacitat;
 
         // Estelles: cada una té el seu temps. Quan comença un cicle nou, tria un punt d'impacte a l'atzar sobre el terra i una direcció de caiguda a 25° de la vertical. La cua es dibuixa fins a 4 m darrere la punta.
         for (let i = 0; i < NUM_ESTELLES; i++) {
@@ -882,9 +873,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           });
           geoCel.dispose();
           texturaA.dispose();
-          texturaB.dispose();
           matA.dispose();
-          matB.dispose();
           geomBanda.dispose();
           geoEstella.dispose();
           matEstella.dispose();
