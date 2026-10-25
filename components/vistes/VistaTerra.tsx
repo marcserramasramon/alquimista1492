@@ -167,7 +167,7 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
       const p = posicio.current;
       if (!p) return setAProp(false);
       const d = distanciaMetres({ lat: p.lat, lng: p.lng }, { lat: PUNT_FORAT.latitud, lng: PUNT_FORAT.longitud });
-      setAProp(d <= 20);
+      setAProp(d <= 10);
     }, 500);
     return () => clearInterval(id);
   }, [iniciat]);
