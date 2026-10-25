@@ -59,7 +59,7 @@ def pose(t, speed):
     if MODE == 'assenyalar':
         # braç esquerre estès cap endavant (apuntant), la resta quieta
         rot = {}
-        rot['upperarm_l'] = fwd(deg(-80))
+        rot['upperarm_l'] = fwd(deg(80))
         rot['lowerarm_l'] = I
         return rot, np.array([0.0, 0.0, 0.0])
     if MODE == 'seure':
