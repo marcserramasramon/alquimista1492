@@ -36,6 +36,11 @@ if MODE == 'senyal':
     NOM = 'Senyal'
     def w_walk(t): return 0.0*t
     def arm_up(t): return ramp(t, 0.2, 0.8) - ramp(t, 2.4, 3.0)
+elif MODE == 'assenyalar':
+    TOTAL = 1.0
+    NOM = 'Assenyalar'
+    def w_walk(t): return 0.0*t
+    def arm_up(t): return 0.0*t
 elif MODE == 'seure':
     TOTAL = 1.0
     NOM = 'Seure'
@@ -51,6 +56,12 @@ def phase_of(t, n=2000):
     ts = np.linspace(0, t, n); return 2*np.pi*np.trapezoid([w_walk(x) for x in ts], ts) if t > 0 else 0.0
 
 def pose(t, speed):
+    if MODE == 'assenyalar':
+        # braç esquerre estès cap endavant (apuntant), la resta quieta
+        rot = {}
+        rot['upperarm_l'] = fwd(deg(-80))
+        rot['lowerarm_l'] = I
+        return rot, np.array([0.0, 0.0, 0.0])
     if MODE == 'seure':
         # postura asseguda: cuixes endavant, genolls doblegats, pelvis baixa (unitats del model, ~10 d'alt)
         rot = {}
