@@ -247,6 +247,7 @@ const SKY_VERTEX = `
 /** Estella fugaç i impacte: punts amb color i alfa per vèrtex. */
 const CAIGUDA_VERTEX = `
   attribute float aAlpha;
+  attribute float aMida;
   uniform float uPR;
   uniform vec2 uCam;
   uniform vec3 uCol;
@@ -259,7 +260,7 @@ const CAIGUDA_VERTEX = `
     vec4 wp = modelMatrix * vec4(position, 1.0);
     vA = aAlpha * (1.0 - smoothstep(120.0, 260.0, length(wp.xz - uCam)));
     vCol = uCol;
-    gl_PointSize = clamp(uMida * 260.0 / (-mv.z), 2.0, uMax) * uPR;
+    gl_PointSize = clamp(uMida * aMida * 260.0 / (-mv.z), 2.0, uMax) * uPR;
     gl_Position = projectionMatrix * mv;
   }
 `;
@@ -617,24 +618,38 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         grupAnfores.add(puntsAnfores);
         escena.add(grupAnfores);
 
-        // Estella fugaç: cau del cel a 25° de la vertical i impacta al punt final. A l'impacte, les partícules
-        // del terra salten cap a fora i cauen. Cicle de 15 s.
-        const TRAIL_ESTELLA = 60;
-        const PARTICULES_IMPACTE = 120;
+        // Estelles fugaces: 30, cada una amb el seu temps, que cauen a l'atzar cap a un punt a 50 m davant de
+        // l'observador (dispersat). Cua de fins a 4 m, densa, que s'estreny fins a 1/10 a la punta.
+        const NUM_ESTELLES = 30;
+        const TRAIL_ESTELLA = 40;
+        const LLARG_CUA = 4;
+        const PARTICULES_IMPACTE = 40;
         const CICLE_ESTELLA = 15;
         const T_IMPACTE = 3.5;
         const DURADA_IMPACTE = 1.5;
         const GRAVETAT = 6;
-        const impacteEstella = new THREE.Vector3(centre.x, 0.02, centre.z);
-        const angleEstella = (25 * Math.PI) / 180;
-        let cicleEstellaAnterior = 99;
-        const inicEstella = new THREE.Vector3(centre.x - Math.sin(angleEstella) * 60, Math.cos(angleEstella) * 60, centre.z);
-        const dirEstella = impacteEstella.clone().sub(inicEstella).normalize();
-        const posEstella = new Float32Array((TRAIL_ESTELLA + 1) * 3);
-        const alfaEstella = new Float32Array(TRAIL_ESTELLA + 1);
+        const ANG_CAIGUDA = (25 * Math.PI) / 180;
+        const estelles = Array.from({ length: NUM_ESTELLES }, () => ({
+          fase: Math.random() * CICLE_ESTELLA,
+          cicleAnterior: 99,
+          inici: new THREE.Vector3(),
+          impacte: new THREE.Vector3(),
+          dir: new THREE.Vector3(1, 0, 0),
+          dirsImpacte: Array.from({ length: PARTICULES_IMPACTE }, () => {
+            const theta = Math.random() * Math.PI * 2;
+            const elev = 0.2 + Math.random() * 1.0;
+            const v = 1.5 + Math.random() * 3;
+            return { x: Math.cos(theta) * Math.cos(elev) * v, y: Math.sin(elev) * v, z: Math.sin(theta) * Math.cos(elev) * v };
+          }),
+        }));
+        const TOTAL_CUA = NUM_ESTELLES * (TRAIL_ESTELLA + 1);
+        const posEstella = new Float32Array(TOTAL_CUA * 3);
+        const alfaEstella = new Float32Array(TOTAL_CUA);
+        const midaEstella = new Float32Array(TOTAL_CUA);
         const geoEstella = new THREE.BufferGeometry();
         geoEstella.setAttribute("position", new THREE.BufferAttribute(posEstella, 3));
         geoEstella.setAttribute("aAlpha", new THREE.BufferAttribute(alfaEstella, 1));
+        geoEstella.setAttribute("aMida", new THREE.BufferAttribute(midaEstella, 1));
         const matEstella = new THREE.ShaderMaterial({
           uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(1.0, 0.97, 0.85) }, uMida: { value: 6 }, uMax: { value: 36 } },
           vertexShader: CAIGUDA_VERTEX,
@@ -646,18 +661,14 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const puntsEstella = new THREE.Points(geoEstella, matEstella);
         puntsEstella.frustumCulled = false;
         escena.add(puntsEstella);
-        // Partícules de l'impacte: direcció fixa per partícula, velocitat i elevació a l'atzar.
-        const dirsImpacte = Array.from({ length: PARTICULES_IMPACTE }, () => {
-          const theta = Math.random() * Math.PI * 2;
-          const elev = 0.2 + Math.random() * 1.0;
-          const v = 1.5 + Math.random() * 3;
-          return { x: Math.cos(theta) * Math.cos(elev) * v, y: Math.sin(elev) * v, z: Math.sin(theta) * Math.cos(elev) * v };
-        });
-        const posImpacte = new Float32Array(PARTICULES_IMPACTE * 3);
-        const alfaImpacte = new Float32Array(PARTICULES_IMPACTE);
+        const TOTAL_IMPACTE = NUM_ESTELLES * PARTICULES_IMPACTE;
+        const posImpacte = new Float32Array(TOTAL_IMPACTE * 3);
+        const alfaImpacte = new Float32Array(TOTAL_IMPACTE);
+        const midaImpacte = new Float32Array(TOTAL_IMPACTE).fill(1);
         const geoImpacte = new THREE.BufferGeometry();
         geoImpacte.setAttribute("position", new THREE.BufferAttribute(posImpacte, 3));
         geoImpacte.setAttribute("aAlpha", new THREE.BufferAttribute(alfaImpacte, 1));
+        geoImpacte.setAttribute("aMida", new THREE.BufferAttribute(midaImpacte, 1));
         const matImpacte = new THREE.ShaderMaterial({
           uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(0.6, 1.0, 0.5) }, uMida: { value: 1 }, uMax: { value: 10 } },
           vertexShader: CAIGUDA_VERTEX,
@@ -743,46 +754,64 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // Les àmfores giren una volta cada 8 segons.
         grupAnfores.rotation.y = -(((ara - inici) / 1000) * Math.PI * 2) / 8;
 
-        // Estella: cau (T_IMPACTE s) i després les partícules de l'impacte salten i cauen.
-        const tCicle = ((ara - inici) / 1000) % CICLE_ESTELLA;
-        // A cada cicle nou, l'impacte es posa a 15 m davant de l'observador (en la direcció on mira).
-        if (tCicle < cicleEstellaAnterior) {
-          const th = m.rumb * RAD;
-          const ox = sobreCami.x + Math.sin(th) * 15;
-          const oz = sobreCami.z - Math.cos(th) * 15;
-          impacteEstella.set(ox, 0.02, oz);
-          inicEstella.set(ox - Math.sin(angleEstella) * 60, Math.cos(angleEstella) * 60, oz);
-          dirEstella.copy(impacteEstella).sub(inicEstella).normalize();
-        }
-        cicleEstellaAnterior = tCicle;
-        if (tCicle < T_IMPACTE) {
-          const f = tCicle / T_IMPACTE;
-          const cap = inicEstella.clone().lerp(impacteEstella, f);
-          for (let k = 0; k <= TRAIL_ESTELLA; k++) {
-            const pt = cap.clone().addScaledVector(dirEstella, -k * 1.2);
-            posEstella[k * 3] = pt.x;
-            posEstella[k * 3 + 1] = pt.y;
-            posEstella[k * 3 + 2] = pt.z;
-            alfaEstella[k] = k === 0 ? 1 : 1 - (k / TRAIL_ESTELLA) * 0.7;
+        // Estelles: cada una té el seu temps. Quan comença un cicle nou, tria un punt d'impacte a 50 m davant
+        // (dispersat) i una direcció de caiguda a 25° de la vertical. La cua es dibuixa fins a 4 m darrere la punta.
+        for (let i = 0; i < NUM_ESTELLES; i++) {
+          const e = estelles[i];
+          const tC = ((ara - inici) / 1000 + e.fase) % CICLE_ESTELLA;
+          if (tC < e.cicleAnterior) {
+            const th = m.rumb * RAD;
+            const fwd = 50 + (Math.random() * 2 - 1) * 6;
+            const lat = (Math.random() * 2 - 1) * 12;
+            const ox = sobreCami.x + Math.sin(th) * fwd + Math.cos(th) * lat;
+            const oz = sobreCami.z - Math.cos(th) * fwd + Math.sin(th) * lat;
+            e.impacte.set(ox, 0.02, oz);
+            const az = Math.random() * Math.PI * 2;
+            e.inici.set(
+              ox - Math.cos(az) * Math.sin(ANG_CAIGUDA) * 60,
+              Math.cos(ANG_CAIGUDA) * 60,
+              oz - Math.sin(az) * Math.sin(ANG_CAIGUDA) * 60,
+            );
+            e.dir.copy(e.impacte).sub(e.inici).normalize();
           }
-        } else {
-          alfaEstella.fill(0);
+          e.cicleAnterior = tC;
+
+          // Cua: el cap és gran i la cua s'estreny fins a 1/10 a 4 m de distància.
+          const base = i * (TRAIL_ESTELLA + 1);
+          if (tC < T_IMPACTE) {
+            const cap = e.inici.clone().lerp(e.impacte, tC / T_IMPACTE);
+            for (let k = 0; k <= TRAIL_ESTELLA; k++) {
+              const fraccio = k / TRAIL_ESTELLA;
+              const pt = cap.clone().addScaledVector(e.dir, -fraccio * LLARG_CUA);
+              const j = base + k;
+              posEstella[j * 3] = pt.x;
+              posEstella[j * 3 + 1] = pt.y;
+              posEstella[j * 3 + 2] = pt.z;
+              alfaEstella[j] = 1 - fraccio * 0.8;
+              midaEstella[j] = 1 - 0.9 * fraccio;
+            }
+          } else {
+            for (let k = 0; k <= TRAIL_ESTELLA; k++) alfaEstella[base + k] = 0;
+          }
+
+          // Impacte: les partícules salten des del punt d'impacte i cauen.
+          const edat = tC - T_IMPACTE;
+          for (let q = 0; q < PARTICULES_IMPACTE; q++) {
+            const j = i * PARTICULES_IMPACTE + q;
+            if (edat > 0 && edat < DURADA_IMPACTE) {
+              const d = e.dirsImpacte[q];
+              posImpacte[j * 3] = e.impacte.x + d.x * edat;
+              posImpacte[j * 3 + 1] = Math.max(0.02, e.impacte.y + d.y * edat - 0.5 * GRAVETAT * edat * edat);
+              posImpacte[j * 3 + 2] = e.impacte.z + d.z * edat;
+              alfaImpacte[j] = 1 - edat / DURADA_IMPACTE;
+            } else {
+              alfaImpacte[j] = 0;
+            }
+          }
         }
         geoEstella.attributes.position.needsUpdate = true;
         geoEstella.attributes.aAlpha.needsUpdate = true;
-
-        const edatImpacte = tCicle - T_IMPACTE;
-        for (let j = 0; j < PARTICULES_IMPACTE; j++) {
-          if (edatImpacte > 0 && edatImpacte < DURADA_IMPACTE) {
-            const d = dirsImpacte[j];
-            posImpacte[j * 3] = impacteEstella.x + d.x * edatImpacte;
-            posImpacte[j * 3 + 1] = Math.max(0.02, impacteEstella.y + d.y * edatImpacte - 0.5 * GRAVETAT * edatImpacte * edatImpacte);
-            posImpacte[j * 3 + 2] = impacteEstella.z + d.z * edatImpacte;
-            alfaImpacte[j] = 1 - edatImpacte / DURADA_IMPACTE;
-          } else {
-            alfaImpacte[j] = 0;
-          }
-        }
+        geoEstella.attributes.aMida.needsUpdate = true;
         geoImpacte.attributes.position.needsUpdate = true;
         geoImpacte.attributes.aAlpha.needsUpdate = true;
 
