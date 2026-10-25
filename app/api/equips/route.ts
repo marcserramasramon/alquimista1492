@@ -6,6 +6,7 @@ import { getServiceRoleClient } from "@/lib/supabase";
 import { getEquipSession, signEquipToken, EQUIP_COOKIE_NAME, EQUIP_COOKIE_MAX_AGE } from "@/lib/auth";
 import { EQUIP_IDS } from "@/content/public/equips";
 import { ESPERAR_INICI_MASTER } from "@/lib/partida";
+import { equipPerCodi, LLARGADA_CODI_EQUIP } from "@/lib/codiEquip";
 
 /** Quins equips ja tenen algun mòbil (per a la pantalla de les icones). */
 export async function GET(request: NextRequest) {
@@ -23,17 +24,22 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ ambJugadors: ambJugadors.map((e) => e.slug), meu });
 }
 
-const AgafarSchema = z.object({ equip: z.enum(EQUIP_IDS) });
+const EntrarSchema = z.object({ codi: z.string().trim().toUpperCase().length(LLARGADA_CODI_EQUIP) });
 
 /**
- * Aquest mòbil entra en un equip. El primer mòbil l'agafa (i genera el `session_nonce`);
- * els següents s'hi uneixen amb el mateix nonce, així ningú fa fora ningú.
+ * Aquest mòbil entra en un equip amb el codi del QR (o el codi escrit a mà). El primer mòbil
+ * l'agafa (i genera el `session_nonce`); els següents s'hi uneixen amb el mateix nonce, així
+ * ningú fa fora ningú.
  */
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
-  const validacio = AgafarSchema.safeParse(body);
+  const validacio = EntrarSchema.safeParse(body);
   if (!validacio.success) {
-    return NextResponse.json({ error: "Equip invàlid" }, { status: 400 });
+    return NextResponse.json({ error: "Codi incorrecte" }, { status: 400 });
+  }
+  const equipId = equipPerCodi(validacio.data.codi);
+  if (!equipId) {
+    return NextResponse.json({ error: "Codi incorrecte" }, { status: 404 });
   }
 
   if (await getEquipSession(request)) {
@@ -55,7 +61,7 @@ export async function POST(request: NextRequest) {
       session_nonce: crypto.randomUUID(),
       ...(iniciada ? { status: "joc", started_at: iniciada } : {}),
     })
-    .eq("slug", validacio.data.equip)
+    .eq("slug", equipId)
     .is("claimed_at", null)
     .select("id, session_nonce")
     .maybeSingle();
@@ -71,7 +77,7 @@ export async function POST(request: NextRequest) {
     const { data: existent, error: errorLectura } = await db
       .from("v2_teams")
       .select("id, session_nonce")
-      .eq("slug", validacio.data.equip)
+      .eq("slug", equipId)
       .not("claimed_at", "is", null)
       .not("session_nonce", "is", null)
       .maybeSingle();
