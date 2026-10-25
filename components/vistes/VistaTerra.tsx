@@ -39,6 +39,8 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   const [guia, setGuia] = useState<Guia>({ missatge: "📍 Esperant la ubicació…", girar: null });
   const video = useRef<HTMLVideoElement>(null);
   const flux = useRef<MediaStream | null>(null);
+  // Ambient de la Terra (cant gregorià sobre soroll de roques), en bucle al 65 %.
+  const ambient = useRef<HTMLAudioElement | null>(null);
   const posicio = useRef<PosicioEquip>(null);
   // Galeria: posició base (sense soroll) a la qual s'apliquen les fletxes.
   const baseGaleria = useRef<PosicioEquip>(null);
@@ -49,6 +51,14 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   // Els sensors, la càmera i la ubicació es demanen en tocar el botó (iOS i Android ho exigeixen).
   async function començar() {
     setIniciat(true);
+    // L'àudio només es pot iniciar des d'un toc de l'usuari (els navegadors ho exigeixen).
+    if (!ambient.current) {
+      const so = new Audio("/audio/ar/terra-ambient.mp3");
+      so.loop = true;
+      so.volume = 0.65;
+      ambient.current = so;
+      so.play().catch(() => {});
+    }
     await demanar();
     try {
       flux.current = await navigator.mediaDevices.getUserMedia({
@@ -170,7 +180,10 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   }, [iniciat, cami, mirada]);
 
   useEffect(() => {
-    return () => flux.current?.getTracks().forEach((p) => p.stop());
+    return () => {
+      flux.current?.getTracks().forEach((p) => p.stop());
+      ambient.current?.pause();
+    };
   }, []);
 
   if (!cami) return null;
