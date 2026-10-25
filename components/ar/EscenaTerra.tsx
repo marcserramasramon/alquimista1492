@@ -576,14 +576,21 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const ctxText = lienzo.getContext("2d");
         if (ctxText) {
           ctxText.clearRect(0, 0, lienzo.width, lienzo.height);
-          ctxText.font = "bold 84px serif";
+          // Font compacta, i més petita si cal: la frase ha de cabre en la meitat de la banda, sense encavalcar-se.
+          const frase = "Aquí guarda l'alquimista la matèria";
+          let mida = 84;
+          ctxText.font = `bold ${mida}px "Arial Narrow", sans-serif`;
+          while (ctxText.measureText(frase).width > lienzo.width * 0.42 && mida > 30) {
+            mida -= 2;
+            ctxText.font = `bold ${mida}px "Arial Narrow", sans-serif`;
+          }
           ctxText.textAlign = "center";
           ctxText.textBaseline = "middle";
           ctxText.fillStyle = "rgb(150, 255, 110)";
           ctxText.shadowColor = "rgb(120, 255, 90)";
           ctxText.shadowBlur = 18;
-          ctxText.fillText("Aquí guarda l'alquimista la matèria", lienzo.width * 0.25, lienzo.height / 2);
-          ctxText.fillText("Aquí guarda l'alquimista la matèria", lienzo.width * 0.75, lienzo.height / 2);
+          ctxText.fillText(frase, lienzo.width * 0.25, lienzo.height / 2);
+          ctxText.fillText(frase, lienzo.width * 0.75, lienzo.height / 2);
         }
         const texturaText = new THREE.CanvasTexture(lienzo);
         const matText = new THREE.MeshBasicMaterial({ map: texturaText, transparent: true, depthWrite: false, side: THREE.DoubleSide });
