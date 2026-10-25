@@ -577,19 +577,22 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         await document.fonts.load(`84px ${FONT_MARQUESINA.style.fontFamily}`).catch(() => {});
         // Dues frases que s'alternen: «Aquí guarda l'alquimista la matèria» (una còpia) i «COMPTE-LES TRES COPS»
         // (tres còpies al voltant). Cada una dona 2 voltes, i es desvanesc per canviar-la per l'altra.
-        const dibuixaFrase = (frase: string, copies: number) => {
+        // Les dues frases tenen la mateixa mida de lletra: la de la primera (que cap sencera a la banda).
+        const dibuixaFrase = (frase: string, copies: number, midaFixa?: number) => {
           const lienzo = document.createElement("canvas");
-          lienzo.width = 2048;
+          lienzo.width = 4096;
           lienzo.height = 260;
           const ctxText = lienzo.getContext("2d");
+          let mida = midaFixa ?? 168;
           if (ctxText) {
             ctxText.clearRect(0, 0, lienzo.width, lienzo.height);
-            let mida = 168;
             ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
             const amplada = lienzo.width / copies;
-            while (ctxText.measureText(frase).width > amplada * 0.92 && mida > 30) {
-              mida -= 2;
-              ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
+            if (midaFixa === undefined) {
+              while (ctxText.measureText(frase).width > amplada * 0.92 && mida > 30) {
+                mida -= 2;
+                ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
+              }
             }
             ctxText.textAlign = "center";
             ctxText.textBaseline = "middle";
@@ -605,10 +608,12 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
               ctxText.restore();
             }
           }
-          return new THREE.CanvasTexture(lienzo);
+          return { textura: new THREE.CanvasTexture(lienzo), mida };
         };
-        const texturaA = dibuixaFrase("Aquí guarda l'alquimista la matèria", 1);
-        const texturaB = dibuixaFrase("COMPTE-LES TRES COPS", 3);
+        const frase1 = dibuixaFrase("Aquí guarda l'alquimista la matèria", 1);
+        const frase2 = dibuixaFrase("COMPTE-LES TRES COPS", 3, frase1.mida);
+        const texturaA = frase1.textura;
+        const texturaB = frase2.textura;
         const matA = new THREE.MeshBasicMaterial({ map: texturaA, transparent: true, depthWrite: false, side: THREE.DoubleSide });
         const matB = new THREE.MeshBasicMaterial({ map: texturaB, transparent: true, depthWrite: false, side: THREE.DoubleSide });
         const matText = matA;
