@@ -575,36 +575,45 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const AMPLE_BANDA_M = 0.7;
         // La font s'ha de carregar abans de dibuixar-la al canvas.
         await document.fonts.load(`84px ${FONT_MARQUESINA.style.fontFamily}`).catch(() => {});
-        const lienzo = document.createElement("canvas");
-        lienzo.width = 2048;
-        lienzo.height = 260;
-        const ctxText = lienzo.getContext("2d");
-        if (ctxText) {
-          ctxText.clearRect(0, 0, lienzo.width, lienzo.height);
-          // Una sola còpia de la frase, la més gran possible perquè càpiga en tota la banda.
-          const frase = "Aquí guarda l'alquimista la matèria";
-          let mida = 168;
-          ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
-          while (ctxText.measureText(frase).width > lienzo.width * 0.92 && mida > 30) {
-            mida -= 2;
+        // Dues frases que s'alternen: «Aquí guarda l'alquimista la matèria» (una còpia) i «COMPTE-LES TRES COPS»
+        // (tres còpies al voltant). Cada una dona 2 voltes, i es desvanesc per canviar-la per l'altra.
+        const dibuixaFrase = (frase: string, copies: number) => {
+          const lienzo = document.createElement("canvas");
+          lienzo.width = 2048;
+          lienzo.height = 260;
+          const ctxText = lienzo.getContext("2d");
+          if (ctxText) {
+            ctxText.clearRect(0, 0, lienzo.width, lienzo.height);
+            let mida = 168;
             ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
+            const amplada = lienzo.width / copies;
+            while (ctxText.measureText(frase).width > amplada * 0.92 && mida > 30) {
+              mida -= 2;
+              ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
+            }
+            ctxText.textAlign = "center";
+            ctxText.textBaseline = "middle";
+            ctxText.fillStyle = "rgb(150, 255, 110)";
+            ctxText.shadowColor = "rgb(120, 255, 90)";
+            ctxText.shadowBlur = 18;
+            // Estirat només en vertical, un 33 % més alt.
+            for (let c = 0; c < copies; c++) {
+              ctxText.save();
+              ctxText.translate(amplada * (c + 0.5), lienzo.height / 2);
+              ctxText.scale(1, 1.33);
+              ctxText.fillText(frase, 0, 0);
+              ctxText.restore();
+            }
           }
-          ctxText.textAlign = "center";
-          ctxText.textBaseline = "middle";
-          ctxText.fillStyle = "rgb(150, 255, 110)";
-          ctxText.shadowColor = "rgb(120, 255, 90)";
-          ctxText.shadowBlur = 18;
-          // Estirat només en vertical, un 33 % més alt.
-          ctxText.save();
-          ctxText.translate(lienzo.width / 2, lienzo.height / 2);
-          ctxText.scale(1, 1.33);
-          ctxText.fillText(frase, 0, 0);
-          ctxText.restore();
-        }
-        const texturaText = new THREE.CanvasTexture(lienzo);
-        const matText = new THREE.MeshBasicMaterial({ map: texturaText, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+          return new THREE.CanvasTexture(lienzo);
+        };
+        const texturaA = dibuixaFrase("Aquí guarda l'alquimista la matèria", 1);
+        const texturaB = dibuixaFrase("COMPTE-LES TRES COPS", 3);
+        const matA = new THREE.MeshBasicMaterial({ map: texturaA, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+        const matB = new THREE.MeshBasicMaterial({ map: texturaB, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+        const matText = matA;
         const geomBanda = new THREE.CylinderGeometry(RADI_BANDA, RADI_BANDA, AMPLE_BANDA_M, 96, 1, true);
-        const banda = new THREE.Mesh(geomBanda, matText);
+        const banda = new THREE.Mesh(geomBanda, matA);
         banda.position.set(0, ALCADA_BANDA, 0);
         const grupAnfores = new THREE.Group();
         grupAnfores.position.set(centre.x, 0, centre.z);
@@ -749,6 +758,15 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           uniforms.uTime.value = (ara - inici) / 1000;
         // Les àmfores giren una volta cada 8 segons.
         grupAnfores.rotation.y = -(((ara - inici) / 1000) * Math.PI * 2) / 8;
+        // Cicle de 32 s: 16 s la frase 1 (2 voltes) i 16 s la frase 2 (2 voltes), amb un desvanit d'1 s al canvi.
+        const cicleText = ((ara - inici) / 1000) % 32;
+        const esFrase1 = cicleText < 16;
+        const tDinsFrase = esFrase1 ? cicleText : cicleText - 16;
+        const opacitat = Math.min(1, tDinsFrase / 1, (16 - tDinsFrase) / 1);
+        const actual = esFrase1 ? matA : matB;
+        banda.material = actual;
+        matA.opacity = esFrase1 ? opacitat : 0;
+        matB.opacity = esFrase1 ? 0 : opacitat;
 
         // Estelles: cada una té el seu temps. Quan comença un cicle nou, tria un punt d'impacte a l'atzar sobre el terra i una direcció de caiguda a 25° de la vertical. La cua es dibuixa fins a 4 m darrere la punta.
         for (let i = 0; i < NUM_ESTELLES; i++) {
@@ -858,8 +876,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             if (objecte instanceof THREE.Mesh) objecte.geometry.dispose();
           });
           geoCel.dispose();
-          texturaText.dispose();
-          matText.dispose();
+          texturaA.dispose();
+          texturaB.dispose();
+          matA.dispose();
+          matB.dispose();
           geomBanda.dispose();
           geoEstella.dispose();
           matEstella.dispose();
