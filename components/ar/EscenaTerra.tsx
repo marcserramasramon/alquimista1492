@@ -244,6 +244,22 @@ const SKY_VERTEX = `
   }
 `;
 
+/** Àmfores: punts de llum sobre el perfil de cada àmfora, sense contorn. */
+const AMFORA_VERTEX = `
+  uniform float uPR;
+  uniform vec2 uCam;
+  varying vec3 vCol;
+  varying float vA;
+  void main() {
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+    vA = 1.0 - smoothstep(120.0, 260.0, length(wp.xz - uCam));
+    vCol = vec3(0.6, 1.0, 0.5);
+    gl_PointSize = clamp(260.0 / (-mv.z), 1.5, 9.0) * uPR;
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
 const FRAGMENT = `
   varying vec3 vCol;
   varying float vA;
@@ -531,6 +547,56 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         escena.add(new THREE.Points(geo, material));
 
+        // Sis àmfores en cercle de 4 m al voltant del punt final, a 0,5 m del terra, d'1 m d'alçada i 0,5 m de
+        // diàmetre a dalt. Són punts de llum sobre el perfil (sense sòlid ni contorn). Giren una volta cada 8 s.
+        const NUM_ANFORES = 6;
+        const RADI_ANFORES = 4;
+        const ALCADA_ANFORES = 0.5;
+        const PUNTS_ANFORA = 260;
+        const perfilAnfora: [number, number][] = [
+          [0, 0.12], [0.15, 0.2], [0.4, 0.3], [0.65, 0.22], [0.85, 0.12], [0.95, 0.18], [1, 0.25],
+        ];
+        const radiAnfora = (h: number): number => {
+          for (let i = 1; i < perfilAnfora.length; i++) {
+            const [h1, r1] = perfilAnfora[i - 1];
+            const [h2, r2] = perfilAnfora[i];
+            if (h <= h2) return r1 + ((r2 - r1) * (h - h1)) / (h2 - h1);
+          }
+          return perfilAnfora[perfilAnfora.length - 1][1];
+        };
+        const posAnfores = new Float32Array(NUM_ANFORES * PUNTS_ANFORA * 3);
+        let pa = 0;
+        for (let a = 0; a < NUM_ANFORES; a++) {
+          const angle = (a / NUM_ANFORES) * Math.PI * 2;
+          const cx = Math.cos(angle) * RADI_ANFORES;
+          const cz = Math.sin(angle) * RADI_ANFORES;
+          for (let q = 0; q < PUNTS_ANFORA; q++) {
+            const h = Math.random();
+            const theta = Math.random() * Math.PI * 2;
+            const r = radiAnfora(h);
+            posAnfores[pa * 3] = cx + Math.cos(theta) * r;
+            posAnfores[pa * 3 + 1] = ALCADA_ANFORES + h;
+            posAnfores[pa * 3 + 2] = cz + Math.sin(theta) * r;
+            pa++;
+          }
+        }
+        const geoAnfores = new THREE.BufferGeometry();
+        geoAnfores.setAttribute("position", new THREE.BufferAttribute(posAnfores, 3));
+        const matAnfores = new THREE.ShaderMaterial({
+          uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam },
+          vertexShader: AMFORA_VERTEX,
+          fragmentShader: FRAGMENT,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        const grupAnfores = new THREE.Group();
+        grupAnfores.position.set(centre.x, 0, centre.z);
+        const puntsAnfores = new THREE.Points(geoAnfores, matAnfores);
+        puntsAnfores.frustumCulled = false;
+        grupAnfores.add(puntsAnfores);
+        escena.add(grupAnfores);
+
 
         // Malla del cel: geometria pròpia (altra graella i altres vèrtexs), en blau i sense forat.
         const totalCel = NX_CEL * NZ_CEL + NVERTEXS_FORAT;
@@ -601,6 +667,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           const u = posicio.current;
           const sobreCami = u ? aMon(u.lat, u.lng, fita) : { x: 0, z: 0 };
           uniforms.uTime.value = (ara - inici) / 1000;
+        // Les àmfores giren una volta cada 8 segons.
+        grupAnfores.rotation.y = -(((ara - inici) / 1000) * Math.PI * 2) / 8;
 
 
           cam.position.set(sobreCami.x, ALCADA_OLLS, sobreCami.z);
@@ -637,6 +705,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             if (objecte instanceof THREE.Mesh) objecte.geometry.dispose();
           });
           geoCel.dispose();
+          geoAnfores.dispose();
+          matAnfores.dispose();
           materialCel.dispose();
           renderer.dispose();
         };
