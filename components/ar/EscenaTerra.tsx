@@ -244,6 +244,24 @@ const SKY_VERTEX = `
   }
 `;
 
+/** Estella fugaç i impacte: punts amb color i alfa per vèrtex. */
+const CAIGUDA_VERTEX = `
+  attribute float aAlpha;
+  uniform float uPR;
+  uniform vec2 uCam;
+  uniform vec3 uCol;
+  varying vec3 vCol;
+  varying float vA;
+  void main() {
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+    vA = aAlpha * (1.0 - smoothstep(120.0, 260.0, length(wp.xz - uCam)));
+    vCol = uCol;
+    gl_PointSize = clamp(260.0 / (-mv.z), 2.0, 10.0) * uPR;
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+
 /** Àmfores: punts de llum sobre el perfil de cada àmfora, sense contorn. */
 const AMFORA_VERTEX = `
   uniform float uPR;
@@ -597,6 +615,58 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         grupAnfores.add(puntsAnfores);
         escena.add(grupAnfores);
 
+        // Estella fugaç: cau del cel a 25° de la vertical i impacta al punt final. A l'impacte, les partícules
+        // del terra salten cap a fora i cauen. Cicle de 12 s.
+        const TRAIL_ESTELLA = 60;
+        const PARTICULES_IMPACTE = 120;
+        const CICLE_ESTELLA = 12;
+        const T_IMPACTE = 1.2;
+        const DURADA_IMPACTE = 1.5;
+        const GRAVETAT = 6;
+        const impacteEstella = new THREE.Vector3(centre.x, 0.02, centre.z);
+        const angleEstella = (25 * Math.PI) / 180;
+        const inicEstella = new THREE.Vector3(centre.x - Math.sin(angleEstella) * 60, Math.cos(angleEstella) * 60, centre.z);
+        const dirEstella = impacteEstella.clone().sub(inicEstella).normalize();
+        const posEstella = new Float32Array((TRAIL_ESTELLA + 1) * 3);
+        const alfaEstella = new Float32Array(TRAIL_ESTELLA + 1);
+        const geoEstella = new THREE.BufferGeometry();
+        geoEstella.setAttribute("position", new THREE.BufferAttribute(posEstella, 3));
+        geoEstella.setAttribute("aAlpha", new THREE.BufferAttribute(alfaEstella, 1));
+        const matEstella = new THREE.ShaderMaterial({
+          uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(1.0, 0.97, 0.85) } },
+          vertexShader: CAIGUDA_VERTEX,
+          fragmentShader: FRAGMENT,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        const puntsEstella = new THREE.Points(geoEstella, matEstella);
+        puntsEstella.frustumCulled = false;
+        escena.add(puntsEstella);
+        // Partícules de l'impacte: direcció fixa per partícula, velocitat i elevació a l'atzar.
+        const dirsImpacte = Array.from({ length: PARTICULES_IMPACTE }, () => {
+          const theta = Math.random() * Math.PI * 2;
+          const elev = 0.2 + Math.random() * 1.0;
+          const v = 1.5 + Math.random() * 3;
+          return { x: Math.cos(theta) * Math.cos(elev) * v, y: Math.sin(elev) * v, z: Math.sin(theta) * Math.cos(elev) * v };
+        });
+        const posImpacte = new Float32Array(PARTICULES_IMPACTE * 3);
+        const alfaImpacte = new Float32Array(PARTICULES_IMPACTE);
+        const geoImpacte = new THREE.BufferGeometry();
+        geoImpacte.setAttribute("position", new THREE.BufferAttribute(posImpacte, 3));
+        geoImpacte.setAttribute("aAlpha", new THREE.BufferAttribute(alfaImpacte, 1));
+        const matImpacte = new THREE.ShaderMaterial({
+          uniforms: { uPR: uniforms.uPR, uCam: uniforms.uCam, uCol: { value: new THREE.Vector3(0.6, 1.0, 0.5) } },
+          vertexShader: CAIGUDA_VERTEX,
+          fragmentShader: FRAGMENT,
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        });
+        const puntsImpacte = new THREE.Points(geoImpacte, matImpacte);
+        puntsImpacte.frustumCulled = false;
+        escena.add(puntsImpacte);
+
 
         // Malla del cel: geometria pròpia (altra graella i altres vèrtexs), en blau i sense forat.
         const totalCel = NX_CEL * NZ_CEL + NVERTEXS_FORAT;
@@ -670,6 +740,39 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // Les àmfores giren una volta cada 8 segons.
         grupAnfores.rotation.y = -(((ara - inici) / 1000) * Math.PI * 2) / 8;
 
+        // Estella: cau (T_IMPACTE s) i després les partícules de l'impacte salten i cauen.
+        const tCicle = ((ara - inici) / 1000) % CICLE_ESTELLA;
+        if (tCicle < T_IMPACTE) {
+          const f = tCicle / T_IMPACTE;
+          const cap = inicEstella.clone().lerp(impacteEstella, f);
+          for (let k = 0; k <= TRAIL_ESTELLA; k++) {
+            const pt = cap.clone().addScaledVector(dirEstella, -k * 0.9);
+            posEstella[k * 3] = pt.x;
+            posEstella[k * 3 + 1] = pt.y;
+            posEstella[k * 3 + 2] = pt.z;
+            alfaEstella[k] = (1 - k / (TRAIL_ESTELLA + 1)) * (k === 0 ? 1 : 0.8);
+          }
+        } else {
+          alfaEstella.fill(0);
+        }
+        geoEstella.attributes.position.needsUpdate = true;
+        geoEstella.attributes.aAlpha.needsUpdate = true;
+
+        const edatImpacte = tCicle - T_IMPACTE;
+        for (let j = 0; j < PARTICULES_IMPACTE; j++) {
+          if (edatImpacte > 0 && edatImpacte < DURADA_IMPACTE) {
+            const d = dirsImpacte[j];
+            posImpacte[j * 3] = impacteEstella.x + d.x * edatImpacte;
+            posImpacte[j * 3 + 1] = Math.max(0.02, impacteEstella.y + d.y * edatImpacte - 0.5 * GRAVETAT * edatImpacte * edatImpacte);
+            posImpacte[j * 3 + 2] = impacteEstella.z + d.z * edatImpacte;
+            alfaImpacte[j] = 1 - edatImpacte / DURADA_IMPACTE;
+          } else {
+            alfaImpacte[j] = 0;
+          }
+        }
+        geoImpacte.attributes.position.needsUpdate = true;
+        geoImpacte.attributes.aAlpha.needsUpdate = true;
+
 
           cam.position.set(sobreCami.x, ALCADA_OLLS, sobreCami.z);
           cam.rotation.set(m.elevacio * RAD, -m.rumb * RAD, 0);
@@ -707,6 +810,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           geoCel.dispose();
           geoAnfores.dispose();
           matAnfores.dispose();
+          geoEstella.dispose();
+          matEstella.dispose();
+          geoImpacte.dispose();
+          matImpacte.dispose();
           materialCel.dispose();
           renderer.dispose();
         };
