@@ -782,9 +782,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             const ox = sobreCami.x + Math.sin(th) * fwd + Math.cos(th) * lat;
             const oz = sobreCami.z - Math.cos(th) * fwd + Math.sin(th) * lat;
             e.impacte.set(ox, 0.02, oz);
-            // Cada estella té la seva direcció i el seu angle de caiguda, a l'atzar (entre 12° i 40° de la vertical).
+            // Cada estella té la seva direcció i el seu angle de caiguda, a l'atzar (entre 8° i 12° de la vertical, al voltant de 10°).
             const az = Math.random() * Math.PI * 2;
-            const angle = ((12 + Math.random() * 28) * Math.PI) / 180;
+            const angle = ((8 + Math.random() * 4) * Math.PI) / 180;
             const distancia = 60;
             e.inici.set(
               ox - Math.cos(az) * Math.sin(angle) * distancia,
