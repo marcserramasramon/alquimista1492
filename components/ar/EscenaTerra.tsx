@@ -450,7 +450,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const zOlls = (caixa.min.z + caixa.max.z) / 2 + 0.108 * alcadaRaw;
         const yOlls = caixa.max.y - 0.091 * alcadaRaw;
         const ulls = [
-          new THREE.Vector3(xCentre - 0.014 * alcadaRaw, yOlls, zOlls + 0.004 * alcadaRaw),
+          new THREE.Vector3(xCentre - 0.018 * alcadaRaw, yOlls, zOlls),
           new THREE.Vector3(xCentre + 0.034 * alcadaRaw, yOlls, zOlls),
         ];
         const capOs = model.getObjectByName("head");
