@@ -4,6 +4,7 @@ import type { AnimationAction, AnimationMixer } from "three";
 import { useEffect, useRef, type RefObject } from "react";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
 import { EstatGolem, SeguimentGolem } from "@/components/ar/terra/seguiment";
+import { dibuixaVora } from "@/components/ar/voraGuia";
 import type { PuntGps } from "@/content/public/extres";
 
 
@@ -289,6 +290,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
   const manual = useRef<Mirada>({ rumb, elevacio: 0 });
   const arrossegarRef = useRef(arrossegar);
   const punter = useRef<{ x: number; y: number } | null>(null);
+  // Posició del golem en metres (món de l'escena), per il·luminar la vora cap a on és.
+  const golemRef = useRef<{ x: number; z: number } | null>(null);
 
   useEffect(() => {
     arrossegarRef.current = arrossegar;
@@ -336,6 +339,14 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         }
       }
 
+      // Vores il·luminades cap a on és el golem, com als altres AR.
+      const gol = golemRef.current;
+      const uu = posicio.current;
+      if (gol && uu) {
+        const o = aMon(uu.lat, uu.lng, fita);
+        const rumbGolem = (Math.atan2(gol.x - o.x, -(gol.z - o.z)) / RAD + 360) % 360;
+        dibuixaVora(ctx, w, h, diferenciaRumb(rumbGolem, m.rumb), 0.8, 900, ara, OR);
+      }
       drawBrujula(ctx, m, e, r, ara / 1000, w, h, guspires);
 
       for (let i = guspires.length - 1; i >= 0; i--) {
@@ -519,6 +530,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         escena.add(new THREE.Points(geo, material));
 
+
         // Malla del cel: geometria pròpia (altra graella i altres vèrtexs), en blau i sense forat.
         const totalCel = NX_CEL * NZ_CEL + NVERTEXS_FORAT;
         const posCel = new Float32Array(totalCel * 3);
@@ -596,6 +608,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
 
           // El gegant segueix el jugador (mostreig cada 0,5 s) i camina cap a la fita.
           const pas = seguiment.update(ara, sobreCami.x, sobreCami.z);
+          golemRef.current = { x: pas.x, z: pas.z };
           golem.position.set(pas.x, 0, pas.z);
           // El gir és continu: el golem gira cap a la direcció que toca a 2,5 rad/s, sense saltar.
           const dtGolem = Math.min(0.1, (ara - ultimFrameGolem) / 1000);
