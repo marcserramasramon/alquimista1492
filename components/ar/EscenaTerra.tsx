@@ -594,7 +594,12 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           ctxText.fillStyle = "rgb(150, 255, 110)";
           ctxText.shadowColor = "rgb(120, 255, 90)";
           ctxText.shadowBlur = 18;
-          ctxText.fillText(frase, lienzo.width / 2, lienzo.height / 2);
+          // Estirat només en vertical, un 33 % més alt.
+          ctxText.save();
+          ctxText.translate(lienzo.width / 2, lienzo.height / 2);
+          ctxText.scale(1, 1.33);
+          ctxText.fillText(frase, 0, 0);
+          ctxText.restore();
         }
         const texturaText = new THREE.CanvasTexture(lienzo);
         const matText = new THREE.MeshBasicMaterial({ map: texturaText, transparent: true, depthWrite: false, side: THREE.DoubleSide });
