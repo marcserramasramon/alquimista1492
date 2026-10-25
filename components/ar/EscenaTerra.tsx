@@ -578,7 +578,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // Dues frases que s'alternen: «Aquí guarda l'alquimista la matèria» (una còpia) i «COMPTE-LES TRES COPS»
         // (tres còpies al voltant). Cada una dona 2 voltes, i es desvanesc per canviar-la per l'altra.
         // Les dues frases juntes, una sobre l'altra: a dalt «Aquí guarda l'alquimista la matèria» (1 còpia) i a
-        // baix «COMPTE-LES TRES COPS» (3 còpies), amb la mateixa mida de lletra. Giren totes dues a la vegada.
+        // baix «COMPTE-LES TRES COPS» (2 còpies), amb la mateixa mida de lletra. Giren totes dues a la vegada.
         const lienzo = document.createElement("canvas");
         lienzo.width = 4096;
         lienzo.height = 520;
@@ -599,7 +599,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           ctxText.fillStyle = "rgb(150, 255, 110)";
           ctxText.shadowColor = "rgb(120, 255, 90)";
           ctxText.shadowBlur = 18;
-          // Fila de dalt: 1 còpia. Fila de baix: 3 còpies. Estirades només en vertical, un 33 % més altes.
+          // Fila de dalt: 1 còpia. Fila de baix: 2 còpies. Estirades només en vertical, un 33 % més altes.
           const filaDalt = lienzo.height * 0.25;
           const filaBaix = lienzo.height * 0.75;
           ctxText.save();
@@ -607,9 +607,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           ctxText.scale(1, 1.33);
           ctxText.fillText(frase1, 0, 0);
           ctxText.restore();
-          for (let c = 0; c < 3; c++) {
+          for (let c = 0; c < 2; c++) {
             ctxText.save();
-            ctxText.translate((lienzo.width / 3) * (c + 0.5), filaBaix);
+            ctxText.translate((lienzo.width / 2) * (c + 0.5), filaBaix);
             ctxText.scale(1, 1.33);
             ctxText.fillText(frase2, 0, 0);
             ctxText.restore();
