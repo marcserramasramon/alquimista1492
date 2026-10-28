@@ -49,9 +49,10 @@ const MALLA_Z1 = 180;
 const OR = "255, 206, 92";
 /** Alçades (m) dels tres anells de runes sobre el punt final. */
 const ALCADES_ANELLS = [2.5, 5.5, 8.5];
-/** Color dels anells runes: lluny (gris fosc) i quan és el número correcte (blanc, que deixa veure el verd). */
-const COLOR_ANELL_LLUNY = { r: 0.18, g: 0.18, b: 0.18 };
-const COLOR_ANELL_APROP = { r: 1, g: 1, b: 1 };
+/** Color dels anells runes: vermell lluny del número, blau quan s'hi acosta, verd quan tots són resolts. */
+const COLOR_ANELL_LLUNY = { r: 1, g: 0.15, b: 0.15 };
+const COLOR_ANELL_APROP = { r: 0.2, g: 0.5, b: 1 };
+const COLOR_ANELL_RESOLT = { r: 0.3, g: 1, b: 0.3 };
 
 /** Estat del camí respecte la posició de l'equip. */
 export interface EstatTerra {
@@ -609,7 +610,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           }
           const svgRunes =
             `<svg xmlns="http://www.w3.org/2000/svg" width="4096" height="260" viewBox="0 0 4096 260">` +
-            `<g fill="rgb(150,255,110)">${paths.join("")}</g></svg>`;
+            `<g fill="rgb(255,255,255)">${paths.join("")}</g></svg>`;
           const imatgeRunes = new Image();
           imatgeRunes.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgRunes);
           await imatgeRunes.decode().catch(() => {});
@@ -655,6 +656,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         simbolTerra.position.set(centre.x, 10, centre.z);
         escena.add(simbolTerra);
         let opacitatSimbol = 0;
+        // 0 = anells en joc; 1 = tots resolts: es tornen verds i desapareixen.
+        let progresResolt = 0;
 
         // Estelles fugaces: 30, cada una amb el seu temps, que cauen a l'atzar cap a un punt a 50 m davant de
         // l'observador (dispersat). Cua de fins a 12 m, densa, en gradient fins a invisible, i que s'estreny fins a 1/10.
@@ -896,17 +899,22 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
               Math.cos(anglesAnells.current[k] - OBJECTIU_ANELLS[k] * PAS_ANELL),
             );
           });
-          // Color: gris blavós lluny del número correcte, verd brillant quan hi és.
+          const resolt = diferencies.every((diferencia) => Math.abs(diferencia) < PAS_ANELL / 3);
+          progresResolt += ((resolt ? 1 : 0) - progresResolt) * 0.05;
+          // Color: vermell lluny del número correcte, blau quan s'hi acosta, verd quan tots són resolts.
           diferencies.forEach((diferencia, k) => {
             const proximitat = 1 - Math.min(1, Math.abs(diferencia) / (PAS_ANELL * 2));
-            const { r, g, b } = COLOR_ANELL_LLUNY;
+            const r = COLOR_ANELL_LLUNY.r + (COLOR_ANELL_APROP.r - COLOR_ANELL_LLUNY.r) * proximitat;
+            const g = COLOR_ANELL_LLUNY.g + (COLOR_ANELL_APROP.g - COLOR_ANELL_LLUNY.g) * proximitat;
+            const b = COLOR_ANELL_LLUNY.b + (COLOR_ANELL_APROP.b - COLOR_ANELL_LLUNY.b) * proximitat;
             matsAnells[k].color.setRGB(
-              r + (COLOR_ANELL_APROP.r - r) * proximitat,
-              g + (COLOR_ANELL_APROP.g - g) * proximitat,
-              b + (COLOR_ANELL_APROP.b - b) * proximitat,
+              r + (COLOR_ANELL_RESOLT.r - r) * progresResolt,
+              g + (COLOR_ANELL_RESOLT.g - g) * progresResolt,
+              b + (COLOR_ANELL_RESOLT.b - b) * progresResolt,
             );
+            matsAnells[k].opacity = 1 - progresResolt;
+            anells[k].visible = progresResolt < 0.98;
           });
-          const resolt = diferencies.every((diferencia) => Math.abs(diferencia) < PAS_ANELL / 3);
           opacitatSimbol += ((resolt ? 1 : 0) - opacitatSimbol) * 0.05;
           matSimbol.opacity = opacitatSimbol;
           renderer.render(escena, cam);
