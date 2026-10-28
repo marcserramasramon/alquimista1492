@@ -29,8 +29,8 @@ export const SOLUCIONS: Record<string, Solucio> = {
   "planes-bones": {
     respostesAcceptades: ["\u{1F703}"], // 🜃 EARTH
     pistes: [
-      "Busca on guarda els elixirs l'alquimista.",
-      "Compta les àmfores i escriu aquest nombre tres cops.", // PENDENT: la mecànica de les àmfores ha canviat
+      "Busca la paraula.",
+      "Amic, busca",
       "El símbol és 🜃.",
     ],
   },
