@@ -12,26 +12,26 @@ export interface Solucio {
 }
 
 export const SOLUCIONS: Record<string, Solucio> = {
-  // Cada fita dona un nombre de tres xifres: Aigua 127 · Foc 233 · Terra 666 · Aire 431 · Ànima 773.
+  // Cada fita dona un símbol alquímic (triat al teclat de la resposta): Aigua 🜄 · Foc 🜂 · Terra 🜃 · Aire 🜁 · Ànima 🜔 (SALT).
 
   // AIGUA — Font del Lleó. Cera d'espelma + aigua tintada revela el número.
   "font-ferro": {
-    respostesAcceptades: ["127"],
+    respostesAcceptades: ["\u{1F704}"], // 🜄 WATER
     pistes: [
       "El que brolla revela el secret.",
-      "Mulla el paper amb aigua per desvelar el número.",
-      "El número és 127.",
+      "Mulla el paper amb aigua per desvelar el símbol.",
+      "El símbol és 🜄.",
     ],
   },
 
   // TERRA — Planes Bones. Hi ha 6 àmfores al lloc; la xifra 6 repetida
   // tres cops dona 666 (el nombre d'àmfores, tres cops).
   "planes-bones": {
-    respostesAcceptades: ["666"],
+    respostesAcceptades: ["\u{1F703}"], // 🜃 EARTH
     pistes: [
       "Busca on guarda els elixirs l'alquimista.",
-      "Compta les àmfores i escriu aquest nombre tres cops.",
-      "El número és el 666.",
+      "Compta les àmfores i escriu aquest nombre tres cops.", // PENDENT: la mecànica de les àmfores ha canviat
+      "El símbol és 🜃.",
     ],
   },
 
@@ -39,31 +39,31 @@ export const SOLUCIONS: Record<string, Solucio> = {
   // el "paper de foc" (cel·lofana vermella) els dissol i hi destaca el
   // número blau: la resposta.
   foc: {
-    respostesAcceptades: ["233"],
+    respostesAcceptades: ["\u{1F702}"], // 🜂 FIRE
     pistes: [
       "El vidre de foc desvela el secret.",
       "Posa el paper vermell davant.",
-      "El número és el 233.",
+      "El símbol és 🜂.",
     ],
   },
 
   // AIRE — Creu del Pujolar. El número apareix bafant sobre el vidre ensabonat.
   aire: {
-    respostesAcceptades: ["431"],
+    respostesAcceptades: ["\u{1F701}"], // 🜁 AIR
     pistes: [
       "El secret es desvelarà amb l'aire del teu alè.",
       "Bufa l'alè calent sobre el vidre.",
-      "El número és 431.",
+      "El símbol és 🜁.",
     ],
   },
 
   // ÀNIMA — Dunes d'asfalt. Tinta UV al punt més alt de la pista.
   anima: {
-    respostesAcceptades: ["773"],
+    respostesAcceptades: ["\u{1F714}"], // 🜔 SALT (símbol de l'Ànima)
     pistes: [
       "El que busques és sota els teus peus.",
       "Il·lumina el terra amb la llanterna.",
-      "El número és 773.",
+      "El símbol és 🜔.",
     ],
   },
 };
