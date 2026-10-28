@@ -54,6 +54,11 @@ const PARAULA_SOLUCIO = "Amic";
 /** Paraules del novul: AMIC més les de distracció (lèxic de la terra i l'alquímia). */
 const PARAULES_NOVUL = [
   PARAULA_SOLUCIO,
+  "Or",
+  "Plata",
+  "Coure",
+  "Ferro",
+  "Plom",
   "Gnom",
   "Humus",
   "Arrel",
