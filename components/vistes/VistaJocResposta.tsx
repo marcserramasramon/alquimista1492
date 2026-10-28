@@ -24,6 +24,26 @@ export interface VistaJocRespostaProps {
 
 const INDEX_RESPOSTA = NOMS_PISTES.length - 1;
 
+/** Símbols que els equips poden triar com a resposta (matriu de botons). */
+const SIMBOLS_RESPOSTA = [
+  "\u{1F701}", // AIR
+  "\u{1F702}", // FIRE
+  "\u{1F703}", // EARTH
+  "\u{1F704}", // WATER
+  "\u{1F70A}", // VINEGAR
+  "\u{1F714}", // ÀNIMA (SALT al Unicode)
+  "\u{1F715}", // NITRE
+  "\u{1F718}", // ROCK SALT
+  "\u{1F71A}", // GOLD
+  "\u{1F71B}", // SILVER
+  "\u{1F736}", // ALKALI
+  "\u{1F73A}", // ARSENIC
+  "\u{1F739}", // SAL-AMMONIAC
+  "\u{1F70D}", // SULFUR
+  "\u{1F729}", // TIN ORE
+  "\u{1F72D}", // SALT OF ANTIMONY
+] as const;
+
 /** Joc d'estació de resposta escrita (presentacional). */
 export function VistaJocResposta({
   resposta,
@@ -73,24 +93,33 @@ export function VistaJocResposta({
         }}
         className="flex flex-col gap-4"
       >
-        <label htmlFor="resposta" className="etiqueta text-base">
+        <p className="etiqueta text-base">
           la vostra resposta
-        </label>
-        <div className={incorrecte ? "animate-tremolar" : ""}>
-          <input
-            id="resposta"
-            type="text"
-            value={resposta}
-            onChange={(e) => onRespostaChange(e.target.value)}
-            placeholder="Escriviu-la aquí..."
-            autoComplete="off"
-            autoCapitalize="characters"
-            autoCorrect="off"
-            spellCheck={false}
-            className={`camp text-center uppercase tracking-wider ${incorrecte ? "border-blood" : ""} ${
-              correcte ? "border-ok bg-ok/10" : ""
-            }`}
-          />
+        </p>
+        <div
+          id="resposta"
+          role="group"
+          aria-label="Símbols"
+          className={`grid grid-cols-4 gap-3 ${incorrecte ? "animate-tremolar" : ""}`}
+        >
+          {SIMBOLS_RESPOSTA.map((simbol) => {
+            const triat = resposta === simbol;
+            return (
+              <button
+                key={simbol}
+                type="button"
+                onClick={() => onRespostaChange(simbol)}
+                disabled={correcte}
+                aria-pressed={triat}
+                aria-label={`Símbol ${simbol}`}
+                className={`flex h-16 items-center justify-center rounded-2xl border-[3px] text-3xl transition ${
+                  triat ? "border-ink bg-gold text-ink shadow-[0_4px_0_var(--ink)]" : "border-ink bg-[#fffdf7] text-ink"
+                } ${incorrecte ? "border-blood" : ""} ${correcte ? "border-ok bg-ok/10" : ""}`}
+              >
+                {simbol}
+              </button>
+            );
+          })}
         </div>
 
         {missatge && correcte && (
