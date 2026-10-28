@@ -47,7 +47,7 @@ const MALLA_Z1 = 180;
 /** Colors del marcador provisional i de la brúixola. */
 const OR = "255, 206, 92";
 /** Alçades (m) dels tres anells de runes sobre el punt final. */
-const ALCADES_ANELLS = [2.0, 4.5, 7.0, 9.5];
+const ALCADES_ANELLS = [2.5, 4.0, 5.5, 7.0];
 /** Lletres de cada anell, de dalt cap avall. Cada anell té 5 lletres. */
 const LLETRES_ANELLS = ["AEVTL", "MRGCO", "IPBXN", "CUKDZ"];
 /** Paraula de la solució: una lletra per anell, de dalt cap avall. */
@@ -1016,7 +1016,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         }}
         onPointerMove={(ev) => {
           if (anellActiu.current !== null && punter.current) {
-            const girar = (ev.clientX - punter.current.x) * 0.02;
+            const girar = (ev.clientX - punter.current.x) * 0.012;
             anglesAnells.current[anellActiu.current] += girar;
             velocitatAnells.current[anellActiu.current] = girar;
             punter.current = { x: ev.clientX, y: ev.clientY };
