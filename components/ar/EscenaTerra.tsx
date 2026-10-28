@@ -48,9 +48,9 @@ const MALLA_Z1 = 180;
 /** Colors del marcador provisional i de la brúixola. */
 const OR = "255, 206, 92";
 /** Alçades (m) dels tres anells de runes sobre el punt final. */
-const ALCADES_ANELLS = [1.0, 3.4, 5.8];
-/** Color dels anells runes: lluny (gris blavós) i quan és el número correcte (blanc, que deixa veure el verd). */
-const COLOR_ANELL_LLUNY = { r: 0.42, g: 0.48, b: 0.46 };
+const ALCADES_ANELLS = [2.5, 5.5, 8.5];
+/** Color dels anells runes: lluny (gris fosc) i quan és el número correcte (blanc, que deixa veure el verd). */
+const COLOR_ANELL_LLUNY = { r: 0.18, g: 0.18, b: 0.18 };
 const COLOR_ANELL_APROP = { r: 1, g: 1, b: 1 };
 
 /** Estat del camí respecte la posició de l'equip. */
