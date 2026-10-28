@@ -75,8 +75,12 @@ function PecaNoise({ p, color = p.color }: { p: PecaSoroll; color?: string }) {
   );
 }
 
-/** Triangle del símbol del Foc (🜂), el mateix de `Simbol` però ple i amb mida i posició pròpies: serveix de forma de la resposta quan no és un número. */
-const TRIANGLE_FOC = "M0,-0.42 L0.4,0.3 L-0.4,0.3 Z";
+/**
+ * Símbol del Foc (U+1F702): un triangle BUIT, és a dir, un anell triangular. Triangle exterior (el de `Simbol`)
+ * més un d'interior reduït al 68% respecte del baricentre (0, 0.06); amb `evenodd` el de dins queda foradat.
+ * Serveix de forma de la resposta quan no és un número.
+ */
+const TRIANGLE_FOC = "M0,-0.42 L0.4,0.3 L-0.4,0.3 Z M0,-0.2664 L0.272,0.2232 L-0.272,0.2232 Z";
 
 /** La forma de la resposta (número o símbol), per retallar-hi la trama (clipPath) o emmascarar-ne la vora (mask). */
 function FormaObjectiu({ p, negreta, ...resta }: { p: PecaSoroll; negreta: boolean } & Record<string, unknown>) {
@@ -85,6 +89,8 @@ function FormaObjectiu({ p, negreta, ...resta }: { p: PecaSoroll; negreta: boole
     return (
       <path
         d={TRIANGLE_FOC}
+        fillRule="evenodd"
+        clipRule="evenodd"
         transform={`translate(${p.x.toFixed(1)} ${(p.y + p.mida * 0.06).toFixed(1)}) rotate(${p.rotacio.toFixed(1)}) scale(${p.mida.toFixed(1)})`}
         {...resta}
         strokeWidth={typeof resta.strokeWidth === "number" ? resta.strokeWidth / p.mida : undefined}
