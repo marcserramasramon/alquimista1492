@@ -56,7 +56,7 @@ export const ESTACIONS: Estacio[] = [
     ordre: 2,
     nom: "Planes Bones",
     situacio: "Al Camí de Planes Bones.",
-    entrada: "Cerqueu on guardava els elements l'alquimista.",
+    entrada: "Obriu la terra on guardava l'element l'alquimista.",
     imatge: "/images/planes-bones.webp",
     latitud: 41.91227654730743,
     longitud: 2.2334459962925832,
