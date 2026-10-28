@@ -70,6 +70,12 @@ const PARAULES_NOVUL = [
 ];
 /** Amplitud (m) del moviment lent de cada paraula al voltant del seu lloc. */
 const MOVIMENT_M = 1.2;
+/** Alçada (m) del dodecaedre que gira al centre, i a quina alçada cau (el terra). */
+const ALCADA_DODECAEDRE = 3;
+const ALTURA_IMPACTE = 0.6;
+/** Temps de caiguda del dodecaedre (s) i durada de l'emergència del con (s). */
+const TEMPS_CAIGUDA = 1.1;
+const DURADA_EMERGENCIA = 3.5;
 /** Color de les paraules: verd com la terra quan baixen, blau com el cel quan pugen. */
 const COLOR_TERRA = { r: 0.3, g: 0.75, b: 0.2 };
 const COLOR_CEL = { r: 0.3, g: 0.6, b: 1 };
@@ -165,7 +171,9 @@ const VERTEX = `
   uniform float uPR;
   uniform float uAlcada;
   uniform vec2 uCentre;
-  uniform vec3 uOnades[90];
+  uniform vec3 uOnades[91];
+  // 0 = el con no es veu; 1 = el con ja ha emergit (després de tocar la paraula correcta).
+  uniform float uEmergencia;
   uniform vec2 uCam;
   uniform vec3 uBaixa;
   uniform vec3 uAlta;
@@ -196,15 +204,16 @@ const VERTEX = `
     float angF = aSeed * 6.2831 * 9.0;
     vec2 xzF = uCentre + vec2(cos(angF), sin(angF)) * rf;
     float wF = 1.0 - smoothstep(2.5, 4.0, d);
-    p.xz = mix(p.xz, xzF, wF);
+    float E = uEmergencia;
+    p.xz = mix(p.xz, xzF, wF * E);
     // Doll de partícules: des de la punta de dalt, els vèrtexs pugen cap amunt en bucle.
     // Només un 30 % dels vèrtexs de la punta pugen; la resta es queden quiets i formen el con.
-    float jet = smoothstep(0.8, 1.0, s) * wF * step(0.7, aSeed);
+    float jet = smoothstep(0.8, 1.0, s) * wF * step(0.7, aSeed) * E;
     float fase = fract(aSeed * 13.7 + uTime * 0.35);
-    float yTerra = mix(h, 9.0 * s, wF) + jet * fase * 6.0;
+    float yTerra = mix(h, 9.0 * s, wF * E) + jet * fase * 6.0;
     // Ones d'impacte: anells que s'expandeixen des de cada punt d'impacte i s'esvaeixen, com les ones de l'aigua.
     float ona = 0.0;
-    for (int q = 0; q < 90; q++) {
+    for (int q = 0; q < 91; q++) {
       vec3 o = uOnades[q];
       float edat = uTime - o.z;
       if (edat > 0.0 && edat < 4.0) {
@@ -240,6 +249,7 @@ const SKY_VERTEX = `
   uniform float uAlcada;
   uniform vec2 uCam;
   uniform vec2 uCentre;
+  uniform float uEmergencia;
   uniform vec3 uBaixa;
   uniform vec3 uAlta;
   varying vec3 vCol;
@@ -264,11 +274,12 @@ const SKY_VERTEX = `
     float angF = aSeed * 6.2831 * 9.0;
     vec2 xzF = uCentre + vec2(cos(angF), sin(angF)) * rf;
     float wF = 1.0 - smoothstep(2.5, 4.0, d);
-    p.xz = mix(p.xz, xzF, wF);
-    float jet = smoothstep(0.8, 1.0, s) * wF * step(0.7, aSeed);
+    float E = uEmergencia;
+    p.xz = mix(p.xz, xzF, wF * E);
+    float jet = smoothstep(0.8, 1.0, s) * wF * step(0.7, aSeed) * E;
     float fase = fract(aSeed * 13.7 + uTime * 0.35);
     // Mirall del terra: el con del cel és la imatge del del terra respecte del pla del cel (30 m).
-    p.y = mix(uAlcada - h, uAlcada - 9.0 * s, wF) - jet * fase * 6.0;
+    p.y = mix(uAlcada - h, uAlcada - 9.0 * s, wF * E) - jet * fase * 6.0;
     float oculta = wF * (1.0 - step(0.0005, jet));
     float cresta = smoothstep(-0.2, 0.4, h);
     float brill = pow(max(0.0, sin(uTime * 2.0 + aSeed * 31.0)), 14.0) * 0.7;
@@ -593,7 +604,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           uAlcada: { value: ALCADA_CEL },
           uCam: { value: new THREE.Vector2() },
           uCentre: { value: new THREE.Vector2(centre.x, centre.z) },
-          uOnades: { value: Array.from({ length: 90 }, () => new THREE.Vector3(0, 0, -100)) },
+          uOnades: { value: Array.from({ length: 91 }, () => new THREE.Vector3(0, 0, -100)) },
+          uEmergencia: { value: 0 },
           uBaixa: { value: new THREE.Vector3(0.12, 0.45, 0.22) },
           uAlta: { value: new THREE.Vector3(0.6, 1.0, 0.5) },
         };
@@ -649,7 +661,18 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           return sprite;
         });
 
-        // Símbol de la terra (triangle invertit amb una línia) que apareix sobre el con quan es resol.
+        // Dodecaedre al centre: gira a poc a poc fins que es toca la paraula correcta; llavors cau i impacta al con.
+        const dodecaedre = new THREE.Mesh(
+          new THREE.DodecahedronGeometry(0.8, 0),
+          new THREE.MeshStandardMaterial({ color: 0x8a7f6a, flatShading: true, roughness: 0.8 }),
+        );
+        dodecaedre.position.set(centre.x, ALCADA_DODECAEDRE, centre.z);
+        escena.add(dodecaedre);
+        // Instant (ms) en què s'ha tocat la paraula correcta, i si el dodecaedre ja ha impactat.
+        let tSolucio: number | null = null;
+        let impacteRegistrat = false;
+
+        // Símbol de la terra (triangle invertit amb una línia) que apareix a mig camí entre la terra i el cel.
         const lienzoTerra = document.createElement("canvas");
         lienzoTerra.width = 256;
         lienzoTerra.height = 256;
@@ -673,10 +696,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         const matSimbol = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(lienzoTerra), transparent: true, opacity: 0, depthWrite: false });
         const simbolTerra = new THREE.Sprite(matSimbol);
         // Uns 1 m: un terç de l'alçada del Gollem.
-        simbolTerra.scale.set(1, 1, 1);
-        simbolTerra.position.set(centre.x, 1.5, centre.z);
+        simbolTerra.scale.set(10, 10, 1);
+        simbolTerra.position.set(centre.x, ALCADA_CEL / 2, centre.z);
         escena.add(simbolTerra);
-        let opacitatSimbol = 0;
         // 0 = paraules en joc; 1 = AMIC tocada: les paraules s'esvaeixen.
         let progresResolt = 0;
 
@@ -783,6 +805,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             uCam: uniforms.uCam,
             uAlcada: uniforms.uAlcada,
             uCentre: uniforms.uCentre,
+            uEmergencia: uniforms.uEmergencia,
             uBaixa: { value: new THREE.Vector3(0.1, 0.3, 0.7) },
             uAlta: { value: new THREE.Vector3(0.55, 0.8, 1.0) },
           },
@@ -935,11 +958,30 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             sprite.material.opacity = 1 - progresResolt;
             sprite.visible = progresResolt < 0.98;
           });
-          // Quan s'ha tocat AMIC, les paraules s'esvaeixen i apareix el símbol de la terra.
+          // Quan s'ha tocat AMIC, les paraules s'esvaeixen.
           const resolt = paraulaTocada.current;
           progresResolt += ((resolt ? 1 : 0) - progresResolt) * 0.05;
-          opacitatSimbol += ((resolt ? 1 : 0) - opacitatSimbol) * 0.05;
-          matSimbol.opacity = opacitatSimbol;
+
+          // Solució: el dodecaedre cau i impacta al centre (genera una ona). Després emergeix el con, de la terra
+          // i del cel, i apareix el símbol a mig camí entre els dos.
+          if (resolt && tSolucio === null) tSolucio = ara;
+          const dtSolucio = tSolucio === null ? -1 : (ara - tSolucio) / 1000;
+          let emergencia = 0;
+          dodecaedre.rotation.set(tempsBelluga * 0.13, tempsBelluga * 0.25, 0);
+          if (dtSolucio >= 0 && dtSolucio < TEMPS_CAIGUDA) {
+            const f = dtSolucio / TEMPS_CAIGUDA;
+            dodecaedre.position.y = ALCADA_DODECAEDRE + (ALTURA_IMPACTE - ALCADA_DODECAEDRE) * f * f;
+          } else if (dtSolucio >= TEMPS_CAIGUDA) {
+            dodecaedre.visible = false;
+            if (!impacteRegistrat) {
+              impacteRegistrat = true;
+              uniforms.uOnades.value[90].set(centre.x, centre.z, (ara - inici) / 1000);
+            }
+            const x = Math.min(1, (dtSolucio - TEMPS_CAIGUDA) / DURADA_EMERGENCIA);
+            emergencia = 1 - (1 - x) * (1 - x) * (1 - x);
+          }
+          uniforms.uEmergencia.value = emergencia;
+          matSimbol.opacity = emergencia;
           renderer.render(escena, cam);
           frame = requestAnimationFrame(bucle);
         };
@@ -953,6 +995,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             if (objecte instanceof THREE.Mesh) objecte.geometry.dispose();
           });
           geoCel.dispose();
+          dodecaedre.geometry.dispose();
+          dodecaedre.material.dispose();
           paraules.forEach((sprite) => {
             sprite.material.map?.dispose();
             sprite.material.dispose();
