@@ -70,6 +70,9 @@ const PARAULES_NOVUL = [
 ];
 /** Amplitud (m) del moviment lent de cada paraula al voltant del seu lloc. */
 const MOVIMENT_M = 1.2;
+/** Color de les paraules: verd com la terra quan baixen, blau com el cel quan pugen. */
+const COLOR_TERRA = { r: 0.3, g: 0.75, b: 0.2 };
+const COLOR_CEL = { r: 0.3, g: 0.6, b: 1 };
 
 /** Estat del camí respecte la posició de l'equip. */
 export interface EstatTerra {
@@ -919,6 +922,16 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           posicioParaules.current = posicions;
           paraules.forEach((sprite, k) => {
             sprite.position.set(centre.x + posicions[k].dx, posicions[k].y, centre.z + posicions[k].dz);
+            // Pujant, la paraula es torna blava com el cel; baixant, verda com la terra.
+            const p = moviment[k];
+            const velocitatVertical = 0.6 * p.f3 * Math.cos(p.f3 * tempsBelluga + p.p5);
+            const fCel = (Math.max(-1, Math.min(1, velocitatVertical / 0.15)) + 1) / 2;
+            sprite.material.color.setRGB(
+              COLOR_TERRA.r + (COLOR_CEL.r - COLOR_TERRA.r) * fCel,
+              COLOR_TERRA.g + (COLOR_CEL.g - COLOR_TERRA.g) * fCel,
+              COLOR_TERRA.b + (COLOR_CEL.b - COLOR_TERRA.b) * fCel,
+              THREE.SRGBColorSpace,
+            );
             sprite.material.opacity = 1 - progresResolt;
             sprite.visible = progresResolt < 0.98;
           });
