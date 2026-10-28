@@ -46,16 +46,12 @@ const MALLA_Z0 = -120;
 const MALLA_Z1 = 180;
 /** Colors del marcador provisional i de la brúixola. */
 const OR = "255, 206, 92";
-/** Alçades (m) dels tres anells de runes sobre el punt final. */
-const ALCADES_ANELLS = [2.5, 4.0, 5.5, 7.0];
-/** Lletres de cada anell, de dalt cap avall. Cada anell té 5 lletres. */
-const LLETRES_ANELLS = ["AEVTL", "MRGCO", "IPBXN", "CUKDZ"];
-/** Paraula de la solució: una lletra per anell, de dalt cap avall. */
+/** Paraula que cal tocar al novul. */
 const PARAULA_SOLUCIO = "AMIC";
-/** Color dels anells runes: vermell lluny del número, blau quan s'hi acosta, verd quan tots són resolts. */
-const COLOR_ANELL_LLUNY = { r: 1, g: 0, b: 0 };
-const COLOR_ANELL_APROP = { r: 0, g: 0.35, b: 1 };
-const COLOR_ANELL_RESOLT = { r: 0.2, g: 1, b: 0.2 };
+/** Paraules del novul. PLACEHOLDER: les altres paraules encara s'han de decidir. */
+const PARAULES_NOVUL = [PARAULA_SOLUCIO, "ROCA", "FANG", "PEDRA", "SAL", "MUSC", "ARGILA", "SORRA"];
+/** Amplitud (m) del moviment lent de cada paraula al voltant del seu lloc. */
+const MOVIMENT_M = 1.2;
 
 /** Estat del camí respecte la posició de l'equip. */
 export interface EstatTerra {
@@ -321,14 +317,11 @@ interface Props {
  * transparents a sobre de la càmera. La lògica geogràfica és a `estatTerra`.
  */
 export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }: Props) {
-  // Anells de runes: angles de gir (radiants) i la posició de cada anell a la pantalla (per tocar-los).
-  const anglesAnells = useRef<number[]>([0, 0, 0, 0]);
-  const anellsPantalla = useRef<number[]>([]);
-  const anellActiu = useRef<number | null>(null);
-  // Anells ja fixats al número correcte: no es poden tornar a girar.
-  const anellsBloquejats = useRef<boolean[]>([false, false, false, false]);
-  // Velocitat de cada anell (radiants per quadre), que ve del gest del dit.
-  const velocitatAnells = useRef<number[]>([0, 0, 0, 0]);
+  // Paraules del novul: posició de cada una a la pantalla (per tocar-les), i posició a l'escena (des del con).
+  const paraulesPantalla = useRef<{ x: number; y: number }[]>([]);
+  const posicioParaules = useRef<{ dx: number; y: number; dz: number }[]>([]);
+  // S'ha tocat la paraula correcta (AMIC).
+  const paraulaTocada = useRef(false);
   const glRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Sense sensors, la vista comença mirant cap al camí.
@@ -370,11 +363,11 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
       const m = arrossegarRef.current ? manual.current : (mirada.current ?? manual.current);
       const u = posicio.current;
       if (u) {
-        // Posició a la pantalla de cada anell, per saber quin toca el dit.
-        const centreAnells = enMetres(PUNT_FORAT, u);
-        anellsPantalla.current = ALCADES_ANELLS.map((alcada) => {
-          const pa = projecta(centreAnells, alcada, m, w, h);
-          return pa ? pa.y : -1000;
+        // Posició a la pantalla de cada paraula, per saber quina toca el dit.
+        const centreParaules = enMetres(PUNT_FORAT, u);
+        paraulesPantalla.current = posicioParaules.current.map((p) => {
+          const pa = projecta({ est: centreParaules.est + p.dx, nord: centreParaules.nord - p.dz }, p.y, m, w, h);
+          return pa ? { x: pa.x, y: pa.y } : { x: -1000, y: -1000 };
         });
       }
       if (u) {
@@ -593,41 +586,44 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         escena.add(new THREE.Points(geo, material));
 
-        // Quatre anells de lletres, un damunt de l'altre al voltant del punt final. Es giren amb el dit: cada anell té
-        // 5 lletres, i quan els quatre tenen la lletra de la paraula davant, apareix el símbol de la terra sobre el con.
-        const PAS_ANELL = (2 * Math.PI) / LLETRES_ANELLS[0].length;
-        const RADI_ANELLS = 5;
-        // Angle de cada anell perquè la seva lletra de la paraula quedi al davant (la lletra i és a l'angle (i + 0,5) · PAS).
-        const OBJECTIU_ANELLS = LLETRES_ANELLS.map((lletres, k) => -(lletres.indexOf(PARAULA_SOLUCIO[k]) + 0.5) * PAS_ANELL);
-        // Cada anell té el seu material (i la seva textura de lletres): així es pot tenyir a mesura que s'acosta.
-        const matsAnells = LLETRES_ANELLS.map((lletres) => {
-          const lienc = document.createElement("canvas");
-          // Proporció de la textura igual que la de l'anell (31 m de perímetre per 0,9 m d'alçada), perquè la lletra
-          // no quedi estirada: 4096 px per 31 m i 128 px per 0,9 m, uns 130-140 px per metre a les dues direccions.
-          lienc.width = 4096;
-          lienc.height = 128;
-          const ctxLletres = lienc.getContext("2d");
-          if (ctxLletres) {
-            // Fons semitransparent de la marquesina; el color de l'anell el tenyeix (vermell, blau o verd).
-            ctxLletres.fillStyle = "rgba(255,255,255,0.35)";
-            ctxLletres.fillRect(0, 0, lienc.width, lienc.height);
-            ctxLletres.fillStyle = "rgb(255,255,255)";
-            ctxLletres.font = "normal 170px Georgia, serif";
-            ctxLletres.textAlign = "center";
-            ctxLletres.textBaseline = "middle";
-            for (let i = 0; i < lletres.length; i++) {
-              ctxLletres.fillText(lletres[i], ((i + 0.5) * lienc.width) / lletres.length, lienc.height / 2);
-            }
-          }
-          const textura = new THREE.CanvasTexture(lienc);
-          return new THREE.MeshBasicMaterial({ map: textura, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+        // Novul de paraules al voltant del con: cada una té el seu moviment lent i caòtic, i cal tocar AMIC.
+        const moviment = PARAULES_NOVUL.map(() => {
+          const angle = Math.random() * 2 * Math.PI;
+          const radi = 3 + Math.random() * 5;
+          return {
+            bx: Math.cos(angle) * radi,
+            bz: Math.sin(angle) * radi,
+            by: 1.5 + Math.random() * 4,
+            f1: 0.12 + Math.random() * 0.18,
+            f2: 0.12 + Math.random() * 0.18,
+            f3: 0.12 + Math.random() * 0.18,
+            p1: Math.random() * 2 * Math.PI,
+            p2: Math.random() * 2 * Math.PI,
+            p3: Math.random() * 2 * Math.PI,
+            p4: Math.random() * 2 * Math.PI,
+            p5: Math.random() * 2 * Math.PI,
+          };
         });
-        const geomAnell = new THREE.CylinderGeometry(RADI_ANELLS, RADI_ANELLS, 0.9, 96, 1, true);
-        const anells = ALCADES_ANELLS.map((alcada, k) => {
-          const anell = new THREE.Mesh(geomAnell, matsAnells[k]);
-          anell.position.set(centre.x, alcada, centre.z);
-          escena.add(anell);
-          return anell;
+        const paraules = PARAULES_NOVUL.map((paraula) => {
+          const lienc = document.createElement("canvas");
+          lienc.width = 512;
+          lienc.height = 192;
+          const ctxParaula = lienc.getContext("2d");
+          if (ctxParaula) {
+            ctxParaula.font = "bold 120px Georgia, serif";
+            ctxParaula.textAlign = "center";
+            ctxParaula.textBaseline = "middle";
+            ctxParaula.lineWidth = 10;
+            ctxParaula.strokeStyle = "rgba(0,0,0,0.85)";
+            ctxParaula.strokeText(paraula, lienc.width / 2, lienc.height / 2);
+            ctxParaula.fillStyle = "rgb(255,255,255)";
+            ctxParaula.fillText(paraula, lienc.width / 2, lienc.height / 2);
+          }
+          const material = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(lienc), transparent: true, depthWrite: false });
+          const sprite = new THREE.Sprite(material);
+          sprite.scale.set(2.4, 0.9, 1);
+          escena.add(sprite);
+          return sprite;
         });
 
         // Símbol de la terra (triangle invertit amb una línia) que apareix sobre el con quan es resol.
@@ -658,12 +654,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         simbolTerra.position.set(centre.x, 1.5, centre.z);
         escena.add(simbolTerra);
         let opacitatSimbol = 0;
-        // 0 = anells en joc; 1 = tots resolts: es tornen verds i desapareixen.
+        // 0 = paraules en joc; 1 = AMIC tocada: les paraules s'esvaeixen.
         let progresResolt = 0;
-        // Flaix blanc i pulsació quan un anell es fixa: 1 just al fixar-se, i es va apagant.
-        const flaixAnells = [0, 0, 0, 0];
-        // Diferència amb la lletra correcta al quadre anterior, per detectar quan el travessa.
-        const diferenciaAnterior = [NaN, NaN, NaN, NaN];
 
         // Estelles fugaces: 30, cada una amb el seu temps, que cauen a l'atzar cap a un punt a 50 m davant de
         // l'observador (dispersat). Cua de fins a 12 m, densa, en gradient fins a invisible, i que s'estreny fins a 1/10.
@@ -897,57 +889,22 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           }
           ultimFrameGolem = ara;
 
-          // Anells: la posició de cada anell és el seu angle, i la combinació és correcta quan és a l'objectiu.
-          const diferencies = anells.map((anell, k) => {
-            // Inèrcia: l'anell continua girant després de solt el dit, i va frenant.
-            if (!anellsBloquejats.current[k] && anellActiu.current !== k) {
-              anglesAnells.current[k] += velocitatAnells.current[k];
-              velocitatAnells.current[k] *= 0.92;
-            }
-            const diferencia = Math.atan2(
-              Math.sin(anglesAnells.current[k] - OBJECTIU_ANELLS[k]),
-              Math.cos(anglesAnells.current[k] - OBJECTIU_ANELLS[k]),
-            );
-            // Es fixa si el número és just davant, o si l'ha travessat girant de pressa (entre dos quadres).
-            const anterior = diferenciaAnterior[k];
-            const travessa =
-              Number.isFinite(anterior) &&
-              Math.sign(anterior) !== Math.sign(diferencia) &&
-              Math.min(Math.abs(anterior), Math.abs(diferencia)) < PAS_ANELL;
-            diferenciaAnterior[k] = diferencia;
-            // En fixar-se, l'anell va exactament al número correcte i fa el flaix.
-            if (!anellsBloquejats.current[k] && (travessa || Math.abs(diferencia) < PAS_ANELL / 3)) {
-              anellsBloquejats.current[k] = true;
-              anglesAnells.current[k] = OBJECTIU_ANELLS[k];
-              velocitatAnells.current[k] = 0;
-              flaixAnells[k] = 1;
-            }
-            anell.rotation.y = anglesAnells.current[k];
-            return diferencia;
+          // Novul de paraules: cada una es belluga a poc a poc, de manera caòtica, al voltant del con.
+          const tempsBelluga = ara / 1000;
+          const posicions = moviment.map((p) => ({
+            dx: p.bx + MOVIMENT_M * (Math.sin(p.f1 * tempsBelluga + p.p1) + 0.5 * Math.sin(p.f2 * 1.7 * tempsBelluga + p.p2)),
+            dz: p.bz + MOVIMENT_M * (Math.cos(p.f2 * tempsBelluga + p.p3) + 0.5 * Math.cos(p.f3 * 1.3 * tempsBelluga + p.p4)),
+            y: p.by + 0.6 * Math.sin(p.f3 * tempsBelluga + p.p5),
+          }));
+          posicioParaules.current = posicions;
+          paraules.forEach((sprite, k) => {
+            sprite.position.set(centre.x + posicions[k].dx, posicions[k].y, centre.z + posicions[k].dz);
+            sprite.material.opacity = 1 - progresResolt;
+            sprite.visible = progresResolt < 0.98;
           });
-          const resolt = diferencies.every((diferencia) => Math.abs(diferencia) < PAS_ANELL / 3);
+          // Quan s'ha tocat AMIC, les paraules s'esvaeixen i apareix el símbol de la terra.
+          const resolt = paraulaTocada.current;
           progresResolt += ((resolt ? 1 : 0) - progresResolt) * 0.05;
-          // Color: vermell lluny del número correcte, blau quan s'hi acosta, verd quan tots són resolts.
-          diferencies.forEach((diferencia, k) => {
-            const proximitat = 1 - Math.min(1, Math.abs(diferencia) / (PAS_ANELL * 2));
-            const r0 = COLOR_ANELL_LLUNY.r + (COLOR_ANELL_APROP.r - COLOR_ANELL_LLUNY.r) * proximitat;
-            const g0 = COLOR_ANELL_LLUNY.g + (COLOR_ANELL_APROP.g - COLOR_ANELL_LLUNY.g) * proximitat;
-            const b0 = COLOR_ANELL_LLUNY.b + (COLOR_ANELL_APROP.b - COLOR_ANELL_LLUNY.b) * proximitat;
-            const r = r0 + (1 - r0) * flaixAnells[k];
-            const g = g0 + (1 - g0) * flaixAnells[k];
-            const b = b0 + (1 - b0) * flaixAnells[k];
-            // En sRGB, perquè el vermell i el blau es vegin tal com s'han definit.
-            matsAnells[k].color.setRGB(
-              r + (COLOR_ANELL_RESOLT.r - r) * progresResolt,
-              g + (COLOR_ANELL_RESOLT.g - g) * progresResolt,
-              b + (COLOR_ANELL_RESOLT.b - b) * progresResolt,
-              THREE.SRGBColorSpace,
-            );
-            flaixAnells[k] *= 0.9;
-            anells[k].scale.setScalar(1 + 0.04 * flaixAnells[k]);
-            matsAnells[k].opacity = 1 - progresResolt;
-            anells[k].visible = progresResolt < 0.98;
-          });
           opacitatSimbol += ((resolt ? 1 : 0) - opacitatSimbol) * 0.05;
           matSimbol.opacity = opacitatSimbol;
           renderer.render(escena, cam);
@@ -963,11 +920,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             if (objecte instanceof THREE.Mesh) objecte.geometry.dispose();
           });
           geoCel.dispose();
-          matsAnells.forEach((m) => {
-            m.map?.dispose();
-            m.dispose();
+          paraules.forEach((sprite) => {
+            sprite.material.map?.dispose();
+            sprite.material.dispose();
           });
-          geomAnell.dispose();
           matSimbol.map?.dispose();
           matSimbol.dispose();
           geoEstella.dispose();
@@ -997,31 +953,24 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         ref={canvasRef}
         className="absolute inset-0 h-full w-full touch-none"
         onPointerDown={(ev) => {
-          // Si el dit toca un anell de runes, el gira; si no, és el gest de mirar al voltant.
-          const y = ev.clientY - ev.currentTarget.getBoundingClientRect().top;
-          // L'anell més proper al dit, sempre que n'hi hagi un a menys de 60 px.
-          let anell: number | null = null;
-          let distancia = 60;
-          anellsPantalla.current.forEach((py, k) => {
-            if (!anellsBloquejats.current[k] && Math.abs(py - y) < distancia) {
-              distancia = Math.abs(py - y);
-              anell = k;
+          // Si el dit toca una paraula, és el gest de tocar-la (no de mirar al voltant).
+          const rect = ev.currentTarget.getBoundingClientRect();
+          const x = ev.clientX - rect.left;
+          const y = ev.clientY - rect.top;
+          let tocada = -1;
+          let distancia = 48;
+          paraulesPantalla.current.forEach((p, k) => {
+            const d = Math.hypot(p.x - x, p.y - y);
+            if (d < distancia) {
+              distancia = d;
+              tocada = k;
             }
           });
-          anellActiu.current = anell;
-          // Tocar un anell que gira el frena; després el gest el torna a girar.
-          if (anell !== null) velocitatAnells.current[anell] = 0;
-          punter.current = { x: ev.clientX, y: ev.clientY };
+          if (tocada >= 0 && PARAULES_NOVUL[tocada] === PARAULA_SOLUCIO) paraulaTocada.current = true;
+          punter.current = tocada >= 0 ? null : { x: ev.clientX, y: ev.clientY };
           ev.currentTarget.setPointerCapture(ev.pointerId);
         }}
         onPointerMove={(ev) => {
-          if (anellActiu.current !== null && punter.current) {
-            const girar = (ev.clientX - punter.current.x) * 0.012;
-            anglesAnells.current[anellActiu.current] += girar;
-            velocitatAnells.current[anellActiu.current] = girar;
-            punter.current = { x: ev.clientX, y: ev.clientY };
-            return;
-          }
           if (!arrossegarRef.current || !punter.current) return;
           const dx = ev.clientX - punter.current.x;
           const dy = ev.clientY - punter.current.y;
@@ -1034,11 +983,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         }}
         onPointerUp={() => {
           punter.current = null;
-          anellActiu.current = null;
         }}
         onPointerCancel={() => {
           punter.current = null;
-          anellActiu.current = null;
         }}
       />
     </>
