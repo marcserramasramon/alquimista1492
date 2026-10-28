@@ -656,8 +656,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         }
         const matSimbol = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(lienzoTerra), transparent: true, opacity: 0, depthWrite: false });
         const simbolTerra = new THREE.Sprite(matSimbol);
-        simbolTerra.scale.set(3, 3, 1);
-        simbolTerra.position.set(centre.x, 10, centre.z);
+        // Uns 1 m: un terç de l'alçada del Gollem.
+        simbolTerra.scale.set(1, 1, 1);
+        simbolTerra.position.set(centre.x, 1.5, centre.z);
         escena.add(simbolTerra);
         let opacitatSimbol = 0;
         // 0 = anells en joc; 1 = tots resolts: es tornen verds i desapareixen.
