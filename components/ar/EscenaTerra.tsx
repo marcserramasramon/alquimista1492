@@ -48,8 +48,23 @@ const MALLA_Z1 = 180;
 const OR = "255, 206, 92";
 /** Paraula que cal tocar al novul. */
 const PARAULA_SOLUCIO = "AMIC";
-/** Paraules del novul. PLACEHOLDER: les altres paraules encara s'han de decidir. */
-const PARAULES_NOVUL = [PARAULA_SOLUCIO, "ROCA", "FANG", "PEDRA", "SAL", "MUSC", "ARGILA", "SORRA"];
+/** Paraules del novul: AMIC més les de distracció (lèxic de la terra i l'alquímia). */
+const PARAULES_NOVUL = [
+  PARAULA_SOLUCIO,
+  "Gnom",
+  "Humus",
+  "Arrel",
+  "Geoda",
+  "Mudra",
+  "Estrat",
+  "Saba",
+  "Quars",
+  "Sofre",
+  "Mercuri",
+  "Sal",
+  "Obsidiana",
+  "Ambre",
+];
 /** Amplitud (m) del moviment lent de cada paraula al voltant del seu lloc. */
 const MOVIMENT_M = 1.2;
 
