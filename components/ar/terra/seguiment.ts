@@ -102,10 +102,10 @@ export class SeguimentGolem {
     }
     const mostra = { x: this.jx, z: this.jz };
 
+    // El gegant apareix just on és el jugador (el punt on s'obre l'AR) i després el precedeix.
     if (!this.iniciat) {
-      const a = this.ancora(mostra);
-      this.gx = a.x;
-      this.gz = a.z;
+      this.gx = mostra.x;
+      this.gz = mostra.z;
       this.iniciat = true;
     }
 
