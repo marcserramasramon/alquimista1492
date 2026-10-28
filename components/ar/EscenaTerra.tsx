@@ -2,6 +2,7 @@
 
 import type { AnimationAction, AnimationMixer } from "three";
 import { useEffect, useRef, type RefObject } from "react";
+import { Fondamento } from "next/font/google";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
 import { EstatGolem, SeguimentGolem } from "@/components/ar/terra/seguiment";
 import { dibuixaVora } from "@/components/ar/voraGuia";
@@ -46,8 +47,10 @@ const MALLA_Z0 = -120;
 const MALLA_Z1 = 180;
 /** Colors del marcador provisional i de la brúixola. */
 const OR = "255, 206, 92";
+/** Font de les paraules del novul (Google Fonts). */
+const fontParaules = Fondamento({ weight: "400", subsets: ["latin"] });
 /** Paraula que cal tocar al novul. */
-const PARAULA_SOLUCIO = "AMIC";
+const PARAULA_SOLUCIO = "Amic";
 /** Paraules del novul: AMIC més les de distracció (lèxic de la terra i l'alquímia). */
 const PARAULES_NOVUL = [
   PARAULA_SOLUCIO,
@@ -619,13 +622,15 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             p5: Math.random() * 2 * Math.PI,
           };
         });
+        // La font ha d'estar carregada abans de dibuixar les paraules al canvas.
+        await document.fonts.load(`120px ${fontParaules.style.fontFamily}`).catch(() => {});
         const paraules = PARAULES_NOVUL.map((paraula) => {
           const lienc = document.createElement("canvas");
           lienc.width = 512;
           lienc.height = 192;
           const ctxParaula = lienc.getContext("2d");
           if (ctxParaula) {
-            ctxParaula.font = "bold 120px Georgia, serif";
+            ctxParaula.font = `120px ${fontParaules.style.fontFamily}`;
             ctxParaula.textAlign = "center";
             ctxParaula.textBaseline = "middle";
             ctxParaula.lineWidth = 10;
