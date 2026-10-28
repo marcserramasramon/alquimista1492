@@ -97,7 +97,7 @@ export const LILA_OBJECTIU = cmyk(CIAN_LILA_OBJECTIU, 92, 28);
 export const BLAU_OBJECTIU = "#2f63c0";
 
 /** Separació entre els punts de la trama de la resposta. */
-export const PAS_PUNTS_OBJECTIU = 6.5;
+export const PAS_PUNTS_OBJECTIU = 5.64; // 6,5 / √1,33: un 33% més de punts
 
 /** Camuflatge: fracció dels punts de dins del número que són vermells. */
 const PROPORCIO_VERMELL_DINS = 0.12;
@@ -109,7 +109,7 @@ const PROPORCIO_LILA_VORA = 0.4;
 export const AMPLADA_VORA_CAMUFLATGE = 18;
 
 /** Radi dels punts de la trama de la resposta (unitats SVG; 1 unitat ≈ 0,168 mm al cartell A4). */
-export const RADI_PUNTS_OBJECTIU = 0.9; // unitats SVG: 0,9 × 0,168 mm/unitat ≈ 0,15 mm al PDF A4
+export const RADI_PUNTS_OBJECTIU = 0.6; // unitats SVG: 0,6 × 0,168 mm/unitat ≈ 0,10 mm al PDF A4
 
 /**
  * Colors del soroll: vermells purs, sense cian ni negre (C0, M95-100, Y85-95, K0).
