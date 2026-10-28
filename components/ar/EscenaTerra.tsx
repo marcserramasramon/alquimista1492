@@ -322,6 +322,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
   const anglesAnells = useRef<number[]>([0, 0, 0]);
   const anellsPantalla = useRef<number[]>([]);
   const anellActiu = useRef<number | null>(null);
+  // Anells ja fixats al número correcte: no es poden tornar a girar.
+  const anellsBloquejats = useRef<boolean[]>([false, false, false]);
   const glRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Sense sensors, la vista comença mirant cap al camí.
@@ -658,6 +660,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         let opacitatSimbol = 0;
         // 0 = anells en joc; 1 = tots resolts: es tornen verds i desapareixen.
         let progresResolt = 0;
+        // Flaix blanc i pulsació quan un anell es fixa: 1 just al fixar-se, i es va apagant.
+        const flaixAnells = [0, 0, 0];
 
         // Estelles fugaces: 30, cada una amb el seu temps, que cauen a l'atzar cap a un punt a 50 m davant de
         // l'observador (dispersat). Cua de fins a 12 m, densa, en gradient fins a invisible, i que s'estreny fins a 1/10.
@@ -893,25 +897,37 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
 
           // Anells: la posició de cada anell és el seu angle, i la combinació és correcta quan és a l'objectiu.
           const diferencies = anells.map((anell, k) => {
-            anell.rotation.y = anglesAnells.current[k];
-            return Math.atan2(
+            const diferencia = Math.atan2(
               Math.sin(anglesAnells.current[k] - OBJECTIU_ANELLS[k] * PAS_ANELL),
               Math.cos(anglesAnells.current[k] - OBJECTIU_ANELLS[k] * PAS_ANELL),
             );
+            // En arribar al número correcte, l'anell es fixa exactament allà i fa el flaix.
+            if (!anellsBloquejats.current[k] && Math.abs(diferencia) < PAS_ANELL / 3) {
+              anellsBloquejats.current[k] = true;
+              anglesAnells.current[k] = OBJECTIU_ANELLS[k] * PAS_ANELL;
+              flaixAnells[k] = 1;
+            }
+            anell.rotation.y = anglesAnells.current[k];
+            return diferencia;
           });
           const resolt = diferencies.every((diferencia) => Math.abs(diferencia) < PAS_ANELL / 3);
           progresResolt += ((resolt ? 1 : 0) - progresResolt) * 0.05;
           // Color: vermell lluny del número correcte, blau quan s'hi acosta, verd quan tots són resolts.
           diferencies.forEach((diferencia, k) => {
             const proximitat = 1 - Math.min(1, Math.abs(diferencia) / (PAS_ANELL * 2));
-            const r = COLOR_ANELL_LLUNY.r + (COLOR_ANELL_APROP.r - COLOR_ANELL_LLUNY.r) * proximitat;
-            const g = COLOR_ANELL_LLUNY.g + (COLOR_ANELL_APROP.g - COLOR_ANELL_LLUNY.g) * proximitat;
-            const b = COLOR_ANELL_LLUNY.b + (COLOR_ANELL_APROP.b - COLOR_ANELL_LLUNY.b) * proximitat;
+            const r0 = COLOR_ANELL_LLUNY.r + (COLOR_ANELL_APROP.r - COLOR_ANELL_LLUNY.r) * proximitat;
+            const g0 = COLOR_ANELL_LLUNY.g + (COLOR_ANELL_APROP.g - COLOR_ANELL_LLUNY.g) * proximitat;
+            const b0 = COLOR_ANELL_LLUNY.b + (COLOR_ANELL_APROP.b - COLOR_ANELL_LLUNY.b) * proximitat;
+            const r = r0 + (1 - r0) * flaixAnells[k];
+            const g = g0 + (1 - g0) * flaixAnells[k];
+            const b = b0 + (1 - b0) * flaixAnells[k];
             matsAnells[k].color.setRGB(
               r + (COLOR_ANELL_RESOLT.r - r) * progresResolt,
               g + (COLOR_ANELL_RESOLT.g - g) * progresResolt,
               b + (COLOR_ANELL_RESOLT.b - b) * progresResolt,
             );
+            flaixAnells[k] *= 0.9;
+            anells[k].scale.setScalar(1 + 0.04 * flaixAnells[k]);
             matsAnells[k].opacity = 1 - progresResolt;
             anells[k].visible = progresResolt < 0.98;
           });
@@ -968,7 +984,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           let anell: number | null = null;
           let distancia = 60;
           anellsPantalla.current.forEach((py, k) => {
-            if (Math.abs(py - y) < distancia) {
+            if (!anellsBloquejats.current[k] && Math.abs(py - y) < distancia) {
               distancia = Math.abs(py - y);
               anell = k;
             }
