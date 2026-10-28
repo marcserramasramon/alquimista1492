@@ -44,6 +44,16 @@ const SIMBOLS_RESPOSTA = [
   "\u{1F72D}", // SALT OF ANTIMONY
 ] as const;
 
+/** Barreja (Fisher-Yates) perquè cada vegada que s'obre la fita els símbols surtin en un ordre diferent. */
+function barreja(llista: readonly string[]): string[] {
+  const copia = [...llista];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
+
 /** Joc d'estació de resposta escrita (presentacional). */
 export function VistaJocResposta({
   resposta,
@@ -60,6 +70,12 @@ export function VistaJocResposta({
   // Demanar la Resposta demana una confirmació: és fàcil tocar-la sense voler.
   const [confirmantResposta, setConfirmantResposta] = useState(false);
   const incorrecte = Boolean(missatge) && !correcte;
+
+  // L'ordre es barreja després de muntar (no al render) perquè el servidor i el client coincideixin.
+  const [ordreSimbols, setOrdreSimbols] = useState<string[]>([...SIMBOLS_RESPOSTA]);
+  useEffect(() => {
+    setOrdreSimbols(barreja(SIMBOLS_RESPOSTA));
+  }, []);
 
   // Si hi ha public/audio/so-fragment.mp3, que ja sigui a punt quan encertin.
   useEffect(() => {
@@ -102,7 +118,7 @@ export function VistaJocResposta({
           aria-label="Símbols"
           className={`grid grid-cols-4 gap-3 ${incorrecte ? "animate-tremolar" : ""}`}
         >
-          {SIMBOLS_RESPOSTA.map((simbol) => {
+          {ordreSimbols.map((simbol) => {
             const triat = resposta === simbol;
             return (
               <button
