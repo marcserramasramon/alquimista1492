@@ -602,12 +602,14 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // Cada anell té el seu material (i la seva textura de lletres): així es pot tenyir a mesura que s'acosta.
         const matsAnells = LLETRES_ANELLS.map((lletres) => {
           const lienc = document.createElement("canvas");
-          lienc.width = 1024;
-          lienc.height = 256;
+          // Proporció de la textura igual que la de l'anell (31 m de perímetre per 0,9 m d'alçada), perquè la lletra
+          // no quedi estirada: 4096 px per 31 m i 128 px per 0,9 m, uns 130-140 px per metre a les dues direccions.
+          lienc.width = 4096;
+          lienc.height = 128;
           const ctxLletres = lienc.getContext("2d");
           if (ctxLletres) {
             ctxLletres.fillStyle = "rgb(255,255,255)";
-            ctxLletres.font = "bold 200px Georgia, serif";
+            ctxLletres.font = "normal 170px Georgia, serif";
             ctxLletres.textAlign = "center";
             ctxLletres.textBaseline = "middle";
             for (let i = 0; i < lletres.length; i++) {
