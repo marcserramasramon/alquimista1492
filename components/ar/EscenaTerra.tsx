@@ -2,7 +2,6 @@
 
 import type { AnimationAction, AnimationMixer } from "three";
 import { useEffect, useRef, type RefObject } from "react";
-import { Eagle_Lake } from "next/font/google";
 import { GLIFS_RUNES, INSCRIPCIO_RUNES } from "@/components/ui/runes";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
 import { EstatGolem, SeguimentGolem } from "@/components/ar/terra/seguiment";
@@ -47,6 +46,8 @@ const MALLA_Z0 = -120;
 const MALLA_Z1 = 120;
 /** Colors del marcador provisional i de la brúixola. */
 const OR = "255, 206, 92";
+/** Alçades (m) dels tres anells de runes sobre el punt final. */
+const ALCADES_ANELLS = [1.5, 3.0, 4.5];
 
 /** Estat del camí respecte la posició de l'equip. */
 export interface EstatTerra {
@@ -258,35 +259,6 @@ const SKY_VERTEX = `
   }
 `;
 
-/** Elements d'una frase en runes: espais i lletres que existeixen al joc (les que no, s'ometen). */
-function itemsRunes(text: string): { d: string | null; amplada: number }[] {
-  const out: { d: string | null; amplada: number }[] = [];
-  const net = text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-  for (const ch of net) {
-    if (ch === " " || ch === "-") out.push({ d: null, amplada: 40 });
-    else if (GLIFS_RUNES[ch]) out.push({ d: GLIFS_RUNES[ch].d, amplada: GLIFS_RUNES[ch].amplada });
-  }
-  return out;
-}
-
-/** Amplada (px) d'una fila de runes a l'escala donada. */
-function amplariRunes(items: { amplada: number }[], escala: number): number {
-  return items.reduce((suma, it) => suma + it.amplada * escala + 25, 0) - 25;
-}
-
-/** SVG d'una fila de runes centrada a `centreX`, amb la línia base a `base`. */
-function filaRunesSvg(items: { d: string | null; amplada: number }[], escala: number, centreX: number, base: number): string {
-  let x = centreX - amplariRunes(items, escala) / 2;
-  let svg = "";
-  for (const it of items) {
-    if (it.d) svg += `<path d="${it.d}" transform="translate(${x.toFixed(1)} ${base}) scale(${escala})"/>`;
-    x += it.amplada * escala + 25;
-  }
-  return svg;
-}
-
-/** Font del text de la marquesina (Google Fonts). */
-const FONT_MARQUESINA = Eagle_Lake({ weight: "400", subsets: ["latin"] });
 
 /** Estella fugaç i impacte: punts amb color i alfa per vèrtex. */
 const CAIGUDA_VERTEX = `
@@ -332,8 +304,6 @@ interface Props {
   /** La fita (on comença el camí, i origen de la malla) i el lloc final. */
   fita: PuntGps;
   amfores: PuntGps;
-  /** Quan és true, les marquesines de runes es transformen en les frases. */
-  traduit?: boolean;
 }
 
 /**
@@ -342,11 +312,11 @@ interface Props {
  * quan l'equip és sobre el camí. Al lloc final hi ha un marcador provisional. Dibuixat en dos canvas
  * transparents a sobre de la càmera. La lògica geogràfica és a `estatTerra`.
  */
-export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, traduit = false }: Props) {
-  const traduitRef = useRef(traduit);
-  useEffect(() => {
-    traduitRef.current = traduit;
-  }, [traduit]);
+export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }: Props) {
+  // Anells de runes: angles de gir (radiants) i la posició de cada anell a la pantalla (per tocar-los).
+  const anglesAnells = useRef<number[]>([0, 0, 0]);
+  const anellsPantalla = useRef<number[]>([]);
+  const anellActiu = useRef<number | null>(null);
   const glRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Sense sensors, la vista comença mirant cap al camí.
@@ -387,6 +357,14 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
 
       const m = arrossegarRef.current ? manual.current : (mirada.current ?? manual.current);
       const u = posicio.current;
+      if (u) {
+        // Posició a la pantalla de cada anell, per saber quin toca el dit.
+        const centreAnells = enMetres(PUNT_FORAT, u);
+        anellsPantalla.current = ALCADES_ANELLS.map((alcada) => {
+          const pa = projecta(centreAnells, alcada, m, w, h);
+          return pa ? pa.y : -1000;
+        });
+      }
       if (u) {
         const b = enMetres(amfores, u);
         const pFinal = projecta(b, 0, m, w, h);
@@ -603,79 +581,31 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
         });
         escena.add(new THREE.Points(geo, material));
 
-        // Marquesina de text que gira al voltant: una banda cilíndrica, amb una sola còpia de la frase. Gira una volta cada 8 s.
-        const RADI_BANDA = 5;
-        const ALCADA_BANDA = 4;
-        const AMPLE_BANDA_M = 1.2;
-        // La font s'ha de carregar abans de dibuixar-la al canvas.
-        await document.fonts.load(`84px ${FONT_MARQUESINA.style.fontFamily}`).catch(() => {});
-        // Dues frases que s'alternen: «Aquí guarda l'alquimista la matèria» (una còpia) i «COMPTE-LES TRES COPS»
-        // (tres còpies al voltant). Cada una dona 2 voltes, i es desvanesc per canviar-la per l'altra.
-        // Les dues frases juntes, una sobre l'altra: a dalt «Aquí guarda l'alquimista la matèria» (1 còpia) i a
-        // baix «COMPTE-LES TRES COPS» (2 còpies), amb la mateixa mida de lletra. Giren totes dues a la vegada.
-        const lienzo = document.createElement("canvas");
-        lienzo.width = 4096;
-        lienzo.height = 520;
-        const ctxText = lienzo.getContext("2d");
-        if (ctxText) {
-          ctxText.clearRect(0, 0, lienzo.width, lienzo.height);
-          const frase1 = "Aquí guarda l'alquimista la matèria";
-          const frase2 = "compte-les tres cops";
-          // Mida de la primera frase: la més gran que hi cap sencera a l'amplada de la banda.
-          let mida = 168;
-          ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
-          while (ctxText.measureText(frase1).width > lienzo.width * 0.92 && mida > 30) {
-            mida -= 2;
-            ctxText.font = `${mida}px ${FONT_MARQUESINA.style.fontFamily}`;
-          }
-          ctxText.textAlign = "center";
-          ctxText.textBaseline = "middle";
-          ctxText.fillStyle = "rgb(150, 255, 110)";
-          ctxText.shadowColor = "rgb(120, 255, 90)";
-          ctxText.shadowBlur = 18;
-          // Fila de dalt: 1 còpia. Fila de baix: 2 còpies. Estirades només en vertical, un 33 % més altes.
-          const filaDalt = lienzo.height * 0.25;
-          const filaBaix = lienzo.height * 0.75;
-          ctxText.save();
-          ctxText.translate(lienzo.width / 2, filaDalt);
-          ctxText.scale(1, 1.33);
-          ctxText.fillText(frase1, 0, 0);
-          ctxText.restore();
-          for (let c = 0; c < 2; c++) {
-            ctxText.save();
-            ctxText.translate((lienzo.width / 2) * (c + 0.5), filaBaix);
-            ctxText.scale(1, 1.33);
-            ctxText.fillText(frase2, 0, 0);
-            ctxText.restore();
-          }
-        }
-        const texturaA = new THREE.CanvasTexture(lienzo);
-        const matA = new THREE.MeshBasicMaterial({ map: texturaA, transparent: true, depthWrite: false, side: THREE.DoubleSide });
-        const geomBanda = new THREE.CylinderGeometry(RADI_BANDA, RADI_BANDA, AMPLE_BANDA_M, 96, 1, true);
-        const banda = new THREE.Mesh(geomBanda, matA);
-        banda.position.set(0, ALCADA_BANDA, 0);
-        const grupAnfores = new THREE.Group();
-        grupAnfores.position.set(centre.x, 0, centre.z);
-        grupAnfores.add(banda);
-
-        // Marquesines de runes: les mateixes dues files que el text, però escrites amb les runes del joc. Quan
-        // el jugador prem «Traduir», es fonen amb les frases (la banda del text, que és la de dalt).
-        const itemsF1 = itemsRunes("Aquí guarda l'alquimista la matèria");
-        const itemsF2 = itemsRunes("compte-les tres cops");
-        let escalaRunes = 1.7;
-        while (amplariRunes(itemsF1, escalaRunes) > 4096 * 0.92 && escalaRunes > 0.5) escalaRunes -= 0.05;
+        // Tres anells de runes, un damunt de l'altre al voltant del punt final. Es giren amb el dit: cada anell té
+        // 8 posicions, i quan els tres són a la combinació correcta, apareix el símbol de la terra sobre el con.
+        const OBJECTIU_ANELLS = [2, 5, 7];
+        const PAS_ANELL = (2 * Math.PI) / 8;
+        const RADI_ANELLS = 5;
         const lienzoRunes = document.createElement("canvas");
         lienzoRunes.width = 4096;
-        lienzoRunes.height = 520;
+        lienzoRunes.height = 260;
         const ctxRunes = lienzoRunes.getContext("2d");
         if (ctxRunes) {
+          const escalaRuna = 1.5;
+          const lletres = [...INSCRIPCIO_RUNES];
+          const paths: string[] = [];
+          let x = 0;
+          while (x < lienzoRunes.width) {
+            for (const ch of lletres) {
+              const g = GLIFS_RUNES[ch];
+              if (!g || x >= lienzoRunes.width) continue;
+              paths.push(`<path d="${g.d}" transform="translate(${x.toFixed(1)} 200) scale(${escalaRuna})"/>`);
+              x += g.amplada * escalaRuna + 30;
+            }
+          }
           const svgRunes =
-            `<svg xmlns="http://www.w3.org/2000/svg" width="4096" height="520" viewBox="0 0 4096 520">` +
-            `<g fill="rgb(150,255,110)">` +
-            filaRunesSvg(itemsF1, escalaRunes, 2048, 130 + 85) +
-            filaRunesSvg(itemsF2, escalaRunes, 1024, 390 + 85) +
-            filaRunesSvg(itemsF2, escalaRunes, 3072, 390 + 85) +
-            `</g></svg>`;
+            `<svg xmlns="http://www.w3.org/2000/svg" width="4096" height="260" viewBox="0 0 4096 260">` +
+            `<g fill="rgb(150,255,110)">${paths.join("")}</g></svg>`;
           const imatgeRunes = new Image();
           imatgeRunes.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgRunes);
           await imatgeRunes.decode().catch(() => {});
@@ -683,13 +613,41 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
         }
         const texturaRunes = new THREE.CanvasTexture(lienzoRunes);
         const matRunes = new THREE.MeshBasicMaterial({ map: texturaRunes, transparent: true, depthWrite: false, side: THREE.DoubleSide });
-        const bandaRunes = new THREE.Mesh(geomBanda, matRunes);
-        bandaRunes.position.set(0, ALCADA_BANDA + 1.5, 0);
-        grupAnfores.add(bandaRunes);
-        // La banda de text (matA) comença transparent: només es veu després de «Traduir».
-        matA.opacity = 0;
-        let fadeTraduir = 0;
-        escena.add(grupAnfores);
+        const geomAnell = new THREE.CylinderGeometry(RADI_ANELLS, RADI_ANELLS, 0.9, 96, 1, true);
+        const anells = ALCADES_ANELLS.map((alcada) => {
+          const anell = new THREE.Mesh(geomAnell, matRunes);
+          anell.position.set(centre.x, alcada, centre.z);
+          escena.add(anell);
+          return anell;
+        });
+
+        // Símbol de la terra (triangle invertit amb una línia) que apareix sobre el con quan es resol.
+        const lienzoTerra = document.createElement("canvas");
+        lienzoTerra.width = 256;
+        lienzoTerra.height = 256;
+        const ctxTerra = lienzoTerra.getContext("2d");
+        if (ctxTerra) {
+          ctxTerra.strokeStyle = "rgb(150, 255, 110)";
+          ctxTerra.lineWidth = 14;
+          ctxTerra.shadowColor = "rgb(120, 255, 90)";
+          ctxTerra.shadowBlur = 16;
+          ctxTerra.beginPath();
+          ctxTerra.moveTo(40, 60);
+          ctxTerra.lineTo(216, 60);
+          ctxTerra.lineTo(128, 220);
+          ctxTerra.closePath();
+          ctxTerra.stroke();
+          ctxTerra.beginPath();
+          ctxTerra.moveTo(70, 130);
+          ctxTerra.lineTo(186, 130);
+          ctxTerra.stroke();
+        }
+        const matSimbol = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(lienzoTerra), transparent: true, opacity: 0, depthWrite: false });
+        const simbolTerra = new THREE.Sprite(matSimbol);
+        simbolTerra.scale.set(3, 3, 1);
+        simbolTerra.position.set(centre.x, 10, centre.z);
+        escena.add(simbolTerra);
+        let opacitatSimbol = 0;
 
         // Estelles fugaces: 30, cada una amb el seu temps, que cauen a l'atzar cap a un punt a 50 m davant de
         // l'observador (dispersat). Cua de fins a 12 m, densa, en gradient fins a invisible, i que s'estreny fins a 1/10.
@@ -827,8 +785,6 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
           const u = posicio.current;
           const sobreCami = u ? aMon(u.lat, u.lng, fita) : { x: 0, z: 0 };
           uniforms.uTime.value = (ara - inici) / 1000;
-        // Les àmfores giren una volta cada 8 segons.
-        grupAnfores.rotation.y = -(((ara - inici) / 1000) * Math.PI * 2) / 8;
 
         // Estelles: cada una té el seu temps. Quan comença un cicle nou, tria un punt d'impacte a l'atzar sobre el terra i una direcció de caiguda a 25° de la vertical. La cua es dibuixa fins a 4 m darrere la punta.
         for (let i = 0; i < NUM_ESTELLES; i++) {
@@ -925,10 +881,17 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
           }
           ultimFrameGolem = ara;
 
-          // Fos de les runes a les frases quan el jugador prem «Traduir».
-          fadeTraduir += ((traduitRef.current ? 1 : 0) - fadeTraduir) * 0.04;
-          matRunes.opacity = 1 - fadeTraduir;
-          matA.opacity = fadeTraduir;
+          // Anells: la posició de cada anell és el seu angle, i la combinació és correcta quan és a l'objectiu.
+          const resolt = anells.every((anell, k) => {
+            anell.rotation.y = anglesAnells.current[k];
+            const diferencia = Math.atan2(
+              Math.sin(anglesAnells.current[k] - OBJECTIU_ANELLS[k] * PAS_ANELL),
+              Math.cos(anglesAnells.current[k] - OBJECTIU_ANELLS[k] * PAS_ANELL),
+            );
+            return Math.abs(diferencia) < PAS_ANELL / 3;
+          });
+          opacitatSimbol += ((resolt ? 1 : 0) - opacitatSimbol) * 0.05;
+          matSimbol.opacity = opacitatSimbol;
           renderer.render(escena, cam);
           frame = requestAnimationFrame(bucle);
         };
@@ -942,11 +905,11 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
             if (objecte instanceof THREE.Mesh) objecte.geometry.dispose();
           });
           geoCel.dispose();
-          texturaA.dispose();
           texturaRunes.dispose();
           matRunes.dispose();
-          matA.dispose();
-          geomBanda.dispose();
+          geomAnell.dispose();
+          matSimbol.map?.dispose();
+          matSimbol.dispose();
           geoEstella.dispose();
           matEstella.dispose();
           geoImpacte.dispose();
@@ -974,10 +937,19 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
         ref={canvasRef}
         className="absolute inset-0 h-full w-full touch-none"
         onPointerDown={(ev) => {
+          // Si el dit toca un anell de runes, el gira; si no, és el gest de mirar al voltant.
+          const y = ev.clientY - ev.currentTarget.getBoundingClientRect().top;
+          const anell = anellsPantalla.current.findIndex((py) => Math.abs(py - y) < 60);
+          anellActiu.current = anell >= 0 ? anell : null;
           punter.current = { x: ev.clientX, y: ev.clientY };
           ev.currentTarget.setPointerCapture(ev.pointerId);
         }}
         onPointerMove={(ev) => {
+          if (anellActiu.current !== null && punter.current) {
+            anglesAnells.current[anellActiu.current] += (ev.clientX - punter.current.x) * 0.012;
+            punter.current = { x: ev.clientX, y: ev.clientY };
+            return;
+          }
           if (!arrossegarRef.current || !punter.current) return;
           const dx = ev.clientX - punter.current.x;
           const dy = ev.clientY - punter.current.y;
@@ -990,9 +962,11 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
         }}
         onPointerUp={() => {
           punter.current = null;
+          anellActiu.current = null;
         }}
         onPointerCancel={() => {
           punter.current = null;
+          anellActiu.current = null;
         }}
       />
     </>
