@@ -2,7 +2,6 @@
 
 import type { AnimationAction, AnimationMixer } from "three";
 import { useEffect, useRef, type RefObject } from "react";
-import { GLIFS_RUNES, INSCRIPCIO_RUNES } from "@/components/ui/runes";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
 import { EstatGolem, SeguimentGolem } from "@/components/ar/terra/seguiment";
 import { dibuixaVora } from "@/components/ar/voraGuia";
@@ -48,7 +47,11 @@ const MALLA_Z1 = 180;
 /** Colors del marcador provisional i de la brúixola. */
 const OR = "255, 206, 92";
 /** Alçades (m) dels tres anells de runes sobre el punt final. */
-const ALCADES_ANELLS = [2.5, 5.5, 8.5];
+const ALCADES_ANELLS = [2.0, 4.5, 7.0, 9.5];
+/** Lletres de cada anell, de dalt cap avall. Cada anell té 5 lletres. */
+const LLETRES_ANELLS = ["AEVTL", "MRGCO", "IPBXN", "CUKDZ"];
+/** Paraula de la solució: una lletra per anell, de dalt cap avall. */
+const PARAULA_SOLUCIO = "AMIC";
 /** Color dels anells runes: vermell lluny del número, blau quan s'hi acosta, verd quan tots són resolts. */
 const COLOR_ANELL_LLUNY = { r: 1, g: 0, b: 0 };
 const COLOR_ANELL_APROP = { r: 0, g: 0.35, b: 1 };
@@ -319,13 +322,13 @@ interface Props {
  */
 export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }: Props) {
   // Anells de runes: angles de gir (radiants) i la posició de cada anell a la pantalla (per tocar-los).
-  const anglesAnells = useRef<number[]>([0, 0, 0]);
+  const anglesAnells = useRef<number[]>([0, 0, 0, 0]);
   const anellsPantalla = useRef<number[]>([]);
   const anellActiu = useRef<number | null>(null);
   // Anells ja fixats al número correcte: no es poden tornar a girar.
-  const anellsBloquejats = useRef<boolean[]>([false, false, false]);
+  const anellsBloquejats = useRef<boolean[]>([false, false, false, false]);
   // Velocitat de cada anell (radiants per quadre), que ve del gest del dit.
-  const velocitatAnells = useRef<number[]>([0, 0, 0]);
+  const velocitatAnells = useRef<number[]>([0, 0, 0, 0]);
   const glRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Sense sensors, la vista comença mirant cap al camí.
@@ -590,41 +593,30 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         escena.add(new THREE.Points(geo, material));
 
-        // Tres anells de runes, un damunt de l'altre al voltant del punt final. Es giren amb el dit: cada anell té
-        // 8 posicions, i quan els tres són a la combinació correcta, apareix el símbol de la terra sobre el con.
-        const OBJECTIU_ANELLS = [2, 5, 7];
-        const PAS_ANELL = (2 * Math.PI) / 8;
+        // Quatre anells de lletres, un damunt de l'altre al voltant del punt final. Es giren amb el dit: cada anell té
+        // 5 lletres, i quan els quatre tenen la lletra de la paraula davant, apareix el símbol de la terra sobre el con.
+        const PAS_ANELL = (2 * Math.PI) / LLETRES_ANELLS[0].length;
         const RADI_ANELLS = 5;
-        const lienzoRunes = document.createElement("canvas");
-        lienzoRunes.width = 4096;
-        lienzoRunes.height = 260;
-        const ctxRunes = lienzoRunes.getContext("2d");
-        if (ctxRunes) {
-          const escalaRuna = 1.5;
-          const lletres = [...INSCRIPCIO_RUNES];
-          const paths: string[] = [];
-          let x = 0;
-          while (x < lienzoRunes.width) {
-            for (const ch of lletres) {
-              const g = GLIFS_RUNES[ch];
-              if (!g || x >= lienzoRunes.width) continue;
-              paths.push(`<path d="${g.d}" transform="translate(${x.toFixed(1)} 200) scale(${escalaRuna})"/>`);
-              x += g.amplada * escalaRuna + 30;
+        // Angle de cada anell perquè la seva lletra de la paraula quedi al davant (la lletra i és a l'angle (i + 0,5) · PAS).
+        const OBJECTIU_ANELLS = LLETRES_ANELLS.map((lletres, k) => -(lletres.indexOf(PARAULA_SOLUCIO[k]) + 0.5) * PAS_ANELL);
+        // Cada anell té el seu material (i la seva textura de lletres): així es pot tenyir a mesura que s'acosta.
+        const matsAnells = LLETRES_ANELLS.map((lletres) => {
+          const lienc = document.createElement("canvas");
+          lienc.width = 1024;
+          lienc.height = 256;
+          const ctxLletres = lienc.getContext("2d");
+          if (ctxLletres) {
+            ctxLletres.fillStyle = "rgb(255,255,255)";
+            ctxLletres.font = "bold 200px Georgia, serif";
+            ctxLletres.textAlign = "center";
+            ctxLletres.textBaseline = "middle";
+            for (let i = 0; i < lletres.length; i++) {
+              ctxLletres.fillText(lletres[i], ((i + 0.5) * lienc.width) / lletres.length, lienc.height / 2);
             }
           }
-          const svgRunes =
-            `<svg xmlns="http://www.w3.org/2000/svg" width="4096" height="260" viewBox="0 0 4096 260">` +
-            `<g fill="rgb(255,255,255)">${paths.join("")}</g></svg>`;
-          const imatgeRunes = new Image();
-          imatgeRunes.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgRunes);
-          await imatgeRunes.decode().catch(() => {});
-          ctxRunes.drawImage(imatgeRunes, 0, 0, lienzoRunes.width, lienzoRunes.height);
-        }
-        const texturaRunes = new THREE.CanvasTexture(lienzoRunes);
-        // Cada anell té el seu material: així es pot tenyir de verd a mesura que s'acosta al seu número.
-        const matsAnells = ALCADES_ANELLS.map(
-          () => new THREE.MeshBasicMaterial({ map: texturaRunes, transparent: true, depthWrite: false, side: THREE.DoubleSide }),
-        );
+          const textura = new THREE.CanvasTexture(lienc);
+          return new THREE.MeshBasicMaterial({ map: textura, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+        });
         const geomAnell = new THREE.CylinderGeometry(RADI_ANELLS, RADI_ANELLS, 0.9, 96, 1, true);
         const anells = ALCADES_ANELLS.map((alcada, k) => {
           const anell = new THREE.Mesh(geomAnell, matsAnells[k]);
@@ -664,9 +656,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // 0 = anells en joc; 1 = tots resolts: es tornen verds i desapareixen.
         let progresResolt = 0;
         // Flaix blanc i pulsació quan un anell es fixa: 1 just al fixar-se, i es va apagant.
-        const flaixAnells = [0, 0, 0];
-        // Diferència amb el número correcte al quadre anterior, per detectar quan el travessa.
-        const diferenciaAnterior = [NaN, NaN, NaN];
+        const flaixAnells = [0, 0, 0, 0];
+        // Diferència amb la lletra correcta al quadre anterior, per detectar quan el travessa.
+        const diferenciaAnterior = [NaN, NaN, NaN, NaN];
 
         // Estelles fugaces: 30, cada una amb el seu temps, que cauen a l'atzar cap a un punt a 50 m davant de
         // l'observador (dispersat). Cua de fins a 12 m, densa, en gradient fins a invisible, i que s'estreny fins a 1/10.
@@ -908,8 +900,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
               velocitatAnells.current[k] *= 0.92;
             }
             const diferencia = Math.atan2(
-              Math.sin(anglesAnells.current[k] - OBJECTIU_ANELLS[k] * PAS_ANELL),
-              Math.cos(anglesAnells.current[k] - OBJECTIU_ANELLS[k] * PAS_ANELL),
+              Math.sin(anglesAnells.current[k] - OBJECTIU_ANELLS[k]),
+              Math.cos(anglesAnells.current[k] - OBJECTIU_ANELLS[k]),
             );
             // Es fixa si el número és just davant, o si l'ha travessat girant de pressa (entre dos quadres).
             const anterior = diferenciaAnterior[k];
@@ -921,7 +913,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             // En fixar-se, l'anell va exactament al número correcte i fa el flaix.
             if (!anellsBloquejats.current[k] && (travessa || Math.abs(diferencia) < PAS_ANELL / 3)) {
               anellsBloquejats.current[k] = true;
-              anglesAnells.current[k] = OBJECTIU_ANELLS[k] * PAS_ANELL;
+              anglesAnells.current[k] = OBJECTIU_ANELLS[k];
               velocitatAnells.current[k] = 0;
               flaixAnells[k] = 1;
             }
@@ -966,8 +958,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             if (objecte instanceof THREE.Mesh) objecte.geometry.dispose();
           });
           geoCel.dispose();
-          texturaRunes.dispose();
-          matsAnells.forEach((m) => m.dispose());
+          matsAnells.forEach((m) => {
+            m.map?.dispose();
+            m.dispose();
+          });
           geomAnell.dispose();
           matSimbol.map?.dispose();
           matSimbol.dispose();
