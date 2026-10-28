@@ -266,18 +266,19 @@ export const EXTRES_AR: ExtraAr[] = [
     fitaId: "planes-bones",
     arribada: true,
     escena: "terra",
-    // La fita (des) i les àmfores (cap): ~180 m cap a l'est-sud-est (rumb ≈ 107°).
+    // Del punt on sona el vídeo del màster (des) fins al con de la fita (cap): ~160 m cap al sud-est.
     cami: {
-      des: { latitud: 41.91227654730743, longitud: 2.2334459962925832 },
-      cap: { latitud: 41.91180905920371, longitud: 2.235562619810543 },
+      des: { latitud: 41.913588, longitud: 2.232733 },
+      cap: { latitud: 41.912260852132, longitud: 2.233455370907986 },
     },
     boto: "🧭 Seguiu la Terra",
     introduccio: {
       titol: "La Terra us guia",
-      entrada: "El Gollem protector de l'element terra us ha vingut a rebre.",
+      entrada: "El Gollem protector de l'element terra apareix aquí mateix i us guiarà fins al con de la fita.",
       passos: [
-        { icona: "🗿", text: "Seguiu-lo fins allà on l'alquimista ha guardat l'element de la terra." },
-        { icona: "🔮", text: "Quan tingueu la resposta, sortiu de la realitat augmentada i resoleu la fita." },
+        { icona: "🗿", text: "Seguiu el Gollem de pedra: camina davant vostre, cap al con de la fita." },
+        { icona: "🔮", text: "Al con, gireu els tres anells de runes amb el dit fins que brillin tots en verd." },
+        { icona: "🌍", text: "Quan aparegui el símbol de la terra sobre el con, sortiu de la realitat augmentada i resoleu la fita." },
       ],
       permisos: {
         titol: "El mòbil us demanarà permís per a:",
