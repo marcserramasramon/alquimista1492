@@ -608,6 +608,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           lienc.height = 128;
           const ctxLletres = lienc.getContext("2d");
           if (ctxLletres) {
+            // Fons semitransparent de la marquesina; el color de l'anell el tenyeix (vermell, blau o verd).
+            ctxLletres.fillStyle = "rgba(255,255,255,0.35)";
+            ctxLletres.fillRect(0, 0, lienc.width, lienc.height);
             ctxLletres.fillStyle = "rgb(255,255,255)";
             ctxLletres.font = "normal 170px Georgia, serif";
             ctxLletres.textAlign = "center";
