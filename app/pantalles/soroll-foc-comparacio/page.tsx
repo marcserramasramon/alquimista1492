@@ -19,6 +19,13 @@ const VARIANTS = [
     radi: RADI_PUNTS_OBJECTIU,
     simbol: true,
   },
+  {
+    titol: "Actual, amb punts grans (només per veure la malla)",
+    detall: `color ${BLAU_OBJECTIU} · radi ${RADI_PETIT} · símbol U+1F702`,
+    color: BLAU_OBJECTIU,
+    radi: RADI_PETIT,
+    simbol: true,
+  },
   { titol: "A · Punts més petits", detall: `color ${BLAU_OBJECTIU} · radi ${RADI_PETIT}`, color: BLAU_OBJECTIU, radi: RADI_PETIT, simbol: false },
   { titol: "B · Blau menys fosc", detall: `color ${BLAU_MIG} · radi ${RADI_PUNTS_OBJECTIU}`, color: BLAU_MIG, radi: RADI_PUNTS_OBJECTIU, simbol: false },
   { titol: "C · Punts petits i blau menys fosc", detall: `color ${BLAU_MIG} · radi ${RADI_PETIT}`, color: BLAU_MIG, radi: RADI_PETIT, simbol: false },
