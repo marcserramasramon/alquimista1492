@@ -50,9 +50,9 @@ const OR = "255, 206, 92";
 /** Alçades (m) dels tres anells de runes sobre el punt final. */
 const ALCADES_ANELLS = [2.5, 5.5, 8.5];
 /** Color dels anells runes: vermell lluny del número, blau quan s'hi acosta, verd quan tots són resolts. */
-const COLOR_ANELL_LLUNY = { r: 1, g: 0.15, b: 0.15 };
-const COLOR_ANELL_APROP = { r: 0.2, g: 0.5, b: 1 };
-const COLOR_ANELL_RESOLT = { r: 0.3, g: 1, b: 0.3 };
+const COLOR_ANELL_LLUNY = { r: 1, g: 0, b: 0 };
+const COLOR_ANELL_APROP = { r: 0, g: 0.35, b: 1 };
+const COLOR_ANELL_RESOLT = { r: 0.2, g: 1, b: 0.2 };
 
 /** Estat del camí respecte la posició de l'equip. */
 export interface EstatTerra {
@@ -939,10 +939,12 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             const r = r0 + (1 - r0) * flaixAnells[k];
             const g = g0 + (1 - g0) * flaixAnells[k];
             const b = b0 + (1 - b0) * flaixAnells[k];
+            // En sRGB, perquè el vermell i el blau es vegin tal com s'han definit.
             matsAnells[k].color.setRGB(
               r + (COLOR_ANELL_RESOLT.r - r) * progresResolt,
               g + (COLOR_ANELL_RESOLT.g - g) * progresResolt,
               b + (COLOR_ANELL_RESOLT.b - b) * progresResolt,
+              THREE.SRGBColorSpace,
             );
             flaixAnells[k] *= 0.9;
             anells[k].scale.setScalar(1 + 0.04 * flaixAnells[k]);
