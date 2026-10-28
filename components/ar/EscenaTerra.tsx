@@ -324,6 +324,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
   const anellActiu = useRef<number | null>(null);
   // Anells ja fixats al número correcte: no es poden tornar a girar.
   const anellsBloquejats = useRef<boolean[]>([false, false, false]);
+  // Velocitat de cada anell (radiants per quadre), que ve del gest del dit.
+  const velocitatAnells = useRef<number[]>([0, 0, 0]);
   const glRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Sense sensors, la vista comença mirant cap al camí.
@@ -662,6 +664,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         let progresResolt = 0;
         // Flaix blanc i pulsació quan un anell es fixa: 1 just al fixar-se, i es va apagant.
         const flaixAnells = [0, 0, 0];
+        // Diferència amb el número correcte al quadre anterior, per detectar quan el travessa.
+        const diferenciaAnterior = [NaN, NaN, NaN];
 
         // Estelles fugaces: 30, cada una amb el seu temps, que cauen a l'atzar cap a un punt a 50 m davant de
         // l'observador (dispersat). Cua de fins a 12 m, densa, en gradient fins a invisible, i que s'estreny fins a 1/10.
@@ -897,14 +901,27 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
 
           // Anells: la posició de cada anell és el seu angle, i la combinació és correcta quan és a l'objectiu.
           const diferencies = anells.map((anell, k) => {
+            // Inèrcia: l'anell continua girant després de solt el dit, i va frenant.
+            if (!anellsBloquejats.current[k] && anellActiu.current !== k) {
+              anglesAnells.current[k] += velocitatAnells.current[k];
+              velocitatAnells.current[k] *= 0.92;
+            }
             const diferencia = Math.atan2(
               Math.sin(anglesAnells.current[k] - OBJECTIU_ANELLS[k] * PAS_ANELL),
               Math.cos(anglesAnells.current[k] - OBJECTIU_ANELLS[k] * PAS_ANELL),
             );
-            // En arribar al número correcte, l'anell es fixa exactament allà i fa el flaix.
-            if (!anellsBloquejats.current[k] && Math.abs(diferencia) < PAS_ANELL / 3) {
+            // Es fixa si el número és just davant, o si l'ha travessat girant de pressa (entre dos quadres).
+            const anterior = diferenciaAnterior[k];
+            const travessa =
+              Number.isFinite(anterior) &&
+              Math.sign(anterior) !== Math.sign(diferencia) &&
+              Math.min(Math.abs(anterior), Math.abs(diferencia)) < PAS_ANELL;
+            diferenciaAnterior[k] = diferencia;
+            // En fixar-se, l'anell va exactament al número correcte i fa el flaix.
+            if (!anellsBloquejats.current[k] && (travessa || Math.abs(diferencia) < PAS_ANELL / 3)) {
               anellsBloquejats.current[k] = true;
               anglesAnells.current[k] = OBJECTIU_ANELLS[k] * PAS_ANELL;
+              velocitatAnells.current[k] = 0;
               flaixAnells[k] = 1;
             }
             anell.rotation.y = anglesAnells.current[k];
@@ -990,12 +1007,16 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             }
           });
           anellActiu.current = anell;
+          // Tocar un anell que gira el frena; després el gest el torna a girar.
+          if (anell !== null) velocitatAnells.current[anell] = 0;
           punter.current = { x: ev.clientX, y: ev.clientY };
           ev.currentTarget.setPointerCapture(ev.pointerId);
         }}
         onPointerMove={(ev) => {
           if (anellActiu.current !== null && punter.current) {
-            anglesAnells.current[anellActiu.current] += (ev.clientX - punter.current.x) * 0.012;
+            const girar = (ev.clientX - punter.current.x) * 0.02;
+            anglesAnells.current[anellActiu.current] += girar;
+            velocitatAnells.current[anellActiu.current] = girar;
             punter.current = { x: ev.clientX, y: ev.clientY };
             return;
           }
