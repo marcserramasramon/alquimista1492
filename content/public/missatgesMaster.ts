@@ -99,13 +99,15 @@ export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
   },
   /** Es dispara sol pel camí cap a Planes Bones (Terra), a l'altura de l'entrada del Mas
    *  Vinyals. Vídeo generat amb IA: arbres i plantes creixen al costat del camí, seguint
-   *  els seus passos. Narració muntada amb scripts/generate-audio-ambient.py. */
+   *  els seus passos. Narració muntada amb scripts/generate-audio-ambient.py. El botó d'AR
+   *  obre la Terra des d'aquest punt: el Gollem apareix i guia l'equip fins al con de la fita. */
   {
     id: "terra-vinyals",
     titol: "La Terra ha florit",
     text: "Heu vist créixer la Terra al vostre pas. Fins i tot ella sap que us acosteu al que busca.",
     video: "/video/terra-planes-bones.mp4",
-    geofence: { lat: 41.9136, lng: 2.232721, radiMetres: 30 },
+    geofence: { lat: 41.913588, lng: 2.232733, radiMetres: 30 },
+    ar: { href: "/joc/ar/terra-cami", boto: "🧭 Seguiu la Terra" },
   },
   /** Es dispara sol pel Camí de Malla, camí cap a la fita d'Ànima (pista skate). Vídeo
    *  generat amb IA: presència de l'Ànima al camí. Narració pendent amb
