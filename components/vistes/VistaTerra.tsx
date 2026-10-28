@@ -82,7 +82,7 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   useEffect(() => {
     if (directa && cami) {
       // A la galeria, l'observador es posa en una posició fixa de prova (la base de les fletxes).
-      baseGaleria.current = { lat: 41.912264228224565, lng: 2.233467711759767 };
+      baseGaleria.current = { lat: 41.913588, lng: 2.232733 };
       posicio.current = baseGaleria.current;
       return;
     }
