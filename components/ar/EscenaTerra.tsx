@@ -26,24 +26,25 @@ const RADI_CAMI_BUIT = 15;
 export const RADI_AMFORES = 6;
 /** Alçada (m) a què penja la còpia de la malla al cel. */
 const ALCADA_CEL = 30;
-/** Posició GPS exacta del monticle. */
-export const PUNT_FORAT: PuntGps = { latitud: 41.91203206477954, longitud: 2.234635039095013 };
+/** Posició GPS exacta del con de la fita: on el Gollem porta l'equip i on són els anells de runes. */
+export const PUNT_FORAT: PuntGps = { latitud: 41.912260852132, longitud: 2.233455370907986 };
 /** Distància (m) a la qual s'ha de estar del monticle per veure'l (posició de prova de la galeria). */
 export const DISTANCIA_PROVA_FORAT_M = 15;
 /** Vèrtexs extra al disc del forat, perquè l'embut tingui prou punts. */
 const NVERTEXS_FORAT = 2500;
 /** Radi (m) del disc del forat, al voltant del punt GPS final. */
 const RADI_FORAT = 3.5;
-/** Malla de punts: 160 × 100 = 16.000 vèrtexs, en metres respecte la fita (x = est, z = sud). */
+/** Malla de punts: 160 × 125 vèrtexs, en metres respecte el punt d'inici (x = est, z = sud). */
 const NX = 160;
-const NZ = 100;
+const NZ = 125;
 /** Malla del cel: una graella pròpia, més esbiaixada que la del terra. */
 const NX_CEL = 120;
-const NZ_CEL = 75;
+const NZ_CEL = 93;
 const MALLA_X0 = -120;
 const MALLA_X1 = 260;
 const MALLA_Z0 = -120;
-const MALLA_Z1 = 120;
+/** Ha d'arribar fins al con de la fita (~150 m al sud del punt d'inici). */
+const MALLA_Z1 = 180;
 /** Colors del marcador provisional i de la brúixola. */
 const OR = "255, 206, 92";
 /** Alçades (m) dels tres anells de runes sobre el punt final. */
