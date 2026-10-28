@@ -149,6 +149,7 @@ export function generaSoroll({
   colorObjectiu = LILA_OBJECTIU,
   radiPunts = RADI_PUNTS_OBJECTIU,
   colorsSoroll = COLORS_SOROLL,
+  simbolObjectiu,
   pasPunts = PAS_PUNTS_OBJECTIU,
   triangles = false,
   camuflatge = true,
@@ -167,6 +168,8 @@ export function generaSoroll({
   radiPunts?: number;
   /** Colors de les xifres i els símbols del soroll; un color repetit pesa més (per defecte COLORS_SOROLL). No canvia la composició, només els colors. */
   colorsSoroll?: string[];
+  /** Si hi és, la resposta del cartell és aquest símbol (ara només el del Foc, 🜂) en lloc del número `resposta`: mateixa trama i camuflatge, però amb la forma del triangle. */
+  simbolObjectiu?: "foc";
   /** Separació entre els punts de la trama del número: com més gran, menys densitat (per defecte PAS_PUNTS_OBJECTIU). */
   pasPunts?: number;
   /** Els punts de la trama són triangles orientats a l'atzar (en lloc de cercles). No toca la composició del soroll. */
@@ -196,7 +199,7 @@ export function generaSoroll({
     mida: midaObjectiuFinal,
     rotacio: 0,
     color: colorObjectiu,
-    xifra: resposta,
+    ...(simbolObjectiu ? { simbol: simbolObjectiu } : { xifra: resposta }),
     objectiu: true,
   });
 
@@ -207,7 +210,7 @@ export function generaSoroll({
   const radiHalftone = radiPunts;
   const margeHalftone = midaObjectiuFinal * 0.65;
   // L'amplada del número creix amb les xifres (cada una fa uns 0,56 de la mida): sense això, la darrera xifra queda tallada.
-  const margeXHalftone = midaObjectiuFinal * Math.max(0.65, 0.3 * resposta.length + 0.05);
+  const margeXHalftone = midaObjectiuFinal * Math.max(0.65, 0.3 * (simbolObjectiu ? 1 : resposta.length) + 0.05);
   const minXHalftone = Math.max(0, xObjectiu - margeXHalftone);
   const maxXHalftone = Math.min(amplada, xObjectiu + margeXHalftone);
   const minYHalftone = Math.max(0, yObjectiu - margeHalftone);

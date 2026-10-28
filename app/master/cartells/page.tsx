@@ -49,6 +49,8 @@ export default async function CartellsPage({
       soroll: resposta
         ? generaSoroll({
             resposta,
+            // La resposta del cartell és el símbol del Foc (🜂), no el número (la solució validada continua sent el número).
+            simbolObjectiu: "foc",
             ...opcionsSoroll(estilCartell === "fons" ? "fons" : "imatge"),
             ...(Number.isFinite(llavorNum) ? { llavor: llavorNum } : {}),
             ...(Number.isFinite(quantitatNum) ? { quantitat: quantitatNum } : {}),

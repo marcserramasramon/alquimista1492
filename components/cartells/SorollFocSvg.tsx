@@ -75,6 +75,39 @@ function PecaNoise({ p, color = p.color }: { p: PecaSoroll; color?: string }) {
   );
 }
 
+/** Triangle del símbol del Foc (🜂), el mateix de `Simbol` però ple i amb mida i posició pròpies: serveix de forma de la resposta quan no és un número. */
+const TRIANGLE_FOC = "M0,-0.42 L0.4,0.3 L-0.4,0.3 Z";
+
+/** La forma de la resposta (número o símbol), per retallar-hi la trama (clipPath) o emmascarar-ne la vora (mask). */
+function FormaObjectiu({ p, negreta, ...resta }: { p: PecaSoroll; negreta: boolean } & Record<string, unknown>) {
+  if (p.simbol === "foc") {
+    // Un pèl avall perquè el triangle (que va de -0,42 a 0,3) quedi centrat visualment.
+    return (
+      <path
+        d={TRIANGLE_FOC}
+        transform={`translate(${p.x.toFixed(1)} ${(p.y + p.mida * 0.06).toFixed(1)}) rotate(${p.rotacio.toFixed(1)}) scale(${p.mida.toFixed(1)})`}
+        {...resta}
+        strokeWidth={typeof resta.strokeWidth === "number" ? resta.strokeWidth / p.mida : undefined}
+      />
+    );
+  }
+  return (
+    <text
+      x={p.x}
+      y={p.y}
+      fontSize={p.mida}
+      fontWeight={negreta ? 700 : 400}
+      textAnchor="middle"
+      dominantBaseline="central"
+      transform={`rotate(${p.rotacio.toFixed(1)} ${p.x.toFixed(1)} ${p.y.toFixed(1)})`}
+      style={{ fontFamily: `${roboto.style.fontFamily}, sans-serif` }}
+      {...resta}
+    >
+      {p.xifra}
+    </text>
+  );
+}
+
 /** Vèrtexs d'un triangle equilàter de radi `r` (circumscrit) centrat a (x, y) i girat `angle` graus. */
 function puntsTriangle(x: number, y: number, r: number, angle: number) {
   return [0, 120, 240]
@@ -161,40 +194,14 @@ export function SorollFocSvg({
       {objectiu && soroll.puntsFons && (
         <defs>
           <mask id={maskVora} maskUnits="userSpaceOnUse" x={0} y={0} width={soroll.amplada} height={soroll.alcada}>
-            <text
-              x={objectiu.x}
-              y={objectiu.y}
-              fontSize={objectiu.mida}
-              fontWeight={negreta ? 700 : 400}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fill="#fff"
-              stroke="#fff"
-              strokeWidth={AMPLADA_VORA_CAMUFLATGE}
-              strokeLinejoin="round"
-              transform={`rotate(${objectiu.rotacio.toFixed(1)} ${objectiu.x.toFixed(1)} ${objectiu.y.toFixed(1)})`}
-              style={{ fontFamily: `${roboto.style.fontFamily}, sans-serif` }}
-            >
-              {objectiu.xifra}
-            </text>
+            <FormaObjectiu p={objectiu} negreta={negreta} fill="#fff" stroke="#fff" strokeWidth={AMPLADA_VORA_CAMUFLATGE} strokeLinejoin="round" />
           </mask>
         </defs>
       )}
       {objectiu && (
         <defs>
           <clipPath id={clipObjectiu}>
-            <text
-              x={objectiu.x}
-              y={objectiu.y}
-              fontSize={objectiu.mida}
-              fontWeight={negreta ? 700 : 400}
-              textAnchor="middle"
-              dominantBaseline="central"
-              transform={`rotate(${objectiu.rotacio.toFixed(1)} ${objectiu.x.toFixed(1)} ${objectiu.y.toFixed(1)})`}
-              style={{ fontFamily: `${roboto.style.fontFamily}, sans-serif` }}
-            >
-              {objectiu.xifra}
-            </text>
+            <FormaObjectiu p={objectiu} negreta={negreta} />
           </clipPath>
         </defs>
       )}

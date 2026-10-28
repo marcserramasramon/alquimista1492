@@ -33,6 +33,13 @@ export default function SorollFocComparacioPage() {
             </div>
           </section>
         ))}
+        <section>
+          <h2 className="font-semibold">Símbol 🜂 (en blau i punts grans, per veure la forma)</h2>
+          <p className="mb-1 font-mono text-xs text-ink-soft">simbolObjectiu: &quot;foc&quot; · color {BLAU_MIG} · radi {RADI_PETIT}</p>
+          <div className="overflow-hidden rounded-xl border-2 border-ink-soft/30 bg-white">
+            <SorollFocSvg soroll={generaSoroll({ resposta: "", simbolObjectiu: "foc", ...opcionsSoroll("imatge"), colorObjectiu: BLAU_MIG, radiPunts: RADI_PETIT })} className="w-full" />
+          </div>
+        </section>
       </div>
     </div>
   );
