@@ -47,7 +47,10 @@ const MALLA_Z1 = 120;
 /** Colors del marcador provisional i de la brúixola. */
 const OR = "255, 206, 92";
 /** Alçades (m) dels tres anells de runes sobre el punt final. */
-const ALCADES_ANELLS = [1.5, 3.0, 4.5];
+const ALCADES_ANELLS = [1.0, 3.4, 5.8];
+/** Color dels anells runes: lluny (gris blavós) i quan és el número correcte (blanc, que deixa veure el verd). */
+const COLOR_ANELL_LLUNY = { r: 0.42, g: 0.48, b: 0.46 };
+const COLOR_ANELL_APROP = { r: 1, g: 1, b: 1 };
 
 /** Estat del camí respecte la posició de l'equip. */
 export interface EstatTerra {
@@ -612,10 +615,13 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           ctxRunes.drawImage(imatgeRunes, 0, 0, lienzoRunes.width, lienzoRunes.height);
         }
         const texturaRunes = new THREE.CanvasTexture(lienzoRunes);
-        const matRunes = new THREE.MeshBasicMaterial({ map: texturaRunes, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+        // Cada anell té el seu material: així es pot tenyir de verd a mesura que s'acosta al seu número.
+        const matsAnells = ALCADES_ANELLS.map(
+          () => new THREE.MeshBasicMaterial({ map: texturaRunes, transparent: true, depthWrite: false, side: THREE.DoubleSide }),
+        );
         const geomAnell = new THREE.CylinderGeometry(RADI_ANELLS, RADI_ANELLS, 0.9, 96, 1, true);
-        const anells = ALCADES_ANELLS.map((alcada) => {
-          const anell = new THREE.Mesh(geomAnell, matRunes);
+        const anells = ALCADES_ANELLS.map((alcada, k) => {
+          const anell = new THREE.Mesh(geomAnell, matsAnells[k]);
           anell.position.set(centre.x, alcada, centre.z);
           escena.add(anell);
           return anell;
@@ -882,14 +888,24 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           ultimFrameGolem = ara;
 
           // Anells: la posició de cada anell és el seu angle, i la combinació és correcta quan és a l'objectiu.
-          const resolt = anells.every((anell, k) => {
+          const diferencies = anells.map((anell, k) => {
             anell.rotation.y = anglesAnells.current[k];
-            const diferencia = Math.atan2(
+            return Math.atan2(
               Math.sin(anglesAnells.current[k] - OBJECTIU_ANELLS[k] * PAS_ANELL),
               Math.cos(anglesAnells.current[k] - OBJECTIU_ANELLS[k] * PAS_ANELL),
             );
-            return Math.abs(diferencia) < PAS_ANELL / 3;
           });
+          // Color: gris blavós lluny del número correcte, verd brillant quan hi és.
+          diferencies.forEach((diferencia, k) => {
+            const proximitat = 1 - Math.min(1, Math.abs(diferencia) / (PAS_ANELL * 2));
+            const { r, g, b } = COLOR_ANELL_LLUNY;
+            matsAnells[k].color.setRGB(
+              r + (COLOR_ANELL_APROP.r - r) * proximitat,
+              g + (COLOR_ANELL_APROP.g - g) * proximitat,
+              b + (COLOR_ANELL_APROP.b - b) * proximitat,
+            );
+          });
+          const resolt = diferencies.every((diferencia) => Math.abs(diferencia) < PAS_ANELL / 3);
           opacitatSimbol += ((resolt ? 1 : 0) - opacitatSimbol) * 0.05;
           matSimbol.opacity = opacitatSimbol;
           renderer.render(escena, cam);
@@ -906,7 +922,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
           });
           geoCel.dispose();
           texturaRunes.dispose();
-          matRunes.dispose();
+          matsAnells.forEach((m) => m.dispose());
           geomAnell.dispose();
           matSimbol.map?.dispose();
           matSimbol.dispose();
@@ -939,8 +955,16 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         onPointerDown={(ev) => {
           // Si el dit toca un anell de runes, el gira; si no, és el gest de mirar al voltant.
           const y = ev.clientY - ev.currentTarget.getBoundingClientRect().top;
-          const anell = anellsPantalla.current.findIndex((py) => Math.abs(py - y) < 60);
-          anellActiu.current = anell >= 0 ? anell : null;
+          // L'anell més proper al dit, sempre que n'hi hagi un a menys de 60 px.
+          let anell: number | null = null;
+          let distancia = 60;
+          anellsPantalla.current.forEach((py, k) => {
+            if (Math.abs(py - y) < distancia) {
+              distancia = Math.abs(py - y);
+              anell = k;
+            }
+          });
+          anellActiu.current = anell;
           punter.current = { x: ev.clientX, y: ev.clientY };
           ev.currentTarget.setPointerCapture(ev.pointerId);
         }}
