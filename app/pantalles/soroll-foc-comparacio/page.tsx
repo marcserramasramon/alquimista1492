@@ -5,7 +5,6 @@ import { SorollFocSvg } from "@/components/cartells/SorollFocSvg";
  * Pàgina de desenvolupament per comparar el color i la mida dels punts de la
  * resposta secreta del cartell de Foc. Hereta el layout de /pantalles (404 en producció).
  */
-const BLAU_MIG = "#2f63c0";
 const RADI_PETIT = 2.7;
 
 /** Símbol alquímic del foc (U+1F702), la resposta del cartell. */
@@ -26,9 +25,6 @@ const VARIANTS = [
     radi: RADI_PETIT,
     simbol: true,
   },
-  { titol: "A · Punts més petits", detall: `color ${BLAU_OBJECTIU} · radi ${RADI_PETIT}`, color: BLAU_OBJECTIU, radi: RADI_PETIT, simbol: false },
-  { titol: "B · Blau menys fosc", detall: `color ${BLAU_MIG} · radi ${RADI_PUNTS_OBJECTIU}`, color: BLAU_MIG, radi: RADI_PUNTS_OBJECTIU, simbol: false },
-  { titol: "C · Punts petits i blau menys fosc", detall: `color ${BLAU_MIG} · radi ${RADI_PETIT}`, color: BLAU_MIG, radi: RADI_PETIT, simbol: false },
 ];
 
 export default function SorollFocComparacioPage() {
@@ -36,7 +32,7 @@ export default function SorollFocComparacioPage() {
     <div className="min-h-dvh bg-paper p-4 text-ink">
       <h1 className="font-display text-xl font-bold">Comparació · resposta secreta de Foc</h1>
       <p className="mb-4 text-sm text-ink-soft">
-        Mateixa composició, canviant només el color i el radi dels punts de la resposta (l&apos;actual és el símbol {SIMBOL_FOC}; la resta, el número 273 d&apos;exemple).
+        Mateixa composició, canviant només el color i el radi dels punts de la resposta (símbol {SIMBOL_FOC}).
       </p>
       <div className="space-y-6">
         {VARIANTS.map((v) => (
