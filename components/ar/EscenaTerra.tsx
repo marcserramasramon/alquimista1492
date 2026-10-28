@@ -68,6 +68,56 @@ const PARAULES_NOVUL = [
   "Obsidiana",
   "Ambre",
 ];
+/** Paraules que poden sortir en substitució d'una de les equivocades que explota. */
+const PARAULES_NOUVES = [
+  "Sofre",
+  "Mercuri",
+  "Sal",
+  "Or",
+  "Plata",
+  "Coure",
+  "Ferro",
+  "Estany",
+  "Plom",
+  "Antimoni",
+  "Arsènic",
+  "Bísmut",
+  "Cinnabri",
+  "Vitriol",
+  "Salnitre",
+  "Sodi",
+  "Zinc",
+  "Cobalt",
+  "Níquel",
+  "Magnesi",
+  "Calç",
+  "Fòsfor",
+  "Carbó",
+  "Borax",
+  "Alum",
+  "Plumbagina",
+  "Manganès",
+  "Platí",
+  "Realgar",
+  "Orpiment",
+  "Estibina",
+  "Calamina",
+  "Galena",
+  "Marcassita",
+  "Pirita",
+  "Vidre",
+  "Guix",
+  "Amoníac",
+  "Bor",
+  "Àgata",
+  "Quars",
+  "Mmica",
+  "Talc",
+  "Sofre Viu",
+  "Sal de Saturn",
+];
+/** Durada (ms) de l'explosió d'una paraula equivocada. */
+const DURADA_EXPLOSIO_MS = 500;
 /** Amplitud (m) del moviment lent de cada paraula al voltant del seu lloc. */
 const MOVIMENT_M = 1.2;
 /** Alçada (m) del dodecaedre que gira al centre, i a quina alçada cau (el terra). */
@@ -354,6 +404,8 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
   const posicioParaules = useRef<{ dx: number; y: number; dz: number }[]>([]);
   // S'ha tocat la paraula correcta (AMIC).
   const paraulaTocada = useRef(false);
+  // Paraules equivocades tocades des de l'última passada de l'escena (índex a la llista).
+  const paraulesExplotades = useRef<number[]>([]);
   const glRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Sense sensors, la vista comença mirant cap al camí.
@@ -639,13 +691,18 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         });
         // La font ha d'estar carregada abans de dibuixar les paraules al canvas.
         await document.fonts.load(`120px ${fontParaules.style.fontFamily}`).catch(() => {});
-        const paraules = PARAULES_NOVUL.map((paraula) => {
+        // Textura d'una paraula: el text es redueix si no cap a l'amplada del canvas.
+        const crearTextura = (paraula: string) => {
           const lienc = document.createElement("canvas");
           lienc.width = 512;
           lienc.height = 192;
           const ctxParaula = lienc.getContext("2d");
           if (ctxParaula) {
-            ctxParaula.font = `120px ${fontParaules.style.fontFamily}`;
+            let mida = 120;
+            ctxParaula.font = `${mida}px ${fontParaules.style.fontFamily}`;
+            const amplada = ctxParaula.measureText(paraula).width;
+            if (amplada > 470) mida = Math.floor((mida * 470) / amplada);
+            ctxParaula.font = `${mida}px ${fontParaules.style.fontFamily}`;
             ctxParaula.textAlign = "center";
             ctxParaula.textBaseline = "middle";
             ctxParaula.lineWidth = 10;
@@ -654,12 +711,19 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             ctxParaula.fillStyle = "rgb(255,255,255)";
             ctxParaula.fillText(paraula, lienc.width / 2, lienc.height / 2);
           }
-          const material = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(lienc), transparent: true, depthWrite: false });
+          return new THREE.CanvasTexture(lienc);
+        };
+        // Paraules visibles ara (la 0 és AMIC). Les que exploten se substitueixen per una de la llista nova.
+        const paraulesEnUs = [...PARAULES_NOVUL];
+        const paraules = paraulesEnUs.map((paraula) => {
+          const material = new THREE.SpriteMaterial({ map: crearTextura(paraula), transparent: true, depthWrite: false });
           const sprite = new THREE.Sprite(material);
           sprite.scale.set(2.4, 0.9, 1);
           escena.add(sprite);
           return sprite;
         });
+        // Instant (ms) en què ha començat l'explosió de cada paraula, o null si no n'hi ha cap.
+        const explosioInici: (number | null)[] = paraules.map(() => null);
 
         // Dodecaedre al centre: gira a poc a poc fins que es toca la paraula correcta; llavors cau i impacta al con.
         const dodecaedre = new THREE.Mesh(
@@ -950,7 +1014,27 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             y: p.by + 0.6 * Math.sin(p.f3 * tempsBelluga + p.p5),
           }));
           posicioParaules.current = posicions;
+          // Paraules equivocades tocades: comencen a explotar.
+          for (const k of paraulesExplotades.current) {
+            if (explosioInici[k] === null) explosioInici[k] = ara;
+          }
+          paraulesExplotades.current = [];
           paraules.forEach((sprite, k) => {
+            // Explosió: la paraula es fa gran i s'esvaeix; en acabar, surt una de nova de la llista.
+            const inici = explosioInici[k];
+            const f = inici === null ? 0 : Math.min(1, (ara - inici) / DURADA_EXPLOSIO_MS);
+            if (inici !== null && f >= 1) {
+              const lliures = PARAULES_NOUVES.filter((p) => !paraulesEnUs.includes(p));
+              const nova = lliures[Math.floor(Math.random() * lliures.length)];
+              if (nova) {
+                paraulesEnUs[k] = nova;
+                sprite.material.map?.dispose();
+                sprite.material.map = crearTextura(nova);
+                sprite.material.needsUpdate = true;
+              }
+              explosioInici[k] = null;
+            }
+            sprite.scale.set(2.4 * (1 + 1.2 * f), 0.9 * (1 + 1.2 * f), 1);
             sprite.position.set(centre.x + posicions[k].dx, posicions[k].y, centre.z + posicions[k].dz);
             // Pujant, la paraula es torna blava com el cel; baixant, verda com la terra.
             const p = moviment[k];
@@ -962,7 +1046,7 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
               COLOR_TERRA.b + (COLOR_CEL.b - COLOR_TERRA.b) * fCel,
               THREE.SRGBColorSpace,
             );
-            sprite.material.opacity = 1 - progresResolt;
+            sprite.material.opacity = (1 - progresResolt) * (1 - f);
             sprite.visible = progresResolt < 0.98;
           });
           // Quan s'ha tocat AMIC, les paraules s'esvaeixen.
@@ -1059,7 +1143,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
               tocada = k;
             }
           });
-          if (tocada >= 0 && PARAULES_NOVUL[tocada] === PARAULA_SOLUCIO) paraulaTocada.current = true;
+          // La paraula 0 és sempre AMIC; les altres, en tocar-les, exploten i en surt una de nova.
+          if (tocada === 0) paraulaTocada.current = true;
+          else if (tocada > 0) paraulesExplotades.current.push(tocada);
           punter.current = tocada >= 0 ? null : { x: ev.clientX, y: ev.clientY };
           ev.currentTarget.setPointerCapture(ev.pointerId);
         }}
