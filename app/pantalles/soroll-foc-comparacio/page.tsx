@@ -2,44 +2,57 @@ import { generaSoroll, opcionsSoroll, BLAU_OBJECTIU, RADI_PUNTS_OBJECTIU } from 
 import { SorollFocSvg } from "@/components/cartells/SorollFocSvg";
 
 /**
- * Pàgina de desenvolupament per comparar el color i la mida dels punts del
- * número secret del cartell de Foc. Hereta el layout de /pantalles (404 en producció).
+ * Pàgina de desenvolupament per comparar el color i la mida dels punts de la
+ * resposta secreta del cartell de Foc. Hereta el layout de /pantalles (404 en producció).
  */
 const BLAU_MIG = "#2f63c0";
 const RADI_PETIT = 2.7;
 
+/** Símbol alquímic del foc (U+1F702), la resposta del cartell. */
+const SIMBOL_FOC = "\u{1F702}";
+
 const VARIANTS = [
-  { titol: "Actual", detall: `color ${BLAU_OBJECTIU} · radi ${RADI_PUNTS_OBJECTIU}`, color: BLAU_OBJECTIU, radi: RADI_PUNTS_OBJECTIU },
-  { titol: "A · Punts més petits", detall: `color ${BLAU_OBJECTIU} · radi ${RADI_PETIT}`, color: BLAU_OBJECTIU, radi: RADI_PETIT },
-  { titol: "B · Blau menys fosc", detall: `color ${BLAU_MIG} · radi ${RADI_PUNTS_OBJECTIU}`, color: BLAU_MIG, radi: RADI_PUNTS_OBJECTIU },
-  { titol: "C · Punts petits i blau menys fosc", detall: `color ${BLAU_MIG} · radi ${RADI_PETIT}`, color: BLAU_MIG, radi: RADI_PETIT },
+  {
+    titol: "Actual",
+    detall: `color ${BLAU_OBJECTIU} · radi ${RADI_PUNTS_OBJECTIU} · símbol U+1F702`,
+    color: BLAU_OBJECTIU,
+    radi: RADI_PUNTS_OBJECTIU,
+    simbol: true,
+  },
+  { titol: "A · Punts més petits", detall: `color ${BLAU_OBJECTIU} · radi ${RADI_PETIT}`, color: BLAU_OBJECTIU, radi: RADI_PETIT, simbol: false },
+  { titol: "B · Blau menys fosc", detall: `color ${BLAU_MIG} · radi ${RADI_PUNTS_OBJECTIU}`, color: BLAU_MIG, radi: RADI_PUNTS_OBJECTIU, simbol: false },
+  { titol: "C · Punts petits i blau menys fosc", detall: `color ${BLAU_MIG} · radi ${RADI_PETIT}`, color: BLAU_MIG, radi: RADI_PETIT, simbol: false },
 ];
 
 export default function SorollFocComparacioPage() {
   return (
     <div className="min-h-dvh bg-paper p-4 text-ink">
-      <h1 className="font-display text-xl font-bold">Comparació · número secret de Foc</h1>
-      <p className="mb-4 text-sm text-ink-soft">Mateixa composició, canviant només el color i el radi dels punts del número (273 d&apos;exemple).</p>
+      <h1 className="font-display text-xl font-bold">Comparació · resposta secreta de Foc</h1>
+      <p className="mb-4 text-sm text-ink-soft">
+        Mateixa composició, canviant només el color i el radi dels punts de la resposta (l&apos;actual és el símbol {SIMBOL_FOC}; la resta, el número 273 d&apos;exemple).
+      </p>
       <div className="space-y-6">
         {VARIANTS.map((v) => (
           <section key={v.titol}>
-            <h2 className="font-semibold">{v.titol}</h2>
+            <h2 className="font-semibold">
+              {v.titol}
+              {v.simbol && <span className="ml-2 font-sans">{SIMBOL_FOC}</span>}
+            </h2>
             <p className="mb-1 font-mono text-xs text-ink-soft">{v.detall}</p>
             <div className="overflow-hidden rounded-xl border-2 border-ink-soft/30 bg-white">
               <SorollFocSvg
-                soroll={generaSoroll({ resposta: "273", ...opcionsSoroll("imatge"), colorObjectiu: v.color, radiPunts: v.radi })}
+                soroll={generaSoroll({
+                  resposta: "273",
+                  ...(v.simbol ? { simbolObjectiu: "foc" as const } : {}),
+                  ...opcionsSoroll("imatge"),
+                  colorObjectiu: v.color,
+                  radiPunts: v.radi,
+                })}
                 className="w-full"
               />
             </div>
           </section>
         ))}
-        <section>
-          <h2 className="font-semibold">Símbol 🜂 (en blau i punts grans, per veure la forma)</h2>
-          <p className="mb-1 font-mono text-xs text-ink-soft">simbolObjectiu: &quot;foc&quot; · color {BLAU_MIG} · radi {RADI_PETIT}</p>
-          <div className="overflow-hidden rounded-xl border-2 border-ink-soft/30 bg-white">
-            <SorollFocSvg soroll={generaSoroll({ resposta: "", simbolObjectiu: "foc", ...opcionsSoroll("imatge"), colorObjectiu: BLAU_MIG, radiPunts: RADI_PETIT })} className="w-full" />
-          </div>
-        </section>
       </div>
     </div>
   );
