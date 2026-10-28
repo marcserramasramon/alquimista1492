@@ -33,8 +33,8 @@ export function dibuixaVora(
     ctx.fillStyle = g;
     ctx.fillRect(rx, ry, rw, rh);
   };
-  const ample = w * 0.3;
-  const alt = h * 0.12;
+  const ample = w * 0.12;
+  const alt = h * 0.05;
   vora(0, 0, ample, 0, pesos.esquerra, 0, 0, ample, h);
   vora(w, 0, w - ample, 0, pesos.dreta, w - ample, 0, ample, h);
   vora(0, 0, 0, alt, pesos.dalt, 0, 0, w, alt);
