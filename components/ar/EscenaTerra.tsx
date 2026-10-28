@@ -671,6 +671,13 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
         // Instant (ms) en què s'ha tocat la paraula correcta, i si el dodecaedre ja ha impactat.
         let tSolucio: number | null = null;
         let impacteRegistrat = false;
+        // Sons: l'impacte del dodecaedre, el fons mentre el con és al seu lloc i el so quan apareix el símbol.
+        const sonImpacte = new Audio("/audio/ar/terra-impacte.mp3");
+        const sonEmergencia = new Audio("/audio/ar/terra-emergencia.mp3");
+        sonEmergencia.loop = true;
+        sonEmergencia.volume = 0.6;
+        const sonSimbol = new Audio("/audio/ar/terra-simbol.mp3");
+        let simbolSonat = false;
 
         // Símbol de la terra (triangle invertit amb una línia) que apareix a mig camí entre la terra i el cel.
         const lienzoTerra = document.createElement("canvas");
@@ -976,9 +983,15 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             if (!impacteRegistrat) {
               impacteRegistrat = true;
               uniforms.uOnades.value[90].set(centre.x, centre.z, (ara - inici) / 1000);
+              sonImpacte.play().catch(() => {});
             }
             const x = Math.min(1, (dtSolucio - TEMPS_CAIGUDA) / DURADA_EMERGENCIA);
             emergencia = 1 - (1 - x) * (1 - x) * (1 - x);
+          }
+          if (emergencia > 0 && sonEmergencia.paused) sonEmergencia.play().catch(() => {});
+          if (emergencia >= 0.5 && !simbolSonat) {
+            simbolSonat = true;
+            sonSimbol.play().catch(() => {});
           }
           uniforms.uEmergencia.value = emergencia;
           matSimbol.opacity = emergencia;
@@ -995,6 +1008,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             if (objecte instanceof THREE.Mesh) objecte.geometry.dispose();
           });
           geoCel.dispose();
+          sonImpacte.pause();
+          sonEmergencia.pause();
+          sonSimbol.pause();
           dodecaedre.geometry.dispose();
           dodecaedre.material.dispose();
           paraules.forEach((sprite) => {
