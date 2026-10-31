@@ -166,31 +166,31 @@ export const GRESOL_ARRIBADA: TextNarratiu = {
 /** 4a → 4b amb GRESOL_CONFIG.transicio = "boto-equip" (PENDENT, content/public/gresol.ts). */
 export const GRESOL_BOTO_RITUAL = {
   avis: "Premeu-lo només quan us hagin dit «El temps es consumeix» i hàgiu respost.",
-  boto: "Hem respost la contrasenya",
+  boto: "Alceu el mòbil cap al cel",
 };
 
-// 4b. El ritual: Fra Francesc els ensenya la recepta i aboquen els cinc líquids (docs/fites-nova.md)
+// 4b. El ritual: l'AR de La Conjunció dels Astres (substitueix el Gresol físic). Text de disseny, pendent de validar.
 export const GRESOL_RITUAL: TextNarratiu = {
-  titol: "El Gresol dels Cinc Elements",
+  titol: "La Conjunció dels Astres",
   paragrafs: [
-    "Davant vostre hi ha el gresol i cinc recipients, un per cada element que heu recollit: l'Aigua de Lluna, la Cendra de la Creació, l'Espurna de Rubí, l'Alè d'Eòl i la Quinta Essència.",
-    "Fra Francesc us ensenyarà la recepta de la Pedra Filosofal. Uniu els cinc elements tal com us indiqui i observeu bé el gresol: quan hi entri l'Ànima, la matèria parlarà.",
+    "Les cinc estrelles que heu guanyat són al cel, sobre el Pla del Masset. Alceu el mòbil i busqueu-les una a una.",
+    "Quan una estrella sigui al seu lloc, mantingueu-la al centre fins que s'encaixi. Quan les cinc siguin al cel, la Pedra Filosofal apareixerà al centre del pentagrama.",
+    "Fra Francesc us ensenyarà la recepta. Observeu bé el cel: la matèria parlarà.",
   ],
 };
 
 /**
- * 4b. Què han de fer, pas a pas. Text provisional d'interfície (no és a docs/textos-nova.md):
- * no diu què revela el Gresol, que és PENDENT a docs/fites-nova.md (l'ordre el mostra la llista de recipients).
+ * 4b. Què han de fer, pas a pas, durant l'AR. Text de disseny, pendent de validar.
  */
 export const GRESOL_PASSOS = {
   titol: "Què heu de fer",
   passos: [
-    "No toqueu res fins que Fra Francesc us ho digui.",
-    "Afegiu cada element al gresol quan us l'indiqui, un darrere l'altre i sense pressa.",
-    "Quan hi entri la Quinta Essència, mireu bé el gresol: la matèria parlarà.",
+    "Gireu el mòbil a poc a poc fins que una estrella aparegui.",
+    "Mantingueu-la al centre fins que s'encaixi.",
+    "Quan les cinc siguin al cel, la Pedra Filosofal sortirà al centre.",
   ],
-  seguretat: "Res del que hi ha a la taula es beu ni es tasta.",
-  recipients: "Els cinc recipients",
+  seguretat: "Mireu el cel amb calma i no camineu mirant la pantalla.",
+  recipients: "Les estrelles",
 };
 
 // 5. Pantalla final
