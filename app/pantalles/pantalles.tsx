@@ -1092,7 +1092,7 @@ export const PANTALLES: Pantalla[] = [
     id: "final-ritual",
     grup: "final",
     titol: "Pla del Masset · ritual",
-    descripcio: "El Gresol: imatge, recipients en ordre i passos. Resultat PENDENT (content/public/gresol.ts).",
+    descripcio: "Ritual: títol, text i passos de l'AR de la Conjunció (content/public/textos.ts).",
     render: () => <VistaFinal ritual onComencarRitual={noop} />,
   },
   {
@@ -1120,7 +1120,7 @@ export const PANTALLES: Pantalla[] = [
     id: "final-incomplet-ritual",
     grup: "final",
     titol: "Pla del Masset · ritual sense tots els elements",
-    descripcio: "La llista de recipients només mostra els elements aconseguits, en l'ordre del ritual.",
+    descripcio: "Ritual amb només els elements aconseguits: les estrelles que falten no s'encenen al pentagrama.",
     render: () => <VistaFinal ritual onComencarRitual={noop} aconseguits={["aigua", "foc", "aire"]} />,
   },
   {
