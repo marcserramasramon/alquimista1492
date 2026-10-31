@@ -28,6 +28,7 @@ import { VistaCarregant } from "@/components/vistes/VistaCarregant";
 import { VistaEstacio } from "@/components/vistes/VistaEstacio";
 import type { VistaJocRespostaProps } from "@/components/vistes/VistaJocResposta";
 import { VistaFinal } from "@/components/vistes/VistaFinal";
+import { ConjuncioAR } from "@/components/ar/conjuncio/ConjuncioAR";
 import { VistaMissatge } from "@/components/vistes/VistaMissatge";
 import { VistaTempsConsumit } from "@/components/vistes/VistaTempsConsumit";
 import { VistaGuardians } from "@/components/vistes/VistaGuardians";
@@ -1093,6 +1094,13 @@ export const PANTALLES: Pantalla[] = [
     titol: "Pla del Masset · ritual",
     descripcio: "El Gresol: imatge, recipients en ordre i passos. Resultat PENDENT (content/public/gresol.ts).",
     render: () => <VistaFinal ritual onComencarRitual={noop} />,
+  },
+  {
+    id: "final-conjuncio",
+    grup: "final",
+    titol: "Pla del Masset · AR de la Conjunció",
+    descripcio: "L'AR final que substitueix el ritual: estrelles, gema i botó per continuar. Les posicions surten del servidor (api/conjuncio).",
+    render: () => <ConjuncioAR onContinuar={noop} />,
   },
   {
     id: "final-una-pantalla",
