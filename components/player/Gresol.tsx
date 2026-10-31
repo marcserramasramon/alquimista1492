@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { VistaFinal } from "@/components/vistes/VistaFinal";
 import { VistaGuardians } from "@/components/vistes/VistaGuardians";
 import { VistaCarregant } from "@/components/vistes/VistaCarregant";
+import { ConjuncioAR } from "@/components/ar/conjuncio/ConjuncioAR";
 import type { Element } from "@/content/public/estacions";
 
 /** Si el mòbil recarrega la pàgina enmig del ritual, no torna a la pantalla d'espera. */
@@ -24,11 +25,30 @@ function llegirRitualGuardat(): boolean {
 
 const senseSubscripcio = () => () => {};
 
+/** Vídeo final a pantalla completa. En acabar, es crida `onAcabat` (la pantalla següent són els guardians). */
+function VideoFinal({ onAcabat }: { onAcabat: () => void }) {
+  return (
+    <main className="fixed inset-0 bg-black">
+      <video
+        src="/video/final-guardians.mp4"
+        autoPlay
+        playsInline
+        onEnded={onAcabat}
+        onError={onAcabat}
+        className="h-full w-full object-contain"
+      />
+    </main>
+  );
+}
+
 export function Gresol() {
   const router = useRouter();
   const guardat = useSyncExternalStore(senseSubscripcio, llegirRitualGuardat, () => false);
   const [comencat, setComencat] = useState(false);
   const [guardians, setGuardians] = useState(false);
+  /** Després de l'AR (gema i botó de continuar): el vídeo final, i després la pantalla dels guardians. */
+  const [videoFinal, setVideoFinal] = useState(false);
+  const [videoAcabat, setVideoAcabat] = useState(false);
   /** undefined = carregant; null = no s'ha pogut saber (es mostren tots). */
   const [aconseguits, setAconseguits] = useState<Element[] | null | undefined>(undefined);
 
@@ -83,8 +103,11 @@ export function Gresol() {
     window.scrollTo({ top: 0 });
   }
 
-  if (guardians) return <VistaGuardians />;
+  if (guardians || videoAcabat) return <VistaGuardians />;
+  if (videoFinal) return <VideoFinal onAcabat={() => setVideoAcabat(true)} />;
   if (aconseguits === undefined) return <VistaCarregant />;
+  // Substitueix el ritual del Gresol: l'AR de la Conjunció (les estrelles i la gema).
+  if (comencat || guardat) return <ConjuncioAR onContinuar={() => setVideoFinal(true)} />;
   return (
     <VistaFinal
       ritual={comencat || guardat}
