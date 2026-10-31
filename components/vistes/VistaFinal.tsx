@@ -1,8 +1,8 @@
 import { Narracio } from "@/components/ui/Narracio";
 import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
 import { MARGE_MARC_FINAL_PX, MarcFinal } from "@/components/ui/MarcFinal";
-import { ELEMENTS, type Element } from "@/content/public/estacions";
-import { GRESOL_CONFIG, LIQUIDS, RECIPIENTS, type TransicioGresol } from "@/content/public/gresol";
+import type { Element } from "@/content/public/estacions";
+import { GRESOL_CONFIG, type TransicioGresol } from "@/content/public/gresol";
 import { GRESOL_ARRIBADA, GRESOL_BOTO_RITUAL, GRESOL_PASSOS, GRESOL_RITUAL } from "@/content/public/textos";
 
 const TOTS_ELS_ELEMENTS: Element[] = ["aigua", "terra", "foc", "aire", "anima"];
@@ -15,10 +15,9 @@ export interface VistaFinalProps {
   onTornar?: () => void;
   /** Per defecte, GRESOL_CONFIG (content/public/gresol.ts). La galeria els sobreescriu. */
   transicio?: TransicioGresol;
-  ordreElements?: Element[];
   /**
-   * Elements que l'equip ha aconseguit. Al pentagrama només s'encenen aquests i a la llista
-   * de recipients només surten aquests (si s'ha acabat el temps abans de trobar-los tots).
+   * Elements que l'equip ha aconseguit. Al pentagrama només s'encenen aquests
+   * (si s'ha acabat el temps abans de trobar-los tots).
    */
   aconseguits?: Element[];
 }
@@ -34,7 +33,6 @@ export function VistaFinal({
   onComencarRitual,
   onTornar,
   transicio = GRESOL_CONFIG.transicio,
-  ordreElements = GRESOL_CONFIG.ordreElements,
   aconseguits = TOTS_ELS_ELEMENTS,
 }: VistaFinalProps) {
   const nodes: NodePentagrama[] = TOTS_ELS_ELEMENTS.map((element) => ({
@@ -44,7 +42,6 @@ export function VistaFinal({
     disponible: true,
   }));
   const complet = TOTS_ELS_ELEMENTS.every((e) => aconseguits.includes(e));
-  const recipients = ordreElements.filter((e) => aconseguits.includes(e));
   const unaPantalla = transicio === "una-pantalla";
   const mostrarArribada = unaPantalla || !ritual;
   const mostrarRitual = unaPantalla || ritual;
@@ -119,7 +116,6 @@ export function VistaFinal({
                   color="var(--gold-deep)"
                   className="animate-entrar [animation-delay:150ms]"
                 />
-                {recipients.length > 0 && <Recipients ordre={recipients} />}
                 <Passos />
               </>
             )}
@@ -144,59 +140,6 @@ function ImatgeGresol({ className = "" }: { className?: string }) {
         className="relative h-full w-full animate-revelar object-contain drop-shadow-[0_0_20px_rgb(234_179_8/0.55)]"
       />
     </div>
-  );
-}
-
-function Recipients({ ordre }: { ordre: Element[] }) {
-  return (
-    <section className="targeta animate-entrar p-5 [animation-delay:300ms]">
-      <h3 className="etiqueta mb-3">{GRESOL_PASSOS.recipients}</h3>
-      <ol className="flex flex-col gap-3">
-        {ordre.map((element, i) => {
-          const { nom, icona, color } = ELEMENTS[element];
-          const liquid = LIQUIDS[element];
-          return (
-            <li
-              key={element}
-              className="flex min-h-14 items-center gap-3 rounded-2xl border-[3px] bg-paper px-3 py-2"
-              style={{ borderColor: color }}
-            >
-              <span
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-display text-xl font-extrabold text-paper"
-                style={{ background: color }}
-              >
-                {i + 1}
-              </span>
-              <img src={icona} alt="" className="h-11 w-11 shrink-0" />
-              <div className="min-w-0 flex-1 leading-tight">
-                <p className="text-xl font-extrabold">{RECIPIENTS[element]}</p>
-                <p className="text-base font-bold" style={{ color }}>
-                  {nom} · <span className="text-ink-soft">líquid {liquid.nom}</span>
-                </p>
-              </div>
-              <Vial mostra={liquid.mostra} />
-            </li>
-          );
-        })}
-      </ol>
-    </section>
-  );
-}
-
-/** Tub d'assaig amb el color del líquid; el transparent, buit amb reflexos. */
-function Vial({ mostra }: { mostra: string | null }) {
-  return (
-    <svg viewBox="0 0 24 48" className="h-12 w-6 shrink-0" aria-hidden>
-      <path d="M5 2 H19 M7 2 V38 a5 5 0 0 0 10 0 V2" fill="#fffdf7" stroke="var(--ink)" strokeWidth={2.5} />
-      <path
-        d="M8.5 18 H15.5 V38 a3.5 3.5 0 0 1 -7 0 Z"
-        fill={mostra ?? "#e6f1f5"}
-        stroke={mostra ? "none" : "var(--ink)"}
-        strokeWidth={1}
-        strokeDasharray={mostra ? undefined : "2 2"}
-      />
-      <path d="M10.5 21 V36" stroke="#fff" strokeOpacity={0.7} strokeWidth={1.5} strokeLinecap="round" />
-    </svg>
   );
 }
 
