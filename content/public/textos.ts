@@ -190,7 +190,6 @@ export const GRESOL_PASSOS = {
     "Quan les cinc siguin al cel, la Pedra Filosofal sortirà al centre.",
   ],
   seguretat: "Mireu el cel amb calma i no camineu mirant la pantalla.",
-  recipients: "Les estrelles",
 };
 
 // 5. Pantalla final
