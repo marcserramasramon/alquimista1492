@@ -173,9 +173,8 @@ export const GRESOL_BOTO_RITUAL = {
 export const GRESOL_RITUAL: TextNarratiu = {
   titol: "La Conjunció dels Astres",
   paragrafs: [
-    "Les cinc estrelles que heu guanyat són al cel, sobre el Pla del Masset. Alceu el mòbil i busqueu-les una a una.",
-    "Quan una estrella sigui al seu lloc, mantingueu-la al centre fins que s'encaixi. Quan les cinc siguin al cel, la Pedra Filosofal apareixerà al centre del pentagrama.",
-    "Fra Francesc us ensenyarà la recepta. Observeu bé el cel: la matèria parlarà.",
+    "Heu aconseguit els fragments de la Pedra Filosofal. Ara utilitzeu el seu poder per conjurar els astres i invocar la Pedra Filosofal.",
+    "Alceu el mòbil cap al cel i busqueu els astres. La flama de l'atanor us guiarà.",
   ],
 };
 
