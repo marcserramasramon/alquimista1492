@@ -3,7 +3,7 @@ import { Pentagrama, type NodePentagrama } from "@/components/ui/Pentagrama";
 import { MARGE_MARC_FINAL_PX, MarcFinal } from "@/components/ui/MarcFinal";
 import type { Element } from "@/content/public/estacions";
 import { GRESOL_CONFIG, type TransicioGresol } from "@/content/public/gresol";
-import { GRESOL_ARRIBADA, GRESOL_BOTO_RITUAL, GRESOL_PASSOS, GRESOL_RITUAL } from "@/content/public/textos";
+import { GRESOL_ARRIBADA, GRESOL_BOTO_AR, GRESOL_BOTO_RITUAL, GRESOL_PASSOS, GRESOL_RITUAL } from "@/content/public/textos";
 
 const TOTS_ELS_ELEMENTS: Element[] = ["aigua", "terra", "foc", "aire", "anima"];
 
@@ -11,6 +11,8 @@ export interface VistaFinalProps {
   /** false: esperant Fra Francesc (4a). true: el ritual (4b). Amb "una-pantalla" s'ignora. */
   ritual: boolean;
   onComencarRitual: () => void;
+  /** Botó del ritual que obre l'AR de la Conjunció (només es mostra al ritual). */
+  onComencarAr?: () => void;
   /** Botó ← de la capçalera, com a les fites. Si no hi és, no surt. */
   onTornar?: () => void;
   /** Per defecte, GRESOL_CONFIG (content/public/gresol.ts). La galeria els sobreescriu. */
@@ -31,6 +33,7 @@ export interface VistaFinalProps {
 export function VistaFinal({
   ritual,
   onComencarRitual,
+  onComencarAr,
   onTornar,
   transicio = GRESOL_CONFIG.transicio,
   aconseguits = TOTS_ELS_ELEMENTS,
@@ -117,6 +120,11 @@ export function VistaFinal({
                   className="animate-entrar [animation-delay:150ms]"
                 />
                 <Passos />
+                {onComencarAr && (
+                  <button type="button" onClick={onComencarAr} className="btn btn-fosc animate-entrar [animation-delay:600ms]">
+                    ⚗️ {GRESOL_BOTO_AR.boto}
+                  </button>
+                )}
               </>
             )}
           </div>

@@ -1093,7 +1093,7 @@ export const PANTALLES: Pantalla[] = [
     grup: "final",
     titol: "Pla del Masset · ritual",
     descripcio: "Ritual: títol, text i passos de l'AR de la Conjunció (content/public/textos.ts).",
-    render: () => <VistaFinal ritual onComencarRitual={noop} />,
+    render: () => <VistaFinal ritual onComencarRitual={noop} onComencarAr={noop} />,
   },
   {
     id: "final-conjuncio",

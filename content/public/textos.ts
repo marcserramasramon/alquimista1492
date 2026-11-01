@@ -166,6 +166,11 @@ export const GRESOL_ARRIBADA: TextNarratiu = {
 /** 4a → 4b amb GRESOL_CONFIG.transicio = "boto-equip" (PENDENT, content/public/gresol.ts). */
 export const GRESOL_BOTO_RITUAL = {
   avis: "Premeu-lo només quan us hagin dit «El temps es consumeix» i hàgiu respost.",
+  boto: "Hem respost la contrasenya",
+};
+
+/** Del ritual (fragments i estrelles) a l'AR de la Conjunció. */
+export const GRESOL_BOTO_AR = {
   boto: "Alceu el mòbil cap al cel",
 };
 
