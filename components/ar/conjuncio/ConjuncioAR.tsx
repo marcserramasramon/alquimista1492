@@ -22,7 +22,7 @@ import { useSensorsCel } from "./sensors";
 import { crearGema, type EstatGema, type Gema } from "./gema";
 import {
   iniciarCarregaLock,
-  iniciarMusicaFons,
+  sonMusicaInici,
   iniciarSorollRadio,
   sonAconseguit,
   sonAmbient,
@@ -395,12 +395,10 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
       radio.aturar();
     };
   }, [mode, completa]);
-  // Música de fons en bucle mentre s'hi juga (AR o dials).
-  const jugant = mode === "ar" || mode === "dials";
+  // Música d'inici de l'AR: sona una sola vegada quan l'equip comença a apuntar al cel.
   useEffect(() => {
-    if (!jugant) return;
-    return iniciarMusicaFons();
-  }, [jugant]);
+    if (mode === "ar") sonMusicaInici();
+  }, [mode]);
   // Ambient de fons mentre s'hi juga: 5 s d'un dels sons, de tant en tant.
   useEffect(() => {
     if (mode !== "ar" && mode !== "dials") return;
