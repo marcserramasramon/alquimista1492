@@ -32,8 +32,9 @@ const ESPURNES = [
  * Sona música èpica en bucle (public/audio/guardians.mp3 o, si no hi és, la sintetitzada de lib/so.ts).
  * Com les pantalles del Pla de Masset, té el marc de runes; al final, l'enllaç al laboratori (/gresol).
  */
-export function VistaGuardians() {
-  const [veientVideo, setVeientVideo] = useState(true);
+export function VistaGuardians({ videoJaVist = false }: { videoJaVist?: boolean }) {
+  // Si el vídeo ja s'ha vist (vingut de l'AR), no es torna a reproduir: només es mostra la pantalla.
+  const [veientVideo, setVeientVideo] = useState(!videoJaVist);
   return (
     <>
       {/* Primer el vídeo (amb el seu so) a sobre de tot; la música sona des que comença i la veu

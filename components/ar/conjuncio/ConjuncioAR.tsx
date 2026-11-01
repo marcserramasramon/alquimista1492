@@ -337,6 +337,15 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
   // aconseguides, o només les de `?fites=aigua,foc` si s'indica, per poder provar els dos estats.
   useEffect(() => {
     let cancelat = false;
+    // Prova amb ?sim: `?fites=aigua,foc` marca les fites aconseguides sense equip.
+    const forcades = new URLSearchParams(window.location.search).get('fites');
+    if (window.location.search.includes('sim') && forcades) {
+      const noms = forcades.split(',');
+      const f = ELEMENTS.map((el) => noms.includes(el.id));
+      setFites(f);
+      setActiu(Math.max(0, f.indexOf(true)));
+      return;
+    }
     fetch('/api/estat', { cache: 'no-store' })
       .then(async (res) => {
         if (!res.ok) throw new Error();
@@ -662,7 +671,8 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
         let millor = -1;
         let cMillor = Math.max(0.5, (al[actiuRef.current] ? 0 : CLARITAT[actiuRef.current]) + 0.15);
         for (let i = 0; i < 5; i++) {
-          if (al[i]) continue;
+          // Només les fites aconseguides es poden bloquejar i prendre com a canal actiu (com als dials).
+          if (al[i] || !ar.fites[i]) continue;
           aguant[i] = aimErr[i].err < 3 ? aguant[i] + dt : 0;
           if (aguant[i] > 1.5) {
             aguant[i] = 0;

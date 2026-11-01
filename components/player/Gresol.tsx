@@ -2,11 +2,16 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import { preload } from "react-dom";
 import { VistaFinal } from "@/components/vistes/VistaFinal";
 import { VistaGuardians } from "@/components/vistes/VistaGuardians";
 import { VistaCarregant } from "@/components/vistes/VistaCarregant";
 import { ConjuncioAR } from "@/components/ar/conjuncio/ConjuncioAR";
 import type { Element } from "@/content/public/estacions";
+import { GUARDIANS } from "@/content/public/textos";
+import { carregarVeu } from "@/lib/so";
+
+const VIDEO_FINAL = "/video/final-guardians.mp4";
 
 /** Si el mòbil recarrega la pàgina enmig del ritual, no torna a la pantalla d'espera. */
 const CLAU_RITUAL = "sentfores:gresol-ritual";
@@ -30,9 +35,10 @@ function VideoFinal({ onAcabat }: { onAcabat: () => void }) {
   return (
     <main className="fixed inset-0 bg-black">
       <video
-        src="/video/final-guardians.mp4"
+        src={VIDEO_FINAL}
         autoPlay
         playsInline
+        preload="auto"
         onEnded={onAcabat}
         onError={onAcabat}
         className="h-full w-full object-contain"
@@ -95,6 +101,13 @@ export function Gresol() {
     if (guardians) window.scrollTo({ top: 0 });
   }, [guardians]);
 
+  // Mentre dura l'AR ja es descarrega el vídeo final i la veu dels guardians, perquè sonin a l'instant.
+  useEffect(() => {
+    if (!enAr) return;
+    preload(VIDEO_FINAL, { as: "video" });
+    if (GUARDIANS.audio) void carregarVeu(GUARDIANS.audio);
+  }, [enAr]);
+
   function comencarRitual() {
     setComencat(true);
     try {
@@ -105,7 +118,7 @@ export function Gresol() {
     window.scrollTo({ top: 0 });
   }
 
-  if (guardians || videoAcabat) return <VistaGuardians />;
+  if (guardians || videoAcabat) return <VistaGuardians videoJaVist={videoAcabat} />;
   if (videoFinal) return <VideoFinal onAcabat={() => setVideoAcabat(true)} />;
   if (enAr) return <ConjuncioAR onContinuar={() => setVideoFinal(true)} />;
   if (aconseguits === undefined) return <VistaCarregant />;
