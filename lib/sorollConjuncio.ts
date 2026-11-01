@@ -122,29 +122,9 @@ export function iniciarCarregaLock(canal: number, volumMax = 0.2): Carrega {
   };
 }
 
-/** Música de fons en bucle mentre s'hi juga. Torna la funció que l'atura. */
-export function iniciarMusicaFons(volum = 0.25): () => void {
-  const c = obtenirCtx();
-  if (!c) return () => {};
-  let parat = false;
-  let font: AudioBufferSourceNode | null = null;
-  carregar("musica-timbals.mp3", c)
-    .then((buf) => {
-      if (parat) return;
-      const guany = c.createGain();
-      guany.gain.value = volum;
-      guany.connect(c.destination);
-      font = c.createBufferSource();
-      font.buffer = buf;
-      font.loop = true;
-      font.connect(guany);
-      font.start();
-    })
-    .catch(() => {});
-  return () => {
-    parat = true;
-    font?.stop();
-  };
+/** Música d'inici de l'AR: una sola vegada, en començar a apuntar al cel. */
+export function sonMusicaInici(volum = 0.25) {
+  tocar("musica-final-stand.mp3", { volum });
 }
 
 /** Soroll de ràdio en bucle mentre es sintonitza amb els dials. */
