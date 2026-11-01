@@ -50,7 +50,7 @@ Cada fita té dos textos:
 
 **🪨 Terra — Planes Bones**
 
-> Heu arribat a Planes Bones. Aquí, uns guardians de pedra vetllen la matèria des de fa molt de temps. Obriu bé els ulls: entre les paraules que flotaran davant vostre, només una és veritable. Trobeu-la i la terra us respondrà.
+> Esteu arribat a Planes Bones. Aquí, uns guardians de pedra vetllen la matèria des de fa molt de temps. Obriu bé els ulls: entre les paraules que flotaran davant vostre, només una és veritable. Trobeu-la i la terra us respondrà.
 
 **🔥 Foc — Serrat del Caçador**
 

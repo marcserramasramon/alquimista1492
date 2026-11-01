@@ -978,7 +978,7 @@ export const PANTALLES: Pantalla[] = [
       return (
         <>
           {getPantalla("hub-mitja-partida")?.render(dades)}
-          <VistaMissatgeVideo titol={missatge.titol} text={missatge.text} video={missatge.video!} onAcceptar={noop} />
+          <VistaMissatgeVideo titol={missatge.titol} text={missatge.text} video={missatge.video!} accioAr={missatge.ar} onAcceptar={noop} />
         </>
       );
     },

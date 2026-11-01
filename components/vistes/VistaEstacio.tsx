@@ -271,11 +271,6 @@ export function VistaEstacio({
                 {extraArribada.boto}
               </Link>
             )}
-            {extraArribada && propDeFita !== true && (
-              <p className="targeta mb-6 text-center text-base font-bold">
-                📍 Per veure l&apos;extra, acosteu-vos a la fita (a menys de {RADI_OBERTURA_M} m).
-              </p>
-            )}
             {/* Pas 1: la veu de Fra Francesc. El botó de sota dona pas a la prova. */}
             <Narracio
               text={onRepetirArribada ? { ...ARRIBADES[estacio.element], audio: undefined } : ARRIBADES[estacio.element]}
@@ -303,6 +298,11 @@ export function VistaEstacio({
           </>
         ) : (
           <>
+            {extraArribada && (
+              <Link href={`/joc/ar/${extraArribada.id}`} className="btn btn-ar mb-6">
+                {extraArribada.boto}
+              </Link>
+            )}
             {/* Pas 2: què han de fer, el primer i el més visible de la pantalla. */}
             <section
               className="targeta mb-6 animate-entrar p-5"

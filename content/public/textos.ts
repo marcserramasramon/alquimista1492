@@ -42,9 +42,9 @@ export const ARRIBADES: Record<Element, TextNarratiu> = {
   },
   terra: {
     paragrafs: [
-      "Heu arribat a Planes Bones. Aquí, uns guardians de pedra vetllen la matèria des de fa molt de temps. Obriu bé els ulls: entre les paraules que flotaran davant vostre, només una és veritable. Trobeu-la i la terra us respondrà.",
+      "Esteu arribat a Planes Bones. Aquí, uns guardians de pedra vetllen la matèria des de fa molt de temps. Obriu bé els ulls: entre les paraules que flotaran davant vostre, només una és veritable. Trobeu-la i la terra us respondrà.",
     ],
-    audio: "/audio/arribada-fita-terra.wav",
+    audio: "/audio/arribada-fita-terra.mp3",
   },
   foc: {
     paragrafs: [
@@ -93,7 +93,7 @@ export const FRAGMENTS: Record<Element, TextNarratiu> = {
       "Els guardians de pedra vetllen l'essència en la matèria. Dins la terra hi ha amagat el fragment.",
       "Qui reconeix la Terra com a amiga no la busca amb els ulls, sinó amb el cor. Vosaltres heu sabut escoltar el que és fidel, i la matèria ha obert la seva porta.",
     ],
-    audio: "/audio/fragment-terra.wav",
+    audio: "/audio/fragment-terra.mp3",
   },
   foc: {
     titol: "El fragment del Foc",

@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mapa de textos, punts i àudios</title>
+<style>
+  :root { color-scheme: light dark; --fons: #fbfaf7; --text: #1d1b16; --suau: #6b655a; --linia: #d8d2c4; --enllac: #1d5fa8; --acc: #8b5e1a; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --fons: #17150f; --text: #efeadc; --suau: #a39c8b; --linia: #3a3427; --enllac: #7fb3ef; --acc: #d9a95a; }
+  }
+  :root[data-theme="dark"] { --fons: #17150f; --text: #efeadc; --suau: #a39c8b; --linia: #3a3427; --enllac: #7fb3ef; --acc: #d9a95a; }
+  body { margin: 0; background: var(--fons); color: var(--text); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.6rem; margin: .5rem 0; }
+  h2 { font-size: 1.25rem; margin: 2rem 0 .5rem; border-bottom: 2px solid var(--acc); padding-bottom: .2rem; }
+  h3 { font-size: 1.05rem; margin: 1.2rem 0 .3rem; }
+  a { color: var(--enllac); word-break: break-word; }
+  .suau { color: var(--suau); font-size: .9rem; }
+  nav ul { columns: 2; padding-left: 1.2rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  th, td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--linia); padding: .4rem .5rem; }
+  .txt { background: color-mix(in srgb, var(--acc) 10%, transparent); border-left: 3px solid var(--acc); padding: .4rem .7rem; margin: .4rem 0; border-radius: 4px; }
+  .txt p { margin: .3rem 0; }
+  .mono { font-family: ui-monospace, Consolas, monospace; font-size: .85rem; }
+  .etiqueta { display: inline-block; font-size: .75rem; color: var(--suau); margin-right: .3rem; text-transform: uppercase; letter-spacing: .04em; }
+  @media (max-width: 640px) { nav ul { columns: 1; } th, td { font-size: .85rem; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Mapa de textos, punts i àudios</h1>
+  <p class="suau">Recull del que surt a cada pantalla i a cada punt GPS, amb els fitxers de vídeo i àudio. Font: <span class="mono">content/public/</span> i <span class="mono">docs/fites-nova.md</span>. Les respostes i les pistes no hi són (són privades).</p>
+
+  <nav>
+    <ul>
+      <li><a href="#punts">1. Punts GPS</a></li>
+      <li><a href="#fites">2. Fites</a></li>
+      <li><a href="#missatges">3. Missatges del màster (GPS)</a></li>
+      <li><a href="#ar">4. Extres de realitat augmentada</a></li>
+      <li><a href="#pantalles">5. Pantalles fixes</a></li>
+      <li><a href="#pendents">6. Coses a revisar</a></li>
+    </ul>
+  </nav>
+
+  <h2 id="punts">1. Punts GPS</h2>
+  <p class="suau">Cada punt amb el seu enllaç al mapa (OpenStreetMap). El radi és el de la geofence.</p>
+  <table>
+    <thead><tr><th>Punt</th><th>Coordenades</th><th>Què es dispara</th><th>Mapa</th></tr></thead>
+    <tbody>
+      <tr><td>Camí a Planes Bones (Terra) · terra-vinyals</td><td class="mono">41.914115, 2.231444 · r 30 m</td><td>Vídeo <span class="mono">terra-planes-bones.mp4</span> + text «La Terra ha florit». Sense botó d'AR.</td><td><a href="https://www.openstreetmap.org/?mlat=41.914115&mlon=2.231444#map=18/41.914115/2.231444">obrir</a></td></tr>
+      <tr><td>Arribada Planes Bones · terra-arribada</td><td class="mono">41.913576, 2.232706 · r 30 m</td><td>Vídeo <span class="mono">arribada-fita-terra.mp4</span> + text «Planes Bones» + botó «🧭 Seguiu la Terra» (AR).</td><td><a href="https://www.openstreetmap.org/?mlat=41.913576&mlon=2.232706#map=18/41.913576/2.232706">obrir</a></td></tr>
+      <tr><td>Fita Planes Bones (Terra)</td><td class="mono">41.912277, 2.233446 (a l'app)</td><td>Destí del camí AR. Revisar: l'equip ha donat 41.912279, 2.233443.</td><td><a href="https://www.openstreetmap.org/?mlat=41.912277&mlon=2.233446#map=18/41.912277/2.233446">obrir</a></td></tr>
+      <tr><td>Font del Lleó (Aigua) · fita</td><td class="mono">41.914816, 2.227479</td><td>Fita Aigua.</td><td><a href="https://www.openstreetmap.org/?mlat=41.914816&mlon=2.227479#map=18/41.914816/2.227479">obrir</a></td></tr>
+      <tr><td>Camí a Font del Lleó (Aigua) · aigua-esglesia</td><td class="mono">41.913778, 2.227906 · r 30 m</td><td>Vídeo <span class="mono">aigua-esglesia.mp4</span> + text «L'aigua ha passat».</td><td><a href="https://www.openstreetmap.org/?mlat=41.913778&mlon=2.227906#map=18/41.913778/2.227906">obrir</a></td></tr>
+      <tr><td>Serrat del Caçador (Foc) · fita</td><td class="mono">41.915419, 2.231577</td><td>Fita Foc.</td><td><a href="https://www.openstreetmap.org/?mlat=41.915419&mlon=2.231577#map=18/41.915419/2.231577">obrir</a></td></tr>
+      <tr><td>Plaça de la Creu · foc-placa-creu</td><td class="mono">41.914663, 2.229972 · r 30 m</td><td>Vídeo <span class="mono">foc-placa-creu.mp4</span> + text «El Foc ha espurnejat».</td><td><a href="https://www.openstreetmap.org/?mlat=41.914663&mlon=2.229972#map=18/41.914663/2.229972">obrir</a></td></tr>
+      <tr><td>Creu del Pujolar · pas previ aire-pas</td><td class="mono">41.911628, 2.226846</td><td>Pas previ de l'Aire. Arribada amb àudio <span class="mono">arribada-aire-pas.mp3</span>.</td><td><a href="https://www.openstreetmap.org/?mlat=41.911628&mlon=2.226846#map=18/41.911628/2.226846">obrir</a></td></tr>
+      <tr><td>Serrat de la Creu (Aire) · fita</td><td class="mono">41.910894, 2.224438</td><td>Fita Aire.</td><td><a href="https://www.openstreetmap.org/?mlat=41.910894&mlon=2.224438#map=18/41.910894/2.224438">obrir</a></td></tr>
+      <tr><td>Dunes d'asfalt, pista skate (Ànima) · fita</td><td class="mono">41.910355, 2.230083</td><td>Fita Ànima.</td><td><a href="https://www.openstreetmap.org/?mlat=41.910355&mlon=2.230083#map=18/41.910355/2.230083">obrir</a></td></tr>
+      <tr><td>Camí de Malla · anima-cami-malla</td><td class="mono">41.912181, 2.229094 · r 30 m</td><td>Vídeo <span class="mono">anima-cami-malla.mp4</span> + text «L'Ànima ronda el camí» + botó «Veure les ànimes guiar-nos».</td><td><a href="https://www.openstreetmap.org/?mlat=41.912181&mlon=2.229094#map=18/41.912181/2.229094">obrir</a></td></tr>
+      <tr><td>Carrer de l'Inquisidor · inquisidor-alerta</td><td class="mono">41.912569, 2.227555 · r 40 m</td><td>Vídeo <span class="mono">alerta-inquisidor.mp4</span> + text «Us ha sentit».</td><td><a href="https://www.openstreetmap.org/?mlat=41.912569&mlon=2.227555#map=18/41.912569/2.227555">obrir</a></td></tr>
+      <tr><td>El cor de l'estrella (Pla del Masset) · gresol</td><td class="mono">41.913125, 2.229762</td><td>Estació final. Sense geofence.</td><td><a href="https://www.openstreetmap.org/?mlat=41.913125&mlon=2.229762#map=18/41.913125/2.229762">obrir</a></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="fites">2. Fites</h2>
+  <p class="suau">Per cada fita: la pàgina de l'app (<span class="mono">/s/&lt;id&gt;</span>), el cartell físic, la pantalla d'arribada (text, àudio i vídeo) i el fragment que es desbloqueja.</p>
+
+  <h3>💧 Aigua · Font del Lleó</h3>
+  <p><span class="etiqueta">Pàgina</span> <a href="/s/font-ferro">/s/font-ferro</a> · <span class="etiqueta">Vídeo arribada</span> <span class="mono">/video/arribada-fita-aigua.mp4</span> · <span class="etiqueta">Àudio arribada</span> <a href="../audio/arribada-aigua.mp3">arribada-aigua.mp3</a></p>
+  <p><span class="etiqueta">Cartell</span></p>
+  <div class="txt">
+    <p>Quatre puntes governen el curs del misteri, el batec sagrat que obre la senda. On la bèstia de bronze guarda el corrent i la roda desafia el repòs, l'origen es desvetlla davant d'aquell qui sap aturar el pas i escoltar la primera vibració.</p>
+    <p>El pergamí roman cec sota la volta celeste, esperant la carícia del bateig. Deixa que el raig del guardià amari el buit silenciós: allò que s'havia ocultat mostrarà la seva força primigènia quan la humitat trenqui el vel.</p>
+  </div>
+  <p><span class="etiqueta">Arribada</span></p>
+  <div class="txt"><p>Escolteu. Sentiu l'aigua? Aquesta font ha donat de beure al poble des de sempre, i ningú no s'ha preguntat mai què més hi porta. Busqueu el meu escrit: és mut fins que l'Aigua el toca.</p></div>
+  <p><span class="etiqueta">Fragment</span> <strong>El fragment de l'Aigua</strong> · <a href="../audio/fragment-aigua.mp3">fragment-aigua.mp3</a></p>
+  <div class="txt">
+    <p>L'Aigua és el primer element que vaig aprendre a escoltar. Tot el que brolla porta alguna cosa de dins la terra, i res no s'hi pot amagar gaire temps.</p>
+    <p>Per això hi vaig deixar un fragment: l'Aigua dissol, neteja i revela. Qui sap escoltar-la ja ha començat el camí.</p>
+  </div>
+
+  <h3>🪨 Terra · Planes Bones</h3>
+  <p><span class="etiqueta">Pàgina</span> <a href="/s/planes-bones">/s/planes-bones</a> · <span class="etiqueta">Vídeo arribada</span> <span class="mono">/video/arribada-fita-terra.mp4</span> · <span class="etiqueta">Àudio arribada</span> <a href="../audio/arribada-fita-terra.mp3">arribada-fita-terra.mp3</a></p>
+  <p><span class="etiqueta">Cartell</span></p>
+  <div class="txt">
+    <p>L'essència ancestral reposa en la matèria de la terra, les pedres i el fang. Custodiats pel guardià de pedra, esperen revelar el secret a qui sàpiga escoltar-les. La matèria no es deixa veure per qui no sigui confident.</p>
+    <p>El saber flota a l'aire. Entre les paraules que veureu davant vostre, només una és veritable. Trieu la paraula que farà que la terra us reconegui com a pròpia: el vincle sagrat que ens uneix i que mai abandona qui la pronuncia.</p>
+  </div>
+  <p><span class="etiqueta">Arribada</span></p>
+  <div class="txt"><p>Esteu arribat a Planes Bones. Aquí, uns guardians de pedra vetllen la matèria des de fa molt de temps. Obriu bé els ulls: entre les paraules que flotaran davant vostre, només una és veritable. Trobeu-la i la terra us respondrà.</p></div>
+  <p><span class="etiqueta">Fragment</span> <strong>El fragment de la Terra</strong> · <a href="../audio/fragment-terra.mp3">fragment-terra.mp3</a></p>
+  <div class="txt">
+    <p>Els guardians de pedra vetllen l'essència en la matèria. Dins la terra hi ha amagat el fragment.</p>
+    <p>Qui reconeix la Terra com a amiga no la busca amb els ulls, sinó amb el cor. Vosaltres heu sabut escoltar el que és fidel, i la matèria ha obert la seva porta.</p>
+  </div>
+
+  <h3>🔥 Foc · Serrat del Caçador</h3>
+  <p><span class="etiqueta">Pàgina</span> <a href="/s/foc">/s/foc</a> · <span class="etiqueta">Vídeo arribada</span> <span class="mono">/video/arribada-fita-foc.mp4</span> · <span class="etiqueta">Àudio arribada</span> <a href="../audio/arribada-foc.mp3">arribada-foc.mp3</a></p>
+  <p><span class="etiqueta">Cartell</span></p>
+  <div class="txt">
+    <p>Un alè incandescent dorm empresonat en el vidre, foc que no crema la pell ni desprèn cendra. A les portes del recinte s'estén un mar de confusions cromàtiques, on les ombres i les llums lluiten per enganyar la mirada ingènua.</p>
+    <p>Interposa la gemma carmesí entre els teus ulls i el laberint vibrant. Quan la flama domi el miratge i devori el fals reflex, només el rastre del brot naixent s'alçarà victoriós entre la tenebra.</p>
+  </div>
+  <p><span class="etiqueta">Arribada</span></p>
+  <div class="txt"><p>Al Serrat del Caçador vaig deixar el Foc perquè ens protegeixi i ens il·lumini. Mireu a través d'ell i trobareu el fragment.</p></div>
+  <p><span class="etiqueta">Fragment</span> <strong>El fragment del Foc</strong> · <a href="../audio/fragment-foc.mp3">fragment-foc.mp3</a></p>
+  <div class="txt">
+    <p>Em van prohibir treballar amb foc. Em van prendre els forns i els alambins. Però el foc no s'apaga perquè ho mani un tribunal: el vaig tancar dins d'un vidre, i ara és ell qui mira per mi.</p>
+    <p>Qui entra al poble passa per aquí sense veure res. Vosaltres, amb el foc als ulls, heu vist el que s'amagava enmig del soroll.</p>
+  </div>
+
+  <h3>🌬️ Aire · Serrat de la Creu (amb pas previ a la Creu del Pujolar)</h3>
+  <p><span class="etiqueta">Pàgina</span> <a href="/s/aire">/s/aire</a> · <span class="etiqueta">Pas previ</span> aire-pas · <span class="etiqueta">Vídeo arribada</span> <span class="mono">/video/arribada-fita-aire.mp4</span> · <span class="etiqueta">Àudio arribada</span> <a href="../audio/arribada-aire.mp3">arribada-aire.mp3</a></p>
+  <p><span class="etiqueta">Pas previ (text)</span> <a href="../audio/arribada-aire-pas.mp3">arribada-aire-pas.mp3</a></p>
+  <div class="txt"><p>Esteu en el camí correcte, que el vent de gregal us empeny per arribar al cim. Camineu amagats seguint el mur, atents a la foscor per si l'Inquisidor hi ronda. Pugeu fins al Serrat de la Creu, on el vent no s'atura, i hi trobareu el que busqueu.</p></div>
+  <p><span class="etiqueta">Cartell</span></p>
+  <div class="txt">
+    <p>Els devots de l'Orde em perseguien. Em vaig amagar rere els murs de pedra d'una masia oblidada, però cap pedra és prou forta per contenir l'essència de l'aire. Vaig fugir fins al cim del turó, allà on el vent en fa el seu element. No t'aturis: segueix amunt, cap a la creu vella, fins on la terra ja no pugui alçar-se més.</p>
+    <p>Ofrena el caliu del teu propi alè sobre la làmina gelada perquè l'efímer es faci visible. Resta el missatge que la boira desvetlli d'allò gravat a la soca; la diferència serà el tribut que l'aire et concedeix.</p>
+  </div>
+  <p><span class="etiqueta">Arribada</span></p>
+  <div class="txt"><p>Heu pujat fins a la creu. Aquí dalt el vent no para mai i s'emporta les paraules abans que ningú les senti. L'Aire hi amaga un número que l'ull no veu. Només el vostre alè el farà visible.</p></div>
+  <p><span class="etiqueta">Fragment</span> <strong>El fragment de l'Aire</strong> · <a href="../audio/fragment-aire.mp3">fragment-aire.mp3</a></p>
+  <div class="txt">
+    <p>Dalt del serrat, el vent ho escampa tot: les paraules, les cendres, els rumors. L'Aire és l'únic element que no es pot tancar en cap gerra.</p>
+    <p>El vaig deixar lligat al metall sagrat de la creu, perquè pugui alçar-se als cels. I recordeu-ho: el vostre alè també és Aire. Mentre respireu, la Gran Obra és viva.</p>
+  </div>
+
+  <h3>✨ Ànima · Dunes d'asfalt (pista skate)</h3>
+  <p><span class="etiqueta">Pàgina</span> <a href="/s/anima">/s/anima</a> · <span class="etiqueta">Vídeo arribada</span> <span class="mono">/video/arribada-fita-anima.mp4</span> · <span class="etiqueta">Àudio arribada</span> <a href="../audio/arribada-anima.mp3">arribada-anima.mp3</a></p>
+  <p><span class="etiqueta">Cartell</span></p>
+  <div class="txt">
+    <p>Onades petrificades tracen un laberint de runa i falses aparences. Incomptables glifs dormen escampats com estels caiguts a la pols; però la quintaessència no habita el fons del cresol, sinó l'àpex que desafia el buit.</p>
+    <p>Només la cresta dominant custodia el batec vertader. Desperta la teva flama porpra sobre la roca més alta, i la runa coronada revelarà l'últim misteri.</p>
+  </div>
+  <p><span class="etiqueta">Arribada</span></p>
+  <div class="txt"><p>Aquest lloc és com la vida, ple de pujades i caigudes. Qui hi ve cau, s'aixeca i torna a provar-ho, com l'alquimista davant del gresol. L'Ànima no es mostra a la llum del dia: porteu la vostra llum i busqueu-la.</p></div>
+  <p><span class="etiqueta">Fragment</span> <strong>El fragment de l'Ànima</strong> · <a href="../audio/fragment-anima.mp3">fragment-anima.mp3</a></p>
+  <div class="txt">
+    <p>Aigua, Terra, Foc i Aire fan el món. Però en falta un que els uneixi: la Quinta Essència, l'Ànima.</p>
+    <p>L'Ànima no es troba a la vall ni al pla tranquil. S'amaga allà on s'ha pujat més amunt, i per arribar-hi cal caure i tornar-se a aixecar. Així es fa la Gran Obra: cada caiguda és una prova, i cada vegada que us aixequeu, us transformeu una mica. Com la meva vida. Com la vostra, si seguiu aquest camí.</p>
+  </div>
+
+  <h2 id="missatges">3. Missatges del màster (es dispara sol per GPS o a mà)</h2>
+  <p class="suau">Font: <span class="mono">content/public/missatgesMaster.ts</span>. Els que tenen vídeo porten la veu al fitxer <span class="mono">/audio/video/&lt;id&gt;.mp3</span>.</p>
+  <table>
+    <thead><tr><th>Id</th><th>Títol</th><th>Text</th><th>Vídeo / àudio</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">queden-15</td><td>Queden 15 minuts</td><td>Queden quinze minuts. Acabeu la fita on sou i poseu-vos en camí cap al Pla del Masset.</td><td>—</td></tr>
+      <tr><td class="mono">queden-5</td><td>Queden 5 minuts</td><td>Només queden cinc minuts. Aneu cap al Pla del Masset sense entretenir-vos.</td><td>—</td></tr>
+      <tr><td class="mono">pla-masset</td><td>Torneu al Pla del Masset</td><td>Deixeu el que feu i torneu al Pla del Masset. Us hi esperen.</td><td>—</td></tr>
+      <tr><td class="mono">inquisidor-vigila</td><td>L'Inquisidor us vigila</td><td>L'home del Sant Ofici ronda a prop. Parleu baix, no us separeu i no li doneu cap motiu per aturar-vos.</td><td>—</td></tr>
+      <tr><td class="mono">inquisidor-alerta</td><td>Us ha sentit</td><td>Sé que rondeu per aquest poble. Heretgia! La sento a l'aire, com fum de foguera. El Sant Ofici no oblida ni perdona. Qui toca l'obra de l'alquimista, crema amb ella. Qui hi ha aquí?</td><td>Vídeo <span class="mono">alerta-inquisidor.mp4</span> · veu pròpia de l'Inquisidor (script <span class="mono">generate-veu-inquisidor.py</span>)</td></tr>
+      <tr><td class="mono">inquisidor-pregunta</td><td>Pregunta per vosaltres</td><td>M'han dit que l'Inquisidor pregunta per vosaltres. Seguiu endavant, però amb els ulls ben oberts.</td><td>—</td></tr>
+      <tr><td class="mono">aigua-esglesia</td><td>L'aigua ha passat</td><td>Heu vist l'Aigua alçar-se i tornar a caure. Reconeix qui s'hi acosta. Continueu.</td><td>Vídeo <span class="mono">aigua-esglesia.mp4</span></td></tr>
+      <tr><td class="mono">terra-vinyals</td><td>La Terra ha florit</td><td>Heu vist créixer la Terra al vostre pas. Fins i tot ella sap que us acosteu al que busca.</td><td>Vídeo <span class="mono">terra-planes-bones.mp4</span> · àudio <a href="../audio/video/terra-planes-bones.mp3">terra-planes-bones.mp3</a></td></tr>
+      <tr><td class="mono">terra-arribada</td><td>Planes Bones</td><td>Ja sou a prop de Planes Bones. Seguiu la Terra fins al lloc on reposa el secret. <span class="suau">(text provisional, meu)</span></td><td>Vídeo <span class="mono">arribada-fita-terra.mp4</span> · botó «🧭 Seguiu la Terra»</td></tr>
+      <tr><td class="mono">anima-cami-malla</td><td>L'Ànima ronda el camí</td><td>Heu vist l'Ànima vibrar entre les ombres del camí, una llum porpra que s'esvaeix en veure-us. Continueu.</td><td>Vídeo <span class="mono">anima-cami-malla.mp4</span> · botó «Veure les ànimes guiar-nos»</td></tr>
+      <tr><td class="mono">foc-placa-creu</td><td>El Foc ha espurnejat</td><td>Heu vist el Foc espurnejar entre les pedres de la plaça i apagar-se en veure-us. Continueu.</td><td>Vídeo <span class="mono">foc-placa-creu.mp4</span></td></tr>
+      <tr><td class="mono">bon-cami</td><td>Aneu per bon camí</td><td>Aneu per bon camí. L'Orde del Testament us observa amb bons ulls.</td><td>—</td></tr>
+      <tr><td class="mono">no-separeu</td><td>No us separeu</td><td>Mantingueu l'equip unit: ningú no ha d'anar sol, i tothom ha de poder veure el mòbil.</td><td>—</td></tr>
+      <tr><td class="mono">carretera</td><td>Compte amb els cotxes</td><td>Si heu de caminar per la carretera, aneu en fila i pel costat. La Gran Obra pot esperar un moment.</td><td>—</td></tr>
+      <tr><td class="mono">tot-be</td><td>Tot en ordre?</td><td>Fa estona que no avanceu. Si teniu cap problema, truqueu al màster.</td><td>—</td></tr>
+      <tr><td class="mono">truqueu</td><td>Truqueu al màster</td><td>Necessitem parlar amb vosaltres. Truqueu al màster tan aviat com pugueu.</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="ar">4. Extres de realitat augmentada (AR)</h2>
+  <p class="suau">Font: <span class="mono">content/public/extres.ts</span>. Cada extra té un botó a la pantalla indicada i una pantalla d'entrada amb el text.</p>
+
+  <h3>Ulls en la foscor · pas previ Aire (<a href="/pantalles">galeria</a>)</h3>
+  <p class="suau">Botó: «👁 Mirar la foscor» · camí des de 41.911500, 2.226306 fins a 41.911306, 2.225583 · <a href="https://www.openstreetmap.org/?mlat=41.9115&mlon=2.226306#map=18/41.9115/2.226306">mapa</a></p>
+  <div class="txt"><p>Hi ha algú que us vigila. Això és el que heu de fer: Aixequeu el mòbil i gireu-lo a poc a poc al vostre voltant. Quan una vora de la pantalla es posa vermella, gireu-vos cap a aquell costat. Si s'acosta massa, crideu perquè marxi.</p></div>
+
+  <h3>Ànimes a la foscor · pista skate Ànima</h3>
+  <p class="suau">Botó: «👻 Mirar les ànimes» · punt de llum 41.910375, 2.230078 · <a href="https://www.openstreetmap.org/?mlat=41.910375&mlon=2.230078#map=18/41.910375/2.230078">mapa</a></p>
+  <div class="txt"><p>A la pista hi ha fantasmes i ànimes errants. Això és el que veureu i podreu fer: Aixequeu el mòbil i gireu-lo a poc a poc: els fantasmes us observen des de lluny. Els portals de llum són per on surten els fantasmes grans, que caçaran les ànimes petites i se les enduran. Toqueu el botó 💥 (a baix a la dreta) per fer un flaix: els fantasmes grans que il·lumini es dissoldran. Si en voleu fer marxar, crideu.</p></div>
+
+  <h3>Foc a la foscor · Serrat del Caçador</h3>
+  <p class="suau">Botó: «🔥 Mirar a través del foc»</p>
+  <div class="txt"><p>El foc us envolta. Això és el que veureu: Aixequeu el mòbil i gireu-lo a poc a poc al vostre voltant. Arcs de flames surten de terra i hi tornen a entrar, com dofins. Enfoqueu els companys: el foc els dibuixarà un contorn vermell.</p></div>
+
+  <h3>Ràpids als peus · Font del Lleó (Aigua)</h3>
+  <p class="suau">Botó: «🌊 Mirar l'aigua als peus» · camí des de 41.914743, 2.227531 fins a 41.914111, 2.228057 · <a href="https://www.openstreetmap.org/?mlat=41.914743&mlon=2.227531#map=18/41.914743/2.227531">mapa</a></p>
+  <div class="txt"><p>L'aigua us corre pels peus. Això és el que veureu: Abaixeu el mòbil cap als peus i gireu-lo a poc a poc al vostre voltant. Un riu de ràpids d'uns 3 metres d'ample us passa pels peus: ones, escuma i esquitxades. Els companys es queden per damunt de l'aigua, com si hi caminessin. Quan una vora de la pantalla es posa blava, gireu-vos cap a aquell costat: un lleó d'aigua hi sortirà. Vindrà dues vegades, des de dos costats oposats.</p></div>
+  <p class="suau">Calibratge: «Mireu cap avall del carrer, cap al Carrer Major, amb el mòbil dret, i toqueu «Aquí».</p>
+
+  <h3>Les ànimes us guien · Camí de Malla</h3>
+  <p class="suau">Botó: «👻 Veure les ànimes guiar-nos» · camí des de 41.912045, 2.229079 fins a 41.910421, 2.229620 · <a href="https://www.openstreetmap.org/?mlat=41.912045&mlon=2.229079#map=18/41.912045/2.229079">mapa</a></p>
+  <div class="txt"><p>Les ànimes d'aquest camí saben on és la fita i us hi acompanyen. Això és el que veureu: Unes ànimes petites sorgeixen al vostre voltant i volen camí avall, cap a la fita d'Ànima. Seguiu-les: el camí és recte i us hi duen. Aixequeu el mòbil i gireu-lo a poc a poc. Si no en veieu cap, un avís us dirà cap a on mirar.</p></div>
+
+  <h3>La Terra us guia · Planes Bones (pantalla d'arribada de la fita)</h3>
+  <p class="suau">Botó: «🧭 Seguiu la Terra» · camí des de 41.913576, 2.232706 fins a 41.912261, 2.233455 · <a href="https://www.openstreetmap.org/?mlat=41.913576&mlon=2.232706#map=18/41.913576/2.232706">mapa</a></p>
+  <div class="txt">
+    <p>El Gollem protector de l'element terra apareix aquí mateix i us guiarà fins al con de la fita.</p>
+    <p>1. Seguiu el Gollem de pedra: camina davant vostre, cap al con de la fita.</p>
+    <p>2. Al con, mireu el núvol de paraules que flota davant vostre i trieu la correcta.</p>
+    <p>3. Quan l'encerteu, un dodecaedre s'introduirà a la terra i en sortirà un con de llum amb el símbol de la resposta. Sortiu de la realitat augmentada i resoleu la fita.</p>
+  </div>
+
+  <h2 id="pantalles">5. Pantalles fixes</h2>
+  <p class="suau">Pantalles de la partida (<span class="mono">app/</span>). Les que tenen àudio porten la veu de Fra Francesc.</p>
+
+  <h3>Entrada i missatge secret · <a href="/">/</a></h3>
+  <p><span class="etiqueta">Àudio</span> <a href="../audio/intro.mp3">intro.mp3</a></p>
+  <div class="txt">
+    <p><strong>Un missatge per a vosaltres</strong></p>
+    <p>Sentfores, any de Nostre Senyor de 1472.</p>
+    <p>Si llegiu aquestes línies, és que us he triat.</p>
+    <p>Em dic Fra Francesc de Sentfores. Tota la vida he servit l'Orde del Testament, que guarda una recepta més antiga que les pedres del castell: el camí per obtenir la Pedra Filosofal.</p>
+    <p>La guerra ho ha capgirat tot. El castell de Sentfores ha caigut, i amb ell la nostra casa. Hi ha gent que cobeja la recepta per fer-ne mal ús, i el Sant Ofici persegueix tothom qui gosa practicar l'art de la transmutació.</p>
+    <p>Per això vaig partir la Gran Obra en cinc fragments — Aigua, Terra, Foc, Aire i Ànima — i els vaig amagar al voltant del poble. Trobeu-los. Demostreu que sou dignes de guardar-los.</p>
+    <p>Aquestes pàgines us guiaran: us diran on anar i guardaran cada fragment que trobeu.</p>
+    <p>Aneu amb compte: un home del Sant Ofici ronda per aquests carrers. Si se us acosta, no us deixeu espantar i seguiu el camí.</p>
+    <p>Que el foc de l'Atanor us guiï.</p>
+    <p>— Fra F.</p>
+  </div>
+
+  <h3>Benvinguda · <a href="/">/</a></h3>
+  <div class="txt"><p>Sentfores, 1472. Un secret us espera.</p><p>Tingueu-la a mà: us acompanyarà tota la nit.</p></div>
+
+  <h3>Hub · <a href="/joc">/joc</a> (manual d'ús)</h3>
+  <div class="txt">
+    <p><strong>Temps:</strong> Això és el temps que us queda. Quan arribi a zero, la partida s'acaba sola.</p>
+    <p><strong>Pentagrama:</strong> Hi ha 5 fites: Aigua, Terra, Foc, Aire i Ànima. Cada fita resolta encén el seu element. Toqueu un element per veure on és!</p>
+    <p><strong>Mapa:</strong> El punt blau sou vosaltres. Aneu fins a la fita triada.</p>
+    <p><strong>Elements:</strong> Aquí veieu quants elements porteu. Tots els mòbils de l'equip veuen el mateix progrés.</p>
+    <p><strong>Fitxa en arribar:</strong> En arribar a la fita, s'obre sola! Si no s'obre, escanegeu el QR del cartell.</p>
+  </div>
+
+  <h3>Fita, resposta i pistes · <a href="/s/planes-bones">/s/&lt;fita&gt;</a></h3>
+  <div class="txt">
+    <p><strong>Manual:</strong> Llegiu què heu de fer, feu el repte i escriviu aquí la resposta. Si us encalleu, podeu demanar una pista.</p>
+    <p><strong>Resposta correcta:</strong> Fragment trobat! — l'Aigua us ha revelat el seu secret / la Terra us ha confiat el seu secret / el Foc us ha mostrat el seu secret / l'Aire us ha xiuxiuejat el seu secret / l'Ànima us ha obert el seu secret.</p>
+    <p><strong>Resposta incorrecta (en rotació):</strong> La matèria no respon. Torneu-ho a provar. · Encara no. Mireu-ho amb més calma. · Aquest no és el secret. L'element encara calla.</p>
+    <p><strong>Massa ràpid:</strong> Espereu un moment abans de tornar-ho a provar.</p>
+    <p><strong>Pistes:</strong> Necessiteu ajuda? Fra Francesc va deixar tres ajudes per a cada fragment. S'obren d'una en una. · Segur que voleu veure la resposta? Us donarà el fragment, però no l'haureu descobert vosaltres. (Botons: No, seguim buscant · Sí, mostra-la.)</p>
+    <p class="suau">Les pistes en si no hi són en aquesta pàgina: són privades.</p>
+  </div>
+
+  <h3>Estrella completa · quan es resolen les 5 fites</h3>
+  <p><span class="etiqueta">Àudio</span> <a href="../audio/estrella.mp3">estrella.mp3</a></p>
+  <div class="txt">
+    <p><strong>L'estrella és completa</strong></p>
+    <p>Els cinc fragments són vostres.</p>
+    <p>Mireu el mapa: Aigua, Terra, Foc, Aire i Ànima dibuixen una estrella de cinc puntes. És el signe de l'Orde del Testament: els quatre elements units sota la Quinta Essència. No és cap casualitat. La vaig traçar jo, pas a pas, sobre la terra del poble.</p>
+    <p>I tota estrella té un cor. Les seves línies es creuen al Pla del Masset.</p>
+    <p>Aneu-hi. Allà s'acaba el camí… i allà trobareu qui us ha vigilat tota la nit.</p>
+    <p>Quan hi arribeu, algú us dirà: «El temps es consumeix.» Si sou dignes, sabreu respondre: «Però el foc de l'Atanor es manté.»</p>
+  </div>
+
+  <h3>S'acaba el temps · quan s'acaba la partida</h3>
+  <p><span class="etiqueta">Àudio</span> <a href="../audio/temps.mp3">temps.mp3</a></p>
+  <div class="txt">
+    <p><strong>El temps s'ha consumit</strong></p>
+    <p>El temps s'ha consumit. Els astres ja no estan alineats i la Gran Obra no pot esperar més.</p>
+    <p>Deixeu el que estigueu fent i aneu al Pla del Masset, al cor de l'estrella. Porteu els fragments que hàgiu trobat. Allà us espera qui us ha vigilat tota la nit.</p>
+    <p>Quan hi arribeu, algú us dirà: «El temps es consumeix.» Si sou dignes, sabreu respondre: «Però el foc de l'Atanor es manté.»</p>
+  </div>
+
+  <h3>El cor de l'estrella · <a href="/final">/final</a> (en arribar al Pla del Masset)</h3>
+  <div class="txt">
+    <p><strong>El cor de l'estrella</strong></p>
+    <p>Sou al cor de l'estrella. Aquí es creuen les cinc línies que heu seguit, de l'Aigua fins a l'Ànima. Aquí s'acaba el camí i comença la Gran Obra.</p>
+    <p>Reuniu tot l'equip, guardeu bé els fragments que porteu i espereu aquí. No marxeu.</p>
+    <p>Algú vindrà a trobar-vos: qui us ha vigilat tota la nit. Us dirà: «El temps es consumeix.» Si sou dignes, respondreu sense dubtar: «Però el foc de l'Atanor es manté.» Llavors tot tindrà sentit.</p>
+  </div>
+
+  <h3>La Conjunció dels Astres · ritual (AR)</h3>
+  <div class="txt">
+    <p><strong>La Conjunció dels Astres</strong></p>
+    <p>Heu aconseguit els fragments de la Pedra Filosofal. Ara utilitzeu el seu poder per conjurar els astres i invocar la Pedra Filosofal.</p>
+    <p>Alceu el mòbil cap al cel i busqueu els astres. La flama de l'atanor us guiarà.</p>
+    <p><strong>Què heu de fer:</strong> Gireu el mòbil a poc a poc fins que una estrella aparegui. · Mantingueu-la al centre fins que s'encaixi. · Quan les cinc siguin al cel, la Pedra Filosofal sortirà al centre.</p>
+    <p class="suau">Seguretat: Mireu el cel amb calma i no camineu mirant la pantalla.</p>
+  </div>
+
+  <h3>Guardians del Secret · <a href="/final">/final</a> (pantalla final)</h3>
+  <p><span class="etiqueta">Àudio</span> <a href="../audio/guardians-veu.mp3">guardians-veu.mp3</a></p>
+  <div class="txt">
+    <p><strong>Guardians del Secret</strong></p>
+    <p>La matèria ha parlat, i Fra Francesc ha vist el que havia de veure.</p>
+    <p>Heu reunit l'Aigua, la Terra, el Foc, l'Aire i l'Ànima. Heu sentit l'amenaça i no us heu aturat. Heu confiat els uns en els altres.</p>
+    <p>Des d'avui sou Guardians del Secret de Sentfores i l'Orde del Testament viu en vosaltres. La fórmula de la Pedra Filosofal és vostra: guardeu-la i no la doneu mai a qui en voldria fer mal ús.</p>
+    <p><em>Veritas et Materia in unum vertuntur.</em> La Veritat i la Matèria es fan una de sola.</p>
+    <p>Ara sou alquimistes: el laboratori de l'Orde és vostre. [Entrar al laboratori] · Gràcies per participar</p>
+  </div>
+
+  <h2 id="pendents">6. Coses a revisar</h2>
+  <ul>
+    <li>Coordenades de la fita Planes Bones: a l'app són <span class="mono">41.912277, 2.233446</span>; l'equip ha donat <span class="mono">41.912279, 2.233443</span>. Cal actualitzar <span class="mono">content/public/estacions.ts</span>.</li>
+    <li>L'àudio d'arribada de la fita Terra: la pantalla carrega <span class="mono">/audio/arribada-fita-{element}.mp3</span> (<a href="/app">app/s/[estacioId]/page.tsx</a>, línia 153), no el WAV de <span class="mono">textos.ts</span>. Per això sona l'àudio antic.</li>
+    <li>El text de <span class="mono">terra-arribada</span> és provisional, escrit per mi.</li>
+    <li>El botó d'AR també surt a la pantalla d'arribada de la fita (extra <span class="mono">terra-cami</span>, <span class="mono">arribada: true</span>), a més del punt GPS nou.</li>
+    <li>Pendent de decisió (fites-nova.md): 666 no és primer; ara la resposta de Terra és la paraula «amic», i queda per decidir si també es valida a la webapp.</li>
+    <li>Àudios de vídeo: el vídeo del camí de Planes Bones no porta so; el so és <span class="mono">/audio/video/terra-planes-bones.mp3</span>.</li>
+    <li>Àudios per regravar: arribada i fragment de Terra (ja són MP3 convertits des dels WAV), i la narració del camí de Planes Bones, que cal refer.</li>
+  </ul>
+
+  <p class="suau">Generat automàticament a partir del codi i els documents de revisió; cal refer-lo si canvia algun text.</p>
+</main>
+</body>
+</html>

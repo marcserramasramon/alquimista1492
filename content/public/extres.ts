@@ -268,7 +268,7 @@ export const EXTRES_AR: ExtraAr[] = [
     escena: "terra",
     // Del punt on sona el vídeo del màster (des) fins al con de la fita (cap): ~160 m cap al sud-est.
     cami: {
-      des: { latitud: 41.913588, longitud: 2.232733 },
+      des: { latitud: 41.91357634879743, longitud: 2.2327057350887016 },
       cap: { latitud: 41.912260852132, longitud: 2.233455370907986 },
     },
     boto: "🧭 Seguiu la Terra",

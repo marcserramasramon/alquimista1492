@@ -97,16 +97,26 @@ export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
     video: "/video/aigua-esglesia.mp4",
     geofence: { lat: 41.91377776075638, lng: 2.227906392940557, radiMetres: 30 },
   },
-  /** Es dispara sol pel camí cap a Planes Bones (Terra), a l'altura de l'entrada del Mas
-   *  Vinyals. Vídeo generat amb IA: arbres i plantes creixen al costat del camí, seguint
-   *  els seus passos. Narració muntada amb scripts/generate-audio-ambient.py. El botó d'AR
-   *  obre la Terra des d'aquest punt: el Gollem apareix i guia l'equip fins al con de la fita. */
+  /** Es dispara sol pel camí cap a Planes Bones (Terra), a uns 500 m de la fita. Vídeo
+   *  generat amb IA: arbres i plantes creixen al costat del camí, seguint els seus passos.
+   *  La narració és a public/audio/video/terra-planes-bones.mp3. Després del vídeo, el botó
+   *  d'AR («Seguiu la Terra»). */
   {
     id: "terra-vinyals",
     titol: "La Terra ha florit",
     text: "Heu vist créixer la Terra al vostre pas. Fins i tot ella sap que us acosteu al que busca.",
     video: "/video/terra-planes-bones.mp4",
-    geofence: { lat: 41.913588, lng: 2.232733, radiMetres: 30 },
+    geofence: { lat: 41.914115162168926, lng: 2.2314442109517176, radiMetres: 30 },
+    ar: { href: "/joc/ar/terra-cami", boto: "🧭 Seguiu la Terra" },
+  },
+  /** Activa el vídeo d'arribada de Planes Bones i el botó d'AR, a prop de la fita. Des
+   *  d'aquest punt, el Gollem guia l'equip fins a la fita real (`extres.ts`, `terra-cami`). */
+  {
+    id: "terra-arribada",
+    titol: "Planes Bones",
+    text: "Ja sou a prop de Planes Bones. Seguiu la Terra fins al lloc on reposa el secret.",
+    video: "/video/arribada-fita-terra.mp4",
+    geofence: { lat: 41.91357634879743, lng: 2.2327057350887016, radiMetres: 30 },
     ar: { href: "/joc/ar/terra-cami", boto: "🧭 Seguiu la Terra" },
   },
   /** Es dispara sol pel Camí de Malla, camí cap a la fita d'Ànima (pista skate). Vídeo
