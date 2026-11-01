@@ -44,6 +44,7 @@ export function Benvinguda() {
   const [modeForcat, setModeForcat] = useState<ModeInstallacio | null>(null);
   const [promptEvent, setPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [installant, setInstallant] = useState(false);
+  const [descarregat, setDescarregat] = useState(false);
 
   useEffect(() => {
     function onBeforeInstall(e: Event) {
@@ -53,6 +54,7 @@ export function Benvinguda() {
     function onInstalled() {
       setPromptEvent(null);
       setModeForcat("installada");
+      setDescarregat(true);
     }
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     window.addEventListener("appinstalled", onInstalled);
@@ -65,13 +67,16 @@ export function Benvinguda() {
   async function installar() {
     if (!promptEvent || installant) return;
     setInstallant(true);
+    setDescarregat(true);
     try {
       await promptEvent.prompt();
       const { outcome } = await promptEvent.userChoice;
       setPromptEvent(null);
       setModeForcat(outcome === "accepted" ? "installada" : "no-disponible");
+      setDescarregat(outcome === "accepted");
     } catch {
       setModeForcat("no-disponible");
+      setDescarregat(false);
     } finally {
       setInstallant(false);
     }
@@ -89,6 +94,7 @@ export function Benvinguda() {
     <VistaBenvinguda
       modeInstallacio={mode}
       installant={installant}
+      descarregat={descarregat}
       onInstallar={installar}
       onContinuar={continuar}
     />

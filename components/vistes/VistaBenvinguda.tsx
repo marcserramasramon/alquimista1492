@@ -10,6 +10,8 @@ export type ModeInstallacio = "boto" | "ios" | "installada" | "no-disponible";
 export interface VistaBenvingudaProps {
   modeInstallacio: ModeInstallacio;
   installant?: boolean;
+  /** Ja s'ha premut Descarregar: cal obrir l'app des de la icona, no es pot continuar des del navegador. */
+  descarregat?: boolean;
   onInstallar: () => void;
   onContinuar: () => void;
 }
@@ -18,6 +20,7 @@ export interface VistaBenvingudaProps {
 export function VistaBenvinguda({
   modeInstallacio,
   installant = false,
+  descarregat = false,
   onInstallar,
   onContinuar,
 }: VistaBenvingudaProps) {
@@ -60,29 +63,41 @@ export function VistaBenvinguda({
           </div>
         )}
 
-        <label className="flex items-start gap-3 text-sm text-ink-soft">
-          <input
-            type="checkbox"
-            checked={accepto}
-            onChange={(e) => setAccepto(e.target.checked)}
-            className="mt-0.5 h-6 w-6 shrink-0 accent-gold"
-          />
-          <span>
-            Accepto les{" "}
-            <a href="/condicions" target="_blank" rel="noopener noreferrer" className="font-bold text-ink underline">
-              condicions de participació i privacitat
-            </a>
-          </span>
-        </label>
+        {descarregat ? (
+          <div className="targeta px-4 py-4 text-center">
+            {/* TEXT PROVISIONAL */}
+            <p className="etiqueta mb-1">app descarregada</p>
+            <p className="text-lg">
+              Obriu <span className="font-extrabold">l&apos;app</span> amb la <span className="font-extrabold">icona instal·lada</span> a la pantalla d&apos;inici.
+            </p>
+          </div>
+        ) : (
+          <>
+            <label className="flex items-start gap-3 text-sm text-ink-soft">
+              <input
+                type="checkbox"
+                checked={accepto}
+                onChange={(e) => setAccepto(e.target.checked)}
+                className="mt-0.5 h-6 w-6 shrink-0 accent-gold"
+              />
+              <span>
+                Accepto les{" "}
+                <a href="/condicions" target="_blank" rel="noopener noreferrer" className="font-bold text-ink underline">
+                  condicions de participació i privacitat
+                </a>
+              </span>
+            </label>
 
-        <button
-          type="button"
-          onClick={onContinuar}
-          disabled={!accepto}
-          className={teBotoInstallar ? "btn btn-secundari" : "btn btn-primari"}
-        >
-          Continuar →
-        </button>
+            <button
+              type="button"
+              onClick={onContinuar}
+              disabled={!accepto}
+              className={teBotoInstallar ? "btn btn-secundari" : "btn btn-primari"}
+            >
+              {teBotoInstallar ? "Continuar al navegador →" : "Continuar →"}
+            </button>
+          </>
+        )}
 
         <a href="/master" className="text-center text-sm text-ink-soft hover:text-ink transition-colors">
           pàgina master
