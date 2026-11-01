@@ -215,6 +215,9 @@ export const LABORATORI = {
   boto: "Entrar al laboratori",
 };
 
+/** Últim text de la pantalla dels guardians, sota el botó del laboratori. */
+export const GRACIES_PARTICIPAR = "Gràcies per participar";
+
 // 6. Textos d'interfície
 export const BENVINGUDA = {
   frase: "Sentfores, 1472. Un secret us espera.",
