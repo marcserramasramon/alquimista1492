@@ -67,7 +67,7 @@ float snoise(vec3 v) {
 }
 
 void main() {
-  float t = u_time;
+  float t = u_time * 3.0;
   vec3 col = u_c[0];
   for (int i = 1; i < 5; i++) {
     float e = float(i);
