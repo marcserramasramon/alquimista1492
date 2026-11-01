@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 /** Cada quant s'envia la posició (equips i màster). Fix de moment; configurable més endavant. */
-export const INTERVAL_UBICACIO_MS = 30_000;
+export const INTERVAL_UBICACIO_MS = 10_000;
 
-/** El servidor ignora posicions que arribin més de pressa que això (defensa contra clients que no respectin l'interval). */
-export const MINIM_ENTRE_UBICACIONS_MS = 10_000;
+/** El servidor ignora posicions que arribin més de pressa que això (defensa contra clients que no respectin l'interval). Més baix que l'interval perquè la latència no faci caure les que arriben justes. */
+export const MINIM_ENTRE_UBICACIONS_MS = 8_000;
 
 /** Una posició (del màster o d'un equip) més antiga que això no s'ensenya (mòbil sense bateria, sense cobertura...). */
 export const MAXIMA_EDAT_UBICACIO_MS = 10 * 60_000;
