@@ -10,6 +10,8 @@ import { ELEMENTS, type Element } from "@/content/public/estacions";
 import { getExtraArDeFita } from "@/content/public/extres";
 import { ARRIBADES, ARRIBADES_PAS, CORRECTE_PER_ELEMENT, FRAGMENTS } from "@/content/public/textos";
 import { CelebracioFragment } from "@/components/vistes/CelebracioFragment";
+import { VistaMissatgeVideo } from "@/components/vistes/VistaMissatgeVideo";
+import { getMissatgeMaster } from "@/content/public/missatgesMaster";
 
 /** Dades públiques d'una estació tal com les retorna /api/joc/[estacioId]. */
 export interface EstacioPublica {
@@ -23,6 +25,10 @@ export interface EstacioPublica {
   disponible: boolean;
   /** Check-in previ a una fita (docs/fites-nova.md § AIRE): text+veu i prou, sense enigma. */
   pasPrevi?: boolean;
+  /** Només en un pas previ: si la fita que desbloqueja estava amagada al mapa fins que s'obre el pas. */
+  fitaAmagada?: boolean;
+  /** Només en un pas previ: id del missatge amb vídeo que es mostra en obrir-lo. */
+  missatge?: string;
 }
 
 export interface VistaEstacioProps extends VistaJocRespostaProps {
@@ -96,6 +102,19 @@ export function VistaEstacio({
   // Check-in previ: només text+veu, sense enigma ni resposta. En tornar al mapa ja s'hi ha
   // revelat la ubicació de la fita real (app/api/estat).
   if (estacio.pasPrevi) {
+    // Pas amb vídeo (p. ex. Mas Vinyals): el vídeo és el que es veu en obrir-lo.
+    const missatgeVideo = estacio.missatge ? getMissatgeMaster(estacio.missatge) : undefined;
+    if (missatgeVideo?.video) {
+      return (
+        <VistaMissatgeVideo
+          titol={missatgeVideo.titol}
+          text={missatgeVideo.text}
+          video={missatgeVideo.video}
+          accioAr={missatgeVideo.ar}
+          onAcceptar={onTornar}
+        />
+      );
+    }
     return (
       <main className="mx-auto flex min-h-dvh max-w-md flex-col gap-6 px-5 py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
         <button
@@ -140,7 +159,9 @@ export function VistaEstacio({
           <Narracio text={ARRIBADES_PAS[estacio.id]} etiqueta="fra francesc" color={color} className="animate-entrar" />
         )}
 
-        <p className="text-center text-xl font-extrabold text-ink-soft">S&apos;ha revelat al mapa on és la propera fita.</p>
+        {estacio.fitaAmagada !== false && (
+          <p className="text-center text-xl font-extrabold text-ink-soft">S&apos;ha revelat al mapa on és la propera fita.</p>
+        )}
 
         <button onClick={onTornar} className="btn btn-primari">
           Veure-ho al mapa →

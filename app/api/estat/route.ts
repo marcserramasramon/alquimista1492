@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
   // Una estació amb pas previ no es revela (no surt al mapa) fins que l'equip l'obre.
   const estacionsAmbPasTancat = getEstacionsOrdenades()
     .map((e) => ({ e, pas: getPasPreviPerEstacio(e.id) }))
-    .filter(({ pas }) => pas && !estaOberta(progresPerEstacio.get(pas.id) ?? null));
+    .filter(({ pas }) => pas && pas.fitaAmagada !== false && !estaOberta(progresPerEstacio.get(pas.id) ?? null));
 
   const idsAmagats = new Set(estacionsAmbPasTancat.map(({ e }) => e.id));
 
@@ -107,7 +107,9 @@ export async function GET(request: NextRequest) {
             progres,
           };
         }),
-      ...getPassosPrevis().map((p) => {
+      ...getPassosPrevis()
+        .filter((p) => !p.pasAmagat || estaOberta(progresPerEstacio.get(p.id) ?? null))
+        .map((p) => {
         const oberta = estaOberta(progresPerEstacio.get(p.id) ?? null);
         return {
           id: p.id,

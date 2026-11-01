@@ -155,6 +155,12 @@ export interface PasPrevi {
   disponible: boolean;
   /** Només per acolorir el cartell/icona amb l'estil de l'element que precedeix; no compta com a fita. */
   element?: Element;
+  /** Per defecte (true), la fita que desbloqueja no es mostra al mapa fins que s'obre el pas. */
+  fitaAmagada?: boolean;
+  /** Si és true, el pas tampoc no es mostra al mapa fins que s'obre (GPS o QR). */
+  pasAmagat?: boolean;
+  /** Id d'un missatge amb vídeo (content/public/missatgesMaster.ts) que es mostra en obrir el pas. */
+  missatge?: string;
 }
 
 export const PASSOS_PREVIS: PasPrevi[] = [
@@ -180,6 +186,11 @@ export const PASSOS_PREVIS: PasPrevi[] = [
     longitud: 2.2326413486560828,
     disponible: true,
     element: "terra",
+    // Planes Bones es veu al mapa des del principi; el pas només apareix en arribar-hi (GPS o QR).
+    fitaAmagada: false,
+    pasAmagat: true,
+    // En obrir el pas (GPS o QR) es mostra el vídeo del camí; «Continuar» porta a Pas 1.
+    missatge: "terra-vinyals",
   },
 ];
 
