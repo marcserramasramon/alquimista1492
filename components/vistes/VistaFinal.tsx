@@ -69,7 +69,7 @@ export function VistaFinal({
           style={{ background: "radial-gradient(circle at 50% 45%, #fff8e1 0%, #f5d77a 45%, var(--gold-deep) 110%)" }}
         >
           {mostrarRitual && !unaPantalla ? (
-            <ImatgeGresol className="h-full py-3" />
+            <img src="/images/ar/conjuncio-fons.webp" alt="La Conjunció dels Astres" className="h-full w-full rounded-[1.5rem] object-cover" />
           ) : (
             <Pentagrama nodes={nodes} centreActiu={complet} girar className="h-full max-w-full animate-segellar py-3" />
           )}
