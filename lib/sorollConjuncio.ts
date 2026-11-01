@@ -81,12 +81,6 @@ export function sonAconseguit() {
   tocar("aconseguit-final.mp3");
 }
 
-export interface SorollRadio {
-  /** Canvia el volum (suau) mentre sona. */
-  volum: (v: number) => void;
-  aturar: () => void;
-}
-
 export interface Carrega {
   /** Proximitat a l'estrella (0 a 1): el volum és proporcional a aquesta distància. */
   progres: (p: number) => void;
@@ -125,37 +119,6 @@ export function iniciarCarregaLock(canal: number, volumMax = 0.2): Carrega {
 /** Música d'inici de l'AR: una sola vegada, en començar a apuntar al cel. */
 export function sonMusicaInici(volum = 0.25) {
   tocar("musica-final-stand.mp3", { volum });
-}
-
-/** Soroll de ràdio en bucle mentre es sintonitza amb els dials. */
-export function iniciarSorollRadio(volumInicial = 0.25): SorollRadio {
-  const c = obtenirCtx();
-  if (!c) return { volum: () => {}, aturar: () => {} };
-  let parat = false;
-  let guany: GainNode | null = null;
-  let font: AudioBufferSourceNode | null = null;
-  carregar("soroll-radio.mp3", c)
-    .then((buf) => {
-      if (parat) return;
-      guany = c.createGain();
-      guany.gain.value = volumInicial;
-      guany.connect(c.destination);
-      font = c.createBufferSource();
-      font.buffer = buf;
-      font.loop = true;
-      font.connect(guany);
-      font.start();
-    })
-    .catch(() => {});
-  return {
-    volum(v) {
-      if (guany) guany.gain.setTargetAtTime(v, c.currentTime, 0.05);
-    },
-    aturar() {
-      parat = true;
-      font?.stop();
-    },
-  };
 }
 
 /** Ambient: 5 s d'un dels fons, al 30 % del volum, amb fade d'entrada i de sortida, des d'un punt aleatori. */
