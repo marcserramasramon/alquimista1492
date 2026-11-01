@@ -54,3 +54,12 @@ supabase/.temp/
 /app/pantalles/soroll-foc/
 /app/pantalles/soroll-foc-simulacio/
 /app/pantalles/soroll-foc-comparacio/
+
+# material de gravació i disseny que el joc no carrega (sobra al deploy de Vercel)
+/public/audio/originals marc voice/
+/public/audio/new voice/
+/public/images/captures reals/
+/public/golem/stone-golem.glb
+/public/golem/walk.glb
+/public/golem/beckon.glb
+/public/golem/semi-rig.glb
