@@ -170,6 +170,17 @@ export const PASSOS_PREVIS: PasPrevi[] = [
     disponible: true,
     element: "aire",
   },
+  {
+    id: "terra-pas",
+    desbloqueja: "planes-bones",
+    nom: "Camí de Planes Bones",
+    situacio: "Al camí cap a Planes Bones.",
+    entrada: "Seguiu el camí fins al punt indicat.",
+    latitud: 41.91362609597928,
+    longitud: 2.2326413486560828,
+    disponible: true,
+    element: "terra",
+  },
 ];
 
 export function getPassosPrevis(): PasPrevi[] {

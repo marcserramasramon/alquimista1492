@@ -13,6 +13,7 @@ export const CODIS_FITES: Record<string, string> = {
   "planes-bones": "TMQ7K",
   foc: "FWZ3E",
   "aire-pas": "QDN6M",
+  "terra-pas": "JW5RN",
   aire: "PHN8S",
   anima: "GVD5C",
 };

@@ -42,7 +42,7 @@ export const ARRIBADES: Record<Element, TextNarratiu> = {
   },
   terra: {
     paragrafs: [
-      "Esteu arribat a Planes Bones. Aquí, uns guardians de pedra vetllen la matèria des de fa molt de temps. Obriu bé els ulls: entre les paraules que flotaran davant vostre, només una és veritable. Trobeu-la i la terra us respondrà.",
+      "Esteu arribat a Planes Bones. Aquí, un guardia de pedra vetlla la matèria des de fa molt de temps. Obriu bé els ulls: entre les paraules que flotaran davant vostre, només una és veritable. Trobeu-la i la terra us respondrà.",
     ],
     audio: "/audio/arribada-fita-terra.mp3",
   },
@@ -74,6 +74,11 @@ export const ARRIBADES_PAS: Record<string, TextNarratiu> = {
       "Esteu en el camí correcte, que el vent de gregal us empeny per arribar al cim. Camineu amagats seguint el mur, atents a la foscor per si l'Inquisidor hi ronda. Pugeu fins al Serrat de la Creu, on el vent no s'atura, i hi trobareu el que busqueu.",
     ],
     audio: "/audio/arribada-aire-pas.mp3",
+  },
+  "terra-pas": {
+    paragrafs: [
+      "Esteu a prop de Planes Bones. Mireu el que us espera davant vostre i seguiu la Terra.",
+    ],
   },
 };
 

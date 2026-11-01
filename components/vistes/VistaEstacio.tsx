@@ -6,8 +6,7 @@ import { VistaJocResposta, type VistaJocRespostaProps } from "@/components/viste
 import { AvisError } from "@/components/ui/Pantalla";
 import { Pentagrama } from "@/components/ui/Pentagrama";
 import { Narracio } from "@/components/ui/Narracio";
-import { ELEMENTS, ESTACIONS, type Element } from "@/content/public/estacions";
-import { distanciaMetres, RADI_OBERTURA_M } from "@/lib/ubicacio";
+import { ELEMENTS, type Element } from "@/content/public/estacions";
 import { getExtraArDeFita } from "@/content/public/extres";
 import { ARRIBADES, ARRIBADES_PAS, CORRECTE_PER_ELEMENT, FRAGMENTS } from "@/content/public/textos";
 import { CelebracioFragment } from "@/components/vistes/CelebracioFragment";
@@ -45,24 +44,6 @@ export interface VistaEstacioProps extends VistaJocRespostaProps {
   onTornar: () => void;
 }
 
-/** Si l'equip és a menys de RADI_OBERTURA_M de la fita: true o false, o null mentre no hi ha ubicació. */
-function usePropDeFita(estacioId?: string): boolean | null {
-  const [aprop, setAprop] = useState<boolean | null>(null);
-  const fita = ESTACIONS.find((e) => e.id === estacioId);
-  const lat = fita?.latitud;
-  const lng = fita?.longitud;
-  useEffect(() => {
-    if (lat === undefined || lng === undefined || !navigator.geolocation) return;
-    const id = navigator.geolocation.watchPosition(
-      (p) => setAprop(distanciaMetres({ lat: p.coords.latitude, lng: p.coords.longitude }, { lat, lng }) <= RADI_OBERTURA_M),
-      () => setAprop(null),
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 },
-    );
-    return () => navigator.geolocation.clearWatch(id);
-  }, [lat, lng]);
-  return aprop;
-}
-
 export function VistaEstacio({
   estacio,
   error,
@@ -74,7 +55,10 @@ export function VistaEstacio({
   ...joc
 }: VistaEstacioProps) {
   const [pas, setPas] = useState(pasInicial);
-  const propDeFita = usePropDeFita(estacio?.id);
+  // Si el pas inicial canvia (p. ex. en tornar de l'AR amb ?pas=prova), la pantalla el segueix.
+  useEffect(() => {
+    setPas(pasInicial);
+  }, [pasInicial]);
 
   function anarAProva() {
     setPas("prova");
@@ -266,7 +250,7 @@ export function VistaEstacio({
           )
         ) : pas === "narracio" && estacio.element ? (
           <>
-            {extraArribada && propDeFita === true && (
+            {extraArribada && (
               <Link href={`/joc/ar/${extraArribada.id}`} className="btn btn-ar mb-6">
                 {extraArribada.boto}
               </Link>
@@ -292,9 +276,12 @@ export function VistaEstacio({
                 )
               }
             />
-            <button onClick={anarAProva} className="btn btn-primari">
-              A la prova →
-            </button>
+            {/* A Planes Bones, la prova només s'obre després de la paraula correcta de l'AR (VistaTerra). */}
+            {!extraArribada && (
+              <button onClick={anarAProva} className="btn btn-primari">
+                A la prova →
+              </button>
+            )}
           </>
         ) : (
           <>

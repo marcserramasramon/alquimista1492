@@ -106,19 +106,11 @@ export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
     titol: "La Terra ha florit",
     text: "Heu vist créixer la Terra al vostre pas. Fins i tot ella sap que us acosteu al que busca.",
     video: "/video/terra-planes-bones.mp4",
-    geofence: { lat: 41.914115162168926, lng: 2.2314442109517176, radiMetres: 30 },
-    ar: { href: "/joc/ar/terra-cami", boto: "🧭 Seguiu la Terra" },
+    geofence: { lat: 41.91362609597928, lng: 2.2326413486560828, radiMetres: 30 },
+    ar: { href: "/s/planes-bones", boto: "Continuar" },
   },
   /** Activa el vídeo d'arribada de Planes Bones i el botó d'AR, a prop de la fita. Des
    *  d'aquest punt, el Gollem guia l'equip fins a la fita real (`extres.ts`, `terra-cami`). */
-  {
-    id: "terra-arribada",
-    titol: "Planes Bones",
-    text: "Ja sou a prop de Planes Bones. Seguiu la Terra fins al lloc on reposa el secret.",
-    video: "/video/arribada-fita-terra.mp4",
-    geofence: { lat: 41.91357634879743, lng: 2.2327057350887016, radiMetres: 30 },
-    ar: { href: "/joc/ar/terra-cami", boto: "🧭 Seguiu la Terra" },
-  },
   /** Es dispara sol pel Camí de Malla, camí cap a la fita d'Ànima (pista skate). Vídeo
    *  generat amb IA: presència de l'Ànima al camí. Narració pendent amb
    *  scripts/generate-audio-ambient.py (afegir "anima-cami-malla" a AMBIENT_IDS). */

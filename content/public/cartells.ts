@@ -45,9 +45,20 @@ export const POEMES_CARTELLS: Record<string, PoemaCartell> = {
     imatge: "/images/cartells/planes-bones.jpg",
     fons: "/images/cartells/fons/planes-bones.jpg",
     paragrafs: [
-      "El fang ancestral reposa en l'obaga, bressol dels tres principis de la Gran Obra. Entre la sal que fixa, el sofre que crema sense flama i el mercuri volàtil, la matèria jeu silent esperant l'ull atent de l'iniciat.",
-      "Oblida els vells tractats i cerca el testimoni dels cossos d'argila. Quants recipients custodien el recer? Compta'ls i repeteix la xifra tres cops, com un conjur que es repeteix: aquest serà el nombre de la clau mineral.",
+      "L'essència ancestral reposa en la matèria de la terra, les pedres i el fang. Custodiats pel guardià de pedra, esperen revelar el secret a qui sàpiga escoltar-les. La matèria no es deixa veure per qui no sigui confident.",
+      "El saber flota a l'aire. Entre les paraules que veureu davant vostre, només una és veritable. Trieu la paraula que farà que la terra us reconegui com a pròpia: el vincle sagrat que ens uneix i que mai abandona qui la pronuncia.",
     ],
+  },
+  // Cartell del pas previ de Planes Bones (check-in, Mas Vinyals): portal de runes.
+  "terra-pas": {
+    lema: "La Terra us espera al final del camí.",
+    imatge: "/images/cartells/terra-pas.jpg",
+    fons: "/images/cartells/fons/terra-pas.jpg",
+    pendent: "Text provisional del pas: pendent de revisió.",
+    paragrafs: [
+      "Heu arribat al camí cap al portal de la Terra, i us heu trobat amb el golem de pedra, el guardià que custodia el secret. Seguiu-lo: us guiarà i us protegirà.",
+    ],
+    notaCentrada: "Continua al camí.",
   },
   foc: {
     lema: "Hi ha un foc que no crema:\nnomés revela.",

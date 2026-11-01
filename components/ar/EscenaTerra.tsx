@@ -395,6 +395,8 @@ interface Props {
   /** La fita (on comença el camí, i origen de la malla) i el lloc final. */
   fita: PuntGps;
   amfores: PuntGps;
+  /** Es crida una sola vegada, quan l'equip toca la paraula correcta (AMIC). */
+  onResolt?: () => void;
 }
 
 /**
@@ -403,7 +405,7 @@ interface Props {
  * quan l'equip és sobre el camí. Al lloc final hi ha un marcador provisional. Dibuixat en dos canvas
  * transparents a sobre de la càmera. La lògica geogràfica és a `estatTerra`.
  */
-export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }: Props) {
+export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, onResolt }: Props) {
   // Paraules del novul: posició de cada una a la pantalla (per tocar-les), i posició a l'escena (des del con).
   const paraulesPantalla = useRef<{ x: number; y: number }[]>([]);
   const posicioParaules = useRef<{ dx: number; y: number; dz: number }[]>([]);
@@ -1149,7 +1151,10 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores }
             }
           });
           // La paraula 0 és sempre AMIC; les altres, en tocar-les, exploten i en surt una de nova.
-          if (tocada === 0) paraulaTocada.current = true;
+          if (tocada === 0 && !paraulaTocada.current) {
+            paraulaTocada.current = true;
+            onResolt?.();
+          }
           else if (tocada > 0) paraulesExplotades.current.push(tocada);
           punter.current = tocada >= 0 ? null : { x: ev.clientX, y: ev.clientY };
           ev.currentTarget.setPointerCapture(ev.pointerId);

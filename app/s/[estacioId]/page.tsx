@@ -26,6 +26,11 @@ export default function EstacioPage() {
   const [dades, setDades] = useState<EstacioData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [resolta, setResolta] = useState(false);
+  // ?pas=prova (des de l'AR de Planes Bones) obre directament la prova en lloc de la narració.
+  const [pasInicial, setPasInicial] = useState<"narracio" | "prova">("narracio");
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("pas") === "prova") setPasInicial("prova");
+  }, []);
   // Aquesta resposta ha completat les cinc fites elementals: en tornar al mapa, primer es veu
   // la celebració de l'estrella completa (CelebracioEstrella) en lloc d'anar-hi directes.
   const [estrellaCompletada, setEstrellaCompletada] = useState(false);
@@ -141,6 +146,7 @@ export default function EstacioPage() {
         {...joc}
         estacio={dades?.estacio ?? null}
         resolta={resolta}
+        pasInicial={pasInicial}
         error={error}
         onRepetirVideo={dades?.estacio.element ? () => setVeientVideo(true) : undefined}
         onRepetirArribada={hiHaArribada ? () => setVeientArribada(true) : undefined}

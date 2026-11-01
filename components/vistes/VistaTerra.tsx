@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { EscenaTerra, estatTerra, RADI_AMFORES, type PosicioEquip } from "@/components/ar/EscenaTerra";
 import { IntroduccioExtraAr } from "@/components/vistes/IntroduccioExtraAr";
 import { rumbCami, type ExtraAr } from "@/content/public/extres";
@@ -35,6 +36,8 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   const cami = extra.cami;
   const rumb = rumbCami(extra) ?? 0;
   const [iniciat, setIniciat] = useState(directa);
+  // La paraula correcta (AMIC) s'ha tocat: apareix el botó per resoldre la prova.
+  const [resolt, setResolt] = useState(false);
   const [camera, setCamera] = useState<EstatCamera>("esperant");
   const [guia, setGuia] = useState<Guia>({ missatge: "📍 Esperant la ubicació…", girar: null });
   const video = useRef<HTMLVideoElement>(null);
@@ -204,6 +207,7 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
           rumb={rumb}
           fita={cami.des}
           amfores={cami.cap}
+          onResolt={() => setResolt(true)}
         />
       )}
 
@@ -229,7 +233,12 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
 
 
       {iniciat ? (
-        <div className="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] mx-auto w-full max-w-md px-4">
+        <div className="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] mx-auto flex w-full max-w-md flex-col gap-3 px-4">
+          {resolt && (
+            <Link href={`/s/${extra.fitaId}?pas=prova`} className="btn btn-ar w-full">
+              Resoldre la prova
+            </Link>
+          )}
           <button type="button" onClick={onTornar} className="btn btn-fosc w-full">
             Tornar al joc
           </button>
