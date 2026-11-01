@@ -5,6 +5,7 @@ import { MapaEquip, type EstacioMapa, type MarcadorMapa } from "@/components/pla
 import type { EstatUbicacio } from "@/lib/useCompartirUbicacio";
 import { PanellMissatgesMaster, type PanellMissatgesMasterProps } from "@/components/vistes/PanellMissatgesMaster";
 import { PanellAvisosMaster, type AvisEquip } from "@/components/vistes/PanellAvisosMaster";
+import { PanellAjudesMaster, type AjudaPendent } from "@/components/vistes/PanellAjudesMaster";
 import { PanellRecorregut, type PanellRecorregutProps } from "@/components/vistes/PanellRecorregut";
 import { PanellPartidaMaster } from "@/components/vistes/PanellPartidaMaster";
 import { PanellGuardiansMaster } from "@/components/vistes/PanellGuardiansMaster";
@@ -53,6 +54,8 @@ export interface VistaMasterEquipsProps {
   missatges?: Omit<PanellMissatgesMasterProps, "equips">;
   /** Avisos que els equips envien al màster (botó "?" del mapa). Si no hi és, no es mostra. */
   avisos?: { recents: AvisEquip[]; onLlegit: (id: string) => void };
+  /** Ajudes que els equips demanen per a un element que encara no tenen. Si no hi són, no es mostren. */
+  ajudes?: { pendents: AjudaPendent[]; onDesbloqueja: (id: string) => void };
   /** Recorregut d'un equip al mapa, amb els temps. Si no hi és, no es mostra. */
   recorregut?: Omit<PanellRecorregutProps, "equips">;
   /** Com de fresques són les dades. Sense valor, no es mostra l'indicador. */
@@ -136,6 +139,7 @@ export function VistaMasterEquips({
   onEquipsVeuenEquipsChange,
   missatges,
   avisos,
+  ajudes,
   recorregut,
   connexio,
   fets,
@@ -324,6 +328,7 @@ export function VistaMasterEquips({
 
         <div hidden={pestanya !== "missatges"} className="flex flex-col gap-5">
           {avisos && <PanellAvisosMaster equips={equips && agafats} {...avisos} />}
+          {ajudes && <PanellAjudesMaster equips={equips && agafats} {...ajudes} />}
           {missatges ? (
             <PanellMissatgesMaster equips={equips && agafats} {...missatges} />
           ) : (

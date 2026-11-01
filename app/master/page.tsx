@@ -12,6 +12,7 @@ import type {
   ResultatEnviament,
 } from "@/components/vistes/PanellMissatgesMaster";
 import type { AvisEquip } from "@/components/vistes/PanellAvisosMaster";
+import type { AjudaPendent } from "@/components/vistes/PanellAjudesMaster";
 import type { DadesRecorregut } from "@/components/vistes/PanellRecorregut";
 import type { DadesConnexio } from "@/components/ui/EstatConnexio";
 import type { Confirmacio } from "@/components/ui/DialegConfirmacio";
@@ -83,6 +84,7 @@ export default function MasterPage() {
   const ubicacio = useCompartirUbicacio({ actiu: comparteixo, endpoint: "/api/master/ubicacio" });
   const [missatgesRecents, setMissatgesRecents] = useState<MissatgeEnviat[]>([]);
   const [avisosRecents, setAvisosRecents] = useState<AvisEquip[]>([]);
+  const [ajudesPendents, setAjudesPendents] = useState<AjudaPendent[]>([]);
   const [recorregutId, setRecorregutId] = useState<string | null>(null);
   const [recorregut, setRecorregut] = useState<DadesRecorregut | null>(null);
   const [connexio, setConnexio] = useState<DadesConnexio>({ ultimaLecturaAt: null, errorsSeguits: 0 });
@@ -214,6 +216,38 @@ export default function MasterPage() {
       clearInterval(interval);
     };
   }, [carregarAvisos]);
+
+  // Ajudes que els equips demanen per a un element que els falta (el màster les desbloqueja).
+  const carregarAjudes = useCallback(
+    () =>
+      fetch("/api/master/ajudes")
+        .then(async (res) => {
+          if (!res.ok) return;
+          const data: { ajudes: AjudaPendent[] } = await res.json();
+          setAjudesPendents(data.ajudes);
+        })
+        .catch(() => {}),
+    []
+  );
+
+  useEffect(() => {
+    const inicial = setTimeout(carregarAjudes, 0);
+    const interval = setInterval(carregarAjudes, 5000);
+    return () => {
+      clearTimeout(inicial);
+      clearInterval(interval);
+    };
+  }, [carregarAjudes]);
+
+  async function desbloquejaAjuda(id: string) {
+    setAjudesPendents((ara) => ara.filter((a) => a.id !== id));
+    await fetch("/api/master/ajudes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    }).catch(() => {});
+    carregarAjudes();
+  }
 
   async function marcarAvisLlegit(id: string) {
     setAvisosRecents((ara) => ara.map((a) => (a.id === id ? { ...a, llegit_at: new Date().toISOString() } : a)));
@@ -435,6 +469,7 @@ export default function MasterPage() {
       onEquipsVeuenEquipsChange={canviarEquipsVeuenEquips}
       missatges={{ recents: missatgesRecents, onEnviar: enviarMissatge }}
       avisos={{ recents: avisosRecents, onLlegit: marcarAvisLlegit }}
+      ajudes={{ pendents: ajudesPendents, onDesbloqueja: desbloquejaAjuda }}
       recorregut={{ triatId: recorregutId, dades: recorregut, onTriar: triarRecorregut }}
       connexio={connexio}
       fets={{ llista: fets, noVistos, onVeure: veureFets, avisos: avisosFragments, onEntes: entesFragments }}
