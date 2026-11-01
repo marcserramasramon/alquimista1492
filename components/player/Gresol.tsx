@@ -45,6 +45,8 @@ export function Gresol() {
   const router = useRouter();
   const guardat = useSyncExternalStore(senseSubscripcio, llegirRitualGuardat, () => false);
   const [comencat, setComencat] = useState(false);
+  /** L'equip ha passat del ritual (fragments) a l'AR de la Conjunció. */
+  const [enAr, setEnAr] = useState(false);
   const [guardians, setGuardians] = useState(false);
   /** Després de l'AR (gema i botó de continuar): el vídeo final, i després la pantalla dels guardians. */
   const [videoFinal, setVideoFinal] = useState(false);
@@ -105,13 +107,14 @@ export function Gresol() {
 
   if (guardians || videoAcabat) return <VistaGuardians />;
   if (videoFinal) return <VideoFinal onAcabat={() => setVideoAcabat(true)} />;
+  if (enAr) return <ConjuncioAR onContinuar={() => setVideoFinal(true)} />;
   if (aconseguits === undefined) return <VistaCarregant />;
-  // Substitueix el ritual del Gresol: l'AR de la Conjunció (les estrelles i la gema).
-  if (comencat || guardat) return <ConjuncioAR onContinuar={() => setVideoFinal(true)} />;
+  // Arribada → ritual (fragments i estrelles) → AR de la Conjunció → vídeo → guardians.
   return (
     <VistaFinal
       ritual={comencat || guardat}
       onComencarRitual={comencarRitual}
+      onComencarAr={() => setEnAr(true)}
       onTornar={() => router.push("/joc")}
       aconseguits={aconseguits ?? undefined}
     />
