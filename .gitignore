@@ -49,3 +49,8 @@ supabase/.temp/
 
 # còpies dels vídeos originals (pesades)
 /backup-video-original/
+
+# pantalles de desenvolupament del soroll de Foc (només en local)
+/app/pantalles/soroll-foc/
+/app/pantalles/soroll-foc-simulacio/
+/app/pantalles/soroll-foc-comparacio/
