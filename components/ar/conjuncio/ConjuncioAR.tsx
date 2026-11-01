@@ -23,7 +23,6 @@ import { crearGema, type EstatGema, type Gema } from "./gema";
 import {
   iniciarCarregaLock,
   sonMusicaInici,
-  iniciarSorollRadio,
   sonAconseguit,
   sonAmbient,
   sonEstrellaEncaixada,
@@ -38,11 +37,11 @@ import {
  * del cel (veure cel.ts). Les 5 estrelles dels elements són els vèrtexs d'un pentagrama que envolta el
  * jugador.
  *
- * - Mode AR: amb brúixola/orientació i GPS concedits, el mòbil és el sintonitzador: s'apunta al cel (sobre la
+ * - Mode AR: amb brúixola/orientació concedida, el mòbil és el sintonitzador: s'apunta al cel (sobre la
  *   càmera) i, mentre es gira, els anells s'inclinen en 3D (X = elevació, Y = azimut, Z = gir lateral), l'ona
  *   s'aclareix i l'estrella apareix i s'enganxa al lloc. Mantenint l'apuntat uns 1,5 s fa lock.
- * - Mode dials: només si no hi ha els permisos (o no es volen donar). Sis dials (X i Z, de tres xifres) donen
- *   la mateixa direcció, i tot el que ve després (nitidesa, anells, constel·lacions, gravetat) és idèntic.
+ * - Sense sensors: l'equip arrossega el dit per la pantalla per girar el cel i trobar les estrelles (el mateix
+ *   gir que el mode de simulació). No hi ha dials.
  *
  * ATENCIÓ: les coordenades i les claus de ressonància són NOMÉS de prova i viuen al client. Si mai
  * passa a ser del joc, tot això (solució + proximitat) ha de viure al servidor (content/private/ + API).
@@ -126,13 +125,6 @@ function calculaOrdreCiclic() {
   if (coneguda.some((d) => d === null)) return;
   ordreCiclic = [0, 1, 2, 3, 4].sort((a, b) => azEl(coneguda[a]!).az - azEl(coneguda[b]!).az);
 }
-/** Xifres (X i Z, tres dígits cadascun) de l'estrella del canal, o null si encara no s'ha vist. */
-function digitsObjectiu(i: number): number[] | null {
-  const d = coneguda[i];
-  if (!d) return null;
-  const [x, z] = codisDesDir(d);
-  return [...String(x).padStart(3, '0'), ...String(z).padStart(3, '0')].map(Number);
-}
 
 /** Demana al servidor si l'equip apunta a l'estrella `i` (sense enviar-ne la posició si no encaixa). */
 async function consultaLock(i: number, aim: V3, mode: 'mobil' | 'dials'): Promise<boolean> {
@@ -175,30 +167,11 @@ async function consultaMira(aim: V3): Promise<void> {
   }
 }
 
-/** Direcció del cel que marquen els dials (els dígits arrodonits). */
-function dirDeDials(f: number[]): V3 {
-  const r = f.map((v) => Math.round(v));
-  return dirDesCodis(r[0] * 100 + r[1] * 10 + r[2], r[3] * 100 + r[4] * 10 + r[5]);
-}
-
-const INICIALS: number[][] = [
-  [4, 1, 2, 3, 0, 8],
-  [0, 8, 5, 7, 2, 1],
-  [5, 4, 0, 1, 9, 4],
-  [9, 0, 5, 6, 6, 0],
-  [2, 6, 0, 8, 3, 7],
-];
-const NOM_DIALS = ['Centenes', 'Desenes', 'Unitats'];
-const NOM_GRUP = ['X · est–oest', 'Z · nord–sud'];
 
 /** Estat que calcula el bucle a cada fotograma i comparteixen l'oscil·loscopi i els dials (prototip: variables de mòdul). */
 const CLARITAT = [0, 0, 0, 0, 0];
 const FREQ = [0, 0, 0, 0, 0];
 
-/** Nitidesa del senyal (0 = soroll pur, 1 = sintonitzat) segons l'error angular de cada canal (la calcula el bucle). */
-function nitidesa(_d: number[], i: number): number {
-  return CLARITAT[i];
-}
 
 /** Ressonància d'una estrella del cel amb un dial: ample (en unitats de freqüència) de la banda. */
 const AMPLE_RESSONANCIA = 16;
@@ -229,12 +202,6 @@ function colorSenyalA(hex: string, c: number, alfa: number): string {
   return `rgba(${m[0]},${m[1]},${m[2]},${alfa.toFixed(3)})`;
 }
 
-/** Proximitat (0–1) d'una sola xifra a la seva xifra objectiu. */
-function proximitatXifra(v: number, i: number, j: number): number {
-  const obj = digitsObjectiu(i);
-  if (!obj) return 0;
-  return Math.pow(Math.max(0, 1 - Math.abs(v - obj[j]) / 5), 1.4);
-}
 
 function mulberry(seed: number) {
   return () => {
@@ -267,14 +234,10 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
   const gemaRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const [vals, setVals] = useState<number[][]>(INICIALS);
   const [alineats, setAlineats] = useState<boolean[]>([false, false, false, false, false]);
   const [actiu, setActiu] = useState(0);
-  /** Quina de les dues coordenades (0 = X, 1 = Z) editen els tres dials. */
-  const [grup, setGrup] = useState(0);
-  /** inici: cal activar els sensors · demanant: esperant els permisos · ar: apuntant amb el mòbil · dials: sense sensors. */
-  const [modeEstat, setMode] = useState<"inici" | "demanant" | "ar" | "dials">("inici");
-  const [gpsOk, setGpsOk] = useState<boolean | null>(null);
+  /** inici: cal activar el cel · demanant: esperant els permisos · ar: apuntant (amb el mòbil o arrossegant). */
+  const [modeEstat, setMode] = useState<"inici" | "demanant" | "ar">("inici");
   /** `?sim` a l'URL: botó per simular el mòbil amb el ratolí (només per provar a l'ordinador). */
   const simulacio = useSyncExternalStore(
     senseSubscripcio,
@@ -283,15 +246,10 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
   );
   /** Números X i Z cap on apunta ara el mòbil (només en mode AR). */
   const { base: baseSensors, estat: estatSensors, demanar: demanarSensors } = useSensorsCel();
-  // Sense GPS o sense sensors d'orientació → dials. Amb tots dos → AR. (Derivat: no cal cap efecte.)
-  const mode: "inici" | "demanant" | "ar" | "dials" =
-    modeEstat === "demanant" && gpsOk !== null
-      ? !gpsOk || estatSensors === "denegat" || estatSensors === "no-disponible"
-        ? "dials"
-        : estatSensors === "actiu"
-          ? "ar"
-          : "demanant"
-      : modeEstat;
+  // Sense sensors d'orientació → es gira arrossegant el dit. Amb sensors → AR amb el mòbil. (Derivat: no cal cap efecte.)
+  const sensorsNo = estatSensors === "denegat" || estatSensors === "no-disponible";
+  const mode: "inici" | "demanant" | "ar" =
+    modeEstat === "demanant" ? (sensorsNo || estatSensors === "actiu" ? "ar" : "demanant") : modeEstat;
   const anellsRef = useRef<(SVGGElement | null)[]>([]);
   /** Un <svg> per anell: així cada anell es pot inclinar en 3D de manera independent. */
   const svgsRef = useRef<(SVGSVGElement | null)[]>([]);
@@ -300,8 +258,6 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
     [],
   );
   const alineatsRef = useRef(alineats);
-  /** Valors decimals de cada dial (el que dibuixen els canvas); `vals` n'és l'arrodoniment per a la UI. */
-  const valsRef = useRef<number[][]>(INICIALS.map((d) => [...d]));
   const actiuRef = useRef(actiu);
   /** Estat de la vista AR que llegeix el bucle de dibuix. */
   /** Fil màgic (duende) que guia cap a l'estrella del canal actiu. Més endavant podria ser una pista amb cost. */
@@ -374,9 +330,6 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
     const id = setTimeout(() => setContinuaVisible(true), 10_000);
     return () => clearTimeout(id);
   }, [completa]);
-  // Soroll de ràdio mentre es sintonitza amb els dials (s'atura en completar-ho tot).
-  // El volum el marca el bucle de dibuix: com menys nítid és el canal actiu, més soroll.
-  const radioRef = useRef<((v: number) => void) | null>(null);
   // Nota de càrrega mentre s'apunta a una estrella (només en AR, on es fa el lock).
   const carregaRef = useRef<{ i: number; so: Carrega } | null>(null);
   useEffect(
@@ -386,22 +339,13 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
     },
     [mode],
   );
-  useEffect(() => {
-    if (mode !== "dials" || completa) return;
-    const radio = iniciarSorollRadio();
-    radioRef.current = radio.volum;
-    return () => {
-      radioRef.current = null;
-      radio.aturar();
-    };
-  }, [mode, completa]);
   // Música d'inici de l'AR: sona una sola vegada quan l'equip comença a apuntar al cel.
   useEffect(() => {
     if (mode === "ar") sonMusicaInici();
   }, [mode]);
   // Ambient de fons mentre s'hi juga: 5 s d'un dels sons, de tant en tant.
   useEffect(() => {
-    if (mode !== "ar" && mode !== "dials") return;
+    if (mode !== "ar") return;
     const primer = setTimeout(sonAmbient, 10_000);
     const id = setInterval(sonAmbient, 35_000);
     return () => {
@@ -413,11 +357,8 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
   // Lock d'un canal (en mode AR el decideix el bucle de dibuix en mantenir l'apuntat).
   useEffect(() => {
     bloquejarRef.current = (i: number) => {
-      const obj = digitsObjectiu(i);
-      if (alineatsRef.current[i] || !obj) return;
+      if (alineatsRef.current[i]) return;
       sonEstrellaEncaixada();
-      valsRef.current[i] = [...obj];
-      setVals((a) => a.map((d, k) => (k === i ? [...obj] : d)));
       setAlineats((a) => a.map((x, k) => (k === i ? true : x)));
       // En mode AR, el fil màgic passa sol a l'estrella següent que falta.
       if (arRef.current.actiu) {
@@ -427,64 +368,36 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
     };
   }, []);
 
-  function sintonitza(i: number, j: number, x: number) {
-    if (alineatsRef.current[i]) return;
-    const v = Math.min(9, Math.max(0, x));
-    valsRef.current[i][j] = v;
-    const r = Math.round(v);
-    setVals((a) => (a[i][j] === r ? a : a.map((d, k) => (k === i ? d.map((q, n) => (n === j ? r : q)) : d))));
-  }
-
-  // Dials: quan les sis xifres queden clavades a l'objectiu, el senyal s'encaixa i es passa al següent canal.
-  // El servidor decideix si els dials són a l'estrella (les xifres no es comparen al client).
-  const clauActiu = vals[actiu].join('');
+  // Sense sensors, el cel es gira arrossegant el dit (mode de simulació).
   useEffect(() => {
-    if (mode === 'ar' || alineatsRef.current[actiu]) return;
-    const id = setTimeout(async () => {
-      const aim = dirDeDials(valsRef.current[actiu]);
-      if (!(await consultaLock(actiu, aim, 'dials'))) return;
-      bloquejarRef.current(actiu);
-      const seguent = ELEMENTS.findIndex((_, k) => k !== actiu && !alineatsRef.current[k] && arRef.current.fites[k]);
-      if (seguent >= 0) setTimeout(() => setActiu(seguent), 1100);
-    }, 800);
-    return () => clearTimeout(id);
-  }, [clauActiu, actiu, mode]);
+    if (sensorsNo) arRef.current.sim = true;
+  }, [sensorsNo]);
 
-  // Mentre s'apunta (mòbil o dials), el servidor diu quina estrella és més a prop i la fa visible.
+  // Mentre s'apunta, el servidor diu quina estrella és més a prop i la fa visible.
   useEffect(() => {
-    if (mode !== 'ar' && mode !== 'dials') return;
+    if (mode !== 'ar') return;
     const id = setInterval(() => {
       const ar = arRef.current;
-      if (ar.actiu && ar.base) consultaMira(ar.base.f);
-      else if (!ar.actiu) consultaMira(dirDeDials(valsRef.current[actiuRef.current]));
+      if (ar.base) consultaMira(ar.base.f);
     }, 300);
     return () => clearInterval(id);
   }, [mode]);
 
-  /** Demana alhora brúixola/orientació, GPS i càmera (ha de ser dins del gest de l'usuari, per iOS). */
+  /** Demana alhora brúixola/orientació i càmera (ha de ser dins del gest de l'usuari, per iOS). */
   async function activar() {
     sonTocBoto();
     setMode('demanant');
     const pSensors = demanarSensors();
-    const pGps = new Promise<boolean>((resolve) => {
-      if (!navigator.geolocation) return resolve(false);
-      navigator.geolocation.getCurrentPosition(
-        () => resolve(true),
-        () => resolve(false),
-        { timeout: 15_000 },
-      );
-    });
     const pCamera: Promise<MediaStream | null> = navigator.mediaDevices?.getUserMedia
       ? navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false }).catch(() => null)
       : Promise.resolve(null);
-    const [gps, stream] = await Promise.all([pGps, pCamera, pSensors]);
+    const [stream] = await Promise.all([pCamera, pSensors]);
     if (stream && videoRef.current) {
       streamRef.current = stream;
       videoRef.current.srcObject = stream;
       videoRef.current.play().catch(() => {});
       arRef.current.video = true;
     }
-    setGpsOk(gps);
   }
 
   function simular() {
@@ -646,23 +559,20 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
 
       for (let i = 0; i < 5; i++) afegeixCumul(i);
       destins = vertexsPentagrama();
-      // Cap on apunta cada canal (els dials o el mòbil) → error angular respecte a la seva estrella → nitidesa.
+      // El mòbil apunta al cel → error angular respecte a cada estrella → nitidesa.
       // Una estrella no vista encara no té error (és lluny, i no es pot encaixar sense que el servidor la confirmi).
+      const aim: V3 | null = AR ? ar.base!.f : null;
+      const ae = aim ? azEl(aim) : null;
       for (let i = 0; i < 5; i++) {
-        let aim: V3;
-        if (AR) aim = ar.base!.f;
-        else aim = dirDeDials(valsRef.current[i]);
         const obj = coneguda[i];
-        const ae = azEl(aim);
         const oe = obj ? azEl(obj) : null;
-        const dAz = oe ? diffAz(ae.az, oe.az) : 0;
-        const dEl = oe ? ae.el - oe.el : 0;
-        const err = obj ? errorAngular(aim, obj) : 180;
+        const dAz = ae && oe ? diffAz(ae.az, oe.az) : 0;
+        const dEl = ae && oe ? ae.el - oe.el : 0;
+        const err = aim && obj ? errorAngular(aim, obj) : 180;
         aimErr[i] = { err, dAz, dEl };
         CLARITAT[i] = al[i] ? 1 : Math.pow(Math.max(0, 1 - err / 40), 1.8);
         FREQ[i] = (obj ? codisDesDir(obj)[0] : 500) + (dAz + dEl) * 2.5;
       }
-      if (!AR) radioRef.current?.(0.06 + 0.4 * (1 - CLARITAT[actiuRef.current]));
       if (AR) {
         // Lock: mantenir l'apuntat (menys de 3°) 1,5 s. El canal més «calent» passa a ser l'actiu.
         // Només es canvia de canal si un altre és clarament més «calent» (el fil màgic segueix el canal triat).
@@ -758,7 +668,7 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
 
       // Partícules que vénen de l'infinit cap a la càmera: ratlles que s'allarguen i s'aclareixen en acostar-se.
       // Van més de pressa com més nítid és el senyal del canal actiu i en completar-ho tot.
-      const cActiu = al[actiuRef.current] ? 1 : nitidesa(valsRef.current[actiuRef.current], actiuRef.current);
+      const cActiu = al[actiuRef.current] ? 1 : CLARITAT[actiuRef.current];
       const velocitatPart = 0.7 + 2 * cActiu + 1.5 * zoom;
       ctx!.lineCap = "round";
       for (const pt of particules) {
@@ -807,7 +717,7 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
           const q = od ? projAR(od) : { x: -9999, y: -9999, vis: false };
           return { x: q.x, y: q.y, s: focal * 0.2, k, vis: q.vis };
         }
-        const kp = Math.max(k, 0.85 * nitidesa(valsRef.current[i], i));
+        const kp = Math.max(k, 0.85 * CLARITAT[i]);
         const p: V3 = [lerp(el.pos[0], destins[i][0], kp), lerp(el.pos[1], destins[i][1], kp), lerp(el.pos[2], destins[i][2], kp)];
         return { ...proj(p), k, vis: true };
       });
@@ -1224,7 +1134,7 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
       // Mentre es sintonitza, l'anell frena, s'il·lumina amb el color de l'element i s'orienta cap a la seva
       // estrella; en arribar al valor exacte fa lock.
       for (let i = 0; i < 5; i++) {
-        const c = al[i] ? 1 : nitidesa(valsRef.current[i], i);
+        const c = al[i] ? 1 : CLARITAT[i];
         const dx = pos[i].x - cx;
         const dy = pos[i].y - cy;
         const dif = pos[i].vis ? ((((Math.atan2(dx, -dy) * 180) / Math.PI - angleAnell[i] + 540) % 360) - 180) : 0;
@@ -1272,9 +1182,7 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
   }, [baseSensors]);
 
   const enAr = mode === 'ar';
-  const dialsVisibles = mode === 'dials';
   const colorActiu = alineats[actiu] ? '#ffd76e' : ELEMENTS[actiu].color;
-  const caixaCoord = 'flex min-h-12 flex-1 items-center justify-center rounded-md border px-3';
 
   return (
     <main className="relative flex min-h-dvh flex-col overflow-hidden bg-[#05040f] text-white">
@@ -1327,10 +1235,10 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
           {completa
             ? "Els astres són alineats. Els cinc vèrtexs del pentagrama envolten el cel."
             : enAr
-              ? "Gira el mòbil cap a l'estrella que marca el fil i mantén-lo quiet fins que aparegui."
-              : dialsVisibles
-                ? "Sense sensors: posa amb els dials els números X i Z de la fita."
-                : "Apunta el mòbil al cel, allà on et diguin els números de cada fita."}
+              ? sensorsNo
+                ? "Arrossegueu el dit per la pantalla fins a trobar l'estrella i mantingueu-la al centre."
+                : "Gira el mòbil cap a l'estrella que marca el fil i mantén-lo quiet fins que aparegui."
+              : "Activa el cel i busca les estrelles."}
         </p>
       </div>
       {completa && continuaVisible && (
@@ -1366,7 +1274,7 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
         {mode === 'inici' || mode === 'demanant' ? (
           <div className="rounded-xl border border-white/20 bg-black/65 p-4 text-center">
             <p className="text-base">
-              Per apuntar al cel el mòbil necessita la brúixola, el GPS i, si vols veure el cel real, la càmera.
+              Per apuntar al cel el mòbil necessita la brúixola i, si vols veure el cel real, la càmera. Si no, podeu arrossegar el dit per la pantalla.
             </p>
             <button
               type="button"
@@ -1375,17 +1283,6 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
               className="mt-3 min-h-12 w-full rounded-lg bg-[#ffd76e] px-4 text-lg font-bold text-[#1b1511] disabled:opacity-60"
             >
               {mode === 'demanant' ? 'Esperant els permisos…' : 'Activar el cel'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                sonTocBoto();
-                setMode('dials');
-              }}
-              disabled={mode === 'demanant'}
-              className="mt-2 min-h-12 w-full text-base text-white/70 underline disabled:opacity-40"
-            >
-              Prefereixo els dials
             </button>
             {simulacio && (
               <button type="button" onClick={simular} className="mt-1 min-h-12 w-full text-base text-[#ffd76e] underline">
@@ -1426,251 +1323,9 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
                 </button>
               ))}
             </div>
-            {!enAr && (
-              <>
-                <div className="flex gap-1.5">
-                  {[0, 1].map((g) => (
-                    <button
-                      key={g}
-                      type="button"
-                      onClick={() => {
-                        sonTocBoto();
-                        setGrup(g);
-                      }}
-                      className={caixaCoord}
-                      style={{ borderColor: g === grup ? colorActiu : 'rgba(255,255,255,0.15)', background: g === grup ? `${colorActiu}22` : 'rgba(5,4,15,0.6)' }}
-                    >
-                      <span className="text-sm font-semibold" style={{ color: colorActiu }}>
-                        {NOM_GRUP[g]}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-                {[0, 1, 2].map((j) => (
-                  <DialRadio
-                    key={j}
-                    index={actiu}
-                    roda={grup * 3 + j}
-                    etiqueta={`${grup === 0 ? 'X' : 'Z'} · ${NOM_DIALS[j]}`}
-                    valsRef={valsRef}
-                    bloquejat={alineats[actiu]}
-                    onSintonitza={sintonitza}
-                  />
-                ))}
-              </>
-            )}
           </>
         )}
       </div>
     </main>
-  );
-}
-
-/** Canvas que s'ajusta a la mida CSS (amb DPR) i dibuixa cada fotograma amb `dibuixa`. */
-function useCanvasBucle(dibuixa: (ctx: CanvasRenderingContext2D, w: number, h: number, t: number) => void) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  const dibuixaRef = useRef(dibuixa);
-  useEffect(() => {
-    dibuixaRef.current = dibuixa;
-  });
-  useEffect(() => {
-    const canvas = ref.current;
-    const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
-    let w = 0;
-    let h = 0;
-    const mida = () => {
-      const r = canvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      w = r.width;
-      h = r.height;
-      canvas.width = Math.round(w * dpr);
-      canvas.height = Math.round(h * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-    mida();
-    const ro = new ResizeObserver(mida);
-    ro.observe(canvas);
-    const inici = performance.now();
-    let raf = 0;
-    const bucle = (ara: number) => {
-      ctx.clearRect(0, 0, w, h);
-      dibuixaRef.current(ctx, w, h, (ara - inici) / 1000);
-      raf = requestAnimationFrame(bucle);
-    };
-    raf = requestAnimationFrame(bucle);
-    return () => {
-      cancelAnimationFrame(raf);
-      ro.disconnect();
-    };
-  }, []);
-  return ref;
-}
-
-/**
- * Dial de sintonia horitzontal i fi d'una xifra (0–9), a tota l'amplada: s'arrossega l'agulla (el dit
- * la segueix 1:1) i en deixar-la, s'enganxa a la xifra més propera.
- */
-function DialRadio({
-  index,
-  roda,
-  etiqueta,
-  valsRef,
-  bloquejat,
-  onSintonitza,
-}: {
-  index: number;
-  roda: number;
-  etiqueta: string;
-  valsRef: React.RefObject<number[][]>;
-  bloquejat: boolean;
-  onSintonitza: (i: number, j: number, x: number) => void;
-}) {
-  const MARGE = 14;
-  /** Xifres visibles alhora a tota l'amplada del dial. */
-  const FINESTRA = 6;
-  const drag = useRef<number | null>(null);
-  const snap = useRef(0);
-  const propsRef = useRef({ index, roda, bloquejat, onSintonitza });
-  useEffect(() => {
-    propsRef.current = { index, roda, bloquejat, onSintonitza };
-  });
-  // Si es canvia de canal, l'enganxament del canal anterior no ha de moure el nou.
-  useEffect(() => {
-    drag.current = null;
-    cancelAnimationFrame(snap.current);
-  }, [index]);
-
-  const ref = useCanvasBucle((ctx, w, h, temps) => {
-    const d = valsRef.current[index];
-    const v = d[roda];
-    const hex = ELEMENTS[index].color;
-    // Proximitat d'aquesta xifra: governa l'agulla, l'ondulació de l'escala, el mesurador i la vora.
-    const p = bloquejat ? 1 : proximitatXifra(v, index, roda);
-    const obj = digitsObjectiu(index);
-    const correcta = bloquejat || (obj !== null && Math.abs(v - obj[roda]) < 0.06);
-    const color = colorSenyal(hex, p);
-    const base = h - 4;
-    // L'agulla és fixa al centre; l'escala (finestra de FINESTRA xifres) llisca per sota.
-    const ppu = w / FINESTRA;
-    const xAgulla = w / 2;
-
-    // Vora: s'il·lumina amb el color de l'element a mesura que la xifra s'acosta; amb la xifra bona, pulsa.
-    const pols = correcta ? 0.65 + 0.35 * Math.sin(temps * 5) : 1;
-    ctx.strokeStyle = colorSenyalA(hex, p, (0.15 + 0.85 * p) * pols);
-    ctx.lineWidth = 1 + 1.5 * p;
-    ctx.shadowColor = hex;
-    ctx.shadowBlur = correcta ? 10 : 0;
-    ctx.strokeRect(1, 1, w - 2, h - 2);
-    ctx.shadowBlur = 0;
-
-    // Halo darrere l'agulla.
-    const halo = ctx.createRadialGradient(xAgulla, base, 0, xAgulla, base, 60);
-    halo.addColorStop(0, colorSenyalA(hex, p, 0.1 + 0.4 * p));
-    halo.addColorStop(1, colorSenyalA(hex, p, 0));
-    ctx.fillStyle = halo;
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.strokeStyle = "rgba(235,235,255,0.35)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(MARGE, base);
-    ctx.lineTo(w - MARGE, base);
-    ctx.stroke();
-    ctx.textAlign = "center";
-    ctx.font = "600 11px sans-serif";
-    // Escala simple: una marca per xifra (amb número) i una de mitja entre cada dues; s'esvaeix cap a les vores.
-    for (let n = 0; n <= 18; n++) {
-      const x = w / 2 + (n / 2 - v) * ppu;
-      if (x < 0 || x > w) continue;
-      const gran = n % 2 === 0;
-      const fosa = 1 - 0.85 * Math.pow(Math.abs(x - w / 2) / (w / 2), 2);
-      ctx.strokeStyle = `rgba(235,235,255,${((gran ? 0.85 : 0.4) * fosa).toFixed(3)})`;
-      ctx.beginPath();
-      ctx.moveTo(x, base);
-      ctx.lineTo(x, base - (gran ? 14 : 8));
-      ctx.stroke();
-      if (gran) {
-        ctx.fillStyle = `rgba(235,235,255,${(0.85 * fosa).toFixed(3)})`;
-        ctx.fillText(String(n / 2), x, base - 20);
-      }
-    }
-    ctx.textAlign = "left";
-    ctx.font = "600 9px sans-serif";
-    ctx.fillStyle = "rgba(235,235,255,0.5)";
-    ctx.fillText(etiqueta.toUpperCase(), MARGE, 10);
-
-    // ✓ quan la xifra és la bona.
-    if (correcta) {
-      ctx.textAlign = "right";
-      ctx.font = "700 12px sans-serif";
-      ctx.fillStyle = hex;
-      ctx.fillText("✓", w - MARGE, 13);
-    }
-
-    // Agulla.
-    const x = xAgulla;
-    ctx.strokeStyle = color;
-    ctx.fillStyle = color;
-    ctx.lineWidth = 2;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 6 + 10 * p;
-    ctx.beginPath();
-    ctx.moveTo(x, 10);
-    ctx.lineTo(x, h);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x - 5, 8);
-    ctx.lineTo(x + 5, 8);
-    ctx.lineTo(x, 15);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-  });
-
-  const mou = (x: number) => {
-    const p = propsRef.current;
-    if (!p.bloquejat) p.onSintonitza(p.index, p.roda, x);
-  };
-
-  return (
-    <canvas
-      ref={ref}
-      aria-label={`Dial de ${etiqueta.toLowerCase()}`}
-      className="h-[52px] w-full touch-none rounded-md border border-white/15 bg-[#05040f]/70"
-      onPointerDown={(e) => {
-        cancelAnimationFrame(snap.current);
-        drag.current = e.clientX;
-        e.currentTarget.setPointerCapture(e.pointerId);
-      }}
-      onPointerMove={(e) => {
-        if (drag.current === null) return;
-        // L'escala segueix el dit: arrossegar cap a la dreta fa baixar el valor.
-        const w = e.currentTarget.getBoundingClientRect().width;
-        const du = (-(e.clientX - drag.current) / w) * FINESTRA;
-        drag.current = e.clientX;
-        mou(valsRef.current[propsRef.current.index][propsRef.current.roda] + du);
-      }}
-      onPointerUp={() => {
-        drag.current = null;
-        let ultim = performance.now();
-        const enganxa = (ara: number) => {
-          const dt = (ara - ultim) / 1000;
-          ultim = ara;
-          const { index: i, roda: j } = propsRef.current;
-          const v = valsRef.current[i][j];
-          const meta = Math.round(v);
-          if (Math.abs(meta - v) < 0.004) {
-            mou(meta);
-            return;
-          }
-          mou(v + (meta - v) * (1 - Math.exp(-dt * 16)));
-          snap.current = requestAnimationFrame(enganxa);
-        };
-        snap.current = requestAnimationFrame(enganxa);
-      }}
-      onPointerCancel={() => {
-        drag.current = null;
-      }}
-    />
   );
 }
