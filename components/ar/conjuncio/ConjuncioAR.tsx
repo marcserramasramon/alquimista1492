@@ -725,7 +725,7 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
       const projAR = (d: V3) => projecta(d, ar.base!, focalAR, cx, cy);
       if (AR) {
         ctx!.clearRect(0, 0, w, h);
-        ctx!.fillStyle = ar.video ? 'rgba(5,4,15,0.4)' : 'rgba(5,4,15,0.35)';
+        ctx!.fillStyle = ar.video ? 'rgba(5,4,15,0.4)' : '#05040f';
         ctx!.fillRect(0, 0, w, h);
       } else {
         const grad = ctx!.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * 0.75);
@@ -1270,13 +1270,6 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
 
   return (
     <main className="relative flex min-h-dvh flex-col overflow-hidden bg-[#05040f] text-white">
-      {/* Fons del cel de l'AR (sense càmera): la imatge queda sota la càmera i el dibuix. */}
-      <img
-        src="/images/ar/conjuncio-fons.webp"
-        alt=""
-        aria-hidden
-        className={`absolute inset-0 h-full w-full object-cover ${enAr ? '' : 'hidden'}`}
-      />
       <video
         ref={videoRef}
         playsInline
