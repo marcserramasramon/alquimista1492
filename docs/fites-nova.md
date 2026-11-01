@@ -47,14 +47,14 @@ Cada fita/estació és un **element**. El jugador hi troba un missatge o número
 | Camp | Valor |
 |------|-------|
 | Ubicació | **Planes Bones** — coordenades confirmades: **41.912256, 2.233469** (reaprofita el nom de l'estació existent, però ~150 m al sud de les coordenades actuals a `stations.ts`: 41.913588, 2.232733 — cal actualitzar) |
-| Tècnica | Observació: buscar i comptar les àmfores del lloc (ja no es fa servir el full amb cola blanca + fang) |
-| Material del jugador | Cap: només el cartell amb el poema |
-| Acció física | Els jugadors busquen les àmfores de Planes Bones i les compten |
-| Element físic real aprofitat | **6 àmfores** a Planes Bones (recompte real al lloc, 2026-09-26 — abans es pensava que n'hi havia 3). **El recompte no és directament la resposta**: cal comptar-les i repetir la xifra tres cops (6 → 666) |
-| Poema/context | **Text del cartell (2026-09-26, prosa, actualitzat per reflectir les 6 àmfores):**<br>*El fang ancestral reposa en l'obaga, bressol dels tres principis de la Gran Obra. Entre la sal que fixa, el sofre que crema sense flama i el mercuri volàtil, la matèria jeu silent esperant l'ull atent de l'iniciat.*<br><br>*Oblida els vells tractats i cerca el testimoni dels cossos d'argila. Quants recipients custodien el recer? Compta'ls i repeteix la xifra tres cops, com un conjur que es repeteix: aquest serà el nombre de la clau mineral.* |
-| Resposta esperada | **Actualitzat (2026-10-03):** comptar les 6 àmfores i repetir la xifra tres cops. Resposta final a validar al servidor: **666** (2026-10-03; el nombre d'àmfores (6) repetit tres cops) |
-| Pistes | 1. "Busca on guarda els elixirs l'alquimista." · 2. "Compta les àmfores i escriu aquest nombre tres cops." · 3. "El número és el 666." |
-| Notes de seguretat/logística | Comprovar abans de la partida que les 6 àmfores hi són i es veuen bé |
+| Tècnica | **Realitat augmentada (AR), sense material físic:** el jugador veu un núvol de paraules flotant i ha de triar la correcta |
+| Material del jugador | Cap: només el cartell amb el poema (i el mòbil amb la càmera) |
+| Acció física | Els jugadors miren el núvol de paraules a través del mòbil i en trien la correcta. Quan l'encerten, un **dodecaedre** s'introdueix a la terra i en surt un **con de llum amb el símbol de la resposta** |
+| Element físic real aprofitat | Cap. Les 6 àmfores de Planes Bones ja no es compten ni es fan servir (2026-10-06) |
+| Poema/context | **Text del cartell (2026-11-01, versió de l'equip):**<br>*L'essència ancestral reposa en la matèria de la terra, les pedres i el fang. Custodiats pel guardià de pedra, esperen revelar el secret a qui sàpiga escoltar-les. La matèria no es deixa veure per qui no sigui confident.*<br><br>*El saber flota a l'aire. Entre les paraules que veureu davant vostre, només una és veritable. Trieu la paraula que farà que la terra us reconegui com a pròpia: el vincle sagrat que ens uneix i que mai abandona qui la pronuncia.* |
+| Resposta esperada | **Pendent de decidir.** La paraula correcta del núvol és **amic**. Queda per decidir si aquesta paraula és només la clau de l'AR o si també és el valor que s'introdueix a la webapp (fins ara era el número 666, que no és primer) |
+| Pistes | 1. "La terra escolta el que és fidel." · 2. "Busca la paraula que mai no us abandona." · 3. "La paraula correcta és «amic»." |
+| Notes de seguretat/logística | L'AR encara no està implementat a `components/ar/EscenaTerra.tsx` (la versió actual és la del Gollem i els anells de runes). Cal regravar l'àudio d'arribada amb el text nou |
 
 ---
 

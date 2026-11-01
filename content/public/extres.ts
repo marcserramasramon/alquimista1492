@@ -277,8 +277,8 @@ export const EXTRES_AR: ExtraAr[] = [
       entrada: "El Gollem protector de l'element terra apareix aquí mateix i us guiarà fins al con de la fita.",
       passos: [
         { icona: "🗿", text: "Seguiu el Gollem de pedra: camina davant vostre, cap al con de la fita." },
-        { icona: "🔮", text: "Al con, gireu els tres anells de runes amb el dit fins que brillin tots en verd." },
-        { icona: "🌍", text: "Quan aparegui el símbol de la terra sobre el con, sortiu de la realitat augmentada i resoleu la fita." },
+        { icona: "🔮", text: "Al con, mireu el núvol de paraules que flota davant vostre i trieu la correcta." },
+        { icona: "🌍", text: "Quan l'encerteu, un dodecaedre s'introduirà a la terra i en sortirà un con de llum amb el símbol de la resposta. Sortiu de la realitat augmentada i resoleu la fita." },
       ],
       permisos: {
         titol: "El mòbil us demanarà permís per a:",
