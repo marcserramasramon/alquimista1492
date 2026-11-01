@@ -9,7 +9,7 @@ import { Narracio } from "@/components/ui/Narracio";
 import { Marca } from "@/components/ui/Pantalla";
 import { MARGE_MARC_FINAL_PX, MarcFinal } from "@/components/ui/MarcFinal";
 import { pujarMusica } from "@/lib/so";
-import { GUARDIANS, LABORATORI } from "@/content/public/textos";
+import { GRACIES_PARTICIPAR, GUARDIANS, LABORATORI } from "@/content/public/textos";
 
 const VIDEO_FINAL = "/video/final-guardians.mp4";
 
@@ -91,6 +91,10 @@ export function VistaGuardians() {
             ⚗️ {LABORATORI.boto}
           </Link>
         </section>
+
+        <p className="animate-entrar text-center font-display text-2xl font-extrabold text-paper [animation-delay:650ms]">
+          {GRACIES_PARTICIPAR}
+        </p>
       </main>
     </>
   );
