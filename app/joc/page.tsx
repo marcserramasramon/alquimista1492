@@ -84,6 +84,8 @@ export default function HubPage() {
   const [videoReobert, setVideoReobert] = useState<string | null>(null);
   /** El botó "?" del mapa: primer les preguntes freqüents. */
   const [ajudaOberta, setAjudaOberta] = useState(false);
+  /** Per què el Cor de l'estrella no s'ha pogut obrir en tocar el botó (sense GPS o fora de la fita). */
+  const [avisAnar, setAvisAnar] = useState<string | null>(null);
   /** Des de l'ajuda (o directament): formulari per avisar el màster. */
   const [avisant, setAvisant] = useState(false);
   /** Cada cop que puja, el manual torna a ensenyar les bombolles (botó "Com es juga" de l'ajuda). */
@@ -183,6 +185,7 @@ export default function HubPage() {
   const missatgeReobert = videoReobert ? getMissatgeMaster(videoReobert) : undefined;
 
   async function anarEstacio(estacio: EstacioMapa) {
+    setAvisAnar(null);
     if (estacio.oberta !== false) {
       router.push(estacio.tipus === "especial" ? "/final" : `/s/${estacio.id}`);
       return;
@@ -193,8 +196,17 @@ export default function HubPage() {
       router.push(estacio.tipus === "especial" ? "/final" : `/s/${estacio.id}`);
       return;
     }
-    // El Cor de l'estrella només s'obre per GPS: no té cartell amb QR.
-    if (estacio.tipus === "especial") return;
+    // El Cor de l'estrella només s'obre per GPS: no té cartell amb QR, així que cal dir per què no s'obre.
+    if (estacio.tipus === "especial") {
+      setAvisAnar(
+        distancia === null
+          ? "Per començar el ritual cal el GPS: activeu la ubicació del mòbil i torneu a tocar el botó."
+          : distancia > RADI_OBERTURA_M
+            ? `Encara no sou a la fita (a ${distancia} m). Acosteu-vos-hi i torneu a tocar el botó.`
+            : "No s'ha pogut obrir el ritual. Torneu a tocar el botó d'aquí a un moment."
+      );
+      return;
+    }
     setEscanejant(true);
   }
 
@@ -211,6 +223,7 @@ export default function HubPage() {
         totesResoltes={estat.totesResoltes}
         marcadors={marcadors}
         fitaArribadaId={arribadaId}
+        avisAnar={avisAnar}
         videos={videos}
         onSeleccionarVideo={setVideoReobert}
         onAnarEstacio={anarEstacio}

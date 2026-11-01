@@ -18,6 +18,8 @@ export interface VistaHubProps {
   marcadors?: MarcadorMapa[];
   /** Fita que el GPS acaba d'obrir en arribar-hi: se'n mostra la fitxa amb l'avís. */
   fitaArribadaId?: string | null;
+  /** Per què el ritual no s'ha pogut començar en tocar el botó (es mostra a la fitxa del ritual). */
+  avisAnar?: string | null;
   /** Missatges amb vídeo (per GPS) ja acceptats: insígnia al mapa per tornar-los a veure. */
   videos?: VideoMapa[];
   /** Es crida en tocar la insígnia d'un vídeo ja vist. */
@@ -34,6 +36,7 @@ export function VistaHub({
   seleccionadaInicialId = null,
   marcadors,
   fitaArribadaId = null,
+  avisAnar = null,
   videos,
   onSeleccionarVideo,
   onAvis,
@@ -129,6 +132,7 @@ export function VistaHub({
               estacio={seleccionada}
               teniaPasPrevi={estacions.some((e) => e.tipus === "pas" && e.desbloqueja === seleccionada.id)}
               acabadaDarribar={seleccionada.id === fitaArribadaId}
+              avisAnar={seleccionada.tipus === "especial" ? avisAnar : null}
               onTancar={() => setSeleccionadaId(null)}
               onAnar={() => onAnarEstacio(seleccionada)}
             />
@@ -263,6 +267,7 @@ export function FitxaFita({
   estacio,
   teniaPasPrevi,
   acabadaDarribar,
+  avisAnar = null,
   onTancar,
   onAnar,
 }: {
@@ -270,6 +275,7 @@ export function FitxaFita({
   /** La fita s'ha revelat a través d'un pas previ (fase 2 d'una fita en dos punts, com l'Aire). */
   teniaPasPrevi: boolean;
   acabadaDarribar: boolean;
+  avisAnar?: string | null;
   onTancar: () => void;
   onAnar: () => void;
 }) {
@@ -371,6 +377,11 @@ export function FitxaFita({
                     ? "Hi som! Obrir la fita →"
                     : "Entrar a la fita →"}
         </button>
+        {avisAnar && (
+          <p role="alert" className="mt-2 text-center text-base font-bold leading-snug">
+            {avisAnar}
+          </p>
+        )}
       </div>
     </div>
   );
