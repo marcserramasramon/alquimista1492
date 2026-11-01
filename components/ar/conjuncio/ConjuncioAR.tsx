@@ -151,7 +151,7 @@ async function consultaLock(i: number, aim: V3, mode: 'mobil' | 'dials'): Promis
 }
 
 /** Demana al servidor quina estrella és més a prop de `aim` (només n'envia una, dins de l'àrea gran). */
-async function consultaMira(aim: V3): Promise<void> {
+async function consultaMira(aim: V3): Promise<number | null> {
   try {
     const res = await fetch('/api/conjuncio/mira', {
       method: 'POST',
@@ -159,11 +159,14 @@ async function consultaMira(aim: V3): Promise<void> {
       body: JSON.stringify({ aim }),
       cache: 'no-store',
     });
-    if (!res.ok) return;
+    if (!res.ok) return null;
     const data: { estrella: { i: number; dir: V3 } | null } = await res.json();
-    if (data.estrella) coneguda[data.estrella.i] = data.estrella.dir;
+    if (!data.estrella) return null;
+    coneguda[data.estrella.i] = data.estrella.dir;
+    return data.estrella.i;
   } catch {
     // Sense xarxa, l'estrella simplement no es veu aquest cop.
+    return null;
   }
 }
 
@@ -264,6 +267,10 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
   const [guia, setGuia] = useState(true);
   /** Fites aconseguides al joc: només d'aquests elements es pot demanar el fil màgic i es poden sintonitzar. */
   const [fites, setFites] = useState<boolean[]>([false, false, false, false, false]);
+  /** Estrelles que ja s'han vist al cel (la runa queda marcada). */
+  const [vistes, setVistes] = useState<boolean[]>([false, false, false, false, false]);
+  /** Ajudes ja demanades al màster, per element. */
+  const [ajudesDemanades, setAjudesDemanades] = useState<boolean[]>([false, false, false, false, false]);
   const arRef = useRef({
     actiu: false,
     guia: true,
@@ -302,21 +309,26 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
       setActiu(Math.max(0, f.indexOf(true)));
       return;
     }
-    fetch('/api/estat', { cache: 'no-store' })
-      .then(async (res) => {
-        if (!res.ok) throw new Error();
-        const data: { estacions: { element?: string; progres: { resolta: boolean } }[] } = await res.json();
-        return ELEMENTS.map((el) => data.estacions.some((e) => e.element === el.id && e.progres.resolta));
-      })
-      // Sense dades de l'equip no es pot triar cap canal: només es veuen els logos.
-      .catch(() => ELEMENTS.map(() => false))
-      .then((f) => {
-        if (cancelat) return;
-        setFites(f);
-        setActiu(Math.max(0, f.indexOf(true)));
-      });
+    const carrega = () =>
+      fetch('/api/conjuncio/fites', { cache: 'no-store' })
+        .then(async (res) => {
+          if (!res.ok) throw new Error();
+          const data: { aconseguits: string[] } = await res.json();
+          return ELEMENTS.map((el) => data.aconseguits.includes(el.id));
+        })
+        // Sense dades de l'equip no es pot triar cap canal: només es veuen els logos.
+        .catch(() => ELEMENTS.map(() => false))
+        .then((f) => {
+          if (cancelat) return;
+          setFites(f);
+          setActiu((a) => (f[a] ? a : Math.max(0, f.indexOf(true))));
+        });
+    carrega();
+    // El màster pot desbloquejar una ajuda mentre l'equip és a l'AR: es refresca cada 5 s.
+    const interval = setInterval(carrega, 5000);
     return () => {
       cancelat = true;
+      clearInterval(interval);
     };
   }, []);
   const completa = alineats.every(Boolean);
@@ -378,7 +390,10 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
     if (mode !== 'ar') return;
     const id = setInterval(() => {
       const ar = arRef.current;
-      if (ar.base) consultaMira(ar.base.f);
+      if (!ar.base) return;
+      consultaMira(ar.base.f).then((i) => {
+        if (i !== null) setVistes((v) => v.map((x, k) => (k === i ? true : x)));
+      });
     }, 300);
     return () => clearInterval(id);
   }, [mode]);
@@ -1182,6 +1197,19 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
   }, [baseSensors]);
 
   const enAr = mode === 'ar';
+
+  /** Element que es pot demanar ara: bloquejat, amb la runa de l'estrella ja marcada i sense demanda feta. */
+  const ajudaVisible = [0, 1, 2, 3, 4].find((i) => !fites[i] && vistes[i] && !ajudesDemanades[i]) ?? null;
+
+  async function demanaAjuda(i: number) {
+    const res = await fetch('/api/conjuncio/ajuda', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ element: ELEMENTS[i].id }),
+      cache: 'no-store',
+    }).catch(() => null);
+    if (res?.ok) setAjudesDemanades((a) => a.map((x, k) => (k === i ? true : x)));
+  }
   const colorActiu = alineats[actiu] ? '#ffd76e' : ELEMENTS[actiu].color;
 
   return (
@@ -1323,6 +1351,20 @@ export function ConjuncioAR({ onContinuar }: ConjuncioARProps) {
                 </button>
               ))}
             </div>
+            {ajudaVisible !== null && (
+              <button
+                type="button"
+                onClick={() => demanaAjuda(ajudaVisible)}
+                className="min-h-12 w-full rounded-lg bg-[#ffd76e] px-4 text-lg font-bold text-[#1b1511]"
+              >
+                Parla amb l'alquimista
+              </button>
+            )}
+            {ajudesDemanades.some(Boolean) && ajudaVisible === null && (
+              <p className="text-center text-base text-white/80">
+                L'alquimista ja ha estat avisat. Espereu que us ajudi.
+              </p>
+            )}
           </>
         )}
       </div>
