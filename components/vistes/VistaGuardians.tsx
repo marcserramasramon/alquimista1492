@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { FonsElements } from "@/components/ui/FonsElements";
 import { VideoPantallaCompleta } from "@/components/ui/VideoPantallaCompleta";
 import { BotoMusica } from "@/components/ui/BotoMusica";
 import { Narracio } from "@/components/ui/Narracio";
@@ -14,8 +15,6 @@ const VIDEO_FINAL = "/video/final-guardians.mp4";
 
 /** Pergamí més fosc que la resta de pantalles per al marc: és el final de la nit. */
 const FONS = "#d9bd84";
-/** Dins del marc, negre sòlid: la Pedra hi brilla. */
-const FONS_CENTRAL = "#000";
 
 /** Espurnes blanques fixes sobre la Pedra Filosofal, cadascuna amb la seva posició, mida i retard. */
 const ESPURNES = [
@@ -40,11 +39,7 @@ export function VistaGuardians() {
       {/* Primer el vídeo (amb el seu so) a sobre de tot; la música sona des que comença i la veu
           del text hi entra als 5 s; quan la veu acaba, la música puja al 100%. En acabar o tancar-lo, es veu la pantalla. */}
       {veientVideo && <VideoPantallaCompleta src={VIDEO_FINAL} onAcabat={() => setVeientVideo(false)} />}
-      <div
-        aria-hidden
-        className="fixed inset-0"
-        style={{ background: FONS_CENTRAL }}
-      />
+      <FonsElements className="fixed inset-0 h-full w-full" />
       <MarcFinal fons={FONS} />
       <main
         className="relative z-10 mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5"
