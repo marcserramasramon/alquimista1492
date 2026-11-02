@@ -161,6 +161,8 @@ export interface PasPrevi {
   pasAmagat?: boolean;
   /** Id d'un missatge amb vídeo (content/public/missatgesMaster.ts) que es mostra en obrir el pas. */
   missatge?: string;
+  /** Si és true, obrir el pas (GPS o QR) també obre la fita que desbloqueja, perquè el pas hi porta directament. */
+  obreFita?: boolean;
 }
 
 export const PASSOS_PREVIS: PasPrevi[] = [
@@ -191,6 +193,8 @@ export const PASSOS_PREVIS: PasPrevi[] = [
     pasAmagat: true,
     // En obrir el pas (GPS o QR) es mostra el vídeo del camí; «Continuar» porta a Pas 1.
     missatge: "terra-vinyals",
+    // «Continuar» porta a /s/planes-bones: la fita ha de quedar oberta, encara que el con sigui a ~160 m.
+    obreFita: true,
   },
 ];
 

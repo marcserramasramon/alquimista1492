@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getServiceRoleClient } from "@/lib/supabase";
-import type { Estacio } from "@/content/public/estacions";
+import { getPasPrevi, type Estacio } from "@/content/public/estacions";
 
 export type Obertura = "gps" | "qr" | "codi";
 
@@ -26,8 +26,14 @@ export async function fitaOberta(teamId: string, estacio: Estacio): Promise<bool
   return estaOberta(data);
 }
 
-/** Obre la fita per a l'equip. Si ja era oberta, no canvia ni quan ni com. */
+/** Obre la fita per a l'equip. Si ja era oberta, no canvia ni quan ni com. Un pas amb `obreFita` obre també la seva fita. */
 export async function obrirFita(teamId: string, estacioId: string, obertura: Obertura): Promise<void> {
+  await obrirUna(teamId, estacioId, obertura);
+  const pas = getPasPrevi(estacioId);
+  if (pas?.obreFita) await obrirUna(teamId, pas.desbloqueja, obertura);
+}
+
+async function obrirUna(teamId: string, estacioId: string, obertura: Obertura): Promise<void> {
   const db = getServiceRoleClient();
   const { data: existent } = await db
     .from("v2_progres")
