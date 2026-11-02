@@ -21,8 +21,6 @@ const MOSTREIG_MS = 500;
 const DISTANCIA_DAVANT = 7;
 /** ...i aquests metres a la seva esquerra, perquè no tapi el punt final. */
 const DESPLA_ESQUERRA = 2;
-/** En obrir l'AR, el golem apareix aquests metres a l'esquerra del jugador (mirant cap a la fita). */
-const DISTANCIA_APARICIO = 4;
 /** Velocitat del golem quan camina, en metres per segon. */
 const VELOCITAT = 1.4;
 /** Si el jugador és a menys d'això de la fita (m), el golem s'hi queda quiet. */
@@ -104,9 +102,9 @@ export class SeguimentGolem {
     }
     const mostra = { x: this.jx, z: this.jz };
 
-    // El gegant apareix a l'esquerra del jugador (on s'obre l'AR) i després el precedeix.
+    // El gegant apareix ja al seu lloc, davant i a l'esquerra del jugador (on s'obre l'AR), i després el precedeix.
     if (!this.iniciat) {
-      const aparicio = this.puntLateral(mostra, 0, DISTANCIA_APARICIO);
+      const aparicio = this.ancora(mostra);
       this.gx = aparicio.x;
       this.gz = aparicio.z;
       this.iniciat = true;
@@ -245,12 +243,8 @@ export class SeguimentGolem {
     return this.puntLateral(j, DISTANCIA_DAVANT);
   }
 
-  /** Punt a `distancia` metres del jugador en la direcció de la fita, desplaçat `esquerra` metres a l'esquerra. */
-  private puntLateral(
-    j: { x: number; z: number },
-    distancia: number,
-    esquerra = DESPLA_ESQUERRA
-  ): { x: number; z: number } {
+  /** Punt a `distancia` metres del jugador en la direcció de la fita, desplaçat a l'esquerra. */
+  private puntLateral(j: { x: number; z: number }, distancia: number): { x: number; z: number } {
     const lx = this.fx - j.x;
     const lz = this.fz - j.z;
     const ll = Math.hypot(lx, lz);
@@ -259,6 +253,6 @@ export class SeguimentGolem {
     const uz = lz / ll;
     const d = Math.min(distancia, ll);
     // Costat esquerre de qui camina cap a la fita.
-    return { x: j.x + ux * d + uz * esquerra, z: j.z + uz * d - ux * esquerra };
+    return { x: j.x + ux * d + uz * DESPLA_ESQUERRA, z: j.z + uz * d - ux * DESPLA_ESQUERRA };
   }
 }
