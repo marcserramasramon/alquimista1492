@@ -164,7 +164,7 @@ export default function EstacioPage() {
       )}
       {veientVideo && dades?.estacio.element && (
         <VideoFita
-          video={`/video/fita-${dades.estacio.element}.mp4`}
+          video={dades.estacio.element === "aigua" ? "/video/aigua-final.mp4" : `/video/fita-${dades.estacio.element}.mp4`}
           veu={FRAGMENTS[dades.estacio.element].audio}
           ambient
           animacio={dades.estacio.element}

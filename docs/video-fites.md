@@ -141,7 +141,7 @@ Rètol final (post): «Fragment de l'Aigua trobat», etc. El símbol i el rètol
 
 ## 7. Fitxers i connexió (només proposta, no implementat)
 
-`public/video/fita-aigua.mp4`, `fita-terra.mp4`, `fita-foc.mp4`, `fita-aire.mp4`, `fita-anima.mp4` (noms diferents dels de camí: `aigua-esglesia`, `terra-planes-bones`…).
+`public/video/aigua-final.mp4` (aigua), `fita-terra.mp4`, `fita-foc.mp4`, `fita-aire.mp4`, `fita-anima.mp4` (noms diferents dels de camí: `aigua-esglesia`, `terra-planes-bones`…).
 
 Camp `video` a `FRAGMENTS` (`content/public/textos.ts`) i reproduir-lo a `VistaEstacio.tsx` abans de `Narracio` amb `VistaMissatgeVideo`, amb mode de reserva (sense fitxer, només text). Pes: uns 25–30 MB al `public/` per als cinc (els de camí fan 4–7 MB; veure la neteja de Vercel del 2026-09-28).
 

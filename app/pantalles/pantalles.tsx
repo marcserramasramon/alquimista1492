@@ -275,7 +275,7 @@ function pantallesFita(estacio: Estacio): Pantalla[] {
               "Entre la celebració i el fragment: public/video/fita-*.mp4 (mut) amb la veu del fragment. En acabar el vídeo, la veu continua a la pantalla de la fita. Sense el fitxer, passa directe (mode de reserva).",
             render: () => (
               <VideoFita
-                video={`/video/fita-${estacio.element}.mp4`}
+                video={estacio.element === "aigua" ? "/video/aigua-final.mp4" : `/video/fita-${estacio.element}.mp4`}
                 veu={FRAGMENTS[estacio.element!].audio}
                 animacio={estacio.element}
                 resolts={["aigua", "terra", "foc"]}
