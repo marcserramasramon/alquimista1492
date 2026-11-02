@@ -7,7 +7,7 @@ import { getEstacio, getEstacionsJugables, getPasPrevi } from "@/content/public/
 import { getServiceRoleClient } from "@/lib/supabase";
 import { getEstacioPerCodi } from "@/content/private/codisFites";
 import { necessitaObertura, obrirFita } from "@/lib/obertura";
-import { RADI_OBERTURA_M, distanciaMetres } from "@/lib/ubicacio";
+import { distanciaMetres, radiObertura } from "@/lib/ubicacio";
 
 /**
  * Obre una fita de dues maneres:
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
   }
   const distancia = distanciaMetres(dades, { lat: desti.latitud, lng: desti.longitud });
-  if (distancia > RADI_OBERTURA_M) {
+  if (distancia > radiObertura(desti)) {
     return NextResponse.json(
       { error: "Encara no sou a la fita", distancia: Math.round(distancia) },
       { status: 403 }

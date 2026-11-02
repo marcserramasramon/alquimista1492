@@ -12,6 +12,11 @@ export const MAXIMA_EDAT_UBICACIO_MS = 10 * 60_000;
 /** A menys d'aquesta distància d'una fita, la fita s'obre sola. */
 export const RADI_OBERTURA_M = 50;
 
+/** Radi d'obertura d'una fita concreta: el seu propi si en té, o RADI_OBERTURA_M. */
+export function radiObertura(fita: { radiObertura?: number }): number {
+  return fita.radiObertura ?? RADI_OBERTURA_M;
+}
+
 /** Distància en metres entre dos punts (fórmula del semiverset). */
 export function distanciaMetres(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
   const R = 6_371_000;

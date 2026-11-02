@@ -17,6 +17,8 @@ export interface EstacioMapa {
   element?: Element;
   /** false = l'equip encara no hi ha arribat (GPS o QR del cartell). Sense valor, es pot entrar. */
   oberta?: boolean;
+  /** Radi (m) a què s'obre sola pel GPS, si no és el general. */
+  radiObertura?: number;
   progres: { resolta: boolean };
   /** Només als "pas": id de la fita que desbloqueja (per dibuixar-hi la línia de guia). */
   desbloqueja?: string;

@@ -16,8 +16,8 @@ import { MANUAL_ARRIBAR, MANUAL_HUB } from "@/content/public/textos";
 import { getMissatgeMaster } from "@/content/public/missatgesMaster";
 import {
   INTERVAL_UBICACIO_MS,
-  RADI_OBERTURA_M,
   distanciaMetres,
+  radiObertura,
   llegirDecisioUbicacio,
   type Ubicacio,
 } from "@/lib/ubicacio";
@@ -154,7 +154,7 @@ export default function HubPage() {
       // El Cor de l'estrella no s'obre fins que no hi ha les cinc fites resoltes.
       if (estacio.tipus === "especial" && !estat.totesResoltes) continue;
       const distancia = distanciaA(posicio, estacio);
-      if (distancia === null || distancia > RADI_OBERTURA_M) continue;
+      if (distancia === null || distancia > radiObertura(estacio)) continue;
       if (ara - (intentsGps.current.get(estacio.id) ?? 0) < REINTENT_GPS_MS) continue;
       intentsGps.current.set(estacio.id, ara);
       obrirPerGps(estacio, posicio).then((oberta) => {
@@ -192,7 +192,7 @@ export default function HubPage() {
     }
     // El GPS encara no l'ha oberta: si ja hi sou, es prova de nou; si no, escàner del QR (opcional si el GPS funciona).
     const distancia = distanciaA(posicio, estacio);
-    if (posicio && distancia !== null && distancia <= RADI_OBERTURA_M && (await obrirPerGps(estacio, posicio))) {
+    if (posicio && distancia !== null && distancia <= radiObertura(estacio) && (await obrirPerGps(estacio, posicio))) {
       router.push(estacio.tipus === "especial" ? "/final" : `/s/${estacio.id}`);
       return;
     }
@@ -201,7 +201,7 @@ export default function HubPage() {
       setAvisAnar(
         distancia === null
           ? "Per començar el ritual cal el GPS: activeu la ubicació del mòbil i torneu a tocar el botó."
-          : distancia > RADI_OBERTURA_M
+          : distancia > radiObertura(estacio)
             ? `Encara no sou a la fita (a ${distancia} m). Acosteu-vos-hi i torneu a tocar el botó.`
             : "No s'ha pogut obrir el ritual. Torneu a tocar el botó d'aquí a un moment."
       );

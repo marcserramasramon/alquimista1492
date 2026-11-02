@@ -22,6 +22,8 @@ export interface Estacio {
   /** Estacions marcades com a no disponible encara no tenen el joc decidit: es mostra "properament". */
   disponible: boolean;
   element?: Element;
+  /** Radi (m) a què la fita s'obre sola pel GPS. Per defecte, RADI_OBERTURA_M (lib/ubicacio.ts). */
+  radiObertura?: number;
 }
 
 /**
@@ -63,6 +65,7 @@ export const ESTACIONS: Estacio[] = [
     tipus: "text",
     disponible: true,
     element: "terra",
+    radiObertura: 150,
   },
   {
     // El poema del cartell físic encara és PENDENT a docs/fites-nova.md, però no es mostra a l'app.
@@ -163,6 +166,8 @@ export interface PasPrevi {
   missatge?: string;
   /** Si és true, obrir el pas (GPS o QR) també obre la fita que desbloqueja, perquè el pas hi porta directament. */
   obreFita?: boolean;
+  /** Radi (m) a què el pas s'obre sol pel GPS. Per defecte, RADI_OBERTURA_M (lib/ubicacio.ts). */
+  radiObertura?: number;
 }
 
 export const PASSOS_PREVIS: PasPrevi[] = [
