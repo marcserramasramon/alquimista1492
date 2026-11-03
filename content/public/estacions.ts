@@ -194,7 +194,7 @@ export const PASSOS_PREVIS: PasPrevi[] = [
     // Planes Bones es veu al mapa des del principi; el pas només apareix en arribar-hi (GPS o QR).
     fitaAmagada: false,
     pasAmagat: true,
-    // En obrir el pas (GPS o QR) es mostra el vídeo del camí; «Continuar» obre l'AR del Gollem.
+    // En obrir el pas (GPS o QR) es mostra el vídeo del camí, que no té cap efecte sobre la fita.
     missatge: "terra-vinyals",
   },
 ];

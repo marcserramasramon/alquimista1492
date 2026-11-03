@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { EscenaTerra, estatTerra, RADI_AMFORES, type PosicioEquip } from "@/components/ar/EscenaTerra";
 import { IntroduccioExtraAr } from "@/components/vistes/IntroduccioExtraAr";
 import { rumbCami, type ExtraAr } from "@/content/public/extres";
@@ -50,20 +50,6 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   // Motiu pel qual no hi ha ubicació (permís, GPS...), perquè es vegi a la pantalla.
   const ubicacioError = useRef<string | null>(null);
   const { mirada, estat: estatSensors, demanar } = useOrientacio();
-  const router = useRouter();
-
-  // La fita no s'obre en veure el vídeo del camí: s'obre aquí pel GPS (el con és dins el radi de la fita).
-  async function resoldreProva() {
-    const p = posicio.current;
-    if (p && extra.fitaId) {
-      await fetch("/api/obrir", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estacioId: extra.fitaId, lat: p.lat, lng: p.lng }),
-      }).catch(() => null);
-    }
-    router.push(`/s/${extra.fitaId}?pas=prova`);
-  }
 
   // Els sensors, la càmera i la ubicació es demanen en tocar el botó (iOS i Android ho exigeixen).
   async function començar() {
@@ -95,7 +81,8 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
     }
   }, [camera]);
 
-  // Ubicació contínua: només cal mentre l'extra és obert. A la galeria, l'equip és a la fita.
+  // Ubicació contínua: només cal mentre l'extra és obert. Sense posicions guardades (maximumAge 0): el golem
+  // rep cada lectura nova del GPS, normalment una per segon. A la galeria, l'equip és a la fita.
   useEffect(() => {
     if (directa && cami) {
       // A la galeria, l'observador es posa en una posició fixa de prova (la base de les fletxes).
@@ -122,7 +109,7 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
               ? "📍 El navegador no pot trobar la ubicació (GPS no disponible)."
               : null;
       },
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 },
     );
     return () => navigator.geolocation.clearWatch(id);
   }, [iniciat, directa]);
@@ -249,9 +236,9 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
       {iniciat ? (
         <div className="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] mx-auto flex w-full max-w-md flex-col gap-3 px-4">
           {resolt && (
-            <button type="button" onClick={resoldreProva} className="btn btn-ar w-full">
+            <Link href={`/s/${extra.fitaId}?pas=prova`} className="btn btn-ar w-full">
               Resoldre la prova
-            </button>
+            </Link>
           )}
           <button type="button" onClick={onTornar} className="btn btn-fosc w-full">
             Tornar al joc

@@ -101,8 +101,8 @@ export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
   },
   /** Es dispara sol pel camí cap a Planes Bones (Terra), a uns 500 m de la fita. Vídeo
    *  generat amb IA: arbres i plantes creixen al costat del camí, seguint els seus passos.
-   *  La narració és a public/audio/video/terra-planes-bones.mp3. Després del vídeo, el botó
-   *  d'AR («Seguiu la Terra»). */
+   *  La narració és a public/audio/video/terra-planes-bones.mp3. És independent: no obre ni
+   *  toca la fita; només no surt si l'equip ja l'ha resolta. */
   {
     id: "terra-vinyals",
     titol: "La Terra ha florit",
@@ -115,8 +115,6 @@ export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
       altresPunts: [{ lat: 41.912395, lng: 2.231533 }],
     },
     fita: "planes-bones",
-    // La fita no s'obre fins que no s'hi arriba (150 m): el Gollem hi guia.
-    ar: { href: "/joc/ar/terra-cami", boto: "Continuar" },
   },
   /** Activa el vídeo d'arribada de Planes Bones i el botó d'AR, a prop de la fita. Des
    *  d'aquest punt, el Gollem guia l'equip fins a la fita real (`extres.ts`, `terra-cami`). */
