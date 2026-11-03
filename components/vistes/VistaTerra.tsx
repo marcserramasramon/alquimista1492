@@ -20,6 +20,8 @@ type EstatCamera = "esperant" | "activa" | "no-disponible";
 
 /** A partir de quants graus de desviació s'avisa de girar-se cap a les àmfores. */
 const MARGE_GRAUS = 40;
+/** Fins a aquesta distància (m) de la línia del camí, el missatge encara convida a acostar-se al portal. */
+const RADI_ACOSTEU_M = 100;
 
 /** Frase que diu on és l'equip respecte el camí, i cap a on girar-se si les àmfores no són a la vista. */
 interface Guia {
@@ -164,6 +166,9 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   useEffect(() => {
     if (!iniciat || !cami) return;
     const id = setInterval(() => {
+      if (resolt) {
+        return setGuia({ missatge: "La terra us ha reconegut. Sortiu del AR i Resoleu la prova.", girar: null });
+      }
       const e = estatTerra(posicio.current, cami.des, cami.cap);
       if (!e) {
         return setGuia({ missatge: ubicacioError.current ?? "📍 Esperant la ubicació: cal que el mòbil us localitzi.", girar: null });
@@ -173,16 +178,16 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
       const girar = !lectura || Math.abs(dif) < MARGE_GRAUS ? null : dif > 0 ? "dreta" : "esquerra";
       const missatge =
         e.distanciaAmfores < RADI_AMFORES
-          ? "📍 Ja sou al lloc: mireu a terra."
+          ? "📍 Ja sou al lloc: Digues amic, entra a la terra."
           : e.ressonancia >= 0.6
             ? "Bé: seguiu el golem de pedra."
-            : e.ressonancia >= 0.25
-              ? "✨ Acosteu-vos al camí: el triangle vibra quan hi sou."
+            : e.distanciaCami <= RADI_ACOSTEU_M
+              ? "✨ Acosteu-vos al portal i toqueu la paraula."
               : "🌀 Torneu al camí: la brúixola s'apaga quan us en separeu.";
       setGuia({ missatge, girar });
     }, 400);
     return () => clearInterval(id);
-  }, [iniciat, cami, mirada]);
+  }, [iniciat, cami, mirada, resolt]);
 
   useEffect(() => {
     return () => {

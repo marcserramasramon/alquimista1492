@@ -920,7 +920,12 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
 
           const m = arrossegarRef.current ? manual.current : (mirada.current ?? manual.current);
           const u = posicio.current;
-          const sobreCami = u ? aMon(u.lat, u.lng, fita) : { x: 0, z: 0 };
+          // Sense la primera lectura del GPS no se sap on és el jugador: l'escena no es dibuixa ni es col·loca.
+          if (!u) {
+            frame = requestAnimationFrame(bucle);
+            return;
+          }
+          const sobreCami = aMon(u.lat, u.lng, fita);
           uniforms.uTime.value = (ara - inici) / 1000;
 
         // Estelles: cada una té el seu temps. Quan comença un cicle nou, tria un punt d'impacte a l'atzar sobre el terra i una direcció de caiguda a 25° de la vertical. La cua es dibuixa fins a 4 m darrere la punta.
