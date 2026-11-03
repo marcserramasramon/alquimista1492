@@ -164,8 +164,6 @@ export interface PasPrevi {
   pasAmagat?: boolean;
   /** Id d'un missatge amb vídeo (content/public/missatgesMaster.ts) que es mostra en obrir el pas. */
   missatge?: string;
-  /** Si és true, obrir el pas (GPS o QR) també obre la fita que desbloqueja, perquè el pas hi porta directament. */
-  obreFita?: boolean;
   /** Radi (m) a què el pas s'obre sol pel GPS. Per defecte, RADI_OBERTURA_M (lib/ubicacio.ts). */
   radiObertura?: number;
 }
@@ -196,10 +194,8 @@ export const PASSOS_PREVIS: PasPrevi[] = [
     // Planes Bones es veu al mapa des del principi; el pas només apareix en arribar-hi (GPS o QR).
     fitaAmagada: false,
     pasAmagat: true,
-    // En obrir el pas (GPS o QR) es mostra el vídeo del camí; «Continuar» porta a Pas 1.
+    // En obrir el pas (GPS o QR) es mostra el vídeo del camí; «Continuar» obre l'AR del Gollem.
     missatge: "terra-vinyals",
-    // «Continuar» porta a /s/planes-bones: la fita ha de quedar oberta, encara que el con sigui a ~160 m.
-    obreFita: true,
   },
 ];
 

@@ -14,6 +14,8 @@ export type PosicioEquip = { lat: number; lng: number } | null;
 
 const RAD = Math.PI / 180;
 const METRES_GRAU_LAT = 111_320;
+/** Velocitat màxima (m/s) a què la càmera segueix la posició del jugador. */
+const VEL_CAMERA = 2;
 /** Angle de visió de la càmera del darrere (com a l'extra de les ànimes guia). */
 const FOV_H = 52;
 const FOV_V = 40;
@@ -542,6 +544,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
         let estatAnim: EstatGolem | null = null;
         let ultimFrameGolem = performance.now();
         let yawGolem: number | null = null;
+        let camIniciada = false;
+        let camX = 0;
+        let camZ = 0;
         const accioDe = (estat: EstatGolem | null): AnimationAction | null =>
           estat === "seguint" ? accioCaminar : estat === "gest" ? accioSaludar : estat === "assenyala" ? accioAssenyalar : null;
         const canviaAnimacio = (estat: EstatGolem) => {
@@ -992,12 +997,25 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
         geoImpacte.attributes.aCol.needsUpdate = true;
 
 
-          cam.position.set(sobreCami.x, ALCADA_OLLS, sobreCami.z);
-          cam.rotation.set(m.elevacio * RAD, -m.rumb * RAD, 0);
-          uniforms.uCam.value.set(sobreCami.x, sobreCami.z);
-
-          // El gegant segueix el jugador (mostreig cada 0,5 s) i camina cap a la fita.
+          // El gegant segueix el jugador (mostreig cada 0,5 s, amb zona morta contra el soroll del GPS).
           const pas = seguiment.update(ara, sobreCami.x, sobreCami.z);
+          // La càmera llisca cap a la posició de referència a pas de caminar: els salts del GPS no la fan saltar.
+          const ref = seguiment.jugador();
+          const dtCam = Math.min(0.1, (ara - ultimFrameGolem) / 1000);
+          if (!camIniciada) {
+            camX = ref.x;
+            camZ = ref.z;
+            camIniciada = true;
+          }
+          const dCam = Math.hypot(ref.x - camX, ref.z - camZ);
+          if (dCam > 0.01) {
+            const pasCam = Math.min(dCam, VEL_CAMERA * dtCam);
+            camX += ((ref.x - camX) / dCam) * pasCam;
+            camZ += ((ref.z - camZ) / dCam) * pasCam;
+          }
+          cam.position.set(camX, ALCADA_OLLS, camZ);
+          cam.rotation.set(m.elevacio * RAD, -m.rumb * RAD, 0);
+          uniforms.uCam.value.set(camX, camZ);
           golemRef.current = { x: pas.x, z: pas.z };
           golem.position.set(pas.x, 0, pas.z);
           // El gir és continu: el golem gira cap a la direcció que toca a 2,5 rad/s, sense saltar.

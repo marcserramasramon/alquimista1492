@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { EscenaTerra, estatTerra, RADI_AMFORES, type PosicioEquip } from "@/components/ar/EscenaTerra";
 import { IntroduccioExtraAr } from "@/components/vistes/IntroduccioExtraAr";
 import { rumbCami, type ExtraAr } from "@/content/public/extres";
@@ -50,6 +50,20 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
   // Motiu pel qual no hi ha ubicació (permís, GPS...), perquè es vegi a la pantalla.
   const ubicacioError = useRef<string | null>(null);
   const { mirada, estat: estatSensors, demanar } = useOrientacio();
+  const router = useRouter();
+
+  // La fita no s'obre en veure el vídeo del camí: s'obre aquí pel GPS (el con és dins el radi de la fita).
+  async function resoldreProva() {
+    const p = posicio.current;
+    if (p && extra.fitaId) {
+      await fetch("/api/obrir", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estacioId: extra.fitaId, lat: p.lat, lng: p.lng }),
+      }).catch(() => null);
+    }
+    router.push(`/s/${extra.fitaId}?pas=prova`);
+  }
 
   // Els sensors, la càmera i la ubicació es demanen en tocar el botó (iOS i Android ho exigeixen).
   async function començar() {
@@ -235,9 +249,9 @@ export function VistaTerra({ extra, onTornar, directa = false }: VistaTerraProps
       {iniciat ? (
         <div className="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] mx-auto flex w-full max-w-md flex-col gap-3 px-4">
           {resolt && (
-            <Link href={`/s/${extra.fitaId}?pas=prova`} className="btn btn-ar w-full">
+            <button type="button" onClick={resoldreProva} className="btn btn-ar w-full">
               Resoldre la prova
-            </Link>
+            </button>
           )}
           <button type="button" onClick={onTornar} className="btn btn-fosc w-full">
             Tornar al joc

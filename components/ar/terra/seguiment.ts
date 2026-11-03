@@ -18,7 +18,7 @@ export interface PasGolem {
 /** Cada quant es mostreja la posició del jugador, en mil·lisegons. */
 const MOSTREIG_MS = 500;
 /** El golem es manté aquests metres més enllà del jugador, en la direcció de la fita... */
-const DISTANCIA_DAVANT = 7;
+const DISTANCIA_DAVANT = 10;
 /** ...i aquests metres a la seva esquerra, perquè no tapi el punt final. */
 const DESPLA_ESQUERRA = 2;
 /** Velocitat del golem quan camina, en metres per segon. */
@@ -35,14 +35,13 @@ const FILTRE_ALFA = 0.4;
 const VEL_MAX_M_S = 8;
 const REBUTJOS_MAX = 4;
 /**
- * Histèresi de parat: el jugador es considera parat quan la velocitat suavitzada és < VEL_PARAT durant
- * TEMPS_PARAT_MS, i es considera en moviment quan és > VEL_MOURE durant TEMPS_MOURE_MS. Entre els dos
- * llindars es manté l'estat anterior, així el golem no oscil·la.
+ * Zona morta: el soroll del GPS fa ballar la posició uns metres encara que el jugador estigui quiet. La posició
+ * de referència (la que fan servir el golem i la càmera) només canvia quan la filtrada se n'allunya més
+ * d'aquests metres; així el golem no es mou sense sentit.
  */
-const VEL_PARAT = 0.4;
-const VEL_MOURE = 0.8;
-const TEMPS_PARAT_MS = 2000;
-const TEMPS_MOURE_MS = 1000;
+const ZONA_MORTA = 4;
+/** Si la referència no ha canviat en aquest temps, el jugador es considera parat. */
+const TEMPS_PARAT_MS = 5000;
 
 /**
  * Seqüència quan el jugador està parat, en mil·lisegons des que s'ha parat:
@@ -77,16 +76,16 @@ export class SeguimentGolem {
   private tParat = -1;
   private tSenyalFinal = -1;
 
-  // Posició del jugador suavitzada i velocitat estimada.
+  // Posició del jugador filtrada i, a partir d'ella, la de referència (amb zona morta).
   private jugadorIniciat = false;
   private jx = 0;
   private jz = 0;
+  private rx = 0;
+  private rz = 0;
   private tAcceptada = -1;
-  private velocitat = 0;
+  private tReferencia = -1;
   private rebutjos = 0;
   private aturat = false;
-  private tBaixa = -1;
-  private tAlt = -1;
 
   constructor(private readonly fx: number, private readonly fz: number) {}
 
@@ -100,7 +99,7 @@ export class SeguimentGolem {
       this.ultimaMostra = ara;
       this.actualitzaJugador(ara, rawX, rawZ);
     }
-    const mostra = { x: this.jx, z: this.jz };
+    const mostra = { x: this.rx, z: this.rz };
 
     // El gegant apareix ja al seu lloc, davant i a l'esquerra del jugador (on s'obre l'AR), i després el precedeix.
     if (!this.iniciat) {
@@ -182,13 +181,18 @@ export class SeguimentGolem {
     return this.pas();
   }
 
-  /** Filtra la posició crua del GPS, estima la velocitat i actualitza l'estat de parat amb histèresi. */
+  /** Posició de referència del jugador (sense el ball del GPS): la càmera s'hi acosta a poc a poc. */
+  jugador(): { x: number; z: number } {
+    return { x: this.rx, z: this.rz };
+  }
+
+  /** Filtra la posició crua del GPS, mou la referència si cal i actualitza l'estat de parat. */
   private actualitzaJugador(ara: number, rawX: number, rawZ: number): void {
     if (!this.jugadorIniciat) {
       this.jugadorIniciat = true;
-      this.jx = rawX;
-      this.jz = rawZ;
-      this.tAcceptada = ara;
+      this.jx = this.rx = rawX;
+      this.jz = this.rz = rawZ;
+      this.tAcceptada = this.tReferencia = ara;
       return;
     }
     const dt = (ara - this.tAcceptada) / 1000;
@@ -202,36 +206,17 @@ export class SeguimentGolem {
     }
     this.rebutjos = 0;
 
-    const nx = this.jx + FILTRE_ALFA * (rawX - this.jx);
-    const nz = this.jz + FILTRE_ALFA * (rawZ - this.jz);
-    const velocitatInstant = Math.hypot(nx - this.jx, nz - this.jz) / dt;
-    this.velocitat = 0.7 * this.velocitat + 0.3 * velocitatInstant;
-    this.jx = nx;
-    this.jz = nz;
+    this.jx += FILTRE_ALFA * (rawX - this.jx);
+    this.jz += FILTRE_ALFA * (rawZ - this.jz);
     this.tAcceptada = ara;
 
-    // Histèresi: per passar a parat o a moviment cal mantenir la velocitat un temps.
-    if (this.aturat) {
-      if (this.velocitat > VEL_MOURE) {
-        if (this.tAlt < 0) this.tAlt = ara;
-        if (ara - this.tAlt >= TEMPS_MOURE_MS) {
-          this.aturat = false;
-          this.tAlt = -1;
-        }
-      } else {
-        this.tAlt = -1;
-      }
-    } else {
-      if (this.velocitat < VEL_PARAT) {
-        if (this.tBaixa < 0) this.tBaixa = ara;
-        if (ara - this.tBaixa >= TEMPS_PARAT_MS) {
-          this.aturat = true;
-          this.tBaixa = -1;
-        }
-      } else {
-        this.tBaixa = -1;
-      }
+    // Només un desplaçament de debò (fora de la zona morta) mou la referència i compta com a moviment.
+    if (Math.hypot(this.jx - this.rx, this.jz - this.rz) > ZONA_MORTA) {
+      this.rx = this.jx;
+      this.rz = this.jz;
+      this.tReferencia = ara;
     }
+    this.aturat = ara - this.tReferencia >= TEMPS_PARAT_MS;
   }
 
   private pas(): PasGolem {

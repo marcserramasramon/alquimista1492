@@ -48,7 +48,7 @@ export interface MissatgeMaster {
   text: string;
   video?: string;
   geofence?: { lat: number; lng: number; radiMetres: number; altresPunts?: { lat: number; lng: number }[] };
-  /** Amb geofence: no s'envia si l'equip ja ha resolt aquesta fita, i en enviar-se l'obre (el botó `ar` hi porta). */
+  /** Amb geofence: no s'envia si l'equip ja ha resolt aquesta fita. */
   fita?: string;
   /** Botó extra del pop-up de vídeo que porta a una pantalla de realitat augmentada. */
   ar?: { href: string; boto: string };
@@ -109,13 +109,14 @@ export const MISSATGES_MASTER: readonly MissatgeMaster[] = [
     text: "Heu vist créixer la Terra al vostre pas. Fins i tot ella sap que us acosteu al que busca.",
     video: "/video/terra-planes-bones.mp4",
     geofence: {
-      lat: 41.91362609597928,
-      lng: 2.2326413486560828,
+      lat: 41.91394869288886,
+      lng: 2.2318873123990555,
       radiMetres: 30,
       altresPunts: [{ lat: 41.912395, lng: 2.231533 }],
     },
     fita: "planes-bones",
-    ar: { href: "/s/planes-bones", boto: "Continuar" },
+    // La fita no s'obre fins que no s'hi arriba (150 m): el Gollem hi guia.
+    ar: { href: "/joc/ar/terra-cami", boto: "Continuar" },
   },
   /** Activa el vídeo d'arribada de Planes Bones i el botó d'AR, a prop de la fita. Des
    *  d'aquest punt, el Gollem guia l'equip fins a la fita real (`extres.ts`, `terra-cami`). */

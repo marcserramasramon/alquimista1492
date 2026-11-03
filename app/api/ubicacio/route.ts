@@ -5,7 +5,6 @@ import { getServiceRoleClient } from "@/lib/supabase";
 import { getEquipSession } from "@/lib/auth";
 import { distanciaMetres, MINIM_ENTRE_UBICACIONS_MS, UbicacioSchema } from "@/lib/ubicacio";
 import { MISSATGES_MASTER } from "@/content/public/missatgesMaster";
-import { obrirFita } from "@/lib/obertura";
 
 const MISSATGES_GEOFENCE = MISSATGES_MASTER.filter((m) => m.geofence);
 
@@ -34,8 +33,6 @@ async function dispararMissatgesGeofence(
         .eq("estacio_id", missatge.fita)
         .maybeSingle();
       if (progres?.resolta) continue;
-      // El botó del vídeo porta a la fita: ha de ser oberta encara que l'equip no hi hagi arribat.
-      await obrirFita(teamId, missatge.fita, "gps");
     }
     const { error } = await db
       .from("v2_missatges")
