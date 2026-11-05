@@ -229,6 +229,52 @@ export const BENVINGUDA = {
   installar: "Tingueu-la a mà: us acompanyarà tota la nit.",
 };
 
+/** Prova inicial del telèfon: la carta de Fra Francesc (docs/textos-nova.md § 7). */
+export const PROVA_CARTA = {
+  arribada: {
+    titol: "Us ha arribat una carta",
+    paragrafs: [
+      "Algú l'ha confiat al vent, i només es deixarà atrapar per qui sàpiga mirar.",
+      "Busqueu un lloc amb espai per girar-vos i accepteu tots els permisos que us demani el mòbil.",
+    ],
+    boto: "Buscar la carta",
+    saltar: "Saltar la prova",
+  },
+  cerca: {
+    inici: "La carta voleia al vostre voltant. Gireu-vos i toqueu-la!",
+    fugida: "El vent se l'ha endut! Torneu-la a buscar.",
+    arrossegar: "Arrossegueu el dit per mirar al voltant.",
+    noLaTrobo: "No la trobo",
+  },
+  segell: {
+    titol: "Només cedirà davant del nom del poble",
+    tocar: "Toqueu el segell.",
+    demanant: "Accepteu el permís del micròfon.",
+    cridar: "Crideu ben fort: «Sentfores!»",
+    senseMicro: "El micròfon no funciona. Podeu trencar el segell amb la mà.",
+    trencarAMa: "Trencar el segell amb la mà",
+  },
+  oberta: ["Si llegiu aquestes línies, és que us he triat.", "Ens veiem al Pla del Masset."],
+  validat: {
+    titol: "Heu validat les funcions del telèfon",
+    siNoVa: "Si alguna cosa no va, reviseu el document de configuració.",
+    document: "Obrir el document de configuració",
+    fallades: "això no ha funcionat",
+    comprovant: "Encara s'està comprovant la connexió...",
+    so: "Si no heu sentit el vent, apugeu el volum o traieu el mode silenci.",
+    continuar: "Continuar →",
+    repetir: "Tornar a provar",
+  },
+  comprovacions: {
+    camera: "Càmera",
+    moviment: "Brúixola i moviment",
+    tresD: "Realitat augmentada",
+    micro: "Micròfon",
+    ubicacio: "Ubicació",
+    persones: "Detecció de persones (reviseu la connexió)",
+  },
+};
+
 export const RESPOSTA_CORRECTA = "Fragment trobat!";
 
 export const CORRECTE_PER_ELEMENT: Record<Element, string> = {

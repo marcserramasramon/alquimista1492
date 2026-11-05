@@ -244,6 +244,36 @@ Botons: **No, seguim buscant** · **Sí, mostra-la**
 
 ---
 
+## 7. Prova del telèfon — la carta
+
+Va després del consentiment d'ubicació i abans de triar equip (`/carta`). Els textos són a `PROVA_CARTA`. No gasta el missatge secret (§ 1), que es llegeix després d'entrar a l'equip: només n'avança la primera frase.
+
+**Arribada — Us ha arribat una carta**
+
+> Algú l'ha confiat al vent, i només es deixarà atrapar per qui sàpiga mirar.
+>
+> Busqueu un lloc amb espai per girar-vos i accepteu tots els permisos que us demani el mòbil.
+
+**Cerca:** La carta voleia al vostre voltant. Gireu-vos i toqueu-la! / El vent se l'ha endut! Torneu-la a buscar.
+
+**Segell:** Només cedirà davant del nom del poble. Crideu ben fort: «Sentfores!»
+
+**Carta oberta**
+
+> Si llegiu aquestes línies, és que us he triat.
+>
+> Ens veiem al Pla del Masset.
+>
+> — Fra F.
+
+**Pantalla final — Heu validat les funcions del telèfon**
+
+> Si alguna cosa no va, reviseu el document de configuració.
+
+Enllaça a `public/configuracio.html`, còpia de `cartells-html/cartell-instal-lacio.html` amb la fila del micròfon actualitzada. Si es canvia l'un, cal revisar l'altre.
+
+---
+
 ## Àudio
 
 Decidit: l'app mostra el text d'arribada de cada fita i també el reprodueix amb àudio. El text sempre es veu en pantalla, perquè al carrer hi pot haver soroll i no tothom el sentirà.

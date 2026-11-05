@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Com instal·lar l'app</title>
+<style>
+  :root {
+    --paper: #f3e5c4;
+    --card: #fbf4e4;
+    --ink: #1b1511;
+    --soft: #5a4a3c;
+    --gold: #eab308;
+    --warn: #9a3412;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --paper: #1b1511; --card: #2a211b; --ink: #f6ecd6; --soft: #cbb99b; --gold: #eab308; --warn: #fdba74; }
+  }
+  :root[data-theme="dark"] { --paper: #1b1511; --card: #2a211b; --ink: #f6ecd6; --soft: #cbb99b; --gold: #eab308; --warn: #fdba74; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: Georgia, serif; }
+  .page { max-width: 820px; margin: 0 auto; padding: 24px 16px 40px; }
+  h1 { margin: 0 0 6px; font-size: 32px; line-height: 1.15; }
+  h2 { margin: 0 0 10px; font-size: 24px; }
+  h3 { margin: 16px 0 6px; font-size: 18px; font-family: system-ui, sans-serif; }
+  p, li { font-size: 16px; line-height: 1.5; }
+  .intro { color: var(--soft); margin: 0 0 18px; font-family: system-ui, sans-serif; }
+  section { background: var(--card); border: 3px solid var(--ink); border-radius: 16px; padding: 16px 18px; margin-bottom: 20px; }
+  .so { display: inline-block; font-family: system-ui, sans-serif; font-weight: bold; background: var(--gold); color: #1b1511; border: 2px solid #1b1511; border-radius: 10px; padding: 3px 10px; margin-bottom: 8px; }
+  ol, ul { padding-left: 22px; margin: 6px 0; }
+  li { margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; font-family: system-ui, sans-serif; font-size: 15px; margin-top: 8px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 6px; border-bottom: 2px solid var(--ink); }
+  th { font-size: 14px; text-transform: uppercase; letter-spacing: .03em; }
+  .alerta { border: 2px dashed var(--warn); color: var(--warn); border-radius: 12px; padding: 10px 12px; font-family: system-ui, sans-serif; font-size: 15px; margin: 10px 0; }
+  .nota { color: var(--soft); font-family: system-ui, sans-serif; font-size: 14px; margin-top: 10px; }
+  .qr { display: block; width: 200px; max-width: 70%; margin: 10px auto 4px; background: #fff; padding: 8px; border-radius: 8px; }
+  code { font-family: ui-monospace, monospace; background: var(--paper); border: 1px solid var(--ink); border-radius: 6px; padding: 0 4px; font-size: 14px; }
+  .enllac { display: block; margin: 8px 0 4px; font-family: system-ui, sans-serif; font-weight: bold; text-align: center; border: 3px solid var(--ink); border-radius: 12px; padding: 12px; background: var(--gold); }
+  @media print {
+    body { background: #fff; color: #000; }
+    :root { --paper: #fff; --card: #fff; --ink: #000; --soft: #333; --gold: #ffe27a; --warn: #000; }
+    section { break-inside: avoid; }
+    .page { padding: 0; max-width: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Com instal·lar l'app</h1>
+  <p class="intro">Instal·la-la a la pantalla d'inici i deixa-la obrir-se sola, a pantalla completa, com una app més.</p>
+
+  <section>
+    <h2>Abans de començar</h2>
+    <ul>
+      <li>Escaneja aquest codi QR amb la càmera del mòbil per descarregar l'app:
+        <img class="qr" src="qr-descarrega.png" alt="Codi QR per descarregar l'app"></li>
+      <li><strong>No</strong> l'obris des de WhatsApp, Instagram, Messenger o altres aplicacions: el seu navegador intern bloqueja els permisos.</li>
+      <li>No facis servir la navegació <strong>privada / d'incògnit</strong>.</li>
+      <li>Ves a un lloc amb bona connexió (4G, 5G o Wi-Fi).</li>
+    </ul>
+  </section>
+
+  <section>
+    <span class="so">ANDROID</span>
+    <h2>Instal·lació a Android (Chrome)</h2>
+    <p><strong>Primer, prova amb el botó:</strong> obre la pàgina principal i toca <strong>«⬇ Descarregar l'app»</strong>. Si el botó no surt, fes els passos de sota.</p>
+    <ol>
+      <li>Obre l'enllaç amb <strong>Google Chrome</strong>.</li>
+      <li>Toca els <strong>tres punts ⋮</strong> de dalt a la dreta.</li>
+      <li>Toca <strong>«Instal·la l'aplicació»</strong> o <strong>«Afegeix a la pantalla d'inici»</strong>.</li>
+      <li>Confirma amb <strong>«Instal·la»</strong> o <strong>«Afegeix»</strong>.</li>
+      <li>Tanca Chrome i obre l'app des de la icona nova de la pantalla d'inici.</li>
+    </ol>
+    <p class="nota">Si Chrome mostra un globus «Instal·la l'aplicació» a sobre de la pantalla, també pots tocar-lo directament.</p>
+  </section>
+
+  <section>
+    <span class="so">iPHONE / iPAD</span>
+    <h2>Instal·lació a iOS (Safari)</h2>
+    <p><strong>Primer, mira la pàgina principal:</strong> si et mostra les instruccions per descarregar l'app, segueix-les. Si no surten, fes els passos de sota.</p>
+    <ol>
+      <li>Obre l'enllaç amb <strong>Safari</strong>. A iPhone, Chrome o altres navegadors no serveixen per a això.</li>
+      <li>Toca la icona de <strong>compartir</strong> (el quadrat amb una fletxa cap amunt). A l'iPad és a dalt; a l'iPhone, a sota.</li>
+      <li>Baixa i toca <strong>«Afegeix a la pantalla d'inici»</strong>.</li>
+      <li>Toca <strong>«Afegeix»</strong> a dalt a la dreta.</li>
+      <li>Tanca Safari i obre l'app des de la icona de la pantalla d'inici. <strong>Obre-la sempre des d'aquesta icona</strong>, no des de Safari.</li>
+    </ol>
+    <div class="alerta">A iOS els permisos (càmera, ubicació, moviment) es demanen <strong>la primera vegada que s'usen</strong>. Accepta'ls quan apareguin.</div>
+  </section>
+
+  <section>
+    <span class="so">iPHONE / iPAD</span>
+    <h2>Donar els permisos a l'iPhone</h2>
+    <h3>1. Quan l'app et pregunti</h3>
+    <ul>
+      <li>Surt una finestra del tipus «… vol accedir a la càmera» o «… vol usar la teva ubicació».</li>
+      <li>Toca <strong>«Permet»</strong>. Per a la ubicació, tria <strong>«Mentre s'usa l'app»</strong> si et dona a triar.</li>
+      <li>Si no surt cap finestra, o has tocat <strong>«No»</strong>, passa al punt 2.</li>
+    </ul>
+
+    <h3>2. Activar-los a Configuració (si no surten o si vas dir «No»)</h3>
+    <ol>
+      <li>Obre l'app <strong>Configuració</strong> (la roda gris ⚙️).</li>
+      <li>Baixa i toca <strong>Safari</strong>.</li>
+      <li>Toca <strong>Càmera</strong> i tria <strong>«Permet»</strong>.</li>
+      <li>Torna enrere, toca <strong>Micròfon</strong> i tria <strong>«Permet»</strong> (per al segell de la carta i l'extra dels crits).</li>
+      <li>Torna enrere, toca <strong>Ubicació</strong> i tria <strong>«Permet»</strong> o <strong>«Mentre s'usa l'app»</strong>.</li>
+      <li>Torna enrere, toca <strong>Moviment i orientació</strong> i activa-ho.</li>
+    </ol>
+
+    <h3>3. Comprovar els serveis generals</h3>
+    <ol>
+      <li>Ves a <strong>Configuració → Privacitat i seguretat</strong>.</li>
+      <li>Toca <strong>Serveis de localització</strong> i deixa'l <strong>activat</strong>. Baixa fins a <strong>Safari</strong> i tria <strong>«Mentre s'usa l'app»</strong>.</li>
+      <li>Fes el mateix a <strong>Càmera</strong> i <strong>Micròfon</strong>: <strong>Safari</strong> ha d'estar activat.</li>
+    </ol>
+
+    <h3>4. Aplicar-ho</h3>
+    <ol>
+      <li>Tanca l'app del tot: llisca cap amunt des de baix i esborra-la de la vista de fons.</li>
+      <li>Torna a obrir-la des de la icona de la pantalla d'inici. Ara ja no hauria de tornar a preguntar.</li>
+    </ol>
+
+    <div class="alerta">Els noms exactes de les opcions poden canviar segons la versió d'iOS. Si no les trobes, usa la barra de cerca de Configuració i escriu «Càmera», «Ubicació» o «Moviment».</div>
+  </section>
+
+  <section>
+    <h2>Permisos que demana l'app</h2>
+    <p>L'app només demana el que necessita per al joc. Cap permís guarda vídeo, àudio ni fotos.</p>
+    <table>
+      <thead>
+        <tr><th>Permís</th><th>Per a què serveix</th><th>Quan et preguntarà</th><th>Si no el dones</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Càmera</strong></td>
+          <td>Veure la realitat augmentada i escanejar els codis QR de les fites.</td>
+          <td>Quan obres una fita, un escàner de QR o una escena de realitat augmentada.</td>
+          <td>No podràs veure l'escena ni escanejar. Pots tornar-ho a intentar més tard.</td>
+        </tr>
+        <tr>
+          <td><strong>Ubicació (GPS)</strong></td>
+          <td>Mostrar la posició de l'equip al mapa i saber quan sou prop d'una fita.</td>
+          <td>Després d'acceptar l'equip, a la pantalla d'ubicació.</td>
+          <td>El joc continua igual, però el mapa no mostrarà la vostra posició.</td>
+        </tr>
+        <tr>
+          <td><strong>Moviment i orientació</strong></td>
+          <td>Girar el mòbil i moure la figura de realitat augmentada.</td>
+          <td>A iPhone, en tocar el botó per activar el moviment (el demana Safari).</td>
+          <td>Les escenes de realitat augmentada no reaccionaran al moviment del mòbil.</td>
+        </tr>
+        <tr>
+          <td><strong>Micròfon</strong></td>
+          <td>Per trencar el segell de la carta i a l'extra de crits: només mesura el volum. <strong>No s'enregistra res ni s'envia enlloc.</strong></td>
+          <td>En tocar el segell de la carta i en entrar a l'extra de crits.</td>
+          <td>Hi ha un botó per cridar en lloc del micròfon.</td>
+        </tr>
+        <tr>
+          <td><strong>Àudio i so</strong></td>
+          <td>Sons i música del joc.</td>
+          <td>No es demana permís. Cal <strong>tocar la pantalla una vegada</strong> perquè el so s'activi.</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="nota">L'app no demana notificacions ni accés als contactes, fotos o fitxers.</p>
+  </section>
+
+  <section>
+    <h2>Com evitar que el navegador bloquegi els permisos</h2>
+    <p>Els navegadors recorden la teva decisió. Si una vegada dius «No» (o tanques la finestra sense triar), no tornarà a preguntar fins que l'activis a mà. Això és el que cal fer:</p>
+
+    <h3>Abans de tocar res</h3>
+    <ul>
+      <li>Quan surti la finestra del permís, toca <strong>«Permet»</strong> (Android) o <strong>«Permet»</strong> (iPhone). Si no ho saps, <strong>accepta</strong>.</li>
+      <li>Accepta primer la càmera i després la ubicació, una a una. No tanquis la finestra amb la X.</li>
+      <li>Activa la <strong>ubicació del telèfon</strong> abans d'entrar al joc.</li>
+    </ul>
+
+    <h3>Si ja has dit «No» (Android · Chrome)</h3>
+    <ol>
+      <li>Toca la icona de <strong>candau</strong> (o de configuració) a l'esquerra de l'adreça.</li>
+      <li>Toca <strong>«Permisos»</strong> o <strong>«Configuració del lloc»</strong>.</li>
+      <li>Posa <strong>Càmera</strong>, <strong>Ubicació</strong> i <strong>Micròfon</strong> en <strong>«Permet»</strong>.</li>
+      <li>Recarrega la pàgina o torna a obrir l'app.</li>
+    </ol>
+    <p class="nota">Alternativa: Configuració del mòbil → Aplicacions → Chrome → Permisos, i activa-hi Càmera i Ubicació. Si l'app està instal·lada, els permisos poden estar a Configuració → Aplicacions → (nom de l'app).</p>
+
+    <h3>Si ja has dit «No» (iPhone · Safari o app de la pantalla d'inici)</h3>
+    <p>Si al seu dia vas tocar <strong>«No»</strong>, l'iPhone no tornarà a preguntar. Cal activar-ho a mà, com s'explica a la secció següent.</p>
+    <div class="alerta">Si no trobes les opcions de Safari, les opcions de càmera i ubicació també són a <strong>Configuració → Safari → Ajustos de pàgina web</strong>, per a l'enllaç de l'app.</div>
+
+    <h3>Coses que bloquegen l'app sense avisar</h3>
+    <ul>
+      <li><strong>Mode silenci</strong> de l'iPhone (interruptor lateral): desactiva el so del joc. Desactiva'l.</li>
+      <li><strong>Mode d'estalvi d'energia</strong> o bateria baixa: pot aturar la ubicació i els sons. Desactiva'l mentre jugues.</li>
+      <li><strong>Altres apps obertes</strong> (música, trucades, càmera): tanca-les abans de començar.</li>
+      <li><strong>Navegació privada / d'incògnit</strong>: no guarda permisos. Obre l'app en una finestra normal.</li>
+      <li><strong>Enllaç d'una aplicació de missatgeria</strong>: obre-ho sempre amb Chrome (Android) o Safari (iPhone).</li>
+    </ul>
+
+    <div class="alerta">Si el permís encara no funciona: tanca la pestanya o l'app, reinicia el mòbil i torna a entrar. Si la càmera diu «ocupada», tanca altres apps que la facin servir.</div>
+  </section>
+
+  <section>
+    <h2>Si res no funciona</h2>
+    <ul>
+      <li>Torna a provar amb una <strong>connexió diferent</strong> (Wi-Fi o dades mòbils).</li>
+      <li>Actualitza la pàgina (estirar cap avall a Chrome, o tancar i tornar a obrir a Safari).</li>
+      <li>Demana ajuda a la persona organitzadora que tens davant.</li>
+    </ul>
+  </section>
+
+</div>
+</body>
+</html>

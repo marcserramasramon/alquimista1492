@@ -19,6 +19,12 @@ import type { EstacioMapa, MarcadorMapa } from "@/components/player/MapaEquip";
 import { HubVideoVist } from "./HubVideoVist";
 import { VistaUbicacio } from "@/components/vistes/VistaUbicacio";
 import { VistaBenvinguda } from "@/components/vistes/VistaBenvinguda";
+import {
+  VistaCartaArribada,
+  VistaCartaOberta,
+  VistaCartaSegell,
+  VistaTelefonValidat,
+} from "@/components/vistes/VistaCarta";
 import { VistaEntradaEquip } from "@/components/vistes/VistaEntradaEquip";
 import { VistaEspera } from "@/components/vistes/VistaEspera";
 import { EQUIPS } from "@/content/public/equips";
@@ -525,6 +531,45 @@ export const PANTALLES: Pantalla[] = [
     titol: "Ubicació · esperant permís",
     descripcio: "Mentre el navegador mostra el seu diàleg de permís.",
     render: () => <VistaUbicacio demanant onAcceptar={noop} onRebutjar={noop} />,
+  },
+  {
+    id: "carta-arribada",
+    grup: "entrada",
+    titol: "Carta · ha arribat",
+    descripcio: "Prova del telèfon: explica la prova i demana els permisos.",
+    render: () => <VistaCartaArribada onBuscar={noop} onSaltar={noop} />,
+  },
+  {
+    id: "carta-segell",
+    grup: "entrada",
+    titol: "Carta · trencar el segell",
+    descripcio: "El segell a mig esquerdar. A la partida, a sobre de la càmera.",
+    render: () => (
+      <div className="fixed inset-0 bg-black">
+        <VistaCartaSegell progres={0.55} micro="actiu" potTrencarAMa onTocarSegell={noop} onTrencarAMa={noop} />
+      </div>
+    ),
+  },
+  {
+    id: "carta-oberta",
+    grup: "entrada",
+    titol: "Carta · oberta",
+    render: () => <VistaCartaOberta onContinuar={noop} />,
+  },
+  {
+    id: "telefon-validat",
+    grup: "entrada",
+    titol: "Telèfon validat",
+    descripcio: "Final de la prova, amb l'enllaç al document de configuració.",
+    render: () => <VistaTelefonValidat fallades={[]} onContinuar={noop} onRepetir={noop} />,
+  },
+  {
+    id: "telefon-validat-fallades",
+    grup: "entrada",
+    titol: "Telèfon validat · amb fallades",
+    render: () => (
+      <VistaTelefonValidat fallades={["Càmera", "Micròfon"]} onContinuar={noop} onRepetir={noop} />
+    ),
   },
 
   {
