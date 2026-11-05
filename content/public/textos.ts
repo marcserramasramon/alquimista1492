@@ -265,7 +265,13 @@ export const PROVA_CARTA = {
     obrir: "Toqueu la carta per obrir-la",
   },
   oberta: {
-    final: "Ens veiem al Pla del Masset.",
+    // El missatge secret, amb un paràgraf propi en lloc de les indicacions de la partida.
+    paragrafs: [
+      ...MISSATGE_SECRET.paragrafs.slice(0, 5),
+      "Veniu a Sentfores, ajudeu-me i demostreu que sou dignes de guardar el secret.",
+      ...MISSATGE_SECRET.paragrafs.slice(7),
+      "Ens veiem al Pla del Masset.",
+    ],
     guia: "Quan l'hàgiu llegida, toqueu «Continuar»",
   },
   validat: {

@@ -246,7 +246,7 @@ Botons: **No, seguim buscant** · **Sí, mostra-la**
 
 ## 7. Prova del telèfon — la carta
 
-Va després del consentiment d'ubicació i abans de triar equip (`/carta`). Els textos són a `PROVA_CARTA`. La carta oberta mostra el missatge secret sencer (§ 1), sense veu, i afegeix una última frase.
+Va després del consentiment d'ubicació i abans de triar equip (`/carta`). Els textos són a `PROVA_CARTA`. La carta oberta mostra el missatge secret (§ 1) adaptat i sense veu: canvia les indicacions de la partida per una crida a venir i afegeix una última frase. El missatge original no canvia.
 
 **Arribada — Us ha arribat una carta**
 
@@ -264,7 +264,11 @@ Va després del consentiment d'ubicació i abans de triar equip (`/carta`). Els 
 
 **Carta oberta**
 
-> (Missatge secret sencer, § 1)
+> (Missatge secret, § 1, fins a «…dignes de guardar-los.»)
+>
+> Veniu a Sentfores, ajudeu-me i demostreu que sou dignes de guardar el secret.
+>
+> Que el foc de l'Atanor us guiï.
 >
 > Ens veiem al Pla del Masset.
 >

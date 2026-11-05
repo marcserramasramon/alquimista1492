@@ -202,14 +202,14 @@ export function VistaCartaSegell({
   );
 }
 
-/** 4. La carta oberta: el missatge secret del joc, sense veu, acabat amb la cita al Pla del Masset. */
+/** 4. La carta oberta: el missatge secret adaptat, sense veu, acabat amb la cita al Pla del Masset. */
 export function VistaCartaOberta({ onContinuar }: { onContinuar: () => void }) {
   return (
     <Pantalla className="items-center gap-6">
       <Narracio
         text={{
           titol: MISSATGE_SECRET.titol,
-          paragrafs: [...MISSATGE_SECRET.paragrafs, PROVA_CARTA.oberta.final],
+          paragrafs: PROVA_CARTA.oberta.paragrafs,
         }}
         etiqueta="missatge secret"
         className="w-full animate-segellar"
