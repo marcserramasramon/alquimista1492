@@ -15,6 +15,9 @@
 export type TipusMoviment = "aprop" | "lluny";
 
 const URL_FONS = "/audio/carta/fons.mp3";
+/** Riure del primer cop que la carta s'escapa («funny child laughter» d'universfield). */
+const URL_RIURE = "/audio/carta/riure.mp3";
+const VOLUM_RIURE = 0.7;
 const URL_MOVIMENT: Record<TipusMoviment, string> = {
   aprop: "/audio/carta/moviment-aprop.mp3",
   lluny: "/audio/carta/moviment-lluny.mp3",
@@ -34,6 +37,7 @@ const VOLUM_COPS = 0.4;
 let context: AudioContext | null = null;
 let soroll: AudioBuffer | null = null;
 const sonsMoviment: Partial<Record<TipusMoviment, AudioBuffer>> = {};
+let riure: AudioBuffer | null = null;
 let fonts: AudioBufferSourceNode[] = [];
 let tempsFons: ReturnType<typeof setTimeout> | null = null;
 
@@ -107,6 +111,11 @@ export function iniciarSoCarta() {
 
     void carregarMoviment(ctx, "aprop");
     void carregarMoviment(ctx, "lluny");
+    void carregarSo(ctx, URL_RIURE)
+      .then((buffer) => {
+        if (ctx === context) riure = buffer;
+      })
+      .catch(() => {});
   } catch {
     context = null;
   }
@@ -149,6 +158,17 @@ function esclat(frequencia: number, durada: number, volum: number, tipus: Biquad
   font.stop(ctx.currentTime + durada);
 }
 
+/** El riure quan la carta s'escapa. Només es crida el primer cop que la toquen. */
+export function sonarRiureCarta() {
+  if (!context || !riure) return;
+  const font = context.createBufferSource();
+  font.buffer = riure;
+  const gain = context.createGain();
+  gain.gain.value = VOLUM_RIURE;
+  font.connect(gain).connect(context.destination);
+  font.start();
+}
+
 /** La ventada que s'endú la carta. */
 export function sonarFugidaCarta() {
   esclat(900, 1, 0.8, "lowpass");
@@ -178,6 +198,7 @@ export function aturarSoCarta() {
   fonts = [];
   delete sonsMoviment.aprop;
   delete sonsMoviment.lluny;
+  riure = null;
   const ctx = context;
   context = null;
   soroll = null;

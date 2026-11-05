@@ -3,7 +3,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { dibuixaVora } from "@/components/ar/voraGuia";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
-import { sonarFugidaCarta, sonarMovimentCarta, type TipusMoviment } from "@/lib/sorollCarta";
+import { sonarFugidaCarta, sonarMovimentCarta, sonarRiureCarta, type TipusMoviment } from "@/lib/sorollCarta";
 
 /** On és la carta respecte a on mira el mòbil: cap a on cal moure'l, o "vista" si ja es veu. */
 export type GuiaCarta = "dreta" | "esquerra" | "amunt" | "avall" | "vista" | "atrapada";
@@ -275,6 +275,7 @@ export function EscenaCarta({ mirada, arrossegar, alGuia, alFugir, alAtrapar, al
             desDeElev = elevCarta;
             finsElev = -3;
             sonarFugidaCarta();
+            sonarRiureCarta();
             navigator.vibrate?.(120);
             posarGuia(null);
             callbacks.current.alFugir();
