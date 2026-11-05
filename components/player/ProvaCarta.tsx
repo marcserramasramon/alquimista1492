@@ -15,7 +15,15 @@ import {
 import { PROVA_CARTA } from "@/content/public/textos";
 import { aturarMicroAr, iniciarMicroAr, nivellMicroAr } from "@/lib/microAr";
 import { useOrientacio } from "@/lib/orientacio";
-import { aturarSoCarta, iniciarSoCarta, sonarEsquerdaCarta, sonarObrirCarta, sonarTrencaCarta } from "@/lib/sorollCarta";
+import {
+  aturarMusicaCarta,
+  aturarSoCarta,
+  iniciarMusicaCarta,
+  iniciarSoCarta,
+  sonarEsquerdaCarta,
+  sonarObrirCarta,
+  sonarTrencaCarta,
+} from "@/lib/sorollCarta";
 import { llegirDecisioUbicacio } from "@/lib/ubicacio";
 
 /** Aquest mòbil ja ha fet la prova: no es repeteix en tornar a obrir l'app. */
@@ -91,6 +99,11 @@ export function ProvaCarta() {
       video.current.play().catch(() => {});
     }
   }, [camera, fase]);
+
+  // Amb la carta a les mans (o si s'han rendit), calla el so de fons i sona la música.
+  useEffect(() => {
+    if (fase === "segell") iniciarMusicaCarta();
+  }, [fase]);
 
   useEffect(() => {
     if (fase !== "cerca") return;
@@ -224,7 +237,16 @@ export function ProvaCarta() {
   if (jaFeta) return null;
 
   if (fase === "arriba") return <VistaCartaArribada onBuscar={buscar} onSaltar={acabar} />;
-  if (fase === "oberta") return <VistaCartaOberta onContinuar={() => setFase("validat")} />;
+  if (fase === "oberta") {
+    return (
+      <VistaCartaOberta
+        onContinuar={() => {
+          aturarMusicaCarta();
+          setFase("validat");
+        }}
+      />
+    );
+  }
 
   if (fase === "validat") {
     const noms = PROVA_CARTA.comprovacions;

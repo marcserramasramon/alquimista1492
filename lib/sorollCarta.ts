@@ -18,6 +18,11 @@ const URL_FONS = "/audio/carta/fons.mp3";
 /** Riure del primer cop que la carta s'escapa («funny child laughter» d'universfield). */
 const URL_RIURE = "/audio/carta/riure.mp3";
 const VOLUM_RIURE = 0.7;
+/** Música de quan atrapen la carta («toward the dream» de grand_project, els primers 10 s). */
+const URL_MUSICA = "/audio/carta/musica.mp3";
+const VOLUM_MUSICA = 0.3;
+const DURADA_MUSICA = 10;
+const FADE_MUSICA = 4;
 /** Paper que es desplega quan obren la carta («unfold a map» de freesound_community). */
 const URL_OBRIR = "/audio/carta/obrir.mp3";
 const VOLUM_OBRIR = 0.7;
@@ -42,6 +47,11 @@ let soroll: AudioBuffer | null = null;
 const sonsMoviment: Partial<Record<TipusMoviment, AudioBuffer>> = {};
 let riure: AudioBuffer | null = null;
 let obrir: AudioBuffer | null = null;
+let bufferMusica: AudioBuffer | null = null;
+let fonsGain: GainNode | null = null;
+/** Estat de la música: encara no, demanada però sense baixar, sonant o ja acabada. */
+let estatMusica: "espera" | "pendent" | "sonant" | "acabada" = "espera";
+let musica: { font: AudioBufferSourceNode; gain: GainNode } | null = null;
 let fonts: AudioBufferSourceNode[] = [];
 let tempsFons: ReturnType<typeof setTimeout> | null = null;
 
@@ -110,6 +120,15 @@ export function iniciarSoCarta() {
     const fons = ctx.createGain();
     fons.gain.value = 0;
     fons.connect(ctx.destination);
+    fonsGain = fons;
+    estatMusica = "espera";
+    void carregarSo(ctx, URL_MUSICA)
+      .then((buffer) => {
+        if (ctx !== context) return;
+        bufferMusica = buffer;
+        if (estatMusica === "pendent") engegarMusica();
+      })
+      .catch(() => {});
     void sonarFons(ctx, fons);
     cicleFons(ctx, fons);
 
@@ -167,6 +186,51 @@ function esclat(frequencia: number, durada: number, volum: number, tipus: Biquad
   font.stop(ctx.currentTime + durada);
 }
 
+function engegarMusica() {
+  if (!context || !bufferMusica) return;
+  const t = context.currentTime;
+  const font = context.createBufferSource();
+  font.buffer = bufferMusica;
+  const gain = context.createGain();
+  gain.gain.setValueAtTime(VOLUM_MUSICA, t);
+  gain.gain.setValueAtTime(VOLUM_MUSICA, t + DURADA_MUSICA - FADE_MUSICA);
+  gain.gain.linearRampToValueAtTime(0, t + DURADA_MUSICA);
+  font.connect(gain).connect(context.destination);
+  font.start(t);
+  font.stop(t + DURADA_MUSICA);
+  musica = { font, gain };
+  estatMusica = "sonant";
+}
+
+/** Han atrapat la carta: calla el so de fons i sona la música. Només una vegada. */
+export function iniciarMusicaCarta() {
+  if (!context || estatMusica !== "espera") return;
+  if (tempsFons) clearTimeout(tempsFons);
+  tempsFons = null;
+  if (fonsGain) {
+    const ara = context.currentTime;
+    fonsGain.gain.cancelScheduledValues(ara);
+    fonsGain.gain.setTargetAtTime(0, ara, 0.1);
+  }
+  estatMusica = "pendent";
+  engegarMusica();
+}
+
+/** Han tocat «Continuar» a la carta: si la música encara sona, s'apaga de seguida. */
+export function aturarMusicaCarta() {
+  estatMusica = "acabada";
+  if (!context || !musica) return;
+  const ara = context.currentTime;
+  musica.gain.gain.cancelScheduledValues(ara);
+  musica.gain.gain.setTargetAtTime(0, ara, 0.15);
+  try {
+    musica.font.stop(ara + 0.8);
+  } catch {
+    // Ja s'havia acabat.
+  }
+  musica = null;
+}
+
 function sonarUnCop(buffer: AudioBuffer | null, volum: number) {
   if (!context || !buffer) return;
   const font = context.createBufferSource();
@@ -218,6 +282,10 @@ export function aturarSoCarta() {
   delete sonsMoviment.lluny;
   riure = null;
   obrir = null;
+  bufferMusica = null;
+  fonsGain = null;
+  musica = null;
+  estatMusica = "espera";
   const ctx = context;
   context = null;
   soroll = null;

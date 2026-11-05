@@ -256,7 +256,7 @@ export const PROVA_CARTA = {
     noLaTrobo: "No la trobo",
   },
   segell: {
-    titol: "Només cedirà davant del nom del poble",
+    titol: "Només cedirà davant del nom del poble. Crideu «Sentfores!» (prova de micròfon)",
     titolTrencat: "El segell s'ha trencat!",
     tocar: "Toqueu el segell",
     demanant: "Accepteu el permís del micròfon",

@@ -260,7 +260,7 @@ Va després del consentiment d'ubicació i abans de triar equip (`/carta`). Els 
 
 - **Arribada:** Toqueu el botó i accepteu els permisos.
 - **Cerca:** Accepteu els permisos que us demani el mòbil / Gireu-vos cap a la dreta (o l'esquerra) / Apunteu el mòbil més amunt (o més avall) / Aquí la teniu! Toqueu la carta / El vent se l'ha endut! Torneu-la a buscar / Ara sí! Toqueu la carta.
-- **Segell:** Només cedirà davant del nom del poble. Toqueu el segell / Accepteu el permís del micròfon / Crideu ben fort: «Sentfores!». Un cop trencat: El segell s'ha trencat! Toqueu la carta per obrir-la.
+- **Segell:** Només cedirà davant del nom del poble. Crideu «Sentfores!» (prova de micròfon). Toqueu el segell / Accepteu el permís del micròfon / Crideu ben fort: «Sentfores!». Un cop trencat: El segell s'ha trencat! Toqueu la carta per obrir-la.
 - **Carta oberta:** Quan l'hàgiu llegida, toqueu «Continuar».
 - **Pantalla final:** Toqueu «Continuar» per triar el vostre equip.
 
