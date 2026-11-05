@@ -252,11 +252,15 @@ Va després del consentiment d'ubicació i abans de triar equip (`/carta`). Els 
 
 > Algú l'ha confiat al vent, i només es deixarà atrapar per qui sàpiga mirar.
 >
-> Busqueu un lloc amb espai per girar-vos i accepteu tots els permisos que us demani el mòbil.
+> Busqueu un lloc amb espai per girar-vos.
 
-**Cerca:** La carta voleia al vostre voltant. Gireu-vos i toqueu-la! / El vent se l'ha endut! Torneu-la a buscar.
+**Cartells guia:** cada pas en té un, fosc amb vora daurada perquè no es confongui amb un botó, que diu què cal fer.
 
-**Segell:** Només cedirà davant del nom del poble. Crideu ben fort: «Sentfores!»
+- **Arribada:** Toqueu el botó i accepteu els permisos.
+- **Cerca:** Accepteu els permisos que us demani el mòbil / Gireu-vos cap a la dreta (o l'esquerra) / Apunteu el mòbil més amunt (o més avall) / Aquí la teniu! Toqueu la carta / El vent se l'ha endut! Torneu-la a buscar / Ara sí! Toqueu la carta.
+- **Segell:** Només cedirà davant del nom del poble. Toqueu el segell / Accepteu el permís del micròfon / Crideu ben fort: «Sentfores!». Un cop trencat: El segell s'ha trencat! Toqueu la carta per obrir-la.
+- **Carta oberta:** Quan l'hàgiu llegida, toqueu «Continuar».
+- **Pantalla final:** Toqueu «Continuar» per triar el vostre equip.
 
 **Carta oberta**
 

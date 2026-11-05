@@ -5,11 +5,16 @@ import { dibuixaVora } from "@/components/ar/voraGuia";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
 import { ajustarVentCarta, sonarFugidaCarta } from "@/lib/sorollCarta";
 
+/** On és la carta respecte a on mira el mòbil: cap a on cal moure'l, o "vista" si ja es veu. */
+export type GuiaCarta = "dreta" | "esquerra" | "amunt" | "avall" | "vista" | "atrapada";
+
 interface Props {
   /** Lectura de la brúixola i la inclinació. */
   mirada: RefObject<Mirada | null>;
   /** Sense sensors: la mirada es mou arrossegant el dit. */
   arrossegar: boolean;
+  /** Canvia el que ha de dir el cartell; nul mentre la carta vola i no es pot atrapar. */
+  alGuia: (guia: GuiaCarta | null) => void;
   /** El vent s'ha endut la carta el primer cop que l'han tocada. */
   alFugir: () => void;
   /** La carta ja és a les mans del jugador. */
@@ -87,16 +92,16 @@ function suau(t: number) {
  * girar-se. El primer cop que la toquen, el vent se l'endú a una altra banda; el segon, l'atrapen.
  * És el 3D (WebGL) el que també es comprova aquí; si no n'hi ha, avisa amb `alError`.
  */
-export function EscenaCarta({ mirada, arrossegar, alFugir, alAtrapar, alError }: Props) {
+export function EscenaCarta({ mirada, arrossegar, alGuia, alFugir, alAtrapar, alError }: Props) {
   const canvas3D = useRef<HTMLCanvasElement>(null);
   const canvasVora = useRef<HTMLCanvasElement>(null);
   const arrossegarRef = useRef(arrossegar);
-  const callbacks = useRef({ alFugir, alAtrapar, alError });
+  const callbacks = useRef({ alGuia, alFugir, alAtrapar, alError });
 
   useEffect(() => {
     arrossegarRef.current = arrossegar;
-    callbacks.current = { alFugir, alAtrapar, alError };
-  }, [arrossegar, alFugir, alAtrapar, alError]);
+    callbacks.current = { alGuia, alFugir, alAtrapar, alError };
+  }, [arrossegar, alGuia, alFugir, alAtrapar, alError]);
 
   useEffect(() => {
     let desmuntat = false;
@@ -155,6 +160,13 @@ export function EscenaCarta({ mirada, arrossegar, alFugir, alAtrapar, alError }:
         let finsElev = 0;
         let desDe = 0;
 
+        let guiaActual: GuiaCarta | null = null;
+        const posarGuia = (guia: GuiaCarta | null) => {
+          if (guia === guiaActual) return;
+          guiaActual = guia;
+          callbacks.current.alGuia(guia);
+        };
+
         const posicio = new T.Vector3();
         const projectada = new T.Vector3();
 
@@ -176,9 +188,11 @@ export function EscenaCarta({ mirada, arrossegar, alFugir, alAtrapar, alError }:
             finsElev = -3;
             sonarFugidaCarta();
             navigator.vibrate?.(120);
+            posarGuia(null);
             callbacks.current.alFugir();
           } else {
             fase = "atrapada";
+            posarGuia("atrapada");
             navigator.vibrate?.([40, 40, 80]);
             ajustarVentCarta(0.04, 0);
           }
@@ -278,6 +292,11 @@ export function EscenaCarta({ mirada, arrossegar, alFugir, alAtrapar, alError }:
             dibuixaVora(ctx, amplada, alcada, dx, 1, 1300, ara, OR);
             const prop = 1 - Math.abs(dx) / 180;
             ajustarVentCarta(0.12 + prop * prop * 0.75, Math.sin(dx * RAD));
+            const dy = elevCarta - lectura.elevacio;
+            const meitatH = Math.atan(Math.tan((camera.fov / 2) * RAD) * camera.aspect) / RAD;
+            if (Math.abs(dx) > meitatH) posarGuia(dx > 0 ? "dreta" : "esquerra");
+            else if (Math.abs(dy) > camera.fov / 2 - 4) posarGuia(dy > 0 ? "amunt" : "avall");
+            else posarGuia("vista");
           }
         };
         raf = requestAnimationFrame(bucle);

@@ -21,6 +21,7 @@ import { VistaUbicacio } from "@/components/vistes/VistaUbicacio";
 import { VistaBenvinguda } from "@/components/vistes/VistaBenvinguda";
 import {
   VistaCartaArribada,
+  VistaCartaCerca,
   VistaCartaOberta,
   VistaCartaSegell,
   VistaTelefonValidat,
@@ -546,7 +547,29 @@ export const PANTALLES: Pantalla[] = [
     descripcio: "El segell a mig esquerdar. A la partida, a sobre de la càmera.",
     render: () => (
       <div className="fixed inset-0 bg-black">
-        <VistaCartaSegell progres={0.55} micro="actiu" potTrencarAMa onTocarSegell={noop} onTrencarAMa={noop} />
+        <VistaCartaSegell progres={0.55} micro="actiu" potTrencarAMa onTocarSegell={noop} onTrencarAMa={noop} onObrir={noop} />
+      </div>
+    ),
+  },
+  {
+    id: "carta-segell-trencat",
+    grup: "entrada",
+    titol: "Carta · segell trencat",
+    descripcio: "La carta espera que la toquin per obrir-se.",
+    render: () => (
+      <div className="fixed inset-0 bg-black">
+        <VistaCartaSegell progres={1} micro="actiu" trencat potTrencarAMa={false} onTocarSegell={noop} onTrencarAMa={noop} onObrir={noop} />
+      </div>
+    ),
+  },
+  {
+    id: "carta-cerca",
+    grup: "entrada",
+    titol: "Carta · buscant-la",
+    descripcio: "Els cartells sobre la càmera: cap on girar i quan tocar.",
+    render: () => (
+      <div className="fixed inset-0 bg-black">
+        <VistaCartaCerca guia="dreta" fugida={false} esperantPermisos={false} arrossegar={false} potRendirSe={false} onRendirSe={noop} />
       </div>
     ),
   },

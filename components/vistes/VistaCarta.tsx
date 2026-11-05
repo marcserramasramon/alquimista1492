@@ -1,11 +1,24 @@
 "use client";
 
+import type { GuiaCarta } from "@/components/ar/carta/EscenaCarta";
 import { Pantalla } from "@/components/ui/Pantalla";
 import { SegellCera } from "@/components/ui/SegellCera";
 import { MISSATGE_SECRET, PROVA_CARTA } from "@/content/public/textos";
 
 /** Document amb la instal·lació i els permisos (public/configuracio.html). */
 const URL_CONFIGURACIO = "/configuracio.html";
+
+/** Cartell que diu què s'ha de fer ara. Hi és a tots els passos de la prova. */
+function CartellGuia({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <p
+      aria-live="polite"
+      className={`w-full max-w-md rounded-2xl border-[3px] border-gold bg-ink px-4 py-3 text-center text-xl font-extrabold leading-snug text-paper ${className}`}
+    >
+      {children}
+    </p>
+  );
+}
 
 /** 1. Ha arribat una carta: explica la prova i demana els permisos en tocar el botó. */
 export function VistaCartaArribada({ onBuscar, onSaltar }: { onBuscar: () => void; onSaltar: () => void }) {
@@ -20,7 +33,8 @@ export function VistaCartaArribada({ onBuscar, onSaltar }: { onBuscar: () => voi
           </p>
         ))}
       </div>
-      <div className="flex flex-col gap-4 pt-6">
+      <div className="flex flex-col items-center gap-4 pt-6">
+        <CartellGuia>{PROVA_CARTA.arribada.guia}</CartellGuia>
         <button type="button" onClick={onBuscar} className="btn btn-primari">
           {PROVA_CARTA.arribada.boto}
         </button>
@@ -32,34 +46,43 @@ export function VistaCartaArribada({ onBuscar, onSaltar }: { onBuscar: () => voi
   );
 }
 
-/** 2. Rètols sobre la càmera mentre busquen la carta. */
+/** 2. Cartells sobre la càmera mentre busquen la carta. */
 export function VistaCartaCerca({
+  guia,
   fugida,
+  esperantPermisos,
   arrossegar,
   potRendirSe,
   onRendirSe,
 }: {
+  /** On és la carta respecte a on mira el mòbil (nul mentre vola o encara no ha aparegut). */
+  guia: GuiaCarta | null;
+  /** El vent ja se l'ha endut una vegada. */
   fugida: boolean;
+  esperantPermisos: boolean;
   arrossegar: boolean;
   potRendirSe: boolean;
   onRendirSe: () => void;
 }) {
+  const textos = PROVA_CARTA.cerca;
+  let cartell: string = textos.permisos;
+  if (!esperantPermisos) {
+    if (guia === "vista") cartell = fugida ? textos.vistaDeNou : textos.vista;
+    else if (guia) cartell = textos[guia];
+    else if (fugida) cartell = textos.fugida;
+  }
   return (
     <>
       <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))]">
-        <p className="rounded-xl bg-black/65 px-4 py-2 text-center text-lg font-bold text-paper">
-          {fugida ? PROVA_CARTA.cerca.fugida : PROVA_CARTA.cerca.inici}
-        </p>
+        <CartellGuia>{cartell}</CartellGuia>
         {arrossegar && (
-          <p className="rounded-xl bg-black/65 px-3 py-2 text-center text-sm font-bold text-paper">
-            {PROVA_CARTA.cerca.arrossegar}
-          </p>
+          <p className="rounded-xl bg-black/65 px-3 py-2 text-center text-sm font-bold text-paper">{textos.arrossegar}</p>
         )}
       </div>
       {potRendirSe && (
         <div className="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] mx-auto w-full max-w-md px-4">
           <button type="button" onClick={onRendirSe} className="btn btn-fosc">
-            {PROVA_CARTA.cerca.noLaTrobo}
+            {textos.noLaTrobo}
           </button>
         </div>
       )}
@@ -76,7 +99,7 @@ const ESQUERDES = [
 
 export type EstatMicroCarta = "esperant" | "demanant" | "actiu" | "no";
 
-/** 3. La carta atrapada: el segell s'esquerda a mesura que criden el nom del poble. */
+/** 3. La carta atrapada: el segell s'esquerda quan criden el nom del poble i, trencat, es toca per obrir. */
 export function VistaCartaSegell({
   progres,
   nivell = 0,
@@ -85,6 +108,7 @@ export function VistaCartaSegell({
   potTrencarAMa,
   onTocarSegell,
   onTrencarAMa,
+  onObrir,
 }: {
   /** Quant s'ha esquerdat el segell (0-1). */
   progres: number;
@@ -95,54 +119,86 @@ export function VistaCartaSegell({
   potTrencarAMa: boolean;
   onTocarSegell: () => void;
   onTrencarAMa: () => void;
+  onObrir: () => void;
 }) {
+  const textos = PROVA_CARTA.segell;
   const tremolor = Math.min(1, nivell * 4) * 7;
+  const tocable = trencat || micro === "esperant";
+
+  let cartell: string = textos.tocar;
+  if (trencat) cartell = textos.obrir;
+  else if (micro === "demanant") cartell = textos.demanant;
+  else if (micro === "actiu") cartell = textos.cridar;
+  else if (micro === "no") cartell = textos.senseMicro;
+
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-black/55 px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <p className="text-center text-3xl font-bold text-paper">{trencat ? textos.titolTrencat : textos.titol}</p>
+
       <button
         type="button"
-        onClick={onTocarSegell}
-        disabled={micro !== "esperant"}
-        aria-label={PROVA_CARTA.segell.tocar}
-        className="relative flex aspect-[3/2] w-full max-w-sm animate-segellar items-center justify-center rounded-2xl border-[3px] border-ink bg-[#ead9b0] shadow-[0_6px_0_var(--ink)]"
+        onClick={trencat ? onObrir : onTocarSegell}
+        disabled={!tocable}
+        aria-label={cartell}
+        className="relative flex aspect-[3/2] w-full max-w-sm animate-segellar items-center justify-center overflow-hidden rounded-2xl border-[3px] border-ink bg-[#ead9b0] shadow-[0_6px_0_var(--ink)]"
       >
-        <span
-          className={`relative block w-36 transition-opacity duration-500 ${trencat ? "scale-125 opacity-0" : ""}`}
-          style={{ transform: trencat ? undefined : `translate(${Math.sin(progres * 90) * tremolor}px, ${Math.cos(progres * 70) * tremolor * 0.6}px)` }}
-        >
-          <SegellCera className="w-full" />
-          <svg viewBox="0 0 120 120" className="absolute inset-0 h-full w-full" aria-hidden>
-            {ESQUERDES.map((d, i) => {
-              const tram = Math.max(0, Math.min(1, progres * ESQUERDES.length - i));
-              return (
-                <path
-                  key={d}
-                  d={d}
-                  pathLength={1}
-                  fill="none"
-                  stroke="#1b0604"
-                  strokeWidth={3}
-                  strokeLinecap="round"
-                  strokeDasharray="1"
-                  strokeDashoffset={1 - tram}
-                />
-              );
-            })}
-          </svg>
-        </span>
+        {/* Plecs del sobre */}
+        <svg viewBox="0 0 150 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full text-ink/45" aria-hidden>
+          <path
+            d="M0 0 L75 56 L150 0 M0 100 L56 42 M150 100 L94 42"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1}
+            vectorEffect="non-scaling-stroke"
+          />
+        </svg>
+
+        {trencat ? (
+          // El segell partit en dos, i la carta batega perquè es vegi que ara es pot tocar.
+          <>
+            <span className="absolute inset-2 animate-pulse rounded-xl border-4 border-gold" aria-hidden />
+            <span className="relative block w-36">
+              <span className="block -translate-x-4 -rotate-12 [clip-path:polygon(0_0,48%_0,56%_38%,44%_62%,52%_100%,0_100%)]">
+                <SegellCera className="w-full" />
+              </span>
+              <span className="absolute inset-0 block translate-x-4 rotate-12 [clip-path:polygon(48%_0,100%_0,100%_100%,52%_100%,44%_62%,56%_38%)]">
+                <SegellCera className="w-full" />
+              </span>
+            </span>
+          </>
+        ) : (
+          <span
+            className="relative block w-36"
+            style={{ transform: `translate(${Math.sin(progres * 90) * tremolor}px, ${Math.cos(progres * 70) * tremolor * 0.6}px)` }}
+          >
+            <SegellCera className="w-full" />
+            <svg viewBox="0 0 120 120" className="absolute inset-0 h-full w-full" aria-hidden>
+              {ESQUERDES.map((d, i) => {
+                const tram = Math.max(0, Math.min(1, progres * ESQUERDES.length - i));
+                return (
+                  <path
+                    key={d}
+                    d={d}
+                    pathLength={1}
+                    fill="none"
+                    stroke="#1b0604"
+                    strokeWidth={3}
+                    strokeLinecap="round"
+                    strokeDasharray="1"
+                    strokeDashoffset={1 - tram}
+                  />
+                );
+              })}
+            </svg>
+          </span>
+        )}
       </button>
 
-      <p className="text-center text-3xl font-bold text-paper">{PROVA_CARTA.segell.titol}</p>
-      <p aria-live="polite" className="min-h-14 text-center text-lg font-bold text-paper">
-        {micro === "esperant" && PROVA_CARTA.segell.tocar}
-        {micro === "demanant" && PROVA_CARTA.segell.demanant}
-        {micro === "actiu" && PROVA_CARTA.segell.cridar}
-        {micro === "no" && PROVA_CARTA.segell.senseMicro}
-      </p>
+      <CartellGuia>{cartell}</CartellGuia>
 
       {potTrencarAMa && !trencat && (
         <button type="button" onClick={onTrencarAMa} className="btn btn-primari max-w-md">
-          {PROVA_CARTA.segell.trencarAMa}
+          {textos.trencarAMa}
         </button>
       )}
     </div>
@@ -152,15 +208,16 @@ export function VistaCartaSegell({
 /** 4. La carta oberta: només un tast; el missatge sencer el llegiran després d'entrar a l'equip. */
 export function VistaCartaOberta({ onContinuar }: { onContinuar: () => void }) {
   return (
-    <Pantalla className="justify-center gap-8">
-      <div className="targeta flex animate-segellar flex-col gap-6 bg-[#fffdf7] p-6 text-center">
-        {PROVA_CARTA.oberta.map((p) => (
+    <Pantalla className="items-center justify-center gap-6">
+      <div className="targeta flex w-full animate-segellar flex-col gap-6 bg-[#fffdf7] p-6 text-center">
+        {PROVA_CARTA.oberta.paragrafs.map((p) => (
           <p key={p} className="font-display text-3xl font-bold leading-snug">
             {p}
           </p>
         ))}
         <p className="text-right font-display text-3xl font-extrabold italic">{MISSATGE_SECRET.signatura}</p>
       </div>
+      <CartellGuia className="animate-entrar [animation-delay:500ms]">{PROVA_CARTA.oberta.guia}</CartellGuia>
       <button type="button" onClick={onContinuar} className="btn btn-primari animate-entrar [animation-delay:500ms]">
         Continuar →
       </button>
@@ -205,7 +262,8 @@ export function VistaTelefonValidat({
         <p className="text-base text-ink-soft">{PROVA_CARTA.validat.so}</p>
       </div>
 
-      <div className="flex flex-col gap-4 pt-6">
+      <div className="flex flex-col items-center gap-4 pt-6">
+        <CartellGuia>{PROVA_CARTA.validat.guia}</CartellGuia>
         <button type="button" onClick={onContinuar} className="btn btn-primari">
           {PROVA_CARTA.validat.continuar}
         </button>

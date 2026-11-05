@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { EscenaCarta } from "@/components/ar/carta/EscenaCarta";
+import { EscenaCarta, type GuiaCarta } from "@/components/ar/carta/EscenaCarta";
 import type { ContornPersones } from "@/components/ar/foc/contorn";
 import {
   VistaCartaArribada,
@@ -57,6 +57,7 @@ export function ProvaCarta() {
   const [tresD, setTresD] = useState<Resultat>("pendent");
   const [persones, setPersones] = useState<Resultat>("pendent");
   const [microOk, setMicroOk] = useState<Resultat>("pendent");
+  const [guia, setGuia] = useState<GuiaCarta | null>(null);
   const [fugida, setFugida] = useState(false);
   const [potRendirSe, setPotRendirSe] = useState(false);
   const [micro, setMicro] = useState<EstatMicroCarta>("esperant");
@@ -159,12 +160,14 @@ export function ProvaCarta() {
     sonarTrencaCarta();
     navigator.vibrate?.([80, 40, 160]);
     aturarMicroAr();
-    setTimeout(() => {
-      flux.current?.getTracks().forEach((t) => t.stop());
-      flux.current = null;
-      setFase("oberta");
-    }, 800);
   }, []);
+
+  /** Amb el segell trencat, la carta s'obre quan la toquen. */
+  function obrir() {
+    flux.current?.getTracks().forEach((t) => t.stop());
+    flux.current = null;
+    setFase("oberta");
+  }
 
   // El crit: com el dels extres, ha de ser molt més fort que el soroll de fons i sostingut.
   useEffect(() => {
@@ -254,12 +257,15 @@ export function ProvaCarta() {
           <EscenaCarta
             mirada={mirada}
             arrossegar={sensorsFallen}
+            alGuia={setGuia}
             alFugir={alFugir}
             alAtrapar={alAtrapar}
             alError={alError3D}
           />
           <VistaCartaCerca
+            guia={guia}
             fugida={fugida}
+            esperantPermisos={camera === "pendent" || estatSensors === "inactiu"}
             arrossegar={sensorsFallen}
             potRendirSe={potRendirSe}
             onRendirSe={() => setFase("segell")}
@@ -275,6 +281,7 @@ export function ProvaCarta() {
           potTrencarAMa={potTrencarAMa}
           onTocarSegell={tocarSegell}
           onTrencarAMa={trencar}
+          onObrir={obrir}
         />
       )}
     </div>
