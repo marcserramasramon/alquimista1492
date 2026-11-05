@@ -45,6 +45,7 @@ supabase/.temp/
 
 # cartells exportats (porten els codis de les fites)
 /cartells-html/
+/codis-equips/
 /cartells-pdf/
 
 # còpies dels vídeos originals (pesades)

@@ -46,7 +46,7 @@ export const POEMES_CARTELLS: Record<string, PoemaCartell> = {
     fons: "/images/cartells/fons/planes-bones.jpg",
     paragrafs: [
       "L'essència ancestral reposa en la matèria de la terra, les pedres i el fang. Custodiats pel guardià de pedra, esperen revelar el secret a qui sàpiga escoltar-les. La matèria no es deixa veure per qui no sigui confident.",
-      "El saber flota a l'aire. Entre les paraules que veureu davant vostre, només una és veritable. Trieu la paraula que farà que la terra us reconegui com a pròpia: el vincle sagrat que ens uneix i que mai abandona qui la pronuncia.",
+      "El saber flota a l'aire. Entre les paraules que veureu davant vostre, només una és veritable. Trieu la paraula que farà que la terra us reconegui com a pròpia: Digues amic, el vincle sagrat que ens uneix i que mai abandona qui la pronuncia.",
     ],
   },
   // Cartell del pas previ de Planes Bones (check-in, Mas Vinyals): portal de runes.
