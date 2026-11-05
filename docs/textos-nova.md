@@ -246,7 +246,7 @@ Botons: **No, seguim buscant** · **Sí, mostra-la**
 
 ## 7. Prova del telèfon — la carta
 
-Va després del consentiment d'ubicació i abans de triar equip (`/carta`). Els textos són a `PROVA_CARTA`. No gasta el missatge secret (§ 1), que es llegeix després d'entrar a l'equip: només n'avança la primera frase.
+Va després del consentiment d'ubicació i abans de triar equip (`/carta`). Els textos són a `PROVA_CARTA`. La carta oberta mostra el missatge secret sencer (§ 1), sense veu, i afegeix una última frase.
 
 **Arribada — Us ha arribat una carta**
 
@@ -264,7 +264,7 @@ Va després del consentiment d'ubicació i abans de triar equip (`/carta`). Els 
 
 **Carta oberta**
 
-> Si llegiu aquestes línies, és que us he triat.
+> (Missatge secret sencer, § 1)
 >
 > Ens veiem al Pla del Masset.
 >

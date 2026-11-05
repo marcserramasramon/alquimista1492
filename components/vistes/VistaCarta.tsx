@@ -1,6 +1,7 @@
 "use client";
 
 import type { GuiaCarta } from "@/components/ar/carta/EscenaCarta";
+import { Narracio } from "@/components/ui/Narracio";
 import { Pantalla } from "@/components/ui/Pantalla";
 import { SegellCera } from "@/components/ui/SegellCera";
 import { MISSATGE_SECRET, PROVA_CARTA } from "@/content/public/textos";
@@ -205,18 +206,20 @@ export function VistaCartaSegell({
   );
 }
 
-/** 4. La carta oberta: només un tast; el missatge sencer el llegiran després d'entrar a l'equip. */
+/** 4. La carta oberta: el missatge secret del joc, sense veu, acabat amb la cita al Pla del Masset. */
 export function VistaCartaOberta({ onContinuar }: { onContinuar: () => void }) {
   return (
-    <Pantalla className="items-center justify-center gap-6">
-      <div className="targeta flex w-full animate-segellar flex-col gap-6 bg-[#fffdf7] p-6 text-center">
-        {PROVA_CARTA.oberta.paragrafs.map((p) => (
-          <p key={p} className="font-display text-3xl font-bold leading-snug">
-            {p}
-          </p>
-        ))}
-        <p className="text-right font-display text-3xl font-extrabold italic">{MISSATGE_SECRET.signatura}</p>
-      </div>
+    <Pantalla className="items-center gap-6">
+      <Narracio
+        text={{
+          titol: MISSATGE_SECRET.titol,
+          paragrafs: [...MISSATGE_SECRET.paragrafs, PROVA_CARTA.oberta.final],
+        }}
+        etiqueta="missatge secret"
+        className="w-full animate-segellar"
+      >
+        <p className="mt-6 text-right font-display text-4xl font-extrabold italic">{MISSATGE_SECRET.signatura}</p>
+      </Narracio>
       <CartellGuia className="animate-entrar [animation-delay:500ms]">{PROVA_CARTA.oberta.guia}</CartellGuia>
       <button type="button" onClick={onContinuar} className="btn btn-primari animate-entrar [animation-delay:500ms]">
         Continuar →

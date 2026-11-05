@@ -265,7 +265,7 @@ export const PROVA_CARTA = {
     obrir: "Toqueu la carta per obrir-la",
   },
   oberta: {
-    paragrafs: ["Si llegiu aquestes línies, és que us he triat.", "Ens veiem al Pla del Masset."],
+    final: "Ens veiem al Pla del Masset.",
     guia: "Quan l'hàgiu llegida, toqueu «Continuar»",
   },
   validat: {
