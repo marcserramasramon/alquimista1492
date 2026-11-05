@@ -73,21 +73,17 @@ export function VistaCartaCerca({
     else if (fugida) cartell = textos.fugida;
   }
   return (
-    <>
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center gap-2 px-5 pt-[max(1rem,env(safe-area-inset-top))]">
-        <CartellGuia>{cartell}</CartellGuia>
-        {arrossegar && (
-          <p className="rounded-xl bg-black/65 px-3 py-2 text-center text-sm font-bold text-paper">{textos.arrossegar}</p>
-        )}
-      </div>
-      {potRendirSe && (
-        <div className="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] mx-auto w-full max-w-md px-4">
-          <button type="button" onClick={onRendirSe} className="btn btn-fosc">
-            {textos.noLaTrobo}
-          </button>
-        </div>
+    <div className="pointer-events-none absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] mx-auto flex w-full max-w-md flex-col items-center gap-3 px-5">
+      {arrossegar && (
+        <p className="rounded-xl bg-black/65 px-3 py-2 text-center text-sm font-bold text-paper">{textos.arrossegar}</p>
       )}
-    </>
+      <CartellGuia>{cartell}</CartellGuia>
+      {potRendirSe && (
+        <button type="button" onClick={onRendirSe} className="btn btn-fosc pointer-events-auto">
+          {textos.noLaTrobo}
+        </button>
+      )}
+    </div>
   );
 }
 
