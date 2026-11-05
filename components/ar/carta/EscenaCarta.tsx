@@ -26,8 +26,8 @@ interface Props {
 const DURADA_FUGIDA_MS = 1100;
 const DURADA_ATRAPADA_MS = 650;
 const DISTANCIA = 2.2;
-/** Mentre vola, la carta va i ve fins aquí. Cada viatge dura el mateix que el seu so. */
-const DISTANCIA_LLUNY = 3.4;
+/** Mentre vola, la carta reposa en aquestes distàncies. Cada viatge dura el mateix que el seu so. */
+const POSICIONS_REPOS = [DISTANCIA, DISTANCIA * 2, DISTANCIA * 3];
 const DURADA_ALLUNYAR_MS = 890;
 const DURADA_APROPAR_MS = 1630;
 const AMPLE_CARTA = 0.62;
@@ -261,12 +261,14 @@ export function EscenaCarta({ mirada, arrossegar, alGuia, alFugir, alAtrapar, al
           let distancia = distBase;
           let gir = 0;
           if (fase === "vola") {
-            // Va i ve: s'allunya, s'espera, s'acosta, s'espera. Cada viatge sona una vegada.
+            // Salta a una altra posició de repòs, s'espera i torna a saltar. Cada viatge sona una vegada.
             if (!viatge && ara >= properViatge) {
-              const marxa = distBase < DISTANCIA_LLUNY;
+              const altres = POSICIONS_REPOS.filter((d) => d !== distBase);
+              const fins = altres[Math.floor(Math.random() * altres.length)];
+              const marxa = fins > distBase;
               viatge = {
                 des: distBase,
-                fins: marxa ? DISTANCIA_LLUNY : DISTANCIA,
+                fins,
                 inici: ara,
                 durada: marxa ? DURADA_ALLUNYAR_MS : DURADA_APROPAR_MS,
               };
@@ -276,6 +278,7 @@ export function EscenaCarta({ mirada, arrossegar, alGuia, alFugir, alAtrapar, al
               const t = Math.min(1, (ara - viatge.inici) / viatge.durada);
               distBase = viatge.des + (viatge.fins - viatge.des) * suau(t);
               if (t >= 1) {
+                distBase = viatge.fins;
                 viatge = null;
                 properViatge = ara + 1500 + Math.random() * 2000;
               }
