@@ -18,9 +18,9 @@ const URL_FONS = "/audio/carta/fons.mp3";
 /** Riure del primer cop que la carta s'escapa («funny child laughter» d'universfield). */
 const URL_RIURE = "/audio/carta/riure.mp3";
 const VOLUM_RIURE = 0.7;
-/** Música de quan atrapen la carta («toward the dream» de grand_project, els primers 10 s). */
+/** Música de quan obren la carta («toward the dream» de grand_project, els primers 10 s). */
 const URL_MUSICA = "/audio/carta/musica.mp3";
-const VOLUM_MUSICA = 0.3;
+const VOLUM_MUSICA = 0.55;
 const DURADA_MUSICA = 10;
 const FADE_MUSICA = 4;
 /** Paper que es desplega quan obren la carta («unfold a map» de freesound_community). */
@@ -49,9 +49,8 @@ let riure: AudioBuffer | null = null;
 let obrir: AudioBuffer | null = null;
 let bufferMusica: AudioBuffer | null = null;
 let fonsGain: GainNode | null = null;
-/** Estat de la música: encara no, demanada però sense baixar, sonant o ja acabada. */
-let estatMusica: "espera" | "pendent" | "sonant" | "acabada" = "espera";
-let musica: { font: AudioBufferSourceNode; gain: GainNode } | null = null;
+/** Estat de la música: encara no, demanada però sense baixar, o ja engegada. */
+let estatMusica: "espera" | "pendent" | "sonant" = "espera";
 let fonts: AudioBufferSourceNode[] = [];
 let tempsFons: ReturnType<typeof setTimeout> | null = null;
 
@@ -198,13 +197,12 @@ function engegarMusica() {
   font.connect(gain).connect(context.destination);
   font.start(t);
   font.stop(t + DURADA_MUSICA);
-  musica = { font, gain };
   estatMusica = "sonant";
 }
 
-/** Han atrapat la carta: calla el so de fons i sona la música. Només una vegada. */
-export function iniciarMusicaCarta() {
-  if (!context || estatMusica !== "espera") return;
+/** Han atrapat la carta: calla el so de fons, també perquè el micròfon no el senti en cridar. */
+export function callarFonsCarta() {
+  if (!context) return;
   if (tempsFons) clearTimeout(tempsFons);
   tempsFons = null;
   if (fonsGain) {
@@ -212,23 +210,13 @@ export function iniciarMusicaCarta() {
     fonsGain.gain.cancelScheduledValues(ara);
     fonsGain.gain.setTargetAtTime(0, ara, 0.1);
   }
-  estatMusica = "pendent";
-  engegarMusica();
 }
 
-/** Han tocat «Continuar» a la carta: si la música encara sona, s'apaga de seguida. */
-export function aturarMusicaCarta() {
-  estatMusica = "acabada";
-  if (!context || !musica) return;
-  const ara = context.currentTime;
-  musica.gain.gain.cancelScheduledValues(ara);
-  musica.gain.gain.setTargetAtTime(0, ara, 0.15);
-  try {
-    musica.font.stop(ara + 0.8);
-  } catch {
-    // Ja s'havia acabat.
-  }
-  musica = null;
+/** Han obert la carta: sona la música sencera. Només una vegada. */
+export function iniciarMusicaCarta() {
+  if (!context || estatMusica !== "espera") return;
+  estatMusica = "pendent";
+  engegarMusica();
 }
 
 function sonarUnCop(buffer: AudioBuffer | null, volum: number) {
@@ -284,7 +272,6 @@ export function aturarSoCarta() {
   obrir = null;
   bufferMusica = null;
   fonsGain = null;
-  musica = null;
   estatMusica = "espera";
   const ctx = context;
   context = null;
