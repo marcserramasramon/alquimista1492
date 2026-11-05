@@ -5,16 +5,20 @@
  *
  * - De fons (public/audio/carta/fons.mp3): sona a cicles, amb entrada i sortida progressives i un
  *   silenci entre mig.
- * - Moviment de la carta (moviment-aprop.mp3 i moviment-lluny.mp3): sonen en bucle i es fonen l'un amb
- *   l'altre segons si la carta és a prop o lluny d'on mira el mòbil, i a la banda on és.
+ * - Moviment de la carta (moviment-aprop.mp3 i moviment-lluny.mp3): sonen una sola vegada cada cop que
+ *   la carta s'acosta o s'allunya, de la banda on és.
  * - La ventada que s'endú la carta i el segell que es trenca es sintetitzen amb Web Audio.
  *
  * S'ha d'iniciar dins d'un gest de l'usuari (els navegadors mòbils no deixen sonar abans).
  */
 
+export type TipusMoviment = "aprop" | "lluny";
+
 const URL_FONS = "/audio/carta/fons.mp3";
-const URL_APROP = "/audio/carta/moviment-aprop.mp3";
-const URL_LLUNY = "/audio/carta/moviment-lluny.mp3";
+const URL_MOVIMENT: Record<TipusMoviment, string> = {
+  aprop: "/audio/carta/moviment-aprop.mp3",
+  lluny: "/audio/carta/moviment-lluny.mp3",
+};
 
 /** Volum del so de fons, de 0 a 1. */
 const VOLUM_FONS = 0.2;
@@ -29,7 +33,7 @@ const VOLUM_COPS = 0.4;
 
 let context: AudioContext | null = null;
 let soroll: AudioBuffer | null = null;
-let moviment: { aprop: GainNode; lluny: GainNode; panner: StereoPannerNode | null } | null = null;
+const sonsMoviment: Partial<Record<TipusMoviment, AudioBuffer>> = {};
 let fonts: AudioBufferSourceNode[] = [];
 let tempsFons: ReturnType<typeof setTimeout> | null = null;
 
@@ -42,11 +46,25 @@ function bufferSoroll(ctx: AudioContext): AudioBuffer {
   return buffer;
 }
 
-/** Baixa un so i el fa sonar en bucle cap a `desti`. Si no es pot carregar, la prova continua sense. */
-async function sonarEnBucle(ctx: AudioContext, url: string, desti: AudioNode) {
+async function carregarSo(ctx: AudioContext, url: string): Promise<AudioBuffer> {
+  const resposta = await fetch(url);
+  return ctx.decodeAudioData(await resposta.arrayBuffer());
+}
+
+/** Baixa un so de moviment. Si no es pot carregar, la prova continua sense. */
+async function carregarMoviment(ctx: AudioContext, tipus: TipusMoviment) {
   try {
-    const resposta = await fetch(url);
-    const buffer = await ctx.decodeAudioData(await resposta.arrayBuffer());
+    const buffer = await carregarSo(ctx, URL_MOVIMENT[tipus]);
+    if (ctx === context) sonsMoviment[tipus] = buffer;
+  } catch {
+    // Sense aquest so.
+  }
+}
+
+/** Baixa el so de fons i el fa sonar en bucle cap a `desti` (el volum el porten els cicles). */
+async function sonarFons(ctx: AudioContext, desti: AudioNode) {
+  try {
+    const buffer = await carregarSo(ctx, URL_FONS);
     if (ctx !== context) return;
     const font = ctx.createBufferSource();
     font.buffer = buffer;
@@ -84,48 +102,34 @@ export function iniciarSoCarta() {
     const fons = ctx.createGain();
     fons.gain.value = 0;
     fons.connect(ctx.destination);
-    void sonarEnBucle(ctx, URL_FONS, fons);
+    void sonarFons(ctx, fons);
     cicleFons(ctx, fons);
 
-    const aprop = ctx.createGain();
-    const lluny = ctx.createGain();
-    aprop.gain.value = 0;
-    lluny.gain.value = 0;
-    let panner: StereoPannerNode | null = null;
-    if (typeof ctx.createStereoPanner === "function") {
-      panner = ctx.createStereoPanner();
-      panner.connect(ctx.destination);
-    }
-    aprop.connect(panner ?? ctx.destination);
-    lluny.connect(panner ?? ctx.destination);
-    moviment = { aprop, lluny, panner };
-    void sonarEnBucle(ctx, URL_APROP, aprop);
-    void sonarEnBucle(ctx, URL_LLUNY, lluny);
+    void carregarMoviment(ctx, "aprop");
+    void carregarMoviment(ctx, "lluny");
   } catch {
     context = null;
-    moviment = null;
   }
 }
 
-/**
- * Moviment de la carta: `proximitat` és 1 si es mira just cap a ella i 0 si és a l'esquena, i `pan` la
- * banda on és (-1 esquerra, 1 dreta).
- */
-export function ajustarMovimentCarta(proximitat: number, pan: number) {
-  if (!context || !moviment) return;
-  const ara = context.currentTime;
-  const prop = Math.max(0, Math.min(1, (proximitat - 0.5) * 2));
-  moviment.aprop.gain.setTargetAtTime(prop * VOLUM_MOVIMENT, ara, 0.1);
-  moviment.lluny.gain.setTargetAtTime((1 - prop) * VOLUM_MOVIMENT, ara, 0.1);
-  moviment.panner?.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), ara, 0.1);
-}
-
-/** La carta ja no es mou: només queda el so de fons. */
-export function silenciarMovimentCarta() {
-  if (!context || !moviment) return;
-  const ara = context.currentTime;
-  moviment.aprop.gain.setTargetAtTime(0, ara, 0.1);
-  moviment.lluny.gain.setTargetAtTime(0, ara, 0.1);
+/** La carta s'acosta o s'allunya: el so sona una vegada, de la banda on és (-1 esquerra, 1 dreta). */
+export function sonarMovimentCarta(tipus: TipusMoviment, pan: number) {
+  const buffer = sonsMoviment[tipus];
+  if (!context || !buffer) return;
+  const ctx = context;
+  const font = ctx.createBufferSource();
+  font.buffer = buffer;
+  const gain = ctx.createGain();
+  gain.gain.value = VOLUM_MOVIMENT;
+  font.connect(gain);
+  if (typeof ctx.createStereoPanner === "function") {
+    const panner = ctx.createStereoPanner();
+    panner.pan.value = Math.max(-1, Math.min(1, pan));
+    gain.connect(panner).connect(ctx.destination);
+  } else {
+    gain.connect(ctx.destination);
+  }
+  font.start();
 }
 
 /** Esclat curt de soroll filtrat: la base de la ventada i del segell. */
@@ -172,7 +176,8 @@ export function aturarSoCarta() {
     }
   }
   fonts = [];
-  moviment = null;
+  delete sonsMoviment.aprop;
+  delete sonsMoviment.lluny;
   const ctx = context;
   context = null;
   soroll = null;

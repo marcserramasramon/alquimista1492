@@ -3,7 +3,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { dibuixaVora } from "@/components/ar/voraGuia";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
-import { ajustarMovimentCarta, silenciarMovimentCarta, sonarFugidaCarta } from "@/lib/sorollCarta";
+import { sonarFugidaCarta, sonarMovimentCarta, type TipusMoviment } from "@/lib/sorollCarta";
 
 /** On és la carta respecte a on mira el mòbil: cap a on cal moure'l, o "vista" si ja es veu. */
 export type GuiaCarta = "dreta" | "esquerra" | "amunt" | "avall" | "vista" | "atrapada";
@@ -26,6 +26,10 @@ interface Props {
 const DURADA_FUGIDA_MS = 1100;
 const DURADA_ATRAPADA_MS = 650;
 const DISTANCIA = 2.2;
+/** Mentre vola, la carta va i ve fins aquí. Cada viatge dura el mateix que el seu so. */
+const DISTANCIA_LLUNY = 3.4;
+const DURADA_ALLUNYAR_MS = 890;
+const DURADA_APROPAR_MS = 1630;
 const AMPLE_CARTA = 0.62;
 const ALT_CARTA = 0.42;
 const OR = "234, 179, 8";
@@ -159,6 +163,17 @@ export function EscenaCarta({ mirada, arrossegar, alGuia, alFugir, alAtrapar, al
         let desDeElev = 0;
         let finsElev = 0;
         let desDe = 0;
+        // Distància actual, viatge d'anada o tornada en curs i quan comença el següent.
+        let distBase = DISTANCIA;
+        let distDes = DISTANCIA;
+        let viatge: { des: number; fins: number; inici: number; durada: number } | null = null;
+        let properViatge = 0;
+        let tornadaSonada = false;
+        let rumbMirada = 0;
+
+        const sonarMoviment = (tipus: TipusMoviment) => {
+          sonarMovimentCarta(tipus, Math.sin(diferenciaRumb(rumbCarta, rumbMirada) * RAD));
+        };
 
         let guiaActual: GuiaCarta | null = null;
         const posarGuia = (guia: GuiaCarta | null) => {
@@ -180,8 +195,12 @@ export function EscenaCarta({ mirada, arrossegar, alGuia, alFugir, alAtrapar, al
           if (Math.hypot(x - sx, y - sy) > Math.max(110, amplada * 0.34)) return;
           cops++;
           desDe = performance.now();
+          viatge = null;
+          distDes = distBase;
           if (cops === 1) {
             fase = "fuig";
+            tornadaSonada = false;
+            sonarMoviment("lluny");
             desDeRumb = rumbCarta;
             finsRumb = (rumbCarta + (Math.random() < 0.5 ? -1 : 1) * (110 + Math.random() * 50) + 360) % 360;
             desDeElev = elevCarta;
@@ -194,7 +213,7 @@ export function EscenaCarta({ mirada, arrossegar, alGuia, alFugir, alAtrapar, al
             fase = "atrapada";
             posarGuia("atrapada");
             navigator.vibrate?.([40, 40, 80]);
-            silenciarMovimentCarta();
+            sonarMoviment("aprop");
           }
         };
 
@@ -232,24 +251,55 @@ export function EscenaCarta({ mirada, arrossegar, alGuia, alFugir, alAtrapar, al
             elevCarta = Math.max(-5, Math.min(12, lectura.elevacio));
             carta.visible = true;
             fase = "vola";
+            properViatge = ara + 1500;
           }
+          rumbMirada = lectura.rumb;
 
           camera.rotation.y = -lectura.rumb * RAD;
           camera.rotation.x = lectura.elevacio * RAD;
 
-          let distancia = DISTANCIA;
+          let distancia = distBase;
           let gir = 0;
-          if (fase === "fuig") {
+          if (fase === "vola") {
+            // Va i ve: s'allunya, s'espera, s'acosta, s'espera. Cada viatge sona una vegada.
+            if (!viatge && ara >= properViatge) {
+              const marxa = distBase < DISTANCIA_LLUNY;
+              viatge = {
+                des: distBase,
+                fins: marxa ? DISTANCIA_LLUNY : DISTANCIA,
+                inici: ara,
+                durada: marxa ? DURADA_ALLUNYAR_MS : DURADA_APROPAR_MS,
+              };
+              sonarMoviment(marxa ? "lluny" : "aprop");
+            }
+            if (viatge) {
+              const t = Math.min(1, (ara - viatge.inici) / viatge.durada);
+              distBase = viatge.des + (viatge.fins - viatge.des) * suau(t);
+              if (t >= 1) {
+                viatge = null;
+                properViatge = ara + 1500 + Math.random() * 2000;
+              }
+            }
+            distancia = distBase;
+          } else if (fase === "fuig") {
             const t = Math.min(1, (ara - desDe) / DURADA_FUGIDA_MS);
             const e = suau(t);
             rumbCarta = (desDeRumb + diferenciaRumb(finsRumb, desDeRumb) * e + 360) % 360;
             elevCarta = desDeElev + (finsElev - desDeElev) * e + Math.sin(t * Math.PI) * 22;
-            distancia = DISTANCIA + Math.sin(t * Math.PI) * 2.2;
+            distancia = distDes + (DISTANCIA - distDes) * e + Math.sin(t * Math.PI) * 2.2;
             gir = t * Math.PI * 3;
-            if (t >= 1) fase = "vola";
+            if (t >= 0.5 && !tornadaSonada) {
+              tornadaSonada = true;
+              sonarMoviment("aprop");
+            }
+            if (t >= 1) {
+              fase = "vola";
+              distBase = DISTANCIA;
+              properViatge = ara + 2500;
+            }
           } else if (fase === "atrapada") {
             const t = Math.min(1, (ara - desDe) / DURADA_ATRAPADA_MS);
-            distancia = DISTANCIA + (0.75 - DISTANCIA) * suau(t);
+            distancia = distDes + (0.75 - distDes) * suau(t);
             rumbCarta = (rumbCarta + diferenciaRumb(lectura.rumb, rumbCarta) * 0.14 + 360) % 360;
             elevCarta += (lectura.elevacio - elevCarta) * 0.14;
             if (t >= 1) {
@@ -288,7 +338,6 @@ export function EscenaCarta({ mirada, arrossegar, alGuia, alFugir, alAtrapar, al
 
           ctx.clearRect(0, 0, amplada, alcada);
           const dx = diferenciaRumb(rumbCarta, lectura.rumb);
-          if (fase !== "atrapada") ajustarMovimentCarta(1 - Math.abs(dx) / 180, Math.sin(dx * RAD));
           if (fase === "vola") {
             dibuixaVora(ctx, amplada, alcada, dx, 1, 1300, ara, OR);
             const dy = elevCarta - lectura.elevacio;
