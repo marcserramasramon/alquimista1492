@@ -243,7 +243,7 @@ export function VistaTelefonValidat({
       <div className="flex flex-1 animate-entrar flex-col justify-center gap-5 text-center">
         <h1 className="text-5xl font-bold">{PROVA_CARTA.validat.titol}</h1>
         <p className="text-lg text-ink-soft">{PROVA_CARTA.validat.siNoVa}</p>
-        <a href={URL_CONFIGURACIO} target="_blank" rel="noopener noreferrer" className="btn btn-secundari">
+        <a href={URL_CONFIGURACIO} target="_blank" rel="noopener noreferrer" className="btn btn-perill btn-batec">
           {PROVA_CARTA.validat.document}
         </a>
 

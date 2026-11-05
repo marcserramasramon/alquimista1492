@@ -15,7 +15,7 @@ import {
 import { PROVA_CARTA } from "@/content/public/textos";
 import { aturarMicroAr, iniciarMicroAr, nivellMicroAr } from "@/lib/microAr";
 import { useOrientacio } from "@/lib/orientacio";
-import { aturarSoCarta, iniciarSoCarta, sonarEsquerdaCarta, sonarTrencaCarta } from "@/lib/sorollCarta";
+import { aturarSoCarta, iniciarSoCarta, sonarEsquerdaCarta, sonarObrirCarta, sonarTrencaCarta } from "@/lib/sorollCarta";
 import { llegirDecisioUbicacio } from "@/lib/ubicacio";
 
 /** Aquest mòbil ja ha fet la prova: no es repeteix en tornar a obrir l'app. */
@@ -164,6 +164,7 @@ export function ProvaCarta() {
 
   /** Amb el segell trencat, la carta s'obre quan la toquen. */
   function obrir() {
+    sonarObrirCarta();
     flux.current?.getTracks().forEach((t) => t.stop());
     flux.current = null;
     setFase("oberta");

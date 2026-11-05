@@ -236,6 +236,7 @@ export const PROVA_CARTA = {
     paragrafs: [
       "Algú l'ha confiat al vent, i només es deixarà atrapar per qui sàpiga mirar.",
       "Busqueu un lloc amb espai per girar-vos.",
+      "Aquestes pantalles serveixen per comprovar que el vostre mòbil i els seus permisos funcionen bé.",
     ],
     guia: "Toqueu el botó i accepteu els permisos",
     boto: "Buscar la carta",

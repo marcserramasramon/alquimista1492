@@ -18,6 +18,9 @@ const URL_FONS = "/audio/carta/fons.mp3";
 /** Riure del primer cop que la carta s'escapa («funny child laughter» d'universfield). */
 const URL_RIURE = "/audio/carta/riure.mp3";
 const VOLUM_RIURE = 0.7;
+/** Paper que es desplega quan obren la carta («unfold a map» de freesound_community). */
+const URL_OBRIR = "/audio/carta/obrir.mp3";
+const VOLUM_OBRIR = 0.7;
 const URL_MOVIMENT: Record<TipusMoviment, string> = {
   aprop: "/audio/carta/moviment-aprop.mp3",
   lluny: "/audio/carta/moviment-lluny.mp3",
@@ -38,6 +41,7 @@ let context: AudioContext | null = null;
 let soroll: AudioBuffer | null = null;
 const sonsMoviment: Partial<Record<TipusMoviment, AudioBuffer>> = {};
 let riure: AudioBuffer | null = null;
+let obrir: AudioBuffer | null = null;
 let fonts: AudioBufferSourceNode[] = [];
 let tempsFons: ReturnType<typeof setTimeout> | null = null;
 
@@ -116,6 +120,11 @@ export function iniciarSoCarta() {
         if (ctx === context) riure = buffer;
       })
       .catch(() => {});
+    void carregarSo(ctx, URL_OBRIR)
+      .then((buffer) => {
+        if (ctx === context) obrir = buffer;
+      })
+      .catch(() => {});
   } catch {
     context = null;
   }
@@ -158,15 +167,24 @@ function esclat(frequencia: number, durada: number, volum: number, tipus: Biquad
   font.stop(ctx.currentTime + durada);
 }
 
-/** El riure quan la carta s'escapa. Només es crida el primer cop que la toquen. */
-export function sonarRiureCarta() {
-  if (!context || !riure) return;
+function sonarUnCop(buffer: AudioBuffer | null, volum: number) {
+  if (!context || !buffer) return;
   const font = context.createBufferSource();
-  font.buffer = riure;
+  font.buffer = buffer;
   const gain = context.createGain();
-  gain.gain.value = VOLUM_RIURE;
+  gain.gain.value = volum;
   font.connect(gain).connect(context.destination);
   font.start();
+}
+
+/** El riure quan la carta s'escapa. Només es crida el primer cop que la toquen. */
+export function sonarRiureCarta() {
+  sonarUnCop(riure, VOLUM_RIURE);
+}
+
+/** El paper que es desplega quan obren la carta. */
+export function sonarObrirCarta() {
+  sonarUnCop(obrir, VOLUM_OBRIR);
 }
 
 /** La ventada que s'endú la carta. */
@@ -199,6 +217,7 @@ export function aturarSoCarta() {
   delete sonsMoviment.aprop;
   delete sonsMoviment.lluny;
   riure = null;
+  obrir = null;
   const ctx = context;
   context = null;
   soroll = null;

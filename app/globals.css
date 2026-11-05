@@ -172,6 +172,17 @@ h3 {
     background: var(--blood);
     color: var(--paper);
   }
+  /* Batec lent per cridar l'atenció sobre un botó. */
+  .btn-batec {
+    animation: batec-lent 2.4s ease-in-out infinite;
+  }
+  @keyframes batec-lent {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn-batec { animation: none; }
+  }
   .btn-rodo {
     width: 3rem;
     min-height: 3rem;
