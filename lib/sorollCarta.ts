@@ -6,6 +6,10 @@
  * S'ha d'iniciar dins d'un gest de l'usuari (els navegadors mòbils no deixen sonar abans).
  */
 
+/** Volum màxim del paper al vent i dels cops (fugida i segell), de 0 a 1. */
+const VOLUM_VENT = 0.2;
+const VOLUM_COPS = 0.4;
+
 let context: AudioContext | null = null;
 let soroll: AudioBuffer | null = null;
 let vent: { gain: GainNode; panner: StereoPannerNode | null; aturar: () => void } | null = null;
@@ -76,7 +80,7 @@ export function iniciarSoCarta() {
 export function ajustarVentCarta(volum: number, pan: number) {
   if (!context || !vent) return;
   const ara = context.currentTime;
-  vent.gain.gain.setTargetAtTime(Math.max(0, Math.min(1, volum)), ara, 0.08);
+  vent.gain.gain.setTargetAtTime(Math.max(0, Math.min(1, volum)) * VOLUM_VENT, ara, 0.08);
   vent.panner?.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), ara, 0.08);
 }
 
@@ -90,7 +94,7 @@ function esclat(frequencia: number, durada: number, volum: number, tipus: Biquad
   filtre.type = tipus;
   filtre.frequency.value = frequencia;
   const gain = ctx.createGain();
-  gain.gain.setValueAtTime(volum, ctx.currentTime);
+  gain.gain.setValueAtTime(volum * VOLUM_COPS, ctx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durada);
   font.connect(filtre).connect(gain).connect(ctx.destination);
   font.start(ctx.currentTime, Math.random());
