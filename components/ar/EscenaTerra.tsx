@@ -25,7 +25,7 @@ const ALCADA_OLLS = 1.5;
 const RADI_CAMI_PLE = 3;
 const RADI_CAMI_BUIT = 15;
 /** Des d'aquesta distància (m) del lloc final, es dona per arribat. */
-export const RADI_AMFORES = 6;
+export const RADI_AMFORES = 25;
 /** Alçada (m) a què penja la còpia de la malla al cel. */
 const ALCADA_CEL = 30;
 /** Posició GPS exacta del con de la fita: on el Gollem porta l'equip i on són els anells de runes. */
