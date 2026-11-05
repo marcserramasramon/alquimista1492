@@ -254,7 +254,7 @@ Va després del consentiment d'ubicació i abans de triar equip (`/carta`). Els 
 >
 > Busqueu un lloc amb espai per girar-vos.
 
-**Cartells guia:** cada pas en té un, fosc amb vora daurada perquè no es confongui amb un botó, que diu què cal fer.
+**Cartells guia:** cada pas en té un, fosc i sense vora perquè no es confongui amb un botó, que diu què cal fer.
 
 - **Arribada:** Toqueu el botó i accepteu els permisos.
 - **Cerca:** Accepteu els permisos que us demani el mòbil / Gireu-vos cap a la dreta (o l'esquerra) / Apunteu el mòbil més amunt (o més avall) / Aquí la teniu! Toqueu la carta / El vent se l'ha endut! Torneu-la a buscar / Ara sí! Toqueu la carta.

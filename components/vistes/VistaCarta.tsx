@@ -14,7 +14,7 @@ function CartellGuia({ children, className = "" }: { children: React.ReactNode; 
   return (
     <p
       aria-live="polite"
-      className={`w-full max-w-md rounded-2xl border-[3px] border-gold bg-ink px-4 py-3 text-center text-xl font-extrabold leading-snug text-paper ${className}`}
+      className={`w-full max-w-md rounded-2xl bg-ink px-4 py-3 text-center text-xl font-extrabold leading-snug text-paper ${className}`}
     >
       {children}
     </p>
