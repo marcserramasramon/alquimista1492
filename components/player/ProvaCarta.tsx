@@ -30,13 +30,16 @@ import { llegirDecisioUbicacio } from "@/lib/ubicacio";
 const CLAU_FETA = "prova-carta-feta";
 /** Temps abans d'oferir «No la trobo» i «Trencar-lo amb la mà». */
 const ESPERA_RENDIR_MS = 30_000;
-const ESPERA_TRENCAR_MS = 10_000;
+const ESPERA_TRENCAR_MS = 6_000;
 /** Temps màxim per carregar el model de persones abans de donar-lo per fallat. */
 const ESPERA_PERSONES_MS = 25_000;
 /** Volum mínim que demostra que el micròfon rep so. */
 const SENYAL_MICRO = 0.008;
-/** Segons de crit sostingut que calen per trencar el segell. */
-const SEGONS_CRIT = 1.1;
+/** Segons de veu alta que calen per trencar el segell, sumats encara que es pari entre mig. */
+const SEGONS_CRIT = 0.5;
+/** Volum mínim que compta com a crit, i quantes vegades ha de superar el soroll de fons. */
+const LLINDAR_CRIT = 0.04;
+const VEGADES_FONS = 2.5;
 
 type Fase = "arriba" | "cerca" | "segell" | "oberta" | "validat";
 type Resultat = "pendent" | "ok" | "no";
@@ -183,7 +186,7 @@ export function ProvaCarta() {
     setFase("oberta");
   }
 
-  // El crit: com el dels extres, ha de ser molt més fort que el soroll de fons i sostingut.
+  // El crit: més permissiu que el dels extres, perquè aquí el segell s'ha de trencar fàcilment.
   useEffect(() => {
     if (micro !== "actiu" || trencat) return;
     let raf = 0;
@@ -199,7 +202,7 @@ export function ProvaCarta() {
       const n = nivellMicroAr();
       picMicro.current = Math.max(picMicro.current, n);
       fons += (Math.min(n, fons * 3 + 0.01) - fons) * 0.003;
-      if (n > Math.max(0.12, fons * 5)) acumulat += dt;
+      if (n > Math.max(LLINDAR_CRIT, fons * VEGADES_FONS)) acumulat += dt;
       const p = Math.min(1, acumulat / SEGONS_CRIT);
       const noves = Math.floor(p * 4);
       if (noves > esquerdes) {
