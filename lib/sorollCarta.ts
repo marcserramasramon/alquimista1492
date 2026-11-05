@@ -1,18 +1,37 @@
 "use client";
 
 /**
- * So de la prova de la carta, sintetitzat amb Web Audio (sense fitxers): el paper que voleia al vent,
- * més fort com més a prop es mira la carta, i el segell de cera que s'esquerda i es trenca.
+ * So de la prova de la carta.
+ *
+ * - De fons (public/audio/carta/fons.mp3): sona a cicles, amb entrada i sortida progressives i un
+ *   silenci entre mig.
+ * - Moviment de la carta (moviment-aprop.mp3 i moviment-lluny.mp3): sonen en bucle i es fonen l'un amb
+ *   l'altre segons si la carta és a prop o lluny d'on mira el mòbil, i a la banda on és.
+ * - La ventada que s'endú la carta i el segell que es trenca es sintetitzen amb Web Audio.
+ *
  * S'ha d'iniciar dins d'un gest de l'usuari (els navegadors mòbils no deixen sonar abans).
  */
 
-/** Volum màxim del paper al vent i dels cops (fugida i segell), de 0 a 1. */
-const VOLUM_VENT = 0.2;
+const URL_FONS = "/audio/carta/fons.mp3";
+const URL_APROP = "/audio/carta/moviment-aprop.mp3";
+const URL_LLUNY = "/audio/carta/moviment-lluny.mp3";
+
+/** Volum del so de fons, de 0 a 1. */
+const VOLUM_FONS = 0.2;
+/** Cada cicle del so de fons: quant dura (segons), dins d'això l'entrada i la sortida, i el silenci posterior. */
+const DURADA_FONS = 3;
+const FADE_FONS = 1;
+const SILENCI_FONS = 1;
+
+/** Volum màxim dels sons de moviment i dels cops (fugida i segell), de 0 a 1. */
+const VOLUM_MOVIMENT = 0.5;
 const VOLUM_COPS = 0.4;
 
 let context: AudioContext | null = null;
 let soroll: AudioBuffer | null = null;
-let vent: { gain: GainNode; panner: StereoPannerNode | null; aturar: () => void } | null = null;
+let moviment: { aprop: GainNode; lluny: GainNode; panner: StereoPannerNode | null } | null = null;
+let fonts: AudioBufferSourceNode[] = [];
+let tempsFons: ReturnType<typeof setTimeout> | null = null;
 
 function bufferSoroll(ctx: AudioContext): AudioBuffer {
   if (soroll) return soroll;
@@ -21,6 +40,35 @@ function bufferSoroll(ctx: AudioContext): AudioBuffer {
   for (let i = 0; i < dades.length; i++) dades[i] = Math.random() * 2 - 1;
   soroll = buffer;
   return buffer;
+}
+
+/** Baixa un so i el fa sonar en bucle cap a `desti`. Si no es pot carregar, la prova continua sense. */
+async function sonarEnBucle(ctx: AudioContext, url: string, desti: AudioNode) {
+  try {
+    const resposta = await fetch(url);
+    const buffer = await ctx.decodeAudioData(await resposta.arrayBuffer());
+    if (ctx !== context) return;
+    const font = ctx.createBufferSource();
+    font.buffer = buffer;
+    font.loop = true;
+    font.connect(desti);
+    font.start();
+    fonts.push(font);
+  } catch {
+    // Sense aquest so.
+  }
+}
+
+/** Un cicle del so de fons i, després del silenci, el següent. */
+function cicleFons(ctx: AudioContext, gain: GainNode) {
+  if (ctx !== context) return;
+  const t = ctx.currentTime + 0.05;
+  gain.gain.cancelScheduledValues(t);
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(VOLUM_FONS, t + FADE_FONS);
+  gain.gain.setValueAtTime(VOLUM_FONS, t + DURADA_FONS - FADE_FONS);
+  gain.gain.linearRampToValueAtTime(0, t + DURADA_FONS);
+  tempsFons = setTimeout(() => cicleFons(ctx, gain), (DURADA_FONS + SILENCI_FONS) * 1000);
 }
 
 export function iniciarSoCarta() {
@@ -33,55 +81,51 @@ export function iniciarSoCarta() {
     context = ctx;
     void ctx.resume().catch(() => {});
 
-    const font = ctx.createBufferSource();
-    font.buffer = bufferSoroll(ctx);
-    font.loop = true;
-    const filtre = ctx.createBiquadFilter();
-    filtre.type = "bandpass";
-    filtre.frequency.value = 2600;
-    filtre.Q.value = 0.7;
+    const fons = ctx.createGain();
+    fons.gain.value = 0;
+    fons.connect(ctx.destination);
+    void sonarEnBucle(ctx, URL_FONS, fons);
+    cicleFons(ctx, fons);
 
-    // El paper bat: una oscil·lació ràpida del volum.
-    const batec = ctx.createGain();
-    batec.gain.value = 0.6;
-    const oscil = ctx.createOscillator();
-    oscil.frequency.value = 11;
-    const profunditat = ctx.createGain();
-    profunditat.gain.value = 0.4;
-    oscil.connect(profunditat).connect(batec.gain);
-
-    const gain = ctx.createGain();
-    gain.gain.value = 0;
-    font.connect(filtre).connect(batec).connect(gain);
+    const aprop = ctx.createGain();
+    const lluny = ctx.createGain();
+    aprop.gain.value = 0;
+    lluny.gain.value = 0;
     let panner: StereoPannerNode | null = null;
     if (typeof ctx.createStereoPanner === "function") {
       panner = ctx.createStereoPanner();
-      gain.connect(panner).connect(ctx.destination);
-    } else {
-      gain.connect(ctx.destination);
+      panner.connect(ctx.destination);
     }
-    font.start();
-    oscil.start();
-    vent = {
-      gain,
-      panner,
-      aturar: () => {
-        font.stop();
-        oscil.stop();
-      },
-    };
+    aprop.connect(panner ?? ctx.destination);
+    lluny.connect(panner ?? ctx.destination);
+    moviment = { aprop, lluny, panner };
+    void sonarEnBucle(ctx, URL_APROP, aprop);
+    void sonarEnBucle(ctx, URL_LLUNY, lluny);
   } catch {
     context = null;
-    vent = null;
+    moviment = null;
   }
 }
 
-/** Volum (0-1) i banda (-1 esquerra, 1 dreta) del paper al vent. */
-export function ajustarVentCarta(volum: number, pan: number) {
-  if (!context || !vent) return;
+/**
+ * Moviment de la carta: `proximitat` és 1 si es mira just cap a ella i 0 si és a l'esquena, i `pan` la
+ * banda on és (-1 esquerra, 1 dreta).
+ */
+export function ajustarMovimentCarta(proximitat: number, pan: number) {
+  if (!context || !moviment) return;
   const ara = context.currentTime;
-  vent.gain.gain.setTargetAtTime(Math.max(0, Math.min(1, volum)) * VOLUM_VENT, ara, 0.08);
-  vent.panner?.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), ara, 0.08);
+  const prop = Math.max(0, Math.min(1, (proximitat - 0.5) * 2));
+  moviment.aprop.gain.setTargetAtTime(prop * VOLUM_MOVIMENT, ara, 0.1);
+  moviment.lluny.gain.setTargetAtTime((1 - prop) * VOLUM_MOVIMENT, ara, 0.1);
+  moviment.panner?.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), ara, 0.1);
+}
+
+/** La carta ja no es mou: només queda el so de fons. */
+export function silenciarMovimentCarta() {
+  if (!context || !moviment) return;
+  const ara = context.currentTime;
+  moviment.aprop.gain.setTargetAtTime(0, ara, 0.1);
+  moviment.lluny.gain.setTargetAtTime(0, ara, 0.1);
 }
 
 /** Esclat curt de soroll filtrat: la base de la ventada i del segell. */
@@ -118,13 +162,19 @@ export function sonarTrencaCarta() {
 }
 
 export function aturarSoCarta() {
-  try {
-    vent?.aturar();
-  } catch {
-    // Ja estava aturat.
+  if (tempsFons) clearTimeout(tempsFons);
+  tempsFons = null;
+  for (const font of fonts) {
+    try {
+      font.stop();
+    } catch {
+      // Ja estava aturat.
+    }
   }
-  vent = null;
-  void context?.close().catch(() => {});
+  fonts = [];
+  moviment = null;
+  const ctx = context;
   context = null;
   soroll = null;
+  void ctx?.close().catch(() => {});
 }

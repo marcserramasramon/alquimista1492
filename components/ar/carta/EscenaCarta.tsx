@@ -3,7 +3,7 @@
 import { useEffect, useRef, type RefObject } from "react";
 import { dibuixaVora } from "@/components/ar/voraGuia";
 import { diferenciaRumb, type Mirada } from "@/lib/orientacio";
-import { ajustarVentCarta, sonarFugidaCarta } from "@/lib/sorollCarta";
+import { ajustarMovimentCarta, silenciarMovimentCarta, sonarFugidaCarta } from "@/lib/sorollCarta";
 
 /** On és la carta respecte a on mira el mòbil: cap a on cal moure'l, o "vista" si ja es veu. */
 export type GuiaCarta = "dreta" | "esquerra" | "amunt" | "avall" | "vista" | "atrapada";
@@ -194,7 +194,7 @@ export function EscenaCarta({ mirada, arrossegar, alGuia, alFugir, alAtrapar, al
             fase = "atrapada";
             posarGuia("atrapada");
             navigator.vibrate?.([40, 40, 80]);
-            ajustarVentCarta(0.04, 0);
+            silenciarMovimentCarta();
           }
         };
 
@@ -288,10 +288,9 @@ export function EscenaCarta({ mirada, arrossegar, alGuia, alFugir, alAtrapar, al
 
           ctx.clearRect(0, 0, amplada, alcada);
           const dx = diferenciaRumb(rumbCarta, lectura.rumb);
+          if (fase !== "atrapada") ajustarMovimentCarta(1 - Math.abs(dx) / 180, Math.sin(dx * RAD));
           if (fase === "vola") {
             dibuixaVora(ctx, amplada, alcada, dx, 1, 1300, ara, OR);
-            const prop = 1 - Math.abs(dx) / 180;
-            ajustarVentCarta(0.12 + prop * prop * 0.75, Math.sin(dx * RAD));
             const dy = elevCarta - lectura.elevacio;
             const meitatH = Math.atan(Math.tan((camera.fov / 2) * RAD) * camera.aspect) / RAD;
             if (Math.abs(dx) > meitatH) posarGuia(dx > 0 ? "dreta" : "esquerra");

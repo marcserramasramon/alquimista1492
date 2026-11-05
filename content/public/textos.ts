@@ -275,7 +275,7 @@ export const PROVA_CARTA = {
     document: "Obrir el document de configuració",
     fallades: "això no ha funcionat",
     comprovant: "Encara s'està comprovant la connexió...",
-    so: "Si no heu sentit el vent, apugeu el volum o traieu el mode silenci.",
+    so: "Si no heu sentit cap so, apugeu el volum o traieu el mode silenci.",
     continuar: "Continuar →",
     repetir: "Tornar a provar",
   },
