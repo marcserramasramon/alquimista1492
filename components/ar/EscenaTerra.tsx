@@ -546,6 +546,9 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
         let yawGolem: number | null = null;
         let camIniciada = false;
         let camX = 0;
+        // Mirada suavitzada: la brúixola i el sensor d'inclinació tremolen; el filtre és per temps (no per lectura).
+        let suauRumb: number | null = null;
+        let suauElev = 0;
         let camZ = 0;
         const accioDe = (estat: EstatGolem | null): AnimationAction | null =>
           estat === "seguint" ? accioCaminar : estat === "gest" ? accioSaludar : estat === "assenyala" ? accioAssenyalar : null;
@@ -904,13 +907,18 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
         const inici = performance.now();
         let w = 0;
         let h = 0;
+        // Qualitat adaptativa: en mòbils febles la resolució baixa a 1 si els fps no arriben a 40 en els primers 2 s.
+        let qualitatDpr = Math.min(window.devicePixelRatio || 1, 2);
+        let fpsIniciMesura: number | null = null;
+        let framesMesurats = 0;
+        let mesuraFeta = false;
         const bucle = (ara: number) => {
           const cw = canvas.clientWidth;
           const ch = canvas.clientHeight;
           if (cw !== w || ch !== h) {
             w = cw;
             h = ch;
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const dpr = qualitatDpr;
             renderer.setPixelRatio(dpr);
             renderer.setSize(w, h, false);
             cam.aspect = w / Math.max(1, h);
@@ -1019,7 +1027,15 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
             camZ += ((ref.z - camZ) / dCam) * pasCam;
           }
           cam.position.set(camX, ALCADA_OLLS, camZ);
-          cam.rotation.set(m.elevacio * RAD, -m.rumb * RAD, 0);
+          // Suavitzat de la mirada amb constant de temps de 0,15 s: treu el tremolor de la mà i de la brúixola sense endarrerir gaire el gir.
+          const aMirada = 1 - Math.exp(-dtCam / 0.15);
+          if (suauRumb === null) {
+            suauRumb = m.rumb;
+            suauElev = m.elevacio;
+          }
+          suauRumb = (suauRumb + diferenciaRumb(m.rumb, suauRumb) * aMirada + 360) % 360;
+          suauElev += (m.elevacio - suauElev) * aMirada;
+          cam.rotation.set(suauElev * RAD, -suauRumb * RAD, 0);
           uniforms.uCam.value.set(camX, camZ);
           golemRef.current = { x: pas.x, z: pas.z };
           golem.position.set(pas.x, 0, pas.z);
@@ -1109,6 +1125,22 @@ export function EscenaTerra({ mirada, posicio, arrossegar, rumb, fita, amfores, 
           }
           uniforms.uEmergencia.value = emergencia;
           matSimbol.opacity = emergencia;
+          if (!mesuraFeta) {
+            if (fpsIniciMesura === null) fpsIniciMesura = ara;
+            framesMesurats++;
+            const durada = ara - fpsIniciMesura;
+            if (durada >= 2000) {
+              mesuraFeta = true;
+              const fps = (framesMesurats * 1000) / durada;
+              if (fps < 40 && qualitatDpr > 1) {
+                qualitatDpr = 1;
+                renderer.setPixelRatio(1);
+                uniforms.uPR.value = 1;
+                w = 0;
+                h = 0;
+              }
+            }
+          }
           renderer.render(escena, cam);
           frame = requestAnimationFrame(bucle);
         };
